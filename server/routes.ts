@@ -8891,6 +8891,224 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // General dating profiles endpoint (returns Normal room profiles by default)
+  app.get('/api/dating-profiles', async (req: Request, res: Response) => {
+    try {
+      console.log('[DEBUG] /api/dating-profiles called');
+      
+      let authenticatedUser = null;
+      
+      // Authentication check (same as tier endpoint)
+      if (req.user) {
+        authenticatedUser = req.user;
+        console.log('[DEBUG] Dating profiles - Session user found:', authenticatedUser.id);
+      } else {
+        // Try manual session check
+        const sessionUserId = req.session?.passport?.user;
+        if (sessionUserId) {
+          const user = await storage.getUser(sessionUserId);
+          if (user) {
+            authenticatedUser = user;
+            console.log('[DEBUG] Dating profiles - Session fallback user found:', user.id);
+          }
+        }
+      }
+      
+      // If no session auth, try Authorization header
+      if (!authenticatedUser) {
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          const token = authHeader.substring(7);
+          try {
+            const payload = verifyToken(token);
+            if (payload) {
+              const user = await storage.getUser(payload.userId);
+              if (user) {
+                authenticatedUser = user;
+                console.log('[DEBUG] Dating profiles - JWT user found:', user.id);
+              }
+            }
+          } catch (jwtError) {
+            console.log('[DEBUG] Dating profiles - JWT verification failed');
+          }
+        }
+      }
+      
+      if (!authenticatedUser) {
+        console.log('[DEBUG] Dating profiles - No authentication found');
+        return res.status(401).json({ 
+          message: 'Unauthorized - No valid authentication' 
+        });
+      }
+
+      // Mock dating profiles (expanded with comprehensive data)
+      const normalDatingProfiles = [
+        {
+          id: 1,
+          userId: 101,
+          displayName: "Sarah M.",
+          age: 28,
+          gender: "Female",
+          bio: "Love hiking and coffee dates. Looking for genuine connections and meaningful conversations.",
+          location: "London, UK",
+          interests: ["Hiking", "Coffee", "Books", "Travel", "Photography"],
+          lookingFor: "Long-term relationship",
+          relationshipType: "serious",
+          profileImages: ["https://images.unsplash.com/random/400x600?sig=1"],
+          isActive: true,
+          isPremium: false,
+          datingRoomTier: "normal",
+          height: "5'6\"",
+          education: "University Graduate",
+          incomeRange: "£25,000 - £40,000"
+        },
+        {
+          id: 2,
+          userId: 102,
+          displayName: "Mike R.",
+          age: 32,
+          gender: "Male",
+          bio: "Entrepreneur and fitness enthusiast. Love trying new restaurants and weekend adventures.",
+          location: "Manchester, UK", 
+          interests: ["Fitness", "Business", "Food", "Music", "Cycling"],
+          lookingFor: "Someone adventurous",
+          relationshipType: "casual",
+          profileImages: ["https://images.unsplash.com/random/400x600?sig=2"],
+          isActive: true,
+          isPremium: false,
+          datingRoomTier: "normal",
+          height: "6'0\"",
+          education: "Self-taught",
+          incomeRange: "£30,000 - £45,000"
+        },
+        {
+          id: 3,
+          userId: 103,
+          displayName: "Emma T.",
+          age: 26,
+          gender: "Female",
+          bio: "Creative designer who loves art galleries and cozy movie nights. Looking for my creative soulmate.",
+          location: "Bristol, UK",
+          interests: ["Art", "Design", "Movies", "Yoga", "Cooking"],
+          lookingFor: "Creative partner",
+          relationshipType: "serious",
+          profileImages: ["https://images.unsplash.com/random/400x600?sig=3"],
+          isActive: true,
+          isPremium: false,
+          datingRoomTier: "normal",
+          height: "5'4\"",
+          education: "Art School",
+          incomeRange: "£20,000 - £35,000"
+        },
+        {
+          id: 4,
+          userId: 104,
+          displayName: "David L.",
+          age: 29,
+          gender: "Male",
+          bio: "Software developer with a passion for gaming and tech. Always up for a good conversation about the latest innovations.",
+          location: "Birmingham, UK",
+          interests: ["Technology", "Gaming", "Programming", "Science Fiction", "Board Games"],
+          lookingFor: "Geeky companion",
+          relationshipType: "casual",
+          profileImages: ["https://images.unsplash.com/random/400x600?sig=4"],
+          isActive: true,
+          isPremium: false,
+          datingRoomTier: "normal",
+          height: "5'10\"",
+          education: "Computer Science Degree",
+          incomeRange: "£35,000 - £50,000"
+        },
+        {
+          id: 5,
+          userId: 105,
+          displayName: "Lucy W.",
+          age: 24,
+          gender: "Female",
+          bio: "Medical student who enjoys running marathons and volunteering. Looking for someone who shares my passion for helping others.",
+          location: "Edinburgh, UK",
+          interests: ["Medicine", "Running", "Volunteering", "Reading", "Nature"],
+          lookingFor: "Compassionate partner",
+          relationshipType: "serious",
+          profileImages: ["https://images.unsplash.com/random/400x600?sig=5"],
+          isActive: true,
+          isPremium: false,
+          datingRoomTier: "normal",
+          height: "5'7\"",
+          education: "Medical School",
+          incomeRange: "£15,000 - £25,000"
+        },
+        {
+          id: 6,
+          userId: 106,
+          displayName: "James K.",
+          age: 35,
+          gender: "Male",
+          bio: "Teacher and weekend musician. Love sharing knowledge and creating beautiful music. Seeking someone who appreciates the simple joys in life.",
+          location: "Leeds, UK",
+          interests: ["Teaching", "Music", "Guitar", "History", "Traveling"],
+          lookingFor: "Life partner",
+          relationshipType: "serious",
+          profileImages: ["https://images.unsplash.com/random/400x600?sig=6"],
+          isActive: true,
+          isPremium: false,
+          datingRoomTier: "normal",
+          height: "5'11\"",
+          education: "Education Degree",
+          incomeRange: "£25,000 - £35,000"
+        },
+        {
+          id: 7,
+          userId: 107,
+          displayName: "Sophie B.",
+          age: 30,
+          gender: "Female",
+          bio: "Marketing manager who loves weekend trips and trying new cuisines. Looking for someone to share adventures with.",
+          location: "Glasgow, UK",
+          interests: ["Marketing", "Food", "Travel", "Dancing", "Wine"],
+          lookingFor: "Adventure partner",
+          relationshipType: "casual",
+          profileImages: ["https://images.unsplash.com/random/400x600?sig=7"],
+          isActive: true,
+          isPremium: false,
+          datingRoomTier: "normal",
+          height: "5'5\"",
+          education: "Marketing Degree",
+          incomeRange: "£28,000 - £40,000"
+        },
+        {
+          id: 8,
+          userId: 108,
+          displayName: "Tom H.",
+          age: 27,
+          gender: "Male",
+          bio: "Photographer and outdoor enthusiast. Love capturing beautiful moments and exploring nature with like-minded people.",
+          location: "Cardiff, UK",
+          interests: ["Photography", "Hiking", "Nature", "Camping", "Art"],
+          lookingFor: "Nature lover",
+          relationshipType: "serious",
+          profileImages: ["https://images.unsplash.com/random/400x600?sig=8"],
+          isActive: true,
+          isPremium: false,
+          datingRoomTier: "normal",
+          height: "5'9\"",
+          education: "Fine Arts",
+          incomeRange: "£22,000 - £32,000"
+        }
+      ];
+
+      // Filter out current user's profile
+      const profiles = normalDatingProfiles.filter(profile => profile.userId !== authenticatedUser.id);
+
+      console.log(`[DEBUG] Dating profiles - Returning ${profiles.length} normal tier profiles`);
+      return res.json(profiles);
+        
+    } catch (error) {
+      console.error('Error fetching dating profiles:', error);
+      res.status(500).json({ message: 'Failed to fetch dating profiles' });
+    }
+  });
+
   // Dating profiles by tier endpoint
   app.get('/api/dating-profiles/:tier', async (req: Request, res: Response) => {
     try {
@@ -9083,6 +9301,355 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
     } catch (error) {
       console.error('Error fetching dating profiles by tier:', error);
+      res.status(500).json({ message: 'Failed to fetch dating profiles' });
+    }
+  });
+
+  // General dating profiles endpoint (without tier parameter) - returns Normal room profiles by default
+  app.get('/api/dating-profiles', async (req: Request, res: Response) => {
+    try {
+      console.log('[DEBUG] /api/dating-profiles called');
+      
+      let authenticatedUser = null;
+      
+      // Authentication check (same as dating-profiles/:tier endpoint)
+      try {
+        if (req.user) {
+          authenticatedUser = req.user;
+          console.log('[DEBUG] Dating profiles - Session user found:', authenticatedUser.id);
+        } else {
+          // Try manual session check
+          const sessionUserId = req.session?.passport?.user;
+          if (sessionUserId) {
+            const user = await storage.getUser(sessionUserId);
+            if (user) {
+              authenticatedUser = user;
+              console.log('[DEBUG] Dating profiles - Session fallback user found:', user.id);
+            }
+          }
+        }
+        
+        // If no session auth, try Authorization header
+        if (!authenticatedUser) {
+          const authHeader = req.headers.authorization;
+          if (authHeader && authHeader.startsWith('Bearer ')) {
+            const token = authHeader.substring(7);
+            try {
+              const payload = verifyToken(token);
+              if (payload) {
+                const user = await storage.getUser(payload.userId);
+                if (user) {
+                  authenticatedUser = user;
+                  console.log('[DEBUG] Dating profiles - JWT user found:', user.id);
+                }
+              }
+            } catch (jwtError) {
+              console.log('[DEBUG] Dating profiles - JWT verification failed');
+            }
+          }
+        }
+        
+        if (!authenticatedUser) {
+          console.log('[DEBUG] Dating profiles - No authentication found');
+          return res.status(401).json({ 
+            message: 'Unauthorized - No valid authentication' 
+          });
+        }
+
+        // Default to normal tier profiles for general endpoint
+        const tier = "normal";
+
+        // Mock dating profiles for different tiers (expanded)
+        const datingProfiles: Record<string, any[]> = {
+          normal: [
+            {
+              id: 1,
+              userId: 101,
+              displayName: "Sarah M.",
+              age: 28,
+              gender: "Female",
+              bio: "Love hiking and coffee dates. Looking for genuine connections and meaningful conversations.",
+              location: "London, UK",
+              interests: ["Hiking", "Coffee", "Books", "Travel", "Photography"],
+              lookingFor: "Long-term relationship",
+              relationshipType: "serious",
+              profileImages: ["https://images.unsplash.com/random/400x600?sig=1"],
+              isActive: true,
+              isPremium: false,
+              datingRoomTier: "normal",
+              height: "5'6\"",
+              education: "University Graduate",
+              incomeRange: "£25,000 - £40,000"
+            },
+            {
+              id: 2,
+              userId: 102,
+              displayName: "Mike R.",
+              age: 32,
+              gender: "Male",
+              bio: "Entrepreneur and fitness enthusiast. Love trying new restaurants and weekend adventures.",
+              location: "Manchester, UK", 
+              interests: ["Fitness", "Business", "Food", "Music", "Cycling"],
+              lookingFor: "Someone adventurous",
+              relationshipType: "casual",
+              profileImages: ["https://images.unsplash.com/random/400x600?sig=2"],
+              isActive: true,
+              isPremium: false,
+              datingRoomTier: "normal",
+              height: "6'0\"",
+              education: "Self-taught",
+              incomeRange: "£30,000 - £45,000"
+            },
+            {
+              id: 3,
+              userId: 103,
+              displayName: "Emma T.",
+              age: 26,
+              gender: "Female",
+              bio: "Creative designer who loves art galleries and cozy movie nights. Looking for my creative soulmate.",
+              location: "Bristol, UK",
+              interests: ["Art", "Design", "Movies", "Yoga", "Cooking"],
+              lookingFor: "Creative partner",
+              relationshipType: "serious",
+              profileImages: ["https://images.unsplash.com/random/400x600?sig=3"],
+              isActive: true,
+              isPremium: false,
+              datingRoomTier: "normal",
+              height: "5'4\"",
+              education: "Art School",
+              incomeRange: "£20,000 - £35,000"
+            },
+            {
+              id: 4,
+              userId: 104,
+              displayName: "David L.",
+              age: 29,
+              gender: "Male",
+              bio: "Software developer with a passion for gaming and tech. Always up for a good conversation about the latest innovations.",
+              location: "Birmingham, UK",
+              interests: ["Technology", "Gaming", "Programming", "Science Fiction", "Board Games"],
+              lookingFor: "Geeky companion",
+              relationshipType: "casual",
+              profileImages: ["https://images.unsplash.com/random/400x600?sig=4"],
+              isActive: true,
+              isPremium: false,
+              datingRoomTier: "normal",
+              height: "5'10\"",
+              education: "Computer Science Degree",
+              incomeRange: "£35,000 - £50,000"
+            },
+            {
+              id: 5,
+              userId: 105,
+              displayName: "Lucy W.",
+              age: 24,
+              gender: "Female",
+              bio: "Medical student who enjoys running marathons and volunteering. Looking for someone who shares my passion for helping others.",
+              location: "Edinburgh, UK",
+              interests: ["Medicine", "Running", "Volunteering", "Reading", "Nature"],
+              lookingFor: "Compassionate partner",
+              relationshipType: "serious",
+              profileImages: ["https://images.unsplash.com/random/400x600?sig=5"],
+              isActive: true,
+              isPremium: false,
+              datingRoomTier: "normal",
+              height: "5'7\"",
+              education: "Medical School",
+              incomeRange: "£15,000 - £25,000"
+            },
+            {
+              id: 6,
+              userId: 106,
+              displayName: "James K.",
+              age: 35,
+              gender: "Male",
+              bio: "Teacher and weekend musician. Love sharing knowledge and creating beautiful music. Seeking someone who appreciates the simple joys in life.",
+              location: "Leeds, UK",
+              interests: ["Teaching", "Music", "Guitar", "History", "Traveling"],
+              lookingFor: "Life partner",
+              relationshipType: "serious",
+              profileImages: ["https://images.unsplash.com/random/400x600?sig=6"],
+              isActive: true,
+              isPremium: false,
+              datingRoomTier: "normal",
+              height: "5'11\"",
+              education: "Education Degree",
+              incomeRange: "£25,000 - £35,000"
+            }
+          ],
+          vip: [
+            {
+              id: 7,
+              userId: 107,
+              displayName: "Alexandra K.",
+              age: 29,
+              gender: "Female",
+              bio: "Investment banker who loves luxury travel and fine dining. Seeking sophisticated conversations and premium experiences.",
+              location: "Canary Wharf, London",
+              interests: ["Finance", "Travel", "Wine", "Art", "Opera"],
+              lookingFor: "Sophisticated partner",
+              relationshipType: "serious",
+              profileImages: ["https://images.unsplash.com/random/400x600?sig=7"],
+              isActive: true,
+              isPremium: true,
+              datingRoomTier: "vip",
+              height: "5'8\"",
+              education: "MBA Finance",
+              incomeRange: "£150,000 - £250,000"
+            },
+            {
+              id: 8,
+              userId: 108,
+              displayName: "James W.",
+              age: 35,
+              gender: "Male",
+              bio: "Tech executive passionate about innovation and philanthropy. Looking for an intellectual equal who shares my vision for the future.",
+              location: "Kensington, London",
+              interests: ["Technology", "Philanthropy", "Sailing", "Chess", "Innovation"],
+              lookingFor: "Intellectual equal",
+              relationshipType: "serious",
+              profileImages: ["https://images.unsplash.com/random/400x600?sig=8"],
+              isActive: true,
+              isPremium: true,
+              datingRoomTier: "vip",
+              height: "6'2\"",
+              education: "Stanford MBA",
+              incomeRange: "£200,000 - £500,000"
+            },
+            {
+              id: 9,
+              userId: 109,
+              displayName: "Sophia R.",
+              age: 31,
+              gender: "Female",
+              bio: "Corporate lawyer specializing in international mergers. Enjoy exclusive events and meaningful conversations over fine champagne.",
+              location: "City of London",
+              interests: ["Law", "International Business", "Champagne", "Theater", "Luxury Shopping"],
+              lookingFor: "Ambitious partner",
+              relationshipType: "exclusive",
+              profileImages: ["https://images.unsplash.com/random/400x600?sig=9"],
+              isActive: true,
+              isPremium: true,
+              datingRoomTier: "vip",
+              height: "5'9\"",
+              education: "Law Degree, Oxford",
+              incomeRange: "£180,000 - £300,000"
+            },
+            {
+              id: 10,
+              userId: 110,
+              displayName: "Oliver H.",
+              age: 33,
+              gender: "Male",
+              bio: "Private equity partner with a passion for classic cars and exclusive golf clubs. Seeking someone who appreciates the finer things in life.",
+              location: "Mayfair, London",
+              interests: ["Private Equity", "Classic Cars", "Golf", "Wine Collecting", "Luxury Travel"],
+              lookingFor: "Elegant companion",
+              relationshipType: "serious",
+              profileImages: ["https://images.unsplash.com/random/400x600?sig=10"],
+              isActive: true,
+              isPremium: true,
+              datingRoomTier: "vip",
+              height: "6'1\"",
+              education: "Harvard Business School",
+              incomeRange: "£300,000 - £600,000"
+            }
+          ],
+          vvip: [
+            {
+              id: 11,
+              userId: 111,
+              displayName: "Victoria S.",
+              age: 31,
+              gender: "Female",
+              bio: "International business mogul with interests in luxury real estate and exclusive art collections. Travel by private jet is the norm.",
+              location: "Belgravia, London",
+              interests: ["Business", "Luxury Real Estate", "Art Collecting", "Private Aviation", "Exclusive Events"],
+              lookingFor: "Elite companion",
+              relationshipType: "exclusive",
+              profileImages: ["https://images.unsplash.com/random/400x600?sig=11"],
+              isActive: true,
+              isPremium: true,
+              datingRoomTier: "vvip",
+              height: "5'10\"",
+              education: "Wharton MBA",
+              incomeRange: "£2,000,000+"
+            },
+            {
+              id: 12,
+              userId: 112,
+              displayName: "Richard H.",
+              age: 38,
+              gender: "Male",
+              bio: "Billionaire entrepreneur and philanthropist. Own multiple businesses and luxury yachts. Looking for someone who understands the high life and global impact.",
+              location: "Kensington Palace Gardens, London",
+              interests: ["Investments", "Yachts", "Polo", "Art Collecting", "Global Philanthropy"],
+              lookingFor: "Exceptional partner",
+              relationshipType: "exclusive",
+              profileImages: ["https://images.unsplash.com/random/400x600?sig=12"],
+              isActive: true,
+              isPremium: true,
+              datingRoomTier: "vvip",
+              height: "6'3\"",
+              education: "Cambridge, Economics",
+              incomeRange: "£10,000,000+"
+            },
+            {
+              id: 13,
+              userId: 113,
+              displayName: "Isabella M.",
+              age: 27,
+              gender: "Female",
+              bio: "Heiress to luxury fashion empire with homes on three continents. Passionate about haute couture and exclusive cultural events.",
+              location: "Monaco / London",
+              interests: ["Fashion", "Haute Couture", "Cultural Events", "Multiple Residences", "Luxury Lifestyle"],
+              lookingFor: "Distinguished gentleman",
+              relationshipType: "exclusive",
+              profileImages: ["https://images.unsplash.com/random/400x600?sig=13"],
+              isActive: true,
+              isPremium: true,
+              datingRoomTier: "vvip",
+              height: "5'11\"",
+              education: "Fashion Institute, Paris",
+              incomeRange: "£5,000,000+"
+            },
+            {
+              id: 14,
+              userId: 114,
+              displayName: "Alexander P.",
+              age: 42,
+              gender: "Male",
+              bio: "Technology mogul and space industry pioneer. When not launching rockets, enjoy exclusive wine tastings and private island retreats.",
+              location: "Chelsea, London",
+              interests: ["Space Technology", "Wine", "Private Islands", "Innovation", "Exclusive Retreats"],
+              lookingFor: "Visionary partner",
+              relationshipType: "exclusive",
+              profileImages: ["https://images.unsplash.com/random/400x600?sig=14"],
+              isActive: true,
+              isPremium: true,
+              datingRoomTier: "vvip",
+              height: "6'0\"",
+              education: "MIT, Aerospace Engineering",
+              incomeRange: "£50,000,000+"
+            }
+          ]
+        };
+
+        // Filter out current user's profile
+        const profiles = datingProfiles[tier].filter(profile => profile.userId !== authenticatedUser.id);
+
+        console.log(`[DEBUG] Dating profiles - Returning ${profiles.length} profiles for default tier: ${tier}`);
+        return res.json(profiles);
+        
+      } catch (authError) {
+        console.error('[DEBUG] Dating profiles - Authentication error:', authError);
+        return res.status(401).json({ 
+          message: 'Authentication error' 
+        });
+      }
+      
+    } catch (error) {
+      console.error('Error fetching dating profiles:', error);
       res.status(500).json({ message: 'Failed to fetch dating profiles' });
     }
   });
