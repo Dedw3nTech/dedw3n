@@ -398,6 +398,7 @@ export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   vendorId: integer("vendor_id").notNull().references(() => vendors.id),
   name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
   description: text("description").notNull(),
   price: doublePrecision("price").notNull(),
   discountPrice: doublePrecision("discount_price"),

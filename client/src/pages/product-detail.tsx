@@ -61,8 +61,8 @@ import { Label } from "@/components/ui/label";
 
 export default function ProductDetail() {
   const [, setLocation] = useLocation();
-  const [, params] = useRoute('/product/:id');
-  const productId = params?.id ? parseInt(params.id) : null;
+  const [, params] = useRoute('/product/:identifier');
+  const identifier = params?.identifier;
   const { user } = useAuth();
   const { formatPriceFromGBP } = useCurrency();
   const { toast } = useToast();
@@ -190,7 +190,7 @@ export default function ProductDetail() {
 
       const response = await apiRequest('POST', '/api/messages/send', {
         receiverId: product.vendorId,
-        content: `🎯 OFFER: ${formatPriceFromGBP(parseFloat(amount))} for "${product?.name}"\n\n${message}\n\nProduct: /product/${product.id}`,
+        content: `🎯 OFFER: ${formatPriceFromGBP(parseFloat(amount))} for "${product?.name}"\n\n${message}\n\nProduct: /product/${product.slug || product.id}`,
         category: 'marketplace'
       });
       
@@ -243,13 +243,13 @@ export default function ProductDetail() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['/api/products', productId],
+    queryKey: ['/api/products', identifier],
     queryFn: async () => {
-      if (!productId) return null;
-      const response = await apiRequest('GET', `/api/products/${productId}`);
+      if (!identifier) return null;
+      const response = await apiRequest('GET', `/api/products/${identifier}`);
       return response.json();
     },
-    enabled: productId !== null,
+    enabled: !!identifier,
   });
 
   // Fetch vendor details
@@ -285,13 +285,13 @@ export default function ProductDetail() {
     data: reviews = [],
     isLoading: reviewsLoading,
   } = useQuery({
-    queryKey: ['/api/products', productId, 'reviews'],
+    queryKey: ['/api/products', identifier, 'reviews'],
     queryFn: async () => {
-      if (!productId) return [];
-      const response = await apiRequest('GET', `/api/products/${productId}/reviews`);
+      if (!identifier) return [];
+      const response = await apiRequest('GET', `/api/products/${identifier}/reviews`);
       return response.json();
     },
-    enabled: productId !== null,
+    enabled: !!identifier,
   });
 
   // Search users for gift functionality
@@ -308,9 +308,9 @@ export default function ProductDetail() {
   // Add to cart mutation
   const addToCartMutation = useMutation({
     mutationFn: async () => {
-      if (!productId || !user) throw new Error('Product or user not available');
+      if (!product?.id || !user) throw new Error('Product or user not available');
       return apiRequest('POST', '/api/cart', {
-        productId,
+        productId: product.id,
         quantity,
       });
     },
@@ -333,14 +333,14 @@ export default function ProductDetail() {
   // Review submission mutation
   const submitReviewMutation = useMutation({
     mutationFn: async (reviewData: { rating: number; title: string; content: string }) => {
-      if (!productId || !user) throw new Error('Product or user not available');
-      return apiRequest('POST', `/api/products/${productId}/reviews`, {
+      if (!product?.id || !user) throw new Error('Product or user not available');
+      return apiRequest('POST', `/api/products/${product.id}/reviews`, {
         ...reviewData,
-        productId: productId
+        productId: product.id
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/products', productId, 'reviews'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/products', identifier, 'reviews'] });
       setIsReviewDialogOpen(false);
       setReviewRating(0);
       setReviewTitle('');
@@ -362,12 +362,12 @@ export default function ProductDetail() {
   // Send gift proposition mutation
   const sendGiftMutation = useMutation({
     mutationFn: async (recipientId: number) => {
-      if (!productId || !user) {
+      if (!product?.id || !user) {
         throw new Error('Product or user not available');
       }
       return apiRequest('POST', '/api/gifts/propose', {
         recipientId,
-        productId,
+        productId: product.id,
         message: `Hi! I'd like to send you this gift: ${product?.name}`,
       });
     },

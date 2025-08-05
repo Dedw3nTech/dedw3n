@@ -27,10 +27,10 @@ export function Breadcrumbs() {
     return null;
   }, [location]);
 
-  // Extract product ID from URL if it's a product detail page
+  // Extract product identifier from URL if it's a product detail page
   const productMatch = useMemo(() => {
-    const match = location.match(/^\/product\/(\d+)$/);
-    return match ? parseInt(match[1]) : null;
+    const match = location.match(/^\/product\/([^\/]+)$/);
+    return match ? match[1] : null;
   }, [location]);
   
   // Fetch vendor data to determine correct vendor type for breadcrumb

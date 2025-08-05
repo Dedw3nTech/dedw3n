@@ -133,6 +133,7 @@ export interface IStorage {
   getPopularProducts(): Promise<Product[]>;
   createProduct(product: InsertProduct): Promise<Product>;
   getProduct(id: number): Promise<Product | undefined>;
+  getProductBySlug(slug: string): Promise<Product | undefined>;
   updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product | undefined>;
   deleteProduct(id: number): Promise<boolean>;
   getTopSellingProducts(limit: number): Promise<any[]>;
@@ -1485,6 +1486,20 @@ export class DatabaseStorage implements IStorage {
       return product;
     } catch (error) {
       console.error('Error fetching product:', error);
+      return undefined;
+    }
+  }
+
+  async getProductBySlug(slug: string): Promise<Product | undefined> {
+    try {
+      const [product] = await db
+        .select()
+        .from(products)
+        .where(eq(products.slug, slug))
+        .limit(1);
+      return product;
+    } catch (error) {
+      console.error('Error fetching product by slug:', error);
       return undefined;
     }
   }

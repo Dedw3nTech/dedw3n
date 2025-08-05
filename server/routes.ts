@@ -3913,16 +3913,22 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Individual product endpoint
-  app.get('/api/products/:id', async (req: Request, res: Response) => {
+  // Individual product endpoint - supports both ID and slug
+  app.get('/api/products/:identifier', async (req: Request, res: Response) => {
     try {
-      const productId = parseInt(req.params.id);
+      const identifier = req.params.identifier;
       
-      if (isNaN(productId)) {
-        return res.status(400).json({ message: "Invalid product ID" });
+      // Check if identifier is a number (ID) or string (slug)
+      const isNumeric = /^\d+$/.test(identifier);
+      let product;
+      
+      if (isNumeric) {
+        const productId = parseInt(identifier);
+        product = await storage.getProduct(productId);
+      } else {
+        // Look up by slug
+        product = await storage.getProductBySlug(identifier);
       }
-      
-      const product = await storage.getProduct(productId);
       
       if (!product) {
         return res.status(404).json({ message: "Product not found" });

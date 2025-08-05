@@ -298,7 +298,7 @@ function Router() {
         <Products />
       </Route>
       
-      <Route path="/product/:id" component={ProductDetail} />
+      <Route path="/product/:identifier" component={ProductDetail} />
       
       <Route path="/vendors">
         <SEOHead {...seoConfigs.vendors} />
@@ -406,7 +406,7 @@ function Router() {
       </Route>
       
       {/* Product detail routes */}
-      <Route path="/product/:id" component={ProductDetail} />
+      <Route path="/product/:identifier" component={ProductDetail} />
 
       {/* Vendor profile routes - Removed conflicting route, using VendorDetailPage for slug-based routing */}
       
