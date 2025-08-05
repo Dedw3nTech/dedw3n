@@ -4224,33 +4224,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Get current user's vendor account endpoint
-  app.get('/api/vendors/me', unifiedIsAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const userId = (req as any).user?.id;
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
 
-      const vendorAccounts = await storage.getUserVendorAccounts(userId);
-      
-      if (!vendorAccounts || vendorAccounts.length === 0) {
-        return res.status(404).json({ message: "No vendor accounts found" });
-      }
-
-      // Return the first vendor account (for compatibility) or all accounts
-      res.json({
-        vendor: vendorAccounts[0],
-        vendorAccounts,
-        hasPrivateVendor: vendorAccounts.some(v => v.vendorType === 'private'),
-        hasBusinessVendor: vendorAccounts.some(v => v.vendorType === 'business')
-      });
-    } catch (error) {
-      console.error("Error getting user vendor:", error);
-      res.status(500).json({ message: "Failed to get vendor information" });
-    }
-  });
 
   // Update vendor settings
   app.put('/api/vendors/settings', unifiedIsAuthenticated, async (req: Request, res: Response) => {
