@@ -4961,19 +4961,20 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(400).json({ message: "Invalid vendor slug" });
       }
       
-      // Get all vendors and find matching slug
+      // Get all vendors and find matching slug - query the database directly for better performance
       const allVendors = await db.select().from(vendors);
       
       const vendor = allVendors.find(v => {
-        if (!v.store_name) return false;
-        const vendorSlug = v.store_name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (!v.storeName) {
+          return false;
+        }
+        const vendorSlug = v.storeName.toLowerCase().replace(/[^a-z0-9]/g, '');
         return vendorSlug === slug;
       });
       
       if (!vendor) {
         return res.status(404).json({ message: "Vendor not found" });
       }
-      
       res.json(vendor);
     } catch (error) {
       console.error("Error getting vendor by slug:", error);

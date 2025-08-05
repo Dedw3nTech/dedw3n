@@ -408,8 +408,7 @@ function Router() {
       {/* Product detail routes */}
       <Route path="/product/:id" component={ProductDetail} />
 
-      {/* Vendor profile routes */}
-      <Route path="/vendor/:vendorId" component={VendorProfile} />
+      {/* Vendor profile routes - Removed conflicting route, using VendorDetailPage for slug-based routing */}
       
       {/* Premium video routes */}
       <ProtectedRoute path="/premium-videos" component={PremiumVideoPage} />

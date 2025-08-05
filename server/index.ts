@@ -484,7 +484,7 @@ app.use((req, res, next) => {
       /^\/business\/[^/]+$/, // /business/category
       /^\/wall\/[^/]+$/, // /wall/category
       /^\/dating\/[^/]+$/, // /dating/category
-      /^\/vendor\/\d+$/, // /vendor/123
+      /^\/vendor\/[^/]+$/, // /vendor/123 or /vendor/adminstore
     ];
     
     // Remove query parameters and hash for route checking

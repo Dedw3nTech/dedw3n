@@ -257,12 +257,12 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                 variant="ghost"
                 className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
                 onClick={() => {
-                  if (userVendor && userVendor.store_name) {
-                    const slug = createStoreSlug(userVendor.store_name);
+                  if (userVendor && userVendor.storeName) {
+                    const slug = createStoreSlug(userVendor.storeName);
                     handlePageNavigation(`/vendor/${slug}`);
                   } else {
-                    // Fallback to ID-based URL if vendor data not available
-                    handlePageNavigation(`/vendor/${user?.id}`);
+                    // Fallback to vendor dashboard if vendor data not available
+                    handlePageNavigation(`/vendor-dashboard`);
                   }
                 }}
               >
