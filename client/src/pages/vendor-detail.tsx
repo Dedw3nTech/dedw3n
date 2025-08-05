@@ -448,69 +448,6 @@ export default function VendorDetailPage() {
                   </Sheet>
                 </CardFooter>
               </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    <div className="flex items-center">
-                      <Users className="mr-2 h-5 w-5 text-blue-500" />
-                      {t("vendors.top_buyers")}
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {isLoadingAnalytics ? (
-                    <div className="space-y-4">
-                      {Array(3).fill(0).map((_, i) => (
-                        <div key={i} className="flex items-center gap-4">
-                          <Skeleton className="h-6 w-6" />
-                          <Skeleton className="h-10 w-10 rounded-full" />
-                          <div className="flex-1">
-                            <Skeleton className="h-4 w-full mb-2" />
-                            <Skeleton className="h-3 w-28" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : topBuyers && topBuyers.length > 0 ? (
-                    <div className="-mx-4">
-                      {topBuyers.slice(0, 3).map((buyer, i) => (
-                        <TopBuyerItem key={i} buyer={buyer} index={i} />
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-center text-sm text-muted-foreground py-4">
-                      {t("vendors.no_buyers_yet")}
-                    </p>
-                  )}
-                </CardContent>
-                <CardFooter>
-                  <Sheet>
-                    <SheetTrigger asChild>
-                      <Button variant="ghost" className="w-full">
-                        {t("vendors.view_all_buyers")}
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </SheetTrigger>
-                    <SheetContent className="w-full sm:max-w-md">
-                      <SheetHeader>
-                        <SheetTitle>{t("vendors.top_buyers")}</SheetTitle>
-                      </SheetHeader>
-                      <div className="mt-6 -mx-6">
-                        {topBuyers && topBuyers.length > 0 ? (
-                          topBuyers.map((buyer, i) => (
-                            <TopBuyerItem key={i} buyer={buyer} index={i} />
-                          ))
-                        ) : (
-                          <p className="text-center text-sm text-muted-foreground py-4">
-                            {t("vendors.no_buyers_yet")}
-                          </p>
-                        )}
-                      </div>
-                    </SheetContent>
-                  </Sheet>
-                </CardFooter>
-              </Card>
             </div>
           )}
         </div>
