@@ -31,6 +31,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/utils";
+import { storeNameToSlug } from "@shared/utils";
 
 const VendorCard = ({ vendor }: { vendor: Vendor }) => {
   const [, setLocation] = useLocation();
@@ -65,7 +66,7 @@ const VendorCard = ({ vendor }: { vendor: Vendor }) => {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setLocation(`/vendors/${vendor.id}`)}
+          onClick={() => setLocation(`/vendor/${storeNameToSlug(vendor.storeName)}`)}
         >
           {t("vendors.view_profile")}
         </Button>

@@ -4952,6 +4952,34 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // Lookup vendor by store name slug
+  app.get('/api/vendors/by-slug/:slug', async (req: Request, res: Response) => {
+    try {
+      const slug = req.params.slug.toLowerCase().replace(/[^a-z0-9]/g, '');
+      
+      if (!slug) {
+        return res.status(400).json({ message: "Invalid vendor slug" });
+      }
+      
+      // Get all vendors and find matching slug
+      const allVendors = await db.select().from(vendors);
+      
+      const vendor = allVendors.find(v => {
+        const vendorSlug = v.storeName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return vendorSlug === slug;
+      });
+      
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor not found" });
+      }
+      
+      res.json(vendor);
+    } catch (error) {
+      console.error("Error getting vendor by slug:", error);
+      res.status(500).json({ message: "Failed to get vendor" });
+    }
+  });
+
   // Get vendor details by ID for vendor settings
   app.get('/api/vendors/details/:vendorId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {

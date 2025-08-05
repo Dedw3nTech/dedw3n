@@ -305,7 +305,7 @@ function Router() {
         <VendorsPage />
       </Route>
       
-      <Route path="/vendor/:id" component={VendorDetailPage} />
+      <Route path="/vendor/:slug" component={VendorDetailPage} />
       
       <Route path="/government">
         <SEOHead {...seoConfigs.government} />

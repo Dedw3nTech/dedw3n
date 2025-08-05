@@ -194,7 +194,7 @@ export default function VendorDetailPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [location, setLocation] = useLocation();
-  const vendorId = parseInt(location.split("/").pop() || "0");
+  const vendorSlug = location.split("/").pop() || "";
   const [activeTab, setActiveTab] = useState("products");
   
   // Fetch vendor data
@@ -202,8 +202,8 @@ export default function VendorDetailPage() {
     data: vendor, 
     isLoading: isLoadingVendor 
   } = useQuery<Vendor>({
-    queryKey: [`/api/vendors/${vendorId}`],
-    enabled: !!vendorId,
+    queryKey: [`/api/vendors/by-slug/${vendorSlug}`],
+    enabled: !!vendorSlug,
   });
   
   // Fetch vendor's products
@@ -211,8 +211,8 @@ export default function VendorDetailPage() {
     data: products, 
     isLoading: isLoadingProducts 
   } = useQuery<Product[]>({
-    queryKey: [`/api/products`, { vendorId }],
-    enabled: !!vendorId,
+    queryKey: [`/api/products`, { vendorId: vendor?.id }],
+    enabled: !!vendor?.id,
   });
   
   // Get vendor analytics if the viewing user is the vendor
@@ -222,10 +222,10 @@ export default function VendorDetailPage() {
   const topBuyers: TopBuyer[] = [];
   const isLoadingAnalytics = false;
   
-  if (!vendorId) {
+  if (!vendorSlug) {
     return (
       <div className="container py-12 text-center">
-        <h1 className="text-2xl font-bold mb-4">Invalid Vendor ID</h1>
+        <h1 className="text-2xl font-bold mb-4">Invalid Vendor</h1>
         <Button onClick={() => setLocation("/vendors")}>
           <ChevronLeft className="mr-2 h-4 w-4" />
           Back to Vendors

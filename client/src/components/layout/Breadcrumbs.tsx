@@ -13,10 +13,17 @@ interface BreadcrumbItem {
 export function Breadcrumbs() {
   const [location] = useLocation();
   
-  // Extract vendor ID from URL if it's a vendor detail page
-  const vendorIdMatch = useMemo(() => {
-    const match = location.match(/^\/vendor\/(\d+)$/);
-    return match ? parseInt(match[1]) : null;
+  // Extract vendor ID or slug from URL if it's a vendor detail page
+  const vendorMatch = useMemo(() => {
+    const idMatch = location.match(/^\/vendor\/(\d+)$/);
+    const slugMatch = location.match(/^\/vendor\/([^\/]+)$/);
+    
+    if (idMatch) {
+      return { type: 'id', value: parseInt(idMatch[1]) };
+    } else if (slugMatch && !idMatch) {
+      return { type: 'slug', value: slugMatch[1] };
+    }
+    return null;
   }, [location]);
   
   // Fetch vendor data to determine correct vendor type for breadcrumb
@@ -28,8 +35,10 @@ export function Breadcrumbs() {
   
   // Fetch specific vendor data for vendor detail pages
   const { data: specificVendor } = useQuery<Vendor>({
-    queryKey: [`/api/vendors/${vendorIdMatch}`],
-    enabled: !!vendorIdMatch,
+    queryKey: vendorMatch?.type === 'id' 
+      ? [`/api/vendors/${vendorMatch.value}`]
+      : [`/api/vendors/by-slug/${vendorMatch?.value}`],
+    enabled: !!vendorMatch,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -103,7 +112,7 @@ export function Breadcrumbs() {
     const breadcrumbs: BreadcrumbItem[] = [{ label: translatedLabels.home, path: '/' }];
     
     // Special handling for vendor detail pages to show vendor store name
-    if (vendorIdMatch && specificVendor) {
+    if (vendorMatch && specificVendor) {
       breadcrumbs.push({ label: translatedLabels.vendor });
       breadcrumbs.push({ label: specificVendor.storeName });
       return breadcrumbs;
