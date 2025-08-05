@@ -4,18 +4,16 @@ export default function LandingPage() {
   const heroImagePath = "/hero-image-new.png";
   
   return (
-    <div className="min-h-screen w-full">
-      {/* Hero section with full image display - no cropping */}
-      <section className="relative w-full flex items-center justify-center bg-white">
-        {/* Full image container that maintains aspect ratio */}
-        <div className="w-full max-w-none">
+    <div className="min-h-screen w-full overflow-hidden">
+      {/* Hero section with full image display optimized for mobile and desktop */}
+      <section className="relative w-full h-screen bg-white">
+        {/* Full image container that fills viewport on all devices */}
+        <div className="absolute inset-0 w-full h-full">
           <img 
             src={heroImagePath} 
             alt="Spend more time enjoying life - Dedw3n"
-            className="w-full h-auto object-contain block"
+            className="w-full h-full object-cover md:object-contain"
             style={{
-              minHeight: '100vh',
-              objectFit: 'contain',
               objectPosition: 'center center'
             }}
           />
