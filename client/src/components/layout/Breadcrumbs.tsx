@@ -26,6 +26,12 @@ export function Breadcrumbs() {
     }
     return null;
   }, [location]);
+
+  // Extract product ID from URL if it's a product detail page
+  const productMatch = useMemo(() => {
+    const match = location.match(/^\/product\/(\d+)$/);
+    return match ? parseInt(match[1]) : null;
+  }, [location]);
   
   // Fetch vendor data to determine correct vendor type for breadcrumb
   const { data: vendorData } = useQuery({
@@ -40,6 +46,13 @@ export function Breadcrumbs() {
       ? [`/api/vendors/${vendorMatch.value}`]
       : [`/api/vendors/by-slug/${vendorMatch?.value}`],
     enabled: !!vendorMatch,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Fetch product data for product detail pages
+  const { data: productData } = useQuery({
+    queryKey: [`/api/products/${productMatch}`],
+    enabled: !!productMatch,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -116,6 +129,16 @@ export function Breadcrumbs() {
     if (vendorMatch && specificVendor) {
       breadcrumbs.push({ label: translatedLabels.vendor });
       breadcrumbs.push({ label: specificVendor.storeName });
+      return breadcrumbs;
+    }
+
+    // Special handling for product detail pages to show product name
+    if (productMatch && productData) {
+      breadcrumbs.push({ label: translatedLabels.marketplace, path: '/marketplace' });
+      if (productData.category) {
+        breadcrumbs.push({ label: productData.category, path: `/category/${encodeURIComponent(productData.category)}` });
+      }
+      breadcrumbs.push({ label: productData.name });
       return breadcrumbs;
     }
     
@@ -233,7 +256,7 @@ export function Breadcrumbs() {
     // Define route mappings for better breadcrumb labels with translation support
     const routeLabels: Record<string, string> = {
       'products': translatedLabels.marketplace,
-      'product': translatedLabels.productDetails,
+      'product': productData?.name || translatedLabels.productDetails,
       'marketplace': translatedLabels.marketplace,
       'b2c': translatedLabels.b2cMarketplace,
       'b2b': translatedLabels.b2bMarketplace, 
