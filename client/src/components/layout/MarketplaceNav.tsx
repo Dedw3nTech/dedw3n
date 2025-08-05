@@ -260,8 +260,12 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                   if (userVendor && userVendor.storeName) {
                     const slug = createStoreSlug(userVendor.storeName);
                     handlePageNavigation(`/vendor/${slug}`);
+                  } else if (user?.isVendor) {
+                    // For admin and other vendors, try to construct slug from user data or fallback to adminstore
+                    const slug = user?.username === 'admin' ? 'adminstore' : createStoreSlug(user?.name || user?.username || '');
+                    handlePageNavigation(`/vendor/${slug}`);
                   } else {
-                    // Fallback to vendor dashboard if vendor data not available
+                    // Non-vendors go to vendor dashboard to potentially become one
                     handlePageNavigation(`/vendor-dashboard`);
                   }
                 }}
