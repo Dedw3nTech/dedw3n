@@ -5,20 +5,16 @@ export default function LandingPage() {
   
   return (
     <div className="min-h-screen w-full">
-      {/* Hero section with full image display - responsive background handling */}
-      <section className="relative w-full min-h-screen overflow-hidden">
-        {/* Background color that matches the image theme */}
-        <div className="absolute inset-0 bg-gradient-to-b from-gray-800 via-gray-900 to-black"></div>
-        
+      {/* Hero section with full image display - no cropping */}
+      <section className="relative w-full flex items-center justify-center bg-white">
         {/* Full image container that maintains aspect ratio */}
-        <div className="relative w-full h-full flex items-center justify-center min-h-screen">
+        <div className="w-full max-w-none">
           <img 
             src={heroImagePath} 
             alt="Spend more time enjoying life - Dedw3n"
-            className="w-full h-auto object-contain block max-w-full max-h-full"
+            className="w-full h-auto object-contain block"
             style={{
-              minHeight: '60vh',
-              maxHeight: '100vh',
+              minHeight: '100vh',
               objectFit: 'contain',
               objectPosition: 'center center'
             }}
