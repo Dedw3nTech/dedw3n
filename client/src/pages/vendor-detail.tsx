@@ -58,7 +58,7 @@ import {
   BarChart3,
   Award
 } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -332,11 +332,43 @@ export default function VendorDetailPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* About Section */}
               <div>
-                <h3 className="font-medium mb-1">{t("vendors.about")}</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="font-medium mb-2">{t("vendors.about")}</h3>
+                <p className="text-sm text-muted-foreground mb-4">
                   {vendor.description || t("vendors.no_description")}
                 </p>
+                
+                <div className="space-y-2">
+                  <div className="grid grid-cols-3 gap-4 items-center text-sm">
+                    <span className="font-medium">{t("vendors.store_name")}</span>
+                    <span className="col-span-2">{vendor.storeName}</span>
+                  </div>
+                  <Separator className="my-2" />
+                  <div className="grid grid-cols-3 gap-4 items-center text-sm">
+                    <span className="font-medium">{t("vendors.rating")}</span>
+                    <div className="col-span-2 flex items-center">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
+                      <span>
+                        {vendor.rating?.toFixed(1) || "New"} 
+                        {vendor.ratingCount ? ` (${vendor.ratingCount})` : ""}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <Separator />
+              
+              {/* Reviews Section */}
+              <div>
+                <h3 className="font-medium mb-2">{t("vendors.reviews")}</h3>
+                <div className="text-center py-8">
+                  <Star className="mx-auto h-8 w-8 text-muted-foreground opacity-50 mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    {t("vendors.no_reviews_message")}
+                  </p>
+                </div>
               </div>
               
               <Separator />
@@ -501,88 +533,39 @@ export default function VendorDetailPage() {
         
         {/* Main Content */}
         <div className="w-full lg:w-2/3">
-          <Tabs 
-            defaultValue="products" 
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="w-full"
-          >
-            <TabsList className="grid grid-cols-3 mb-6">
-              <TabsTrigger value="products">{t("vendors.products")}</TabsTrigger>
-              <TabsTrigger value="reviews">{t("vendors.reviews")}</TabsTrigger>
-              <TabsTrigger value="about">{t("vendors.about")}</TabsTrigger>
-            </TabsList>
+          {/* Products Section */}
+          <div className="w-full">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold mb-2">{t("vendors.products")}</h2>
+              <p className="text-muted-foreground">
+                Browse all products from {vendor.storeName}
+              </p>
+            </div>
             
-            <TabsContent value="products" className="mt-0">
-              {isLoadingProducts ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {Array(6).fill(0).map((_, i) => (
-                    <Skeleton key={i} className="h-80 w-full rounded-lg" />
-                  ))}
-                </div>
-              ) : products && products.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {products.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-16">
-                  <ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
-                  <h3 className="mt-4 text-lg font-medium">
-                    {t("vendors.no_products")}
-                  </h3>
-                  <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-                    {t("vendors.no_products_message")}
-                  </p>
-                </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="reviews" className="mt-0">
+            {isLoadingProducts ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array(6).fill(0).map((_, i) => (
+                  <Skeleton key={i} className="h-80 w-full rounded-lg" />
+                ))}
+              </div>
+            ) : products && products.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {products.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            ) : (
               <div className="text-center py-16">
-                <Star className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
+                <ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
                 <h3 className="mt-4 text-lg font-medium">
-                  {t("vendors.no_reviews")}
+                  {t("vendors.no_products")}
                 </h3>
                 <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-                  {t("vendors.no_reviews_message")}
+                  {t("vendors.no_products_message")}
                 </p>
               </div>
-            </TabsContent>
-            
-            <TabsContent value="about" className="mt-0">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t("vendors.about")} {vendor.storeName}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground mb-6">
-                    {vendor.description || t("vendors.no_description")}
-                  </p>
-                  
-                  <h3 className="text-lg font-medium mb-4">{t("vendors.store_details")}</h3>
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-3 gap-4 items-center">
-                      <span className="text-sm font-medium">{t("vendors.store_name")}</span>
-                      <span className="col-span-2">{vendor.storeName}</span>
-                    </div>
-                    <Separator />
-                    <div className="grid grid-cols-3 gap-4 items-center">
-                      <span className="text-sm font-medium">{t("vendors.rating")}</span>
-                      <div className="col-span-2 flex items-center">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                        <span>
-                          {vendor.rating?.toFixed(1) || "New"} 
-                          {vendor.ratingCount ? ` (${vendor.ratingCount})` : ""}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+            )}
+          </div>
         </div>
       </div>
     </div>
