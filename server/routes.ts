@@ -3913,7 +3913,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Individual product endpoint - supports both ID and slug
+  // Individual product endpoint - supports both ID and slug with redirect
   app.get('/api/products/:identifier', async (req: Request, res: Response) => {
     try {
       const identifier = req.params.identifier;

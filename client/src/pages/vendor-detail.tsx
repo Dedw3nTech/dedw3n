@@ -124,7 +124,7 @@ const ProductCard = ({ product }: { product: Product }) => {
       <CardFooter>
         <Button 
           className="w-full" 
-          onClick={() => setLocation(`/product/${product.id}`)}
+          onClick={() => setLocation(`/product/${product.slug || product.id}`)}
         >
           {t("products.view_details")}
         </Button>
@@ -140,7 +140,7 @@ const TopProductItem = ({ product, index }: { product: TopProduct; index: number
   return (
     <div 
       className="flex items-center gap-4 p-4 hover:bg-muted/50 rounded-lg cursor-pointer"
-      onClick={() => setLocation(`/product/${product.product.id}`)}
+      onClick={() => setLocation(`/product/${product.product.slug || product.product.id}`)}
     >
       <div className="font-bold text-lg text-muted-foreground w-6 text-center">
         {index + 1}

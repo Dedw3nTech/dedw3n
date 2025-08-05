@@ -133,7 +133,7 @@ export default function Home() {
     <Card 
       key={product.id} 
       className="overflow-hidden flex flex-col"
-      onClick={() => setLocation(`/product/${product.id}`)}
+      onClick={() => setLocation(`/product/${product.slug || product.id}`)}
     >
       <div className="aspect-square bg-gray-100 relative overflow-hidden group cursor-pointer">
         {product.imageUrl ? (

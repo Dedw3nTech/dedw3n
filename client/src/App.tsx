@@ -151,6 +151,7 @@ import ChatbotWindow from "@/components/ai/ChatbotWindow";
 // Import new page components
 import Products from "@/pages/products";
 import ProductDetail from "@/pages/product-detail";
+import ProductRedirectHandler from "@/components/ProductRedirectHandler";
 import AddProduct from "@/pages/add-product";
 import UploadProduct from "@/pages/upload-product";
 import MembersPage from "@/pages/members";
@@ -298,7 +299,9 @@ function Router() {
         <Products />
       </Route>
       
-      <Route path="/product/:identifier" component={ProductDetail} />
+      <Route path="/product/:identifier">
+        {params => <ProductRedirectHandler identifier={params.identifier} />}
+      </Route>
       
       <Route path="/vendors">
         <SEOHead {...seoConfigs.vendors} />
@@ -406,7 +409,9 @@ function Router() {
       </Route>
       
       {/* Product detail routes */}
-      <Route path="/product/:identifier" component={ProductDetail} />
+      <Route path="/product/:identifier">
+        {params => <ProductRedirectHandler identifier={params.identifier} />}
+      </Route>
 
       {/* Vendor profile routes - Removed conflicting route, using VendorDetailPage for slug-based routing */}
       

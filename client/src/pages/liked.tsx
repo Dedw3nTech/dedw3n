@@ -105,7 +105,7 @@ export default function LikedPage() {
 
   const handleAddToCart = (product: Product) => {
     if (marketType === 'c2c') {
-      setLocation(`/product/${product.id}`);
+      setLocation(`/product/${product.slug || product.id}`);
     } else {
       // Add to cart logic here
       console.log('Adding to cart:', product);
@@ -160,7 +160,7 @@ export default function LikedPage() {
               >
                 <div 
                   className="aspect-[2/3] bg-gray-100 relative overflow-hidden group cursor-pointer"
-                  onClick={() => setLocation(`/product/${product.id}`)}
+                  onClick={() => setLocation(`/product/${product.slug || product.id}`)}
                 >
                   {product.imageUrl ? (
                     <img
@@ -212,7 +212,7 @@ export default function LikedPage() {
                   {/* Product title */}
                   <h3 
                     className="font-medium text-gray-900 mb-2 line-clamp-2 cursor-pointer hover:text-gray-700"
-                    onClick={() => setLocation(`/product/${product.id}`)}
+                    onClick={() => setLocation(`/product/${product.slug || product.id}`)}
                   >
                     {getTranslatedProductName(product.name)}
                   </h3>
