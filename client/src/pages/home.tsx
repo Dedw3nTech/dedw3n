@@ -125,7 +125,17 @@ export default function Home() {
     "Secure Payments",
     "Fast Delivery", 
     "24/7 Support",
-    "Money Back Guarantee"
+    "Money Back Guarantee",
+    
+    // Additional Hero Text
+    "Welcome to Dedw3n",
+    "The all-in-one platform for buying, selling, and connecting with others.",
+    "Multi-Vendor Marketplace",
+    "Buy from and sell to users across the platform.",
+    "Social",
+    "Connect with friends, share posts, and build your network.",
+    "Dating",
+    "Find love or your new friend."
   ];
 
   // Use Master Translation System for optimal performance and persistence
