@@ -6,7 +6,8 @@
 export function createStoreSlug(storeName: string): string {
   return storeName
     .toLowerCase()
-    .replace(/[^a-z0-9]/g, '')
+    .replace(/[^a-z0-9\s]/g, '') // Keep spaces initially
+    .replace(/\s+/g, '') // Remove all spaces
     .trim();
 }
 

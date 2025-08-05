@@ -9,6 +9,10 @@ interface TopBuyer {
   name: string;
   totalSpent: number;
   orderCount: number;
+  user: {
+    id: number;
+    name: string;
+  };
 }
 
 interface TopProduct {
@@ -16,6 +20,12 @@ interface TopProduct {
   name: string;
   salesCount: number;
   revenue: number;
+  product: {
+    id: number;
+    name: string;
+    imageUrl: string;
+  };
+  totalSold: number;
 }
 import { Vendor, Product } from "@shared/schema";
 import { 
@@ -297,7 +307,7 @@ export default function VendorDetailPage() {
               <div className="flex items-center gap-4">
                 <Link href={`/members/${vendor.userId}`}>
                   <Avatar className="h-16 w-16 cursor-pointer hover:ring-2 hover:ring-primary hover:ring-offset-2 transition-all">
-                    <AvatarImage src={vendor.logo || undefined} alt={vendor.storeName} />
+                    <AvatarImage src={vendor.logo || undefined} alt={vendor.store_name} />
                     <AvatarFallback>
                       <Store className="h-6 w-6" />
                     </AvatarFallback>
@@ -305,7 +315,7 @@ export default function VendorDetailPage() {
                 </Link>
                 <div>
                   <div className="flex items-center">
-                    <CardTitle className="text-2xl">{vendor.storeName}</CardTitle>
+                    <CardTitle className="text-2xl">{vendor.store_name}</CardTitle>
                     <Link href={`/members/${vendor.userId}`} className="ml-2 text-sm text-muted-foreground hover:text-primary">
                       <User className="h-4 w-4 inline mr-1" />
                       {t('vendors.view_profile')}

@@ -4965,7 +4965,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const allVendors = await db.select().from(vendors);
       
       const vendor = allVendors.find(v => {
-        const vendorSlug = v.storeName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (!v.store_name) return false;
+        const vendorSlug = v.store_name.toLowerCase().replace(/[^a-z0-9]/g, '');
         return vendorSlug === slug;
       });
       
@@ -4977,6 +4978,29 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error) {
       console.error("Error getting vendor by slug:", error);
       res.status(500).json({ message: "Failed to get vendor" });
+    }
+  });
+
+  // Get current user's vendor information
+  app.get('/api/vendors/me', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      // Find vendor account for current user
+      const [vendor] = await db.select().from(vendors).where(eq(vendors.userId, userId));
+      
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor account not found" });
+      }
+
+      return res.json(vendor);
+    } catch (error) {
+      console.error('Error fetching current user vendor:', error);
+      return res.status(500).json({ message: "Internal server error" });
     }
   });
 

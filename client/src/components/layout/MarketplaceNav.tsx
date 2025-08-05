@@ -85,7 +85,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
 
   // Fetch current user's vendor information to generate correct slug
   const { data: userVendor } = useQuery<Vendor>({
-    queryKey: ['/api/vendors', user?.id],
+    queryKey: ['/api/vendors/me'],
     enabled: isAuthenticated && !!user?.id,
     staleTime: 60000,
   });
@@ -257,8 +257,8 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                 variant="ghost"
                 className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
                 onClick={() => {
-                  if (userVendor && userVendor.storeName) {
-                    const slug = createStoreSlug(userVendor.storeName);
+                  if (userVendor && userVendor.store_name) {
+                    const slug = createStoreSlug(userVendor.store_name);
                     handlePageNavigation(`/vendor/${slug}`);
                   } else {
                     // Fallback to ID-based URL if vendor data not available
