@@ -299,195 +299,140 @@ export default function VendorDetailPage() {
         </Button>
       </div>
       
-      <div className="flex flex-col lg:flex-row gap-8">
-        {/* Vendor Info Sidebar */}
-        <div className="w-full lg:w-1/3">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-4">
-                <Link href={`/members/${vendor.userId}`}>
-                  <Avatar className="h-16 w-16 cursor-pointer hover:ring-2 hover:ring-primary hover:ring-offset-2 transition-all">
-                    <AvatarImage src={vendor.logo || undefined} alt={vendor.storeName} />
-                    <AvatarFallback>
-                      <Store className="h-6 w-6" />
-                    </AvatarFallback>
-                  </Avatar>
-                </Link>
+      {/* Vendor Info Top Bar */}
+      <Card className="mb-8">
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* Left Section - Vendor Basic Info */}
+            <div className="flex items-center gap-4 flex-shrink-0">
+              <Link href={`/members/${vendor.userId}`}>
+                <Avatar className="h-16 w-16 cursor-pointer hover:ring-2 hover:ring-primary hover:ring-offset-2 transition-all">
+                  <AvatarImage src={vendor.logo || undefined} alt={vendor.storeName} />
+                  <AvatarFallback>
+                    <Store className="h-6 w-6" />
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-bold">{vendor.storeName}</h1>
+                  <Link href={`/members/${vendor.userId}`} className="text-sm text-muted-foreground hover:text-primary">
+                    <User className="h-4 w-4 inline mr-1" />
+                    {t('vendors.view_profile')}
+                  </Link>
+                </div>
+                <div className="flex items-center gap-1 mt-1">
+                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  <span className="font-medium">
+                    {vendor.rating?.toFixed(1) || "New"} 
+                    {vendor.ratingCount ? ` (${vendor.ratingCount})` : ""}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Center Section - About & Description */}
+            <div className="flex-1 min-w-0">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div>
-                  <div className="flex items-center">
-                    <CardTitle className="text-2xl">{vendor.storeName}</CardTitle>
-                    <Link href={`/members/${vendor.userId}`} className="ml-2 text-sm text-muted-foreground hover:text-primary">
-                      <User className="h-4 w-4 inline mr-1" />
-                      {t('vendors.view_profile')}
-                    </Link>
-                  </div>
-                  <div className="flex items-center gap-1 mt-1">
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span className="font-medium">
-                      {vendor.rating?.toFixed(1) || "New"} 
-                      {vendor.ratingCount ? ` (${vendor.ratingCount})` : ""}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* About Section */}
-              <div>
-                <h3 className="font-medium mb-2">{t("vendors.about")}</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {vendor.description || t("vendors.no_description")}
-                </p>
-                
-                <div className="space-y-2">
-                  <div className="grid grid-cols-3 gap-4 items-center text-sm">
-                    <span className="font-medium">{t("vendors.store_name")}</span>
-                    <span className="col-span-2">{vendor.storeName}</span>
-                  </div>
-                  <Separator className="my-2" />
-                  <div className="grid grid-cols-3 gap-4 items-center text-sm">
-                    <span className="font-medium">{t("vendors.rating")}</span>
-                    <div className="col-span-2 flex items-center">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                      <span>
-                        {vendor.rating?.toFixed(1) || "New"} 
-                        {vendor.ratingCount ? ` (${vendor.ratingCount})` : ""}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <Separator />
-              
-              {/* Reviews Section */}
-              <div>
-                <h3 className="font-medium mb-2">{t("vendors.reviews")}</h3>
-                <div className="text-center py-8">
-                  <Star className="mx-auto h-8 w-8 text-muted-foreground opacity-50 mb-2" />
-                  <p className="text-sm text-muted-foreground">
-                    {t("vendors.no_reviews_message")}
+                  <h3 className="font-medium mb-2">{t("vendors.about")}</h3>
+                  <p className="text-sm text-muted-foreground line-clamp-3">
+                    {vendor.description || t("vendors.no_description")}
                   </p>
                 </div>
+                <div>
+                  <h3 className="font-medium mb-2">{t("vendors.reviews")}</h3>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <Star className="h-4 w-4 text-muted-foreground opacity-50 mr-2" />
+                    <span>{t("vendors.no_reviews_message")}</span>
+                  </div>
+                </div>
               </div>
-              
-              <Separator />
-              
-              <div>
-                <h3 className="font-medium mb-2">{t("vendors.contact")}</h3>
-                <Button variant="outline" className="w-full">
-                  <Mail className="mr-2 h-4 w-4" />
-                  {t("vendors.contact_vendor")}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Top Performers Section (Only visible to the vendor) */}
-          {isOwner && (
-            <div className="mt-6 space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    <div className="flex items-center">
-                      <Award className="mr-2 h-5 w-5 text-yellow-500" />
-                      {t("vendors.top_products")}
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {isLoadingAnalytics ? (
-                    <div className="space-y-4">
-                      {Array(3).fill(0).map((_, i) => (
-                        <div key={i} className="flex items-center gap-4">
-                          <Skeleton className="h-6 w-6" />
-                          <Skeleton className="h-14 w-14" />
-                          <div className="flex-1">
-                            <Skeleton className="h-4 w-full mb-2" />
-                            <Skeleton className="h-3 w-28" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : topProducts && topProducts.length > 0 ? (
-                    <div className="-mx-4">
-                      {topProducts.slice(0, 3).map((product, i) => (
-                        <TopProductItem key={i} product={product} index={i} />
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-center text-sm text-muted-foreground py-4">
-                      {t("vendors.no_products_sold")}
-                    </p>
-                  )}
-                </CardContent>
-                <CardFooter>
-                  <Sheet>
-                    <SheetTrigger asChild>
-                      <Button variant="ghost" className="w-full">
-                        {t("vendors.view_all_products")}
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </SheetTrigger>
-                    <SheetContent className="w-full sm:max-w-md">
-                      <SheetHeader>
-                        <SheetTitle>{t("vendors.top_products")}</SheetTitle>
-                      </SheetHeader>
-                      <div className="mt-6 -mx-6">
-                        {topProducts && topProducts.length > 0 ? (
-                          topProducts.map((product, i) => (
-                            <TopProductItem key={i} product={product} index={i} />
-                          ))
-                        ) : (
-                          <p className="text-center text-sm text-muted-foreground py-4">
-                            {t("vendors.no_products_sold")}
-                          </p>
-                        )}
-                      </div>
-                    </SheetContent>
-                  </Sheet>
-                </CardFooter>
-              </Card>
             </div>
-          )}
+
+            {/* Right Section - Actions */}
+            <div className="flex flex-col gap-2 flex-shrink-0">
+              <Button variant="outline" className="w-full md:w-auto">
+                <Mail className="mr-2 h-4 w-4" />
+                {t("vendors.contact_vendor")}
+              </Button>
+              {isOwner && (
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" className="w-full md:w-auto">
+                      <Award className="mr-2 h-4 w-4" />
+                      {t("vendors.top_products")}
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent className="w-full sm:max-w-md">
+                    <SheetHeader>
+                      <SheetTitle>{t("vendors.top_products")}</SheetTitle>
+                    </SheetHeader>
+                    <div className="mt-6 -mx-6">
+                      {isLoadingAnalytics ? (
+                        <div className="space-y-4 px-6">
+                          {Array(3).fill(0).map((_, i) => (
+                            <div key={i} className="flex items-center gap-4">
+                              <Skeleton className="h-6 w-6" />
+                              <Skeleton className="h-14 w-14" />
+                              <div className="flex-1">
+                                <Skeleton className="h-4 w-full mb-2" />
+                                <Skeleton className="h-3 w-28" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : topProducts && topProducts.length > 0 ? (
+                        topProducts.map((product, i) => (
+                          <TopProductItem key={i} product={product} index={i} />
+                        ))
+                      ) : (
+                        <p className="text-center text-sm text-muted-foreground py-4">
+                          {t("vendors.no_products_sold")}
+                        </p>
+                      )}
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Main Content */}
+      <div className="w-full">
+        {/* Products Section */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold mb-2">{t("vendors.products")}</h2>
+          <p className="text-muted-foreground">
+            Browse all products from {vendor.storeName}
+          </p>
         </div>
         
-        {/* Main Content */}
-        <div className="w-full lg:w-2/3">
-          {/* Products Section */}
-          <div className="w-full">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold mb-2">{t("vendors.products")}</h2>
-              <p className="text-muted-foreground">
-                Browse all products from {vendor.storeName}
-              </p>
-            </div>
-            
-            {isLoadingProducts ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Array(6).fill(0).map((_, i) => (
-                  <Skeleton key={i} className="h-80 w-full rounded-lg" />
-                ))}
-              </div>
-            ) : products && products.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {products.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-16">
-                <ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
-                <h3 className="mt-4 text-lg font-medium">
-                  {t("vendors.no_products")}
-                </h3>
-                <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-                  {t("vendors.no_products_message")}
-                </p>
-              </div>
-            )}
+        {isLoadingProducts ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array(8).fill(0).map((_, i) => (
+              <Skeleton key={i} className="h-80 w-full rounded-lg" />
+            ))}
           </div>
-        </div>
+        ) : products && products.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16">
+            <ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
+            <h3 className="mt-4 text-lg font-medium">
+              {t("vendors.no_products")}
+            </h3>
+            <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
+              {t("vendors.no_products_message")}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
