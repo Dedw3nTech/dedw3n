@@ -4,9 +4,9 @@ export default function LandingPage() {
   const heroImagePath = "/hero-image-new.png";
   
   return (
-    <div className="w-full min-h-[calc(100vh-200px)] overflow-hidden">
+    <div className="w-full min-h-[calc(150vh-300px)] overflow-hidden">
       {/* Hero section with full image display that fills available space between header and footer */}
-      <section className="relative w-full h-full min-h-[calc(100vh-200px)]">
+      <section className="relative w-full h-full min-h-[calc(150vh-300px)]">
         {/* Full image container that fills available space with no white spaces */}
         <div className="absolute inset-0 w-full h-full">
           <img 
