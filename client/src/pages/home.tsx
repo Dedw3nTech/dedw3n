@@ -52,7 +52,8 @@ export default function Home() {
   const homeTexts = [
     // Main Hero Section
     "Welcome to Dedw3n Marketplace",
-    "Your Global Trading Platform",
+    "Your Global Trading Platform", 
+    "Spend more time enjoying life.",
     "Connecting buyers and sellers worldwide with secure transactions",
     "Start Shopping",
     "Become a Vendor",
@@ -303,6 +304,9 @@ export default function Home() {
       <div className="bg-black text-white rounded-xl p-8 shadow-lg mb-8">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold mb-6 text-center">{t("Welcome to Dedw3n") || "Welcome to Dedw3n"}</h1>
+          <h2 className="text-3xl font-light mb-4 text-center opacity-90">
+            {t("Spend more time enjoying life.") || "Spend more time enjoying life."}
+          </h2>
           <p className="text-xl mb-10 text-center">
             {t("The all-in-one platform for buying, selling, and connecting with others.") || "The all-in-one platform for buying, selling, and connecting with others."}
           </p>
