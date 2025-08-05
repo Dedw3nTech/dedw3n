@@ -1,7 +1,7 @@
 import React from 'react';
 
 export default function LandingPage() {
-  const heroImagePath = "/hero-image-full.png";
+  const heroImagePath = "/hero-image-new.png";
   
   return (
     <div className="min-h-screen w-full">
