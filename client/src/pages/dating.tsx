@@ -210,14 +210,14 @@ export default function DatingPage() {
           <p className="text-sm">{profile.bio}</p>
           
           <div className="flex flex-wrap gap-1">
-            {profile.interests.slice(0, 3).map((interest) => (
+            {profile.interests?.slice(0, 3).map((interest) => (
               <Badge key={interest} variant="outline" className="text-xs">
                 {interest}
               </Badge>
             ))}
-            {profile.interests.length > 3 && (
+            {(profile.interests?.length || 0) > 3 && (
               <Badge variant="outline" className="text-xs">
-                +{profile.interests.length - 3} more
+                +{(profile.interests?.length || 0) - 3} {moreText}
               </Badge>
             )}
           </div>
@@ -507,10 +507,10 @@ export default function DatingPage() {
                 <p className="text-gray-600">Loading profiles...</p>
               </div>
             ) : hasAccess(selectedTier) ? (
-              datingProfiles.length > 0 ? (
-                datingProfiles.map((profile) => (
+              (datingProfiles?.length || 0) > 0 ? (
+                datingProfiles?.map((profile) => (
                   <ProfileCard key={profile.id} profile={profile} />
-                ))
+                )) || []
               ) : (
                 <div className="col-span-full text-center py-12">
                   <Heart className="h-12 w-12 text-gray-400 mx-auto mb-4" />

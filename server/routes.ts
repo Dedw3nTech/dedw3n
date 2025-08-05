@@ -8892,54 +8892,19 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // General dating profiles endpoint (returns Normal room profiles by default)
-  app.get('/api/dating-profiles', async (req: Request, res: Response) => {
+  app.get('/api/dating-profiles', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       console.log('[DEBUG] /api/dating-profiles called');
       
-      let authenticatedUser = null;
-      
-      // Authentication check (same as tier endpoint)
-      if (req.user) {
-        authenticatedUser = req.user;
-        console.log('[DEBUG] Dating profiles - Session user found:', authenticatedUser.id);
-      } else {
-        // Try manual session check
-        const sessionUserId = req.session?.passport?.user;
-        if (sessionUserId) {
-          const user = await storage.getUser(sessionUserId);
-          if (user) {
-            authenticatedUser = user;
-            console.log('[DEBUG] Dating profiles - Session fallback user found:', user.id);
-          }
-        }
-      }
-      
-      // If no session auth, try Authorization header
-      if (!authenticatedUser) {
-        const authHeader = req.headers.authorization;
-        if (authHeader && authHeader.startsWith('Bearer ')) {
-          const token = authHeader.substring(7);
-          try {
-            const payload = verifyToken(token);
-            if (payload) {
-              const user = await storage.getUser(payload.userId);
-              if (user) {
-                authenticatedUser = user;
-                console.log('[DEBUG] Dating profiles - JWT user found:', user.id);
-              }
-            }
-          } catch (jwtError) {
-            console.log('[DEBUG] Dating profiles - JWT verification failed');
-          }
-        }
-      }
-      
+      const authenticatedUser = req.user;
       if (!authenticatedUser) {
         console.log('[DEBUG] Dating profiles - No authentication found');
         return res.status(401).json({ 
           message: 'Unauthorized - No valid authentication' 
         });
       }
+      
+      console.log('[DEBUG] Dating profiles - Authenticated user:', authenticatedUser.id);
 
       // Mock dating profiles (expanded with comprehensive data)
       const normalDatingProfiles = [
