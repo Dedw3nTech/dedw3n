@@ -7,6 +7,8 @@ import { useCart } from '@/hooks/use-cart';
 import { useQuery } from '@tanstack/react-query';
 import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 import { useAuth } from '@/hooks/use-auth';
+import { createStoreSlug } from '@shared/utils';
+import { Vendor } from '@shared/schema';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -79,6 +81,13 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
     queryKey: ['/api/orders/notifications/count'],
     staleTime: 10000,
     enabled: isAuthenticated,
+  });
+
+  // Fetch current user's vendor information to generate correct slug
+  const { data: userVendor } = useQuery<Vendor>({
+    queryKey: ['/api/vendors', user?.id],
+    enabled: isAuthenticated && !!user?.id,
+    staleTime: 60000,
   });
 
   const likedProductsCount = isAuthenticated && Array.isArray(likedProducts) ? likedProducts.length : 0;
@@ -247,7 +256,15 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               <Button
                 variant="ghost"
                 className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
-                onClick={() => handlePageNavigation(`/vendor/${user?.id}`)}
+                onClick={() => {
+                  if (userVendor && userVendor.storeName) {
+                    const slug = createStoreSlug(userVendor.storeName);
+                    handlePageNavigation(`/vendor/${slug}`);
+                  } else {
+                    // Fallback to ID-based URL if vendor data not available
+                    handlePageNavigation(`/vendor/${user?.id}`);
+                  }
+                }}
               >
                 <Building2 className="h-4 w-4" />
                 <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.vendorPageText}</span>
