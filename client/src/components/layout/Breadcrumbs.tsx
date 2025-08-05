@@ -3,6 +3,7 @@ import { ChevronRight, Home } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import { useMemo } from "react";
+import { Vendor } from "@shared/schema";
 
 interface BreadcrumbItem {
   label: string;
@@ -12,10 +13,23 @@ interface BreadcrumbItem {
 export function Breadcrumbs() {
   const [location] = useLocation();
   
+  // Extract vendor ID from URL if it's a vendor detail page
+  const vendorIdMatch = useMemo(() => {
+    const match = location.match(/^\/vendor\/(\d+)$/);
+    return match ? parseInt(match[1]) : null;
+  }, [location]);
+  
   // Fetch vendor data to determine correct vendor type for breadcrumb
   const { data: vendorData } = useQuery({
     queryKey: ['/api/vendors/me'],
     enabled: location === '/vendor-dashboard',
+    staleTime: 5 * 60 * 1000,
+  });
+  
+  // Fetch specific vendor data for vendor detail pages
+  const { data: specificVendor } = useQuery<Vendor>({
+    queryKey: [`/api/vendors/${vendorIdMatch}`],
+    enabled: !!vendorIdMatch,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -29,7 +43,7 @@ export function Breadcrumbs() {
     'Liked Products', 'Add Product', 'Upload Product', 'Vendor Dashboard',
     'Become a Vendor', 'Members', 'Wallet', 'Admin Dashboard', 'FAQ',
     'Privacy Policy', 'Terms of Service', 'Business Terms of Service', 'Shipping Info', 'Cookie Policy',
-    'Community Guidelines', 'Site Map', 'Network Partnerships', 'Affiliate Partnerships', 'Resources'
+    'Community Guidelines', 'Site Map', 'Network Partnerships', 'Affiliate Partnerships', 'Resources', 'Vendor'
   ], []);
 
   // Use master translation system for unified performance
@@ -80,12 +94,20 @@ export function Breadcrumbs() {
     siteMap: translatedTexts[40] || "Site Map",
     networkPartnerships: translatedTexts[41] || "Network Partnerships",
     affiliatePartnerships: translatedTexts[42] || "Affiliate Partnerships",
-    resources: translatedTexts[43] || "Resources"
+    resources: translatedTexts[43] || "Resources",
+    vendor: translatedTexts[44] || "Vendor"
   }), [translatedTexts]);
 
   const getBreadcrumbs = (path: string): BreadcrumbItem[] => {
     const segments = path.split('/').filter(Boolean);
     const breadcrumbs: BreadcrumbItem[] = [{ label: translatedLabels.home, path: '/' }];
+    
+    // Special handling for vendor detail pages to show vendor store name
+    if (vendorIdMatch && specificVendor) {
+      breadcrumbs.push({ label: translatedLabels.vendor });
+      breadcrumbs.push({ label: specificVendor.storeName });
+      return breadcrumbs;
+    }
     
     // Special handling for dating-profile to show proper hierarchy
     if (path === '/dating-profile') {
