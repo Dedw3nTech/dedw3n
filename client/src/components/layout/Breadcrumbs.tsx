@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import { useMemo } from "react";
 import { Vendor } from "@shared/schema";
+import { createStoreSlug } from "@shared/utils";
 
 interface BreadcrumbItem {
   label: string;

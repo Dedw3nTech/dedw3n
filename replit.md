@@ -9,6 +9,7 @@ Dedw3n is a sophisticated multi-purpose social marketplace platform designed to 
 - Maintain clear documentation of architectural changes.
 - Use comprehensive error handling and logging.
 - Implement comprehensive features without unnecessary advanced UI enhancements when core functionality is sufficient.
+- Conduct comprehensive error assessments covering 400/500 errors, JavaScript, authentication, Wouter routing, LSP, and TypeScript issues when implementing major changes.
 
 ## System Architecture
 The platform is built with a modular, layered architecture for maintainability and scalability.
