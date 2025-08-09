@@ -15213,6 +15213,273 @@ The Dedw3n Team
     }
   });
 
+  // Mobile Landing Page API endpoints
+  app.get('/api/products/featured', async (req: Request, res: Response) => {
+    try {
+      const featuredProducts = await db.select()
+        .from(products)
+        .where(eq(products.featured, true))
+        .orderBy(desc(products.createdAt))
+        .limit(20);
+      
+      const productsWithVendorInfo = await Promise.all(
+        featuredProducts.map(async (product) => {
+          const vendor = await db.select()
+            .from(vendors)
+            .where(eq(vendors.id, product.vendorId))
+            .limit(1);
+          
+          return {
+            ...product,
+            vendorName: vendor[0]?.storeName || vendor[0]?.businessName || 'Unknown Vendor',
+            isLiked: false // TODO: Check user's likes
+          };
+        })
+      );
+
+      res.json(productsWithVendorInfo);
+    } catch (error) {
+      console.error('Error fetching featured products:', error);
+      res.status(500).json({ error: 'Failed to fetch featured products' });
+    }
+  });
+
+  app.get('/api/posts/trending', async (req: Request, res: Response) => {
+    try {
+      // Mock trending posts data - replace with actual implementation
+      const trendingPosts = [
+        {
+          id: 1,
+          content: "Check out this amazing new marketplace feature! 🛍️",
+          authorId: 1,
+          authorName: "Admin User",
+          authorAvatar: "/uploads/avatars/avatar_1_1745902766269.png",
+          createdAt: new Date().toISOString(),
+          likesCount: 15,
+          commentsCount: 3,
+          isLiked: false,
+          category: 'social'
+        },
+        {
+          id: 2,
+          content: "Just discovered some incredible vendors on Dedw3n! The variety is amazing.",
+          authorId: 2,
+          authorName: "Community User",
+          authorAvatar: "/placeholder-avatar.jpg",
+          createdAt: new Date(Date.now() - 3600000).toISOString(),
+          likesCount: 8,
+          commentsCount: 2,
+          isLiked: false,
+          category: 'social'
+        }
+      ];
+
+      res.json(trendingPosts);
+    } catch (error) {
+      console.error('Error fetching trending posts:', error);
+      res.status(500).json({ error: 'Failed to fetch trending posts' });
+    }
+  });
+
+  app.get('/api/community/posts', async (req: Request, res: Response) => {
+    try {
+      // Mock community posts data
+      const communityPosts = [
+        {
+          id: 1,
+          content: "Welcome to our growing community! Share your thoughts.",
+          authorId: 1,
+          authorName: "Community Manager",
+          authorAvatar: "/placeholder-avatar.jpg",
+          createdAt: new Date().toISOString(),
+          likesCount: 12,
+          commentsCount: 5,
+          isLiked: false,
+          category: 'community'
+        },
+        {
+          id: 2,
+          content: "Tips for new sellers on the marketplace",
+          authorId: 3,
+          authorName: "Marketplace Guide",
+          authorAvatar: "/placeholder-avatar.jpg",
+          createdAt: new Date(Date.now() - 7200000).toISOString(),
+          likesCount: 20,
+          commentsCount: 8,
+          isLiked: false,
+          category: 'community'
+        }
+      ];
+
+      res.json(communityPosts);
+    } catch (error) {
+      console.error('Error fetching community posts:', error);
+      res.status(500).json({ error: 'Failed to fetch community posts' });
+    }
+  });
+
+  app.get('/api/dating/featured-profiles', async (req: Request, res: Response) => {
+    try {
+      // Mock dating profiles data
+      const datingProfiles = [
+        {
+          id: 1,
+          username: "sarah_m",
+          name: "Sarah",
+          avatar: "/placeholder-avatar.jpg",
+          bio: "Love traveling and good coffee",
+          isOnline: true,
+          location: "London",
+          age: 28,
+          interests: ["travel", "coffee", "books"],
+          isFollowing: false
+        },
+        {
+          id: 2,
+          username: "alex_k",
+          name: "Alex",
+          avatar: "/placeholder-avatar.jpg",
+          bio: "Photographer and adventure seeker",
+          isOnline: false,
+          location: "Paris",
+          age: 32,
+          interests: ["photography", "hiking", "music"],
+          isFollowing: false
+        }
+      ];
+
+      res.json(datingProfiles);
+    } catch (error) {
+      console.error('Error fetching dating profiles:', error);
+      res.status(500).json({ error: 'Failed to fetch dating profiles' });
+    }
+  });
+
+  app.get('/api/events/upcoming', async (req: Request, res: Response) => {
+    try {
+      // Mock upcoming events data
+      const upcomingEvents = [
+        {
+          id: 1,
+          title: "Marketplace Vendor Meetup",
+          description: "Connect with fellow vendors and share experiences",
+          date: new Date(Date.now() + 86400000 * 7).toISOString(),
+          location: "Virtual Event",
+          imageUrl: "/placeholder-event.jpg",
+          attendeeCount: 45,
+          category: "business",
+          isAttending: false
+        },
+        {
+          id: 2,
+          title: "Community Social Night",
+          description: "Join us for an evening of networking and fun",
+          date: new Date(Date.now() + 86400000 * 14).toISOString(),
+          location: "London",
+          imageUrl: "/placeholder-event.jpg",
+          attendeeCount: 78,
+          category: "social",
+          isAttending: false
+        }
+      ];
+
+      res.json(upcomingEvents);
+    } catch (error) {
+      console.error('Error fetching upcoming events:', error);
+      res.status(500).json({ error: 'Failed to fetch upcoming events' });
+    }
+  });
+
+  app.get('/api/marketplace/stats', async (req: Request, res: Response) => {
+    try {
+      const [productCount] = await db.select({ count: count() }).from(products);
+      const [vendorCount] = await db.select({ count: count() }).from(vendors);
+      const [userCount] = await db.select({ count: count() }).from(users);
+      const [orderCount] = await db.select({ count: count() }).from(orders);
+
+      const stats = {
+        totalProducts: productCount.count,
+        totalVendors: vendorCount.count,
+        totalUsers: userCount.count,
+        totalOrders: orderCount.count
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching marketplace stats:', error);
+      res.status(500).json({ error: 'Failed to fetch marketplace stats' });
+    }
+  });
+
+  // Mobile Landing Page Action Endpoints
+  app.post('/api/products/:id/like', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const productId = parseInt(req.params.id);
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      // TODO: Implement actual like functionality with database
+      res.json({ success: true, message: 'Product liked successfully' });
+    } catch (error) {
+      console.error('Error liking product:', error);
+      res.status(500).json({ error: 'Failed to like product' });
+    }
+  });
+
+  app.post('/api/posts/:id/like', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      // TODO: Implement actual like functionality with database
+      res.json({ success: true, message: 'Post liked successfully' });
+    } catch (error) {
+      console.error('Error liking post:', error);
+      res.status(500).json({ error: 'Failed to like post' });
+    }
+  });
+
+  app.post('/api/users/:id/follow', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const targetUserId = parseInt(req.params.id);
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      // TODO: Implement actual follow functionality with database
+      res.json({ success: true, message: 'User followed successfully' });
+    } catch (error) {
+      console.error('Error following user:', error);
+      res.status(500).json({ error: 'Failed to follow user' });
+    }
+  });
+
+  app.post('/api/events/:id/attend', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const eventId = parseInt(req.params.id);
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      // TODO: Implement actual event attendance functionality with database
+      res.json({ success: true, message: 'Event attendance registered successfully' });
+    } catch (error) {
+      console.error('Error registering for event:', error);
+      res.status(500).json({ error: 'Failed to register for event' });
+    }
+  });
+
   // Catch-all handler for invalid API routes
   app.use('/api/*', (req: Request, res: Response) => {
     res.status(404).json({

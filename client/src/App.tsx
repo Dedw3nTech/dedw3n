@@ -122,6 +122,7 @@ import NotFound from "@/pages/not-found";
 import NotFoundPage from "@/pages/NotFoundPage";
 import Home from "@/pages/home";
 import Social from "@/pages/social";
+import MobileLanding from "@/pages/mobile-landing";
 
 import Cart from "@/pages/cart";
 import Checkout from "@/pages/checkout";
@@ -257,6 +258,11 @@ function Router() {
       <Route path="/auth">
         <SEOHead title="Authentication - Dedw3n" description="Sign in to your account or create a new one to access all Dedw3n features." />
         <AuthPage />
+      </Route>
+
+      <Route path="/mobile">
+        <SEOHead title="Dedw3n Mobile - Marketplace & Social Platform" description="Mobile-optimized experience for Dedw3n. Shop, connect, and discover with our comprehensive mobile platform." />
+        <MobileLanding />
       </Route>
 
       <Route path="/">
