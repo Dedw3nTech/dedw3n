@@ -317,11 +317,11 @@ export default function Home() {
     <div className="min-h-screen">
       {/* Hero Section with Background Image */}
       <div 
-        className="relative min-h-screen flex items-center justify-center hero-mobile-optimized"
+        className="relative w-full h-screen flex items-center justify-center hero-mobile-optimized"
         style={{
           backgroundImage: `url('https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?auto=format&fit=crop&w=1920&q=80')`,
           backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundPosition: 'center center',
           backgroundRepeat: 'no-repeat',
           backgroundAttachment: 'scroll'
         }}
@@ -330,33 +330,33 @@ export default function Home() {
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
         
         {/* Hero Content */}
-        <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 text-center">
-          <div className="max-w-4xl mx-auto">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 text-white leading-tight">
+        <div className="relative z-10 w-full h-full flex flex-col justify-center items-center px-4 py-8 text-center">
+          <div className="w-full max-w-4xl mx-auto space-y-4 sm:space-y-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
               {t("Welcome to Dedw3n") || "Welcome to Dedw3n"}
             </h1>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-light mb-6 sm:mb-8 text-white opacity-90 leading-relaxed">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light text-white opacity-90 leading-relaxed">
               {t("Spend more time enjoying life.") || "Spend more time enjoying life."}
             </h2>
-            <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl mb-8 sm:mb-12 text-white max-w-3xl mx-auto leading-relaxed opacity-80">
+            <p className="text-lg sm:text-xl md:text-2xl text-white max-w-3xl mx-auto leading-relaxed opacity-80">
               {t("The all-in-one platform for buying, selling, and connecting with others.") || "The all-in-one platform for buying, selling, and connecting with others."}
             </p>
             
             {/* Feature cards with mobile-optimized layout */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mt-8 sm:mt-12 lg:mt-16">
-              <div className="bg-white bg-opacity-10 backdrop-blur-sm p-6 sm:p-8 rounded-xl hover:bg-opacity-20 transition-all duration-300 touch-target border border-white border-opacity-20">
-                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-3 sm:mb-4 text-white">{t("Multi-Vendor Marketplace") || "Multi-Vendor Marketplace"}</h3>
-                <p className="text-white opacity-90 text-base sm:text-lg leading-relaxed">{t("Buy from and sell to users across the platform.") || "Buy from and sell to users across the platform."}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mt-6 sm:mt-8 lg:mt-12">
+              <div className="bg-white bg-opacity-10 backdrop-blur-sm p-4 sm:p-6 rounded-lg hover:bg-opacity-20 transition-all duration-300 touch-target border border-white border-opacity-20">
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 sm:mb-3 text-white">{t("Multi-Vendor Marketplace") || "Multi-Vendor Marketplace"}</h3>
+                <p className="text-white opacity-90 text-sm sm:text-base leading-relaxed">{t("Buy from and sell to users across the platform.") || "Buy from and sell to users across the platform."}</p>
               </div>
               
-              <div className="bg-white bg-opacity-10 backdrop-blur-sm p-6 sm:p-8 rounded-xl hover:bg-opacity-20 transition-all duration-300 touch-target border border-white border-opacity-20">
-                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-3 sm:mb-4 text-white">{t("Social") || "Social"}</h3>
-                <p className="text-white opacity-90 text-base sm:text-lg leading-relaxed">{t("Connect with friends, share posts, and build your network.") || "Connect with friends, share posts, and build your network."}</p>
+              <div className="bg-white bg-opacity-10 backdrop-blur-sm p-4 sm:p-6 rounded-lg hover:bg-opacity-20 transition-all duration-300 touch-target border border-white border-opacity-20">
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 sm:mb-3 text-white">{t("Social") || "Social"}</h3>
+                <p className="text-white opacity-90 text-sm sm:text-base leading-relaxed">{t("Connect with friends, share posts, and build your network.") || "Connect with friends, share posts, and build your network."}</p>
               </div>
               
-              <div className="bg-white bg-opacity-10 backdrop-blur-sm p-6 sm:p-8 rounded-xl hover:bg-opacity-20 transition-all duration-300 touch-target border border-white border-opacity-20 sm:col-span-2 lg:col-span-1">
-                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-3 sm:mb-4 text-white">{t("Dating") || "Dating"}</h3>
-                <p className="text-white opacity-90 text-base sm:text-lg leading-relaxed">{t("Find love or your new friend.") || "Find love or your new friend."}</p>
+              <div className="bg-white bg-opacity-10 backdrop-blur-sm p-4 sm:p-6 rounded-lg hover:bg-opacity-20 transition-all duration-300 touch-target border border-white border-opacity-20 sm:col-span-2 lg:col-span-1">
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 sm:mb-3 text-white">{t("Dating") || "Dating"}</h3>
+                <p className="text-white opacity-90 text-sm sm:text-base leading-relaxed">{t("Find love or your new friend.") || "Find love or your new friend."}</p>
               </div>
             </div>
           </div>

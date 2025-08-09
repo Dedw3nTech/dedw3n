@@ -152,37 +152,61 @@
 
 /* Hero section mobile optimization */
 .hero-mobile-optimized {
-  min-height: 100vh;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile */
   background-attachment: scroll !important; /* Better mobile performance */
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
 }
 
+/* Global mobile overflow prevention */
+html, body {
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile-specific hero optimizations */
 @media (max-width: 768px) {
   .hero-mobile-optimized {
-    min-height: 100vh;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    background-attachment: scroll !important;
     background-size: cover !important;
     background-position: center center !important;
-    background-attachment: scroll !important;
-  }
-
-  /* Ensure proper mobile container spacing */
-  .container {
-    padding-left: 1rem;
-    padding-right: 1rem;
   }
   
-  /* Prevent horizontal overflow on mobile */
-  html, body {
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
+  /* Mobile typography adjustments */
+  .hero-mobile-optimized h1 {
+    font-size: 2rem !important;
+    line-height: 1.2 !important;
+  }
+  
+  .hero-mobile-optimized h2 {
+    font-size: 1.5rem !important;
+    line-height: 1.3 !important;
+  }
+  
+  .hero-mobile-optimized p {
+    font-size: 1rem !important;
+    line-height: 1.4 !important;
   }
 }
 
-/* Small mobile devices optimization */
+/* Extra small mobile devices */
 @media (max-width: 375px) {
-  .hero-mobile-optimized {
-    min-height: 100vh;
-    background-size: cover !important;
-    background-position: center center !important;
+  .hero-mobile-optimized h1 {
+    font-size: 1.75rem !important;
+  }
+  
+  .hero-mobile-optimized h2 {
+    font-size: 1.25rem !important;
+  }
+  
+  .hero-mobile-optimized p {
+    font-size: 0.875rem !important;
   }
 }
 
