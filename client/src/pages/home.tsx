@@ -317,7 +317,7 @@ export default function Home() {
     <div className="min-h-screen">
       {/* Hero Section with Background Image */}
       <div 
-        className="relative w-full h-screen flex items-center justify-center hero-mobile-optimized"
+        className="relative w-full min-h-screen flex items-center justify-center hero-mobile-optimized"
         style={{
           backgroundImage: `url('https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?auto=format&fit=crop&w=1920&q=80')`,
           // backgroundSize is now controlled by CSS media queries for responsive behavior
@@ -326,12 +326,12 @@ export default function Home() {
           backgroundAttachment: 'scroll'
         }}
       >
-        {/* Dark overlay for better text readability */}
-        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+        {/* Mobile-optimized overlay for better text readability */}
+        <div className="absolute inset-0 bg-black bg-opacity-40 md:bg-opacity-50"></div>
         
         {/* Hero Content */}
-        <div className="relative z-10 w-full h-full flex flex-col justify-center items-center px-3 py-4 text-center">
-          <div className="w-full max-w-4xl mx-auto space-y-3">
+        <div className="relative z-10 w-full h-full flex flex-col justify-center items-center px-3 py-8 md:py-4 text-center">
+          <div className="w-full max-w-4xl mx-auto space-y-4 md:space-y-3">
             <h1 className="hero-title font-bold text-white leading-tight">
               {t("Welcome to Dedw3n") || "Welcome to Dedw3n"}
             </h1>

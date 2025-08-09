@@ -162,10 +162,12 @@
   background-color: #1a1a1a; /* Dark fallback background */
 }
 
-/* Mobile devices: Use cover to fill the screen */
+/* Mobile devices: Show full image with contain */
 @media (max-width: 768px) {
   .hero-mobile-optimized {
-    background-size: cover !important; /* Fill mobile screen completely */
+    background-size: contain !important; /* Show full image on mobile */
+    background-color: #2a2a2a !important; /* Darker background for better text contrast */
+    min-height: calc(100vh - 120px) !important; /* Account for header and footer space */
   }
 }
 
@@ -182,17 +184,20 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Hero typography - mobile first approach */
+/* Hero typography - mobile first approach with better visibility */
 .hero-title {
   font-size: 1.75rem; /* 28px */
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.8); /* Enhanced text shadow for mobile */
 }
 
 .hero-subtitle {
   font-size: 1.25rem; /* 20px */
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.8); /* Enhanced text shadow for mobile */
 }
 
 .hero-description {
   font-size: 0.875rem; /* 14px */
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.7); /* Enhanced text shadow for mobile */
 }
 
 /* Tablet and larger screens */
