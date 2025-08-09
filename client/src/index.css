@@ -68,6 +68,53 @@
   }
 }
 
+/* Mobile Touch Target Optimization */
+@layer utilities {
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  /* Enhanced mobile image responsiveness */
+  .responsive-image {
+    @apply w-full h-auto max-w-full object-cover;
+  }
+  
+  /* Mobile-friendly hover states */
+  @media (hover: hover) {
+    .hover-supported:hover {
+      @apply transform scale-105 transition-transform duration-200;
+    }
+  }
+  
+  /* Improved text readability on mobile */
+  .mobile-text {
+    @apply text-base leading-relaxed;
+  }
+  
+  @media (max-width: 640px) {
+    .mobile-text {
+      @apply text-sm leading-relaxed;
+    }
+  }
+}
+
+/* Improved mobile scrolling performance */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent zoom on input focus on iOS */
+@media screen and (max-width: 767px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
 @keyframes scroll-left {
   0% {
     transform: translateX(0);

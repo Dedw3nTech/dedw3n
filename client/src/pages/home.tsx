@@ -294,11 +294,16 @@ export default function Home() {
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button variant="outline" size="sm" onClick={(e) => {
-              e.stopPropagation();
-              setLocation(`/product/${product.id}`);
-            }}>
-{t("View") || "View"}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="min-h-[44px] min-w-[44px] touch-target" 
+              onClick={(e) => {
+                e.stopPropagation();
+                setLocation(`/product/${product.id}`);
+              }}
+            >
+              {t("View") || "View"}
             </Button>
           </div>
         </div>
@@ -309,32 +314,34 @@ export default function Home() {
   );
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
       {/* Hero Section */}
-      <div className="bg-black text-white rounded-xl p-8 shadow-lg mb-8">
+      <div className="bg-black text-white rounded-xl p-6 sm:p-8 lg:p-12 shadow-lg mb-6 sm:mb-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold mb-6 text-center">{t("Welcome to Dedw3n") || "Welcome to Dedw3n"}</h1>
-          <h2 className="text-3xl font-light mb-4 text-center opacity-90">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6 text-center leading-tight">
+            {t("Welcome to Dedw3n") || "Welcome to Dedw3n"}
+          </h1>
+          <h2 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-light mb-3 sm:mb-4 text-center opacity-90 leading-relaxed">
             {t("Spend more time enjoying life.") || "Spend more time enjoying life."}
           </h2>
-          <p className="text-xl mb-10 text-center">
+          <p className="text-base sm:text-lg lg:text-xl mb-8 sm:mb-10 text-center max-w-3xl mx-auto leading-relaxed">
             {t("The all-in-one platform for buying, selling, and connecting with others.") || "The all-in-one platform for buying, selling, and connecting with others."}
           </p>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
-            <div className="bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition-colors">
-              <h2 className="text-2xl font-bold mb-3">{t("Multi-Vendor Marketplace") || "Multi-Vendor Marketplace"}</h2>
-              <p className="text-gray-200">{t("Buy from and sell to users across the platform.") || "Buy from and sell to users across the platform."}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mt-8 sm:mt-10 lg:mt-12">
+            <div className="bg-gray-800 p-4 sm:p-6 rounded-lg hover:bg-gray-700 transition-colors touch-target">
+              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 sm:mb-3">{t("Multi-Vendor Marketplace") || "Multi-Vendor Marketplace"}</h3>
+              <p className="text-gray-200 text-sm sm:text-base leading-relaxed">{t("Buy from and sell to users across the platform.") || "Buy from and sell to users across the platform."}</p>
             </div>
             
-            <div className="bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition-colors">
-              <h2 className="text-2xl font-bold mb-3">{t("Social") || "Social"}</h2>
-              <p className="text-gray-200">{t("Connect with friends, share posts, and build your network.") || "Connect with friends, share posts, and build your network."}</p>
+            <div className="bg-gray-800 p-4 sm:p-6 rounded-lg hover:bg-gray-700 transition-colors touch-target">
+              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 sm:mb-3">{t("Social") || "Social"}</h3>
+              <p className="text-gray-200 text-sm sm:text-base leading-relaxed">{t("Connect with friends, share posts, and build your network.") || "Connect with friends, share posts, and build your network."}</p>
             </div>
             
-            <div className="bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition-colors">
-              <h2 className="text-2xl font-bold mb-3">{t("Dating") || "Dating"}</h2>
-              <p className="text-gray-200">{t("Find love or your new friend.") || "Find love or your new friend."}</p>
+            <div className="bg-gray-800 p-4 sm:p-6 rounded-lg hover:bg-gray-700 transition-colors touch-target sm:col-span-2 lg:col-span-1">
+              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 sm:mb-3">{t("Dating") || "Dating"}</h3>
+              <p className="text-gray-200 text-sm sm:text-base leading-relaxed">{t("Find love or your new friend.") || "Find love or your new friend."}</p>
             </div>
           </div>
         </div>
@@ -342,9 +349,11 @@ export default function Home() {
 
       {/* Featured Products Section */}
       {featuredProducts.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-4">{t("Featured Products") || "Featured Products"}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-6 text-center sm:text-left">
+            {t("Featured Products") || "Featured Products"}
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {featuredProducts.map(renderProductCard)}
           </div>
         </div>
@@ -360,9 +369,11 @@ export default function Home() {
 
       {/* New Products Section */}
       {newProducts.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-4">{t("New Products") || "New Products"}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-6 text-center sm:text-left">
+            {t("New Products") || "New Products"}
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {newProducts.map(renderProductCard)}
           </div>
         </div>
