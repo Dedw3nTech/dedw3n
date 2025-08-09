@@ -317,58 +317,15 @@ export default function Home() {
     <div className="min-h-screen">
       {/* Hero Section with Background Image */}
       <div className="relative w-full min-h-screen flex items-center justify-center hero-mobile-optimized">
-        {/* Responsive background image using img element with srcset */}
+        {/* Responsive background image using local optimized image */}
         <img 
-          srcSet="
-            https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?auto=format&fit=crop&w=480&q=80 480w,
-            https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?auto=format&fit=crop&w=768&q=80 768w,
-            https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?auto=format&fit=crop&w=1200&q=80 1200w,
-            https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?auto=format&fit=crop&w=1920&q=80 1920w,
-            https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?auto=format&fit=crop&w=2560&q=80 2560w
-          "
-          sizes="100vw"
-          src="https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?auto=format&fit=crop&w=1920&q=80"
-          alt="Background image showing people enjoying life"
+          src="/attached_assets/hero-image-mobile.png"
+          alt="Spend more time enjoying life - Dedw3n"
           className="absolute inset-0 w-full h-full"
           loading="eager"
           decoding="async"
         />
-        
-        {/* Mobile-optimized overlay for better text readability */}
-        <div className="absolute inset-0 bg-black bg-opacity-40 md:bg-opacity-50 z-10"></div>
-        
-        {/* Hero Content */}
-        <div className="relative z-20 w-full h-full flex flex-col justify-center items-center px-3 py-8 md:py-4 text-center">
-          <div className="w-full max-w-4xl mx-auto space-y-4 md:space-y-3">
-            <h1 className="hero-title font-bold text-white leading-tight">
-              {t("Welcome to Dedw3n") || "Welcome to Dedw3n"}
-            </h1>
-            <h2 className="hero-subtitle font-light text-white opacity-90 leading-relaxed">
-              {t("Spend more time enjoying life.") || "Spend more time enjoying life."}
-            </h2>
-            <p className="hero-description text-white max-w-3xl mx-auto leading-relaxed opacity-80">
-              {t("The all-in-one platform for buying, selling, and connecting with others.") || "The all-in-one platform for buying, selling, and connecting with others."}
-            </p>
-            
-            {/* Feature cards with mobile-optimized layout */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mt-6 sm:mt-8 lg:mt-12">
-              <div className="bg-white bg-opacity-10 backdrop-blur-sm p-4 sm:p-6 rounded-lg hover:bg-opacity-20 transition-all duration-300 touch-target border border-white border-opacity-20">
-                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 sm:mb-3 text-white">{t("Multi-Vendor Marketplace") || "Multi-Vendor Marketplace"}</h3>
-                <p className="text-white opacity-90 text-sm sm:text-base leading-relaxed">{t("Buy from and sell to users across the platform.") || "Buy from and sell to users across the platform."}</p>
-              </div>
-              
-              <div className="bg-white bg-opacity-10 backdrop-blur-sm p-4 sm:p-6 rounded-lg hover:bg-opacity-20 transition-all duration-300 touch-target border border-white border-opacity-20">
-                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 sm:mb-3 text-white">{t("Social") || "Social"}</h3>
-                <p className="text-white opacity-90 text-sm sm:text-base leading-relaxed">{t("Connect with friends, share posts, and build your network.") || "Connect with friends, share posts, and build your network."}</p>
-              </div>
-              
-              <div className="bg-white bg-opacity-10 backdrop-blur-sm p-4 sm:p-6 rounded-lg hover:bg-opacity-20 transition-all duration-300 touch-target border border-white border-opacity-20 sm:col-span-2 lg:col-span-1">
-                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 sm:mb-3 text-white">{t("Dating") || "Dating"}</h3>
-                <p className="text-white opacity-90 text-sm sm:text-base leading-relaxed">{t("Find love or your new friend.") || "Find love or your new friend."}</p>
-              </div>
-            </div>
-          </div>
-        </div>
+
       </div>
 
       {/* Products Section */}
