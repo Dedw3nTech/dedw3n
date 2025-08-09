@@ -320,7 +320,7 @@ export default function Home() {
         className="relative w-full h-screen flex items-center justify-center hero-mobile-optimized"
         style={{
           backgroundImage: `url('https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?auto=format&fit=crop&w=1920&q=80')`,
-          backgroundSize: 'cover',
+          backgroundSize: 'contain',
           backgroundPosition: 'center center',
           backgroundRepeat: 'no-repeat',
           backgroundAttachment: 'scroll'
