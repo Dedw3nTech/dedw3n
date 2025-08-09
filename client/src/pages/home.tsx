@@ -316,21 +316,29 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       {/* Hero Section with Background Image */}
-      <div 
-        className="relative w-full min-h-screen flex items-center justify-center hero-mobile-optimized"
-        style={{
-          backgroundImage: `url('https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?auto=format&fit=crop&w=1920&q=80')`,
-          // backgroundSize is now controlled by CSS media queries for responsive behavior
-          backgroundPosition: 'center center',
-          backgroundRepeat: 'no-repeat',
-          backgroundAttachment: 'scroll'
-        }}
-      >
+      <div className="relative w-full min-h-screen flex items-center justify-center hero-mobile-optimized">
+        {/* Responsive background image using img element with srcset */}
+        <img 
+          srcSet="
+            https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?auto=format&fit=crop&w=480&q=80 480w,
+            https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?auto=format&fit=crop&w=768&q=80 768w,
+            https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?auto=format&fit=crop&w=1200&q=80 1200w,
+            https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?auto=format&fit=crop&w=1920&q=80 1920w,
+            https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?auto=format&fit=crop&w=2560&q=80 2560w
+          "
+          sizes="100vw"
+          src="https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?auto=format&fit=crop&w=1920&q=80"
+          alt="Background image showing people enjoying life"
+          className="absolute inset-0 w-full h-full object-contain md:object-cover"
+          loading="eager"
+          decoding="async"
+        />
+        
         {/* Mobile-optimized overlay for better text readability */}
-        <div className="absolute inset-0 bg-black bg-opacity-40 md:bg-opacity-50"></div>
+        <div className="absolute inset-0 bg-black bg-opacity-40 md:bg-opacity-50 z-10"></div>
         
         {/* Hero Content */}
-        <div className="relative z-10 w-full h-full flex flex-col justify-center items-center px-3 py-8 md:py-4 text-center">
+        <div className="relative z-20 w-full h-full flex flex-col justify-center items-center px-3 py-8 md:py-4 text-center">
           <div className="w-full max-w-4xl mx-auto space-y-4 md:space-y-3">
             <h1 className="hero-title font-bold text-white leading-tight">
               {t("Welcome to Dedw3n") || "Welcome to Dedw3n"}

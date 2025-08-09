@@ -156,25 +156,39 @@
   max-width: 100%;
   height: 100vh;
   height: 100dvh; /* Dynamic viewport height for mobile */
-  background-attachment: scroll !important; /* Better mobile performance */
-  background-position: center center !important;
-  background-repeat: no-repeat !important; /* Prevent image repetition */
-  background-color: #1a1a1a; /* Dark fallback background */
+  background-color: #2a2a2a; /* Dark background for better text contrast */
+  position: relative;
+  overflow: hidden;
 }
 
 /* Mobile devices: Show full image with contain */
 @media (max-width: 768px) {
   .hero-mobile-optimized {
-    background-size: contain !important; /* Show full image on mobile */
-    background-color: #2a2a2a !important; /* Darker background for better text contrast */
-    min-height: calc(100vh - 120px) !important; /* Account for header and footer space */
+    min-height: calc(100vh - 120px); /* Account for header and footer space */
   }
 }
 
-/* Tablet and desktop: Use contain for aspect ratio preservation */
+/* Responsive image optimization for hero background */
+.hero-mobile-optimized img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+/* Mobile: Use object-contain to show full image */
+@media (max-width: 768px) {
+  .hero-mobile-optimized img {
+    object-fit: contain;
+  }
+}
+
+/* Tablet and desktop: Use object-cover for full coverage */
 @media (min-width: 769px) {
-  .hero-mobile-optimized {
-    background-size: contain !important; /* Maintain aspect ratio on larger screens */
+  .hero-mobile-optimized img {
+    object-fit: cover;
   }
 }
 
