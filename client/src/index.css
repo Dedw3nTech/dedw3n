@@ -161,10 +161,18 @@
   overflow: hidden;
 }
 
-/* Mobile devices: Show full image with contain */
-@media (max-width: 768px) {
+/* iPhone and mobile devices: Show full image with contain */
+@media (max-width: 430px) {
   .hero-mobile-optimized {
-    min-height: calc(100vh - 120px); /* Account for header and footer space */
+    min-height: 100vh !important;
+    height: 100vh !important;
+  }
+}
+
+/* Small tablets */
+@media (min-width: 431px) and (max-width: 768px) {
+  .hero-mobile-optimized {
+    min-height: calc(100vh - 80px);
   }
 }
 
@@ -178,19 +186,21 @@
   z-index: 0;
 }
 
-/* Mobile: Use object-contain to show full image - ensure complete visibility */
-@media (max-width: 768px) {
+/* iPhone specific: Use object-contain to show full image */
+@media (max-width: 430px) {
   .hero-mobile-optimized img {
     object-fit: contain !important;
     object-position: center center !important;
     width: 100% !important;
     height: 100% !important;
   }
-  
-  /* Ensure the container has proper dimensions for mobile */
-  .hero-mobile-optimized {
-    min-height: 100vh !important;
-    height: 100vh !important;
+}
+
+/* Small tablets: Use object-contain as well */
+@media (min-width: 431px) and (max-width: 768px) {
+  .hero-mobile-optimized img {
+    object-fit: contain !important;
+    object-position: center center !important;
   }
 }
 
