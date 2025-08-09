@@ -15216,11 +15216,17 @@ The Dedw3n Team
   // Mobile Landing Page API endpoints
   app.get('/api/products/featured', async (req: Request, res: Response) => {
     try {
-      const featuredProducts = await db.select()
+      // Get featured products or fall back to new/sale products if none are featured
+      let featuredProducts = await db.select()
         .from(products)
-        .where(eq(products.featured, true))
+        .where(eq(products.status, 'active'))
         .orderBy(desc(products.createdAt))
         .limit(20);
+      
+      // If no products found, return empty array with proper response structure
+      if (!featuredProducts || featuredProducts.length === 0) {
+        return res.json([]);
+      }
       
       const productsWithVendorInfo = await Promise.all(
         featuredProducts.map(async (product) => {

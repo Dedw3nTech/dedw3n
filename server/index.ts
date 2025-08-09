@@ -465,7 +465,7 @@ app.use((req, res, next) => {
 
     // Define known valid routes that should return 200
     const validRoutes = [
-      '/', '/login', '/register', '/products', '/wall', '/dating', 
+      '/', '/login', '/register', '/products', '/wall', '/dating', '/mobile',
       '/about', '/contact', '/faq', '/catalogue-rules', '/tips-tricks', '/business', '/network-partnerships', '/network-partnership-resources', '/affiliate-partnerships', '/resources', '/privacy', '/terms', '/business-terms', '/cookies', '/community-guidelines',
       '/profile', '/settings', '/messages', '/notifications', '/cart', '/shipping-calculator',
       '/checkout', '/orders', '/dashboard', '/admin', '/unified-admin-dashboard', '/admin-dashboard', '/admin-control-center', '/moderator',
