@@ -157,14 +157,23 @@
   height: 100vh;
   height: 100dvh; /* Dynamic viewport height for mobile */
   background-attachment: scroll !important; /* Better mobile performance */
-  background-size: contain !important; /* Scale to fit while maintaining aspect ratio */
   background-position: center center !important;
   background-repeat: no-repeat !important; /* Prevent image repetition */
+  background-color: #1a1a1a; /* Dark fallback background */
 }
 
-/* Fallback background color for contain sizing */
-.hero-mobile-optimized {
-  background-color: #1a1a1a; /* Dark fallback for areas not covered by contain */
+/* Mobile devices: Use cover to fill the screen */
+@media (max-width: 768px) {
+  .hero-mobile-optimized {
+    background-size: cover !important; /* Fill mobile screen completely */
+  }
+}
+
+/* Tablet and desktop: Use contain for aspect ratio preservation */
+@media (min-width: 769px) {
+  .hero-mobile-optimized {
+    background-size: contain !important; /* Maintain aspect ratio on larger screens */
+  }
 }
 
 /* Global mobile overflow prevention */
