@@ -27,7 +27,7 @@ The platform is built with a modular, layered architecture for maintainability a
 - **Security**: Hardened against common vulnerabilities with debug statement cleanup, error response sanitization, secure API integrations, and HTTPS enforcement.
 - **Internationalization**: Integrated translation system for multi-language support.
 - **Global Currency Support**: Comprehensive 100+ currency system with professional selection interface, search functionality, and regional grouping for true international marketplace capabilities.
-- **Mobile Responsiveness**: Comprehensive mobile-first responsive design with optimized touch targets (44px minimum), fluid grids, flexible images, progressive text sizing, and enhanced mobile performance optimizations.
+- **Mobile Responsiveness**: Comprehensive mobile-first responsive design with optimized touch targets (44px minimum), fluid grids, flexible images using max-width: 100% and height: auto principles, progressive text sizing, and enhanced mobile performance optimizations. Successfully resolved mobile hero section text cutoff issues with custom CSS classes and proper viewport handling.
 
 ## External Dependencies
 - **PostgreSQL**: Primary database for data storage.
