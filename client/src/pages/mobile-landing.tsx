@@ -1,6 +1,6 @@
 import React from 'react';
 import { SEOHead } from '@/components/seo/SEOHead';
-import heroImageMobile from '@assets/spend more time enjoying life (395 x 932 px)_1754767685316.png';
+import heroImageMobile from '@assets/hero-image-mobile.png';
 
 export default function MobileLanding() {
   return (
