@@ -150,6 +150,42 @@
   display: none !important;
 }
 
+/* Hero section mobile optimization */
+.hero-mobile-optimized {
+  min-height: 100vh;
+  background-attachment: scroll !important; /* Better mobile performance */
+}
+
+@media (max-width: 768px) {
+  .hero-mobile-optimized {
+    min-height: 100vh;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-attachment: scroll !important;
+  }
+
+  /* Ensure proper mobile container spacing */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Prevent horizontal overflow on mobile */
+  html, body {
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Small mobile devices optimization */
+@media (max-width: 375px) {
+  .hero-mobile-optimized {
+    min-height: 100vh;
+    background-size: cover !important;
+    background-position: center center !important;
+  }
+}
+
 /* Messaging Component Layout Isolation */
 [data-messaging-container] {
   isolation: isolate;

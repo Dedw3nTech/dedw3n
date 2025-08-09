@@ -314,77 +314,97 @@ export default function Home() {
   );
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-      {/* Hero Section */}
-      <div className="bg-black text-white rounded-xl p-6 sm:p-8 lg:p-12 shadow-lg mb-6 sm:mb-8">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6 text-center leading-tight">
-            {t("Welcome to Dedw3n") || "Welcome to Dedw3n"}
-          </h1>
-          <h2 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-light mb-3 sm:mb-4 text-center opacity-90 leading-relaxed">
-            {t("Spend more time enjoying life.") || "Spend more time enjoying life."}
-          </h2>
-          <p className="text-base sm:text-lg lg:text-xl mb-8 sm:mb-10 text-center max-w-3xl mx-auto leading-relaxed">
-            {t("The all-in-one platform for buying, selling, and connecting with others.") || "The all-in-one platform for buying, selling, and connecting with others."}
-          </p>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mt-8 sm:mt-10 lg:mt-12">
-            <div className="bg-gray-800 p-4 sm:p-6 rounded-lg hover:bg-gray-700 transition-colors touch-target">
-              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 sm:mb-3">{t("Multi-Vendor Marketplace") || "Multi-Vendor Marketplace"}</h3>
-              <p className="text-gray-200 text-sm sm:text-base leading-relaxed">{t("Buy from and sell to users across the platform.") || "Buy from and sell to users across the platform."}</p>
-            </div>
+    <div className="min-h-screen">
+      {/* Hero Section with Background Image */}
+      <div 
+        className="relative min-h-screen flex items-center justify-center hero-mobile-optimized"
+        style={{
+          backgroundImage: `url('https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?auto=format&fit=crop&w=1920&q=80')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'scroll'
+        }}
+      >
+        {/* Dark overlay for better text readability */}
+        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+        
+        {/* Hero Content */}
+        <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 text-center">
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 text-white leading-tight">
+              {t("Welcome to Dedw3n") || "Welcome to Dedw3n"}
+            </h1>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-light mb-6 sm:mb-8 text-white opacity-90 leading-relaxed">
+              {t("Spend more time enjoying life.") || "Spend more time enjoying life."}
+            </h2>
+            <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl mb-8 sm:mb-12 text-white max-w-3xl mx-auto leading-relaxed opacity-80">
+              {t("The all-in-one platform for buying, selling, and connecting with others.") || "The all-in-one platform for buying, selling, and connecting with others."}
+            </p>
             
-            <div className="bg-gray-800 p-4 sm:p-6 rounded-lg hover:bg-gray-700 transition-colors touch-target">
-              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 sm:mb-3">{t("Social") || "Social"}</h3>
-              <p className="text-gray-200 text-sm sm:text-base leading-relaxed">{t("Connect with friends, share posts, and build your network.") || "Connect with friends, share posts, and build your network."}</p>
-            </div>
-            
-            <div className="bg-gray-800 p-4 sm:p-6 rounded-lg hover:bg-gray-700 transition-colors touch-target sm:col-span-2 lg:col-span-1">
-              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 sm:mb-3">{t("Dating") || "Dating"}</h3>
-              <p className="text-gray-200 text-sm sm:text-base leading-relaxed">{t("Find love or your new friend.") || "Find love or your new friend."}</p>
+            {/* Feature cards with mobile-optimized layout */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mt-8 sm:mt-12 lg:mt-16">
+              <div className="bg-white bg-opacity-10 backdrop-blur-sm p-6 sm:p-8 rounded-xl hover:bg-opacity-20 transition-all duration-300 touch-target border border-white border-opacity-20">
+                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-3 sm:mb-4 text-white">{t("Multi-Vendor Marketplace") || "Multi-Vendor Marketplace"}</h3>
+                <p className="text-white opacity-90 text-base sm:text-lg leading-relaxed">{t("Buy from and sell to users across the platform.") || "Buy from and sell to users across the platform."}</p>
+              </div>
+              
+              <div className="bg-white bg-opacity-10 backdrop-blur-sm p-6 sm:p-8 rounded-xl hover:bg-opacity-20 transition-all duration-300 touch-target border border-white border-opacity-20">
+                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-3 sm:mb-4 text-white">{t("Social") || "Social"}</h3>
+                <p className="text-white opacity-90 text-base sm:text-lg leading-relaxed">{t("Connect with friends, share posts, and build your network.") || "Connect with friends, share posts, and build your network."}</p>
+              </div>
+              
+              <div className="bg-white bg-opacity-10 backdrop-blur-sm p-6 sm:p-8 rounded-xl hover:bg-opacity-20 transition-all duration-300 touch-target border border-white border-opacity-20 sm:col-span-2 lg:col-span-1">
+                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-3 sm:mb-4 text-white">{t("Dating") || "Dating"}</h3>
+                <p className="text-white opacity-90 text-base sm:text-lg leading-relaxed">{t("Find love or your new friend.") || "Find love or your new friend."}</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Featured Products Section */}
-      {featuredProducts.length > 0 && (
-        <div className="mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-6 text-center sm:text-left">
-            {t("Featured Products") || "Featured Products"}
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-            {featuredProducts.map(renderProductCard)}
+      {/* Products Section */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
+
+        {/* Featured Products Section */}
+        {featuredProducts.length > 0 && (
+          <div className="mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8 text-center sm:text-left">
+              {t("Featured Products") || "Featured Products"}
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+              {featuredProducts.map(renderProductCard)}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* AI Personalized Recommendations Section */}
-      {user && (
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-4">{t("Recommended for You") || "Recommended for You"}</h2>
-          <PersonalizedRecommendations />
-        </div>
-      )}
-
-      {/* New Products Section */}
-      {newProducts.length > 0 && (
-        <div className="mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-6 text-center sm:text-left">
-            {t("New Products") || "New Products"}
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-            {newProducts.map(renderProductCard)}
+        {/* AI Personalized Recommendations Section */}
+        {user && (
+          <div className="mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8">{t("Recommended for You") || "Recommended for You"}</h2>
+            <PersonalizedRecommendations />
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Loading State */}
-      {(featuredLoading || newProductsLoading) && (
-        <div className="flex justify-center items-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      )}
+        {/* New Products Section */}
+        {newProducts.length > 0 && (
+          <div className="mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8 text-center sm:text-left">
+              {t("New Products") || "New Products"}
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+              {newProducts.map(renderProductCard)}
+            </div>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {(featuredLoading || newProductsLoading) && (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
