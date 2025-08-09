@@ -150,7 +150,7 @@
   display: none !important;
 }
 
-/* Hero section with comprehensive auto-resize image functionality */
+/* Hero section mobile optimization */
 .hero-mobile-optimized {
   width: 100%;
   max-width: 100%;
@@ -159,12 +159,24 @@
   background-color: #2a2a2a; /* Dark background for better text contrast */
   position: relative;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-/* Base image styling for all devices */
+/* iPhone and mobile devices: Show full image with contain */
+@media (max-width: 430px) {
+  .hero-mobile-optimized {
+    min-height: 100vh !important;
+    height: 100vh !important;
+  }
+}
+
+/* Small tablets */
+@media (min-width: 431px) and (max-width: 768px) {
+  .hero-mobile-optimized {
+    min-height: calc(100vh - 80px);
+  }
+}
+
+/* Responsive image optimization for hero background */
 .hero-mobile-optimized img {
   position: absolute;
   top: 0;
@@ -172,80 +184,31 @@
   width: 100%;
   height: 100%;
   z-index: 0;
-  object-fit: cover; /* Default: cover for desktop */
-  object-position: center center;
-  transition: object-fit 0.3s ease; /* Smooth transition between object-fit modes */
 }
 
-/* Mobile devices (iPhone and smaller): Show complete image with proper scaling */
+/* iPhone specific: Use object-contain to show full image */
 @media (max-width: 430px) {
-  .hero-mobile-optimized {
-    min-height: 100vh !important;
-    height: 100vh !important;
-  }
-  
   .hero-mobile-optimized img {
-    object-fit: contain !important; /* Show complete image on mobile */
+    object-fit: contain !important;
     object-position: center center !important;
-    background-color: transparent; /* Remove any background color that might show */
+    width: 100% !important;
+    height: 100% !important;
   }
 }
 
-/* Small tablets: Balance between contain and cover */
+/* Small tablets: Use object-contain as well */
 @media (min-width: 431px) and (max-width: 768px) {
-  .hero-mobile-optimized {
-    min-height: 100vh;
-    height: 100vh;
-  }
-  
   .hero-mobile-optimized img {
-    object-fit: cover; /* Cover for better tablet experience */
-    object-position: center center;
+    object-fit: contain !important;
+    object-position: center center !important;
   }
 }
 
-/* Large tablets and desktop: Full coverage */
+/* Tablet and desktop: Use object-cover for full coverage */
 @media (min-width: 769px) {
   .hero-mobile-optimized img {
-    object-fit: cover; /* Full coverage for desktop */
-    object-position: center center;
-  }
-}
-
-/* High resolution displays: Optimize image quality */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  .hero-mobile-optimized img {
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-  }
-}
-
-/* Landscape orientation on mobile: Adjust for better fit */
-@media (max-width: 430px) and (orientation: landscape) {
-  .hero-mobile-optimized {
-    height: 100vh !important;
-  }
-  
-  .hero-mobile-optimized img {
-    object-fit: cover !important; /* Use cover in landscape for better experience */
-    object-position: center center !important;
-  }
-}
-
-/* Very large screens: Maintain aspect ratio */
-@media (min-width: 1920px) {
-  .hero-mobile-optimized img {
     object-fit: cover;
-    object-position: center center;
-    max-height: 100vh;
   }
-}
-
-/* Auto-resize fallback for older browsers */
-.hero-mobile-optimized img {
-  max-width: 100%;
-  height: auto;
-  min-height: 100%;
 }
 
 /* Global mobile overflow prevention */
