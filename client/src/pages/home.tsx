@@ -329,7 +329,7 @@ export default function Home() {
           sizes="100vw"
           src="https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?auto=format&fit=crop&w=1920&q=80"
           alt="Background image showing people enjoying life"
-          className="absolute inset-0 w-full h-full object-contain md:object-cover"
+          className="absolute inset-0 w-full h-full"
           loading="eager"
           decoding="async"
         />

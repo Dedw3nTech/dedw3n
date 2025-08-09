@@ -178,10 +178,19 @@
   z-index: 0;
 }
 
-/* Mobile: Use object-contain to show full image */
+/* Mobile: Use object-contain to show full image - ensure complete visibility */
 @media (max-width: 768px) {
   .hero-mobile-optimized img {
-    object-fit: contain;
+    object-fit: contain !important;
+    object-position: center center !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  
+  /* Ensure the container has proper dimensions for mobile */
+  .hero-mobile-optimized {
+    min-height: 100vh !important;
+    height: 100vh !important;
   }
 }
 
