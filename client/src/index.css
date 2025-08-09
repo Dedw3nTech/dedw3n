@@ -167,46 +167,59 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Mobile-specific hero optimizations */
-@media (max-width: 768px) {
-  .hero-mobile-optimized {
-    width: 100vw;
-    height: 100vh;
-    height: 100dvh;
-    background-attachment: scroll !important;
-    background-size: cover !important;
-    background-position: center center !important;
+/* Hero typography - mobile first approach */
+.hero-title {
+  font-size: 1.75rem; /* 28px */
+}
+
+.hero-subtitle {
+  font-size: 1.25rem; /* 20px */
+}
+
+.hero-description {
+  font-size: 0.875rem; /* 14px */
+}
+
+/* Tablet and larger screens */
+@media (min-width: 640px) {
+  .hero-title {
+    font-size: 2.5rem; /* 40px */
   }
   
-  /* Mobile typography adjustments */
-  .hero-mobile-optimized h1 {
-    font-size: 2rem !important;
-    line-height: 1.2 !important;
+  .hero-subtitle {
+    font-size: 2rem; /* 32px */
   }
   
-  .hero-mobile-optimized h2 {
-    font-size: 1.5rem !important;
-    line-height: 1.3 !important;
-  }
-  
-  .hero-mobile-optimized p {
-    font-size: 1rem !important;
-    line-height: 1.4 !important;
+  .hero-description {
+    font-size: 1.25rem; /* 20px */
   }
 }
 
-/* Extra small mobile devices */
-@media (max-width: 375px) {
-  .hero-mobile-optimized h1 {
-    font-size: 1.75rem !important;
+@media (min-width: 768px) {
+  .hero-title {
+    font-size: 3rem; /* 48px */
   }
   
-  .hero-mobile-optimized h2 {
-    font-size: 1.25rem !important;
+  .hero-subtitle {
+    font-size: 2.5rem; /* 40px */
   }
   
-  .hero-mobile-optimized p {
-    font-size: 0.875rem !important;
+  .hero-description {
+    font-size: 1.5rem; /* 24px */
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-title {
+    font-size: 4rem; /* 64px */
+  }
+  
+  .hero-subtitle {
+    font-size: 3rem; /* 48px */
+  }
+  
+  .hero-description {
+    font-size: 1.75rem; /* 28px */
   }
 }
 

@@ -330,15 +330,15 @@ export default function Home() {
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
         
         {/* Hero Content */}
-        <div className="relative z-10 w-full h-full flex flex-col justify-center items-center px-4 py-8 text-center">
-          <div className="w-full max-w-4xl mx-auto space-y-4 sm:space-y-6">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
+        <div className="relative z-10 w-full h-full flex flex-col justify-center items-center px-3 py-4 text-center">
+          <div className="w-full max-w-4xl mx-auto space-y-3">
+            <h1 className="hero-title font-bold text-white leading-tight">
               {t("Welcome to Dedw3n") || "Welcome to Dedw3n"}
             </h1>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light text-white opacity-90 leading-relaxed">
+            <h2 className="hero-subtitle font-light text-white opacity-90 leading-relaxed">
               {t("Spend more time enjoying life.") || "Spend more time enjoying life."}
             </h2>
-            <p className="text-lg sm:text-xl md:text-2xl text-white max-w-3xl mx-auto leading-relaxed opacity-80">
+            <p className="hero-description text-white max-w-3xl mx-auto leading-relaxed opacity-80">
               {t("The all-in-one platform for buying, selling, and connecting with others.") || "The all-in-one platform for buying, selling, and connecting with others."}
             </p>
             
