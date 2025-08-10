@@ -1,21 +1,26 @@
-import { createContext, useContext, ReactNode, useState, useCallback } from 'react';
+import { createContext, useContext, ReactNode, useState, useCallback, useEffect } from 'react';
+
+declare global {
+  interface Window {
+    grecaptcha: {
+      ready: (callback: () => void) => void;
+      execute: (siteKey: string, options: { action: string }) => Promise<string>;
+    };
+  }
+}
 
 interface CaptchaContextType {
   executeRecaptcha: ((action: string) => Promise<string>) | undefined;
   isReady: boolean;
   isLoading: boolean;
   error: string | null;
-  generateChallenge: () => { question: string; answer: string; token: string };
-  validateChallenge: (token: string, userAnswer: string) => boolean;
 }
 
 const CaptchaContext = createContext<CaptchaContextType>({
   executeRecaptcha: undefined,
-  isReady: true,
-  isLoading: false,
-  error: null,
-  generateChallenge: () => ({ question: '', answer: '', token: '' }),
-  validateChallenge: () => false
+  isReady: false,
+  isLoading: true,
+  error: null
 });
 
 export const useUnifiedRecaptcha = () => {
@@ -30,100 +35,87 @@ interface CaptchaProviderProps {
   children: ReactNode;
 }
 
+const RECAPTCHA_SITE_KEY = '6LcFQForAAAAAAN8Qb50X0uJxT4mcIKLzrM1cKTJ';
+
 export function UnifiedRecaptchaProvider({ children }: CaptchaProviderProps) {
-  const [isReady] = useState(true);
-  const [isLoading] = useState(false);
-  const [error] = useState<string | null>(null);
-  const [challenges] = useState(new Map<string, { answer: string; timestamp: number }>());
+  const [isReady, setIsReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Generate a simple math challenge
-  const generateChallenge = useCallback(() => {
-    const operations = ['+', '-', '*'];
-    const operation = operations[Math.floor(Math.random() * operations.length)];
-    
-    let num1, num2, answer, question;
-    
-    switch (operation) {
-      case '+':
-        num1 = Math.floor(Math.random() * 20) + 1;
-        num2 = Math.floor(Math.random() * 20) + 1;
-        answer = num1 + num2;
-        question = `${num1} + ${num2} = ?`;
-        break;
-      case '-':
-        num1 = Math.floor(Math.random() * 20) + 10;
-        num2 = Math.floor(Math.random() * 10) + 1;
-        answer = num1 - num2;
-        question = `${num1} - ${num2} = ?`;
-        break;
-      case '*':
-        num1 = Math.floor(Math.random() * 10) + 1;
-        num2 = Math.floor(Math.random() * 10) + 1;
-        answer = num1 * num2;
-        question = `${num1} × ${num2} = ?`;
-        break;
-      default:
-        num1 = 5;
-        num2 = 3;
-        answer = 8;
-        question = '5 + 3 = ?';
-    }
-
-    const token = 'math_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    const timestamp = Date.now();
-    
-    // Store challenge with 5 minute expiry
-    challenges.set(token, { answer: answer.toString(), timestamp });
-    
-    // Clean up expired challenges
-    Array.from(challenges.entries()).forEach(([key, value]) => {
-      if (timestamp - value.timestamp > 300000) { // 5 minutes
-        challenges.delete(key);
+  // Load Google reCAPTCHA v3 script
+  useEffect(() => {
+    const loadRecaptchaScript = () => {
+      // Check if script already exists
+      if (document.querySelector('script[src*="recaptcha"]')) {
+        if (window.grecaptcha && window.grecaptcha.ready) {
+          window.grecaptcha.ready(() => {
+            setIsReady(true);
+            setIsLoading(false);
+            console.log('[RECAPTCHA] Google reCAPTCHA v3 ready');
+          });
+        }
+        return;
       }
-    });
-    
-    return { question, answer: answer.toString(), token };
-  }, [challenges]);
 
-  // Validate challenge response
-  const validateChallenge = useCallback((token: string, userAnswer: string) => {
-    const challenge = challenges.get(token);
-    if (!challenge) {
-      return false;
-    }
-    
-    const now = Date.now();
-    if (now - challenge.timestamp > 300000) { // 5 minutes expired
-      challenges.delete(token);
-      return false;
-    }
-    
-    const isValid = challenge.answer === userAnswer.trim();
-    if (isValid) {
-      challenges.delete(token); // Remove after successful validation
-    }
-    
-    return isValid;
-  }, [challenges]);
+      const script = document.createElement('script');
+      script.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`;
+      script.async = true;
+      script.defer = true;
+      
+      script.onload = () => {
+        if (window.grecaptcha && window.grecaptcha.ready) {
+          window.grecaptcha.ready(() => {
+            setIsReady(true);
+            setIsLoading(false);
+            console.log('[RECAPTCHA] Google reCAPTCHA v3 loaded and ready');
+          });
+        } else {
+          setError('Failed to initialize Google reCAPTCHA');
+          setIsLoading(false);
+        }
+      };
 
-  // Execute CAPTCHA challenge
-  const executeRecaptcha = useCallback(async (action: string): Promise<string> => {
-    console.log(`[MATH-CAPTCHA] Executing for action: ${action}`);
-    
-    return new Promise((resolve) => {
-      // For programmatic calls, generate a simple validation token
-      const token = `math_captcha_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-      resolve(token);
-    });
+      script.onerror = () => {
+        setError('Failed to load Google reCAPTCHA script');
+        setIsLoading(false);
+        console.error('[RECAPTCHA] Failed to load script');
+      };
+
+      document.head.appendChild(script);
+    };
+
+    loadRecaptchaScript();
   }, []);
 
+  // Execute reCAPTCHA for given action
+  const executeRecaptcha = useCallback(async (action: string): Promise<string> => {
+    if (!isReady || !window.grecaptcha) {
+      console.log('[RECAPTCHA] Not ready, using development bypass');
+      if (process.env.NODE_ENV === 'development') {
+        return 'dev_bypass_token';
+      }
+      throw new Error('reCAPTCHA not ready');
+    }
+
+    try {
+      console.log(`[RECAPTCHA] Executing for action: ${action}`);
+      const token = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action });
+      console.log(`[RECAPTCHA] Token generated successfully for action: ${action}`);
+      return token;
+    } catch (error) {
+      console.error('[RECAPTCHA] Execution error:', error);
+      if (process.env.NODE_ENV === 'development') {
+        return 'dev_bypass_token';
+      }
+      throw error;
+    }
+  }, [isReady]);
+
   const contextValue = {
-    executeRecaptcha,
-    isReady: true,
-    isLoading: false,
-    error: null,
-    generateChallenge,
-    validateChallenge
+    executeRecaptcha: isReady ? executeRecaptcha : undefined,
+    isReady,
+    isLoading,
+    error
   };
 
   return (

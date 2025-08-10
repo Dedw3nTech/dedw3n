@@ -14,14 +14,11 @@ import speakeasy from "speakeasy";
 import QRCode from "qrcode";
 // SVG CAPTCHA removed - using math CAPTCHA only
 
-// reCAPTCHA verification
+// Google reCAPTCHA v3 verification
 async function verifyRecaptcha(token: string, action: string): Promise<boolean> {
   try {
-    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
-    if (!secretKey) {
-      console.error('[RECAPTCHA] SECRET KEY NOT CONFIGURED');
-      return false; // Fail secure when not configured
-    }
+    // Use the provided secret key for the site key 6LcFQForAAAAAAN8Qb50X0uJxT4mcIKLzrM1cKTJ
+    const secretKey = '6LcFQForAAAAABwvKEH8n2tYvXBh5k0_wFvFYr8V'; // Secret key corresponding to the site key
     
     // Handle development bypass tokens
     if (token === 'development-bypass-token' || token === 'dev_bypass_token') {
@@ -40,7 +37,7 @@ async function verifyRecaptcha(token: string, action: string): Promise<boolean> 
       return false;
     }
 
-    console.log(`[RECAPTCHA] Verifying token for action ${action}...`);
+    console.log(`[RECAPTCHA] Verifying Google reCAPTCHA v3 token for action ${action}...`);
     console.log(`[RECAPTCHA] Token length: ${token.length}`);
     console.log(`[RECAPTCHA] Token preview: ${token.substring(0, 20)}...`);
 
@@ -61,7 +58,7 @@ async function verifyRecaptcha(token: string, action: string): Promise<boolean> 
       }
     }
     
-    // Strict validation for production
+    // reCAPTCHA v3 validation with score checking
     if (data.success && data.score >= 0.5) {
       console.log(`[RECAPTCHA] Verification successful for action ${action}: score ${data.score}`);
       return true;
@@ -168,46 +165,8 @@ function resetAuthAttempts(ip: string): void {
 // Generate CAPTCHA
 // Legacy CAPTCHA generation removed - using math CAPTCHA only
 
-// Math CAPTCHA store for frontend-validated challenges
-const mathCaptchaStore = new Map<string, { validated: boolean; timestamp: number }>();
-
-// Unified CAPTCHA verification for math-based system only
-function verifyCaptcha(id: string, userInput: string): boolean {
-  console.log(`[DEBUG] CAPTCHA verification - ID: ${id}, Input: ${userInput}`);
-  
-  // Only support math CAPTCHA tokens now
-  if (id && id.startsWith('math_')) {
-    // For math CAPTCHA, accept "verified" from frontend validation
-    if (userInput === "verified") {
-      // Store validated token to prevent reuse
-      mathCaptchaStore.set(id, { validated: true, timestamp: Date.now() });
-      
-      // Clean up expired tokens
-      const now = Date.now();
-      Array.from(mathCaptchaStore.entries()).forEach(([key, value]) => {
-        if (now - value.timestamp > 300000) { // 5 minutes expiry
-          mathCaptchaStore.delete(key);
-        }
-      });
-      
-      console.log(`[DEBUG] Math CAPTCHA verified successfully for token: ${id}`);
-      return true;
-    }
-    
-    // Check if this token was already validated and prevent reuse
-    const existing = mathCaptchaStore.get(id);
-    if (existing) {
-      console.log(`[DEBUG] Math CAPTCHA token already used: ${id}`);
-      return false;
-    }
-    
-    console.log(`[DEBUG] Math CAPTCHA verification failed for token: ${id}`);
-    return false;
-  }
-  
-  console.log(`[DEBUG] Invalid CAPTCHA token format: ${id}`);
-  return false;
-}
+// Google reCAPTCHA v3 verification - no local CAPTCHA needed
+// All verification is handled by verifyRecaptcha function above
 
 // Account lockout functions
 async function checkAccountLockout(user: any): Promise<{ isLocked: boolean; lockoutExpires?: Date }> {
@@ -588,12 +547,12 @@ export function setupAuth(app: Express) {
         });
       }
 
-      // Verify CAPTCHA if provided
-      if (req.body.captchaId && req.body.captchaInput) {
-        if (!verifyCaptcha(req.body.captchaId, req.body.captchaInput)) {
-          console.log(`[SECURITY] Invalid CAPTCHA for registration attempt: ${req.body.username}`);
+      // Verify reCAPTCHA if provided
+      if (req.body.recaptchaToken) {
+        if (!await verifyRecaptcha(req.body.recaptchaToken, "register")) {
+          console.log(`[SECURITY] Invalid reCAPTCHA for registration attempt: ${req.body.username}`);
           return res.status(400).json({ 
-            message: "Invalid CAPTCHA. Please try again.",
+            message: "Invalid reCAPTCHA. Please try again.",
             code: "INVALID_CAPTCHA"
           });
         }
@@ -673,20 +632,20 @@ export function setupAuth(app: Express) {
       });
     }
 
-    // Verify CAPTCHA if provided
-    if (req.body.captchaId && req.body.captchaInput) {
-      console.log(`[DEBUG] CAPTCHA verification - ID: ${req.body.captchaId}, Input: ${req.body.captchaInput}`);
-      const captchaResult = verifyCaptcha(req.body.captchaId, req.body.captchaInput);
-      console.log(`[DEBUG] CAPTCHA verification result: ${captchaResult}`);
+    // Verify reCAPTCHA if provided
+    if (req.body.recaptchaToken) {
+      console.log(`[DEBUG] reCAPTCHA verification - Token: ${req.body.recaptchaToken.substring(0, 20)}...`);
+      const captchaResult = await verifyRecaptcha(req.body.recaptchaToken, "login");
+      console.log(`[DEBUG] reCAPTCHA verification result: ${captchaResult}`);
       
       if (!captchaResult) {
-        console.log(`[SECURITY] Invalid CAPTCHA for login attempt: ${req.body.username}`);
+        console.log(`[SECURITY] Invalid reCAPTCHA for login attempt: ${req.body.username}`);
         return res.status(400).json({ 
-          message: "Invalid CAPTCHA. Please try again.",
+          message: "Invalid reCAPTCHA. Please try again.",
           code: "INVALID_CAPTCHA"
         });
       }
-      console.log(`[DEBUG] CAPTCHA verification passed for user: ${req.body.username}`);
+      console.log(`[DEBUG] reCAPTCHA verification passed for user: ${req.body.username}`);
     }
 
     // Check for account lockout first

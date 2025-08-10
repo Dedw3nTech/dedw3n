@@ -15,7 +15,7 @@ import { useTypedTranslation, useMasterBatchTranslation } from "@/hooks/use-mast
 import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidator";
 import { useUnifiedRecaptcha } from "@/components/UnifiedRecaptchaProvider";
 import { useEmailValidation } from "@/hooks/use-email-validation";
-import { MathCaptcha } from "@/components/MathCaptcha";
+// Removed MathCaptcha import - using Google reCAPTCHA v3 now
 import { ReportButton } from "@/components/ui/report-button";
 // Remove usePageTitle import as it's not needed
 import { 
@@ -81,8 +81,7 @@ export default function AuthPage() {
   const [rememberPassword, setRememberPassword] = useState(false);
   const [ageError, setAgeError] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
-  const [captchaValid, setCaptchaValid] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState("");
+  // No longer need captcha state for Google reCAPTCHA v3 (invisible)
 
   // Translation using typed hook
   const t = useTypedTranslation();
@@ -153,7 +152,7 @@ export default function AuthPage() {
 
   const isFormValid = useMemo(() => {
     if (isLogin) {
-      return formData.username && formData.password && captchaValid;
+      return formData.username && formData.password && isReady;
     } else {
       return (
         formData.name &&
@@ -167,10 +166,10 @@ export default function AuthPage() {
         formData.city &&
         !ageError &&
         emailIsValid === true &&
-        captchaValid
+        isReady
       );
     }
-  }, [formData, isLogin, ageError, emailIsValid, captchaValid]);
+  }, [formData, isLogin, ageError, emailIsValid, isReady]);
 
   // Trigger email validation when email changes
   useEffect(() => {
@@ -221,25 +220,24 @@ export default function AuthPage() {
     }
 
     try {
-      // Check if math CAPTCHA is completed
-      if (!captchaValid || !captchaToken) {
+      // Get Google reCAPTCHA v3 token
+      if (!executeRecaptcha) {
         toast({
           title: t["Security Verification Required"] || "Security Verification Required", 
-          description: t["Please complete the math problem to verify you are human."] || "Please complete the math problem to verify you are human.",
+          description: t["Please wait for reCAPTCHA to load."] || "Please wait for reCAPTCHA to load.",
           variant: "default"
         });
         return;
       }
 
-      // Use the math captcha token for security verification
-      console.log('[MATH-CAPTCHA] Using verified captcha token for authentication');
+      const recaptchaToken = await executeRecaptcha(isLogin ? 'login' : 'register');
+      console.log(`[RECAPTCHA] Generated token for ${isLogin ? 'login' : 'register'}`);
       
       if (isLogin) {
         await loginMutation.mutateAsync({
           username: formData.username,
           password: formData.password,
-          captchaId: captchaToken,
-          captchaInput: "verified" // Math CAPTCHA already verified
+          recaptchaToken
         });
         
         // Handle remember password functionality
@@ -271,8 +269,7 @@ export default function AuthPage() {
           region: formData.region as "Africa" | "South Asia" | "East Asia" | "Oceania" | "North America" | "Central America" | "South America" | "Middle East" | "Europe" | "Central Asia" | null,
           country: formData.country,
           city: formData.city,
-          captchaId: captchaToken,
-          captchaInput: "verified"
+          recaptchaToken
         });
         toast({
           title: t["Account created!"] || "Account created!",
@@ -542,18 +539,31 @@ export default function AuthPage() {
                 )}
               </div>
 
-              {/* Math CAPTCHA */}
+              {/* Google reCAPTCHA v3 Status */}
               <div className="space-y-2">
                 <Label className="flex items-center">
                   <Shield className="mr-2 h-4 w-4" />
                   {t["Security Verification"] || "Security Verification"}
                 </Label>
-                <MathCaptcha
-                  onValidation={(isValid: boolean, token?: string) => {
-                    setCaptchaValid(isValid);
-                    setCaptchaToken(token || "");
-                  }}
-                />
+                <div className="text-sm text-muted-foreground flex items-center">
+                  {isLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : isReady ? (
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                  ) : error ? (
+                    <XCircle className="mr-2 h-4 w-4 text-red-500" />
+                  ) : (
+                    <Clock className="mr-2 h-4 w-4" />
+                  )}
+                  {isLoading ? 
+                    (t["Loading security verification..."] || "Loading security verification...") :
+                    isReady ? 
+                      (t["Security verification ready"] || "Security verification ready") :
+                      error ? 
+                        (t["Security verification failed to load"] || "Security verification failed to load") :
+                        (t["Initializing security..."] || "Initializing security...")
+                  }
+                </div>
               </div>
 
               {isLogin && (

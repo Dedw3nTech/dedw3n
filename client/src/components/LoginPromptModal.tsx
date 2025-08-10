@@ -21,7 +21,7 @@ import { useTypedTranslation, useMasterBatchTranslation } from "@/hooks/use-mast
 import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidator";
 import { useUnifiedRecaptcha } from "@/components/UnifiedRecaptchaProvider";
 import { useEmailValidation } from "@/hooks/use-email-validation";
-import { MathCaptcha } from "@/components/MathCaptcha";
+// Removed MathCaptcha import - using Google reCAPTCHA v3 now
 import { 
   User, 
   Eye, 
@@ -80,8 +80,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
   const [ageError, setAgeError] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
-  const [captchaValid, setCaptchaValid] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState("");
+  // No longer need captcha state for Google reCAPTCHA v3 (invisible)
 
   // Translation using typed hook
   const t = useTypedTranslation();
@@ -162,15 +161,9 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
   useEffect(() => {
     resetValidation();
     setEmailTouched(false);
-    setCaptchaValid(false);
-    setCaptchaToken("");
   }, [isLogin, resetValidation]);
 
-  // Handle CAPTCHA validation
-  const handleCaptchaValidation = (isValid: boolean, token?: string) => {
-    setCaptchaValid(isValid);
-    setCaptchaToken(token || "");
-  };
+  // No longer need CAPTCHA validation handler for Google reCAPTCHA v3
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -209,25 +202,24 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     }
 
     try {
-      // Check if math CAPTCHA is completed
-      if (!captchaValid || !captchaToken) {
+      // Get Google reCAPTCHA v3 token
+      if (!executeRecaptcha) {
         toast({
           title: t["Security Verification Required"] || "Security Verification Required", 
-          description: t["Please complete the math problem to verify you are human."] || "Please complete the math problem to verify you are human.",
+          description: t["Please wait for reCAPTCHA to load."] || "Please wait for reCAPTCHA to load.",
           variant: "default"
         });
         return;
       }
 
-      // Use the math captcha token for security verification
-      console.log('[MATH-CAPTCHA] Using verified captcha token for authentication');
+      const recaptchaToken = await executeRecaptcha(isLogin ? 'login' : 'register');
+      console.log(`[RECAPTCHA] Generated token for ${isLogin ? 'login' : 'register'}`);
       
       if (isLogin) {
         await loginMutation.mutateAsync({
           username: formData.username,
           password: formData.password,
-          captchaId: captchaToken,
-          captchaInput: "verified" // Math CAPTCHA already verified
+          recaptchaToken
         });
         
         // Handle remember password functionality
@@ -260,8 +252,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           region: formData.region as "Africa" | "South Asia" | "East Asia" | "Oceania" | "North America" | "Central America" | "South America" | "Middle East" | "Europe" | "Central Asia" | null,
           country: formData.country,
           city: formData.city,
-          captchaId: captchaToken,
-          captchaInput: "verified"
+          recaptchaToken
         });
         toast({
           title: t["Account created!"] || "Account created!",
@@ -550,11 +541,32 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             </div>
           )}
 
-          {/* Math CAPTCHA Security Verification */}
-          <MathCaptcha 
-            onValidation={handleCaptchaValidation}
-            className="mt-4"
-          />
+          {/* Google reCAPTCHA v3 Status */}
+          <div className="space-y-2 mt-4">
+            <Label className="flex items-center">
+              <Shield className="mr-2 h-4 w-4" />
+              {t["Security Verification"] || "Security Verification"}
+            </Label>
+            <div className="text-sm text-muted-foreground flex items-center">
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : isReady ? (
+                <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+              ) : error ? (
+                <XCircle className="mr-2 h-4 w-4 text-red-500" />
+              ) : (
+                <Clock className="mr-2 h-4 w-4" />
+              )}
+              {isLoading ? 
+                (t["Loading security verification..."] || "Loading security verification...") :
+                isReady ? 
+                  (t["Security verification ready"] || "Security verification ready") :
+                  error ? 
+                    (t["Security verification failed to load"] || "Security verification failed to load") :
+                    (t["Initializing security..."] || "Initializing security...")
+              }
+            </div>
+          </div>
 
           <Button 
               type="submit" 
@@ -565,7 +577,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                 (!isLogin && ageError) ||
                 (!isLogin && isValidating) ||
                 (!isLogin && emailTouched && emailIsValid === false) ||
-                !captchaValid
+                !isReady
               )}
             >
               {(loginMutation.isPending || registerMutation.isPending) ? 
