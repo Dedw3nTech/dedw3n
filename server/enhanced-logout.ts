@@ -21,7 +21,8 @@ export function createEnhancedLogout() {
         'X-XSS-Protection': '1; mode=block',
         'Referrer-Policy': 'no-referrer',
         'X-Auth-Logged-Out': 'true',
-        'X-Session-Cleared': 'true'
+        'X-Session-Cleared': 'true',
+        'X-User-Logged-Out': 'true'
       };
       
       res.set(antiCacheHeaders);
@@ -205,24 +206,33 @@ export function addSecurityHeaders() {
  */
 export function logoutStateChecker() {
   return (req: Request, res: Response, next: Function) => {
-    // Check for logout headers
+    // Skip logout check for logout endpoint itself
+    if (req.path === '/api/logout') {
+      return next();
+    }
+    
+    // Check for logout headers from unified logout system
     if (req.headers['x-user-logged-out'] === 'true' || 
-        req.headers['x-auth-logged-out'] === 'true') {
+        req.headers['x-auth-logged-out'] === 'true' ||
+        req.headers['x-unified-logout'] === 'true') {
       console.log('[LOGOUT-CHECKER] User marked as logged out via headers');
       return res.status(401).json({ 
         message: 'User session ended',
         requiresLogin: true,
+        logout: true,
         redirect: '/auth'
       });
     }
     
     // Check for logout cookies
     if (req.cookies?.dedwen_logout === 'true' || 
-        req.cookies?.user_logged_out) {
+        req.cookies?.user_logged_out ||
+        req.cookies?.unified_logout === 'true') {
       console.log('[LOGOUT-CHECKER] User marked as logged out via cookies');
       return res.status(401).json({ 
         message: 'User session ended',
         requiresLogin: true,
+        logout: true,
         redirect: '/auth'
       });
     }

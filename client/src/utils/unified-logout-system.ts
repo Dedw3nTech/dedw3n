@@ -97,7 +97,8 @@ class UnifiedLogoutSystem {
           'Content-Type': 'application/json',
           'X-Unified-Logout': 'true',
           'X-Fast-Logout': 'true',
-          'X-Background-Logout': 'true'
+          'X-Background-Logout': 'true',
+          'X-User-Logged-Out': 'true'
         },
         signal: controller.signal
       });
