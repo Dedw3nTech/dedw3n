@@ -191,13 +191,27 @@ export default function DatingPage() {
     const tierInfo = getTierInfo(profile.datingRoomTier || "normal");
     const TierIcon = tierInfo.icon;
 
-    // Handle profile picture display
+    // Handle profile picture display with diverse stock photos
     const getProfilePicture = () => {
       if (profile.profileImages && profile.profileImages.length > 0) {
         return profile.profileImages[0];
       }
-      // Default placeholder image
-      return "/attached_assets/image_1754808686003.png";
+      
+      // Diverse stock photos based on profile ID for consistent display
+      const stockPhotos = [
+        "https://images.unsplash.com/photo-1494790108755-2616b332c4cf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&h=687&q=80", // Woman with curly hair
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&h=687&q=80", // Man with beard
+        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&h=687&q=80", // Woman smiling
+        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&h=687&q=80", // Man in casual shirt
+        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=688&h=688&q=80", // Woman with blonde hair
+        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&h=687&q=80", // Man outdoors
+        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=764&h=764&q=80", // Woman in professional setting
+        "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&h=687&q=80", // Man smiling
+      ];
+      
+      // Use profile ID to consistently assign a photo
+      const photoIndex = (profile.id || 0) % stockPhotos.length;
+      return stockPhotos[photoIndex];
     };
 
     const handleViewProfile = () => {
