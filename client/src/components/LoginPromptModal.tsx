@@ -21,6 +21,7 @@ import { useTypedTranslation, useMasterBatchTranslation } from "@/hooks/use-mast
 import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidator";
 
 import { useEmailValidation } from "@/hooks/use-email-validation";
+import { useUnifiedRecaptcha } from '@/components/UnifiedRecaptchaProvider';
 
 import { 
   User, 
@@ -52,6 +53,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
   const [showPassword, setShowPassword] = useState(false);
   const { loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
+  const { executeRecaptcha } = useUnifiedRecaptcha();
 
   const { 
     validateEmail, 
@@ -200,10 +202,22 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     }
 
     try {
+      // Get reCAPTCHA token invisibly (no UI displayed)
+      let recaptchaToken = null;
+      if (executeRecaptcha) {
+        try {
+          recaptchaToken = await executeRecaptcha(isLogin ? 'login' : 'register');
+          console.log(`[RECAPTCHA] Generated invisible token for ${isLogin ? 'login' : 'register'}`);
+        } catch (recaptchaError) {
+          console.warn('[RECAPTCHA] Token generation failed, proceeding without token:', recaptchaError);
+        }
+      }
+
       if (isLogin) {
         await loginMutation.mutateAsync({
           username: formData.username,
-          password: formData.password
+          password: formData.password,
+          recaptchaToken
         });
         
         // Handle remember password functionality
@@ -236,7 +250,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           region: formData.region as "Africa" | "South Asia" | "East Asia" | "Oceania" | "North America" | "Central America" | "South America" | "Middle East" | "Europe" | "Central Asia" | null,
           country: formData.country,
           city: formData.city,
-
+          recaptchaToken
         });
         toast({
           title: t["Account created!"] || "Account created!",

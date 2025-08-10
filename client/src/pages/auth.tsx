@@ -15,6 +15,7 @@ import { useTypedTranslation, useMasterBatchTranslation } from "@/hooks/use-mast
 import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidator";
 
 import { useEmailValidation } from "@/hooks/use-email-validation";
+import { useUnifiedRecaptcha } from '@/components/UnifiedRecaptchaProvider';
 
 import { ReportButton } from "@/components/ui/report-button";
 // Remove usePageTitle import as it's not needed
@@ -52,6 +53,7 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const { loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
+  const { executeRecaptcha } = useUnifiedRecaptcha();
 
   const { 
     validateEmail, 
@@ -215,10 +217,22 @@ export default function AuthPage() {
     }
 
     try {
+      // Get reCAPTCHA token invisibly (no UI displayed)
+      let recaptchaToken = null;
+      if (executeRecaptcha) {
+        try {
+          recaptchaToken = await executeRecaptcha(isLogin ? 'login' : 'register');
+          console.log(`[RECAPTCHA] Generated invisible token for ${isLogin ? 'login' : 'register'}`);
+        } catch (recaptchaError) {
+          console.warn('[RECAPTCHA] Token generation failed, proceeding without token:', recaptchaError);
+        }
+      }
+
       if (isLogin) {
         await loginMutation.mutateAsync({
           username: formData.username,
-          password: formData.password
+          password: formData.password,
+          recaptchaToken
         });
         
         // Handle remember password functionality
@@ -250,7 +264,7 @@ export default function AuthPage() {
           region: formData.region as "Africa" | "South Asia" | "East Asia" | "Oceania" | "North America" | "Central America" | "South America" | "Middle East" | "Europe" | "Central Asia" | null,
           country: formData.country,
           city: formData.city,
-
+          recaptchaToken
         });
         toast({
           title: t["Account created!"] || "Account created!",
