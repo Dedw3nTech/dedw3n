@@ -13,9 +13,9 @@ import { useAuth } from "@/hooks/use-auth";
 import RegionSelector from "@/components/RegionSelector";
 import { useTypedTranslation, useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidator";
-import { useUnifiedRecaptcha } from "@/components/UnifiedRecaptchaProvider";
+
 import { useEmailValidation } from "@/hooks/use-email-validation";
-// Removed MathCaptcha import - using Google reCAPTCHA v3 now
+
 import { ReportButton } from "@/components/ui/report-button";
 // Remove usePageTitle import as it's not needed
 import { 
@@ -29,10 +29,6 @@ import {
   Users,
   Globe,
   Calendar,
-  Shield,
-  CheckCircle,
-  AlertTriangle,
-  Clock,
   XCircle,
   Loader2,
   Mail,
@@ -56,7 +52,7 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const { loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
-  const { executeRecaptcha, isReady, isLoading, error } = useUnifiedRecaptcha();
+
   const { 
     validateEmail, 
     isValidating, 
@@ -152,7 +148,7 @@ export default function AuthPage() {
 
   const isFormValid = useMemo(() => {
     if (isLogin) {
-      return formData.username && formData.password && isReady;
+      return formData.username && formData.password;
     } else {
       return (
         formData.name &&
@@ -165,11 +161,10 @@ export default function AuthPage() {
         formData.country &&
         formData.city &&
         !ageError &&
-        emailIsValid === true &&
-        isReady
+        emailIsValid === true
       );
     }
-  }, [formData, isLogin, ageError, emailIsValid, isReady]);
+  }, [formData, isLogin, ageError, emailIsValid]);
 
   // Trigger email validation when email changes
   useEffect(() => {
@@ -220,24 +215,10 @@ export default function AuthPage() {
     }
 
     try {
-      // Get Google reCAPTCHA v3 token
-      if (!executeRecaptcha) {
-        toast({
-          title: t["Security Verification Required"] || "Security Verification Required", 
-          description: t["Please wait for reCAPTCHA to load."] || "Please wait for reCAPTCHA to load.",
-          variant: "default"
-        });
-        return;
-      }
-
-      const recaptchaToken = await executeRecaptcha(isLogin ? 'login' : 'register');
-      console.log(`[RECAPTCHA] Generated token for ${isLogin ? 'login' : 'register'}`);
-      
       if (isLogin) {
         await loginMutation.mutateAsync({
           username: formData.username,
-          password: formData.password,
-          recaptchaToken
+          password: formData.password
         });
         
         // Handle remember password functionality
@@ -269,7 +250,7 @@ export default function AuthPage() {
           region: formData.region as "Africa" | "South Asia" | "East Asia" | "Oceania" | "North America" | "Central America" | "South America" | "Middle East" | "Europe" | "Central Asia" | null,
           country: formData.country,
           city: formData.city,
-          recaptchaToken
+
         });
         toast({
           title: t["Account created!"] || "Account created!",
@@ -326,7 +307,7 @@ export default function AuthPage() {
             </div>
             
             <CardTitle className="text-2xl font-bold text-gray-900">
-              {isLogin ? (t["Welcome Back"] || "Welcome Back") : (t["Join Dedw3n"] || "Join Dedw3n")}
+              {isLogin ? (t["Welcome Back"] || "Welcome Back") : (t["Dedw3n"] || "Dedw3n")}
             </CardTitle>
             <p className="text-sm text-gray-600">
               {isLogin ? 
@@ -539,32 +520,7 @@ export default function AuthPage() {
                 )}
               </div>
 
-              {/* Google reCAPTCHA v3 Status */}
-              <div className="space-y-2">
-                <Label className="flex items-center">
-                  <Shield className="mr-2 h-4 w-4" />
-                  {t["Security Verification"] || "Security Verification"}
-                </Label>
-                <div className="text-sm text-muted-foreground flex items-center">
-                  {isLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : isReady ? (
-                    <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
-                  ) : error ? (
-                    <XCircle className="mr-2 h-4 w-4 text-red-500" />
-                  ) : (
-                    <Clock className="mr-2 h-4 w-4" />
-                  )}
-                  {isLoading ? 
-                    (t["Loading security verification..."] || "Loading security verification...") :
-                    isReady ? 
-                      (t["Security verification ready"] || "Security verification ready") :
-                      error ? 
-                        (t["Security verification failed to load"] || "Security verification failed to load") :
-                        (t["Initializing security..."] || "Initializing security...")
-                  }
-                </div>
-              </div>
+
 
               {isLogin && (
                 <div className="flex items-center space-x-2">

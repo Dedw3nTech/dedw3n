@@ -13,7 +13,7 @@ export function usePageTitle({ title, suffix = 'Dedw3n' }: PageTitleOptions) {
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
       const descriptions: Record<string, string> = {
-        'Home': 'Join Dedw3n\'s innovative social marketplace platform. Buy and sell products, connect with a verified community, and discover meaningful relationships.',
+        'Home': 'Dedw3n\'s innovative social marketplace platform. Buy and sell products, connect with a verified community, and discover meaningful relationships.',
         'Products': 'Discover products from verified sellers in our secure B2B, B2C, and C2C marketplace with integrated social features.',
         'Marketplace': 'Discover products from verified sellers in our secure B2B, B2C, and C2C marketplace with integrated social features.',
         'Community': 'Connect with verified creators, shoppers, and professionals in our secure community platform.',
