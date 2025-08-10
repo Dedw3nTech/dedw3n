@@ -8906,51 +8906,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(401).json({ message: 'Unauthorized' });
       }
 
-      // For now, using mock data - in production this would query the database
-      const allProfiles = [
-        {
-          id: 1,
-          userId: 101,
-          displayName: "Sarah M.",
-          age: 28,
-          gender: "Female",
-          bio: "Love hiking and coffee dates. Looking for genuine connections and meaningful conversations. I enjoy exploring new places, reading good books, and having deep conversations over a cup of coffee. My ideal weekend involves a good hike in nature followed by a cozy evening at home with a book.",
-          location: "London, UK",
-          interests: ["Hiking", "Coffee", "Books", "Travel", "Photography"],
-          lookingFor: "Genuine connections",
-          relationshipType: "serious",
-          profileImages: ["/attached_assets/image_1754808686003.png", "https://images.unsplash.com/random/400x600?sig=1b"],
-          isActive: true,
-          isPremium: false,
-          datingRoomTier: "normal",
-          height: "5'6\"",
-          education: "Master's Degree",
-          incomeRange: "£35,000 - £50,000",
-          createdAt: "2024-01-15T10:30:00Z"
-        },
-        {
-          id: 2,
-          userId: 102,
-          displayName: "Mike R.",
-          age: 32,
-          gender: "Male",
-          bio: "Entrepreneur and fitness enthusiast. Love trying new restaurants and weekend adventures. Building my own tech startup while staying fit and exploring Manchester's food scene.",
-          location: "Manchester, UK",
-          interests: ["Fitness", "Business", "Food", "Technology", "Music"],
-          lookingFor: "Adventure partner",
-          relationshipType: "casual",
-          profileImages: ["/attached_assets/image_1754808686003.png", "https://images.unsplash.com/random/400x600?sig=2b"],
-          isActive: true,
-          isPremium: false,
-          datingRoomTier: "normal",
-          height: "5'10\"",
-          education: "Bachelor's in Computer Science",
-          incomeRange: "£45,000 - £65,000",
-          createdAt: "2024-02-20T14:15:00Z"
-        }
-      ];
-
-      const profile = allProfiles.find(p => p.id === profileId);
+      // Query the actual database for the dating profile
+      const profile = await storage.getDatingProfileById(profileId);
       
       if (!profile) {
         return res.status(404).json({ message: 'Dating profile not found' });

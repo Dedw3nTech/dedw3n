@@ -17,7 +17,7 @@ import {
   Banknote,
   User
 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
 
 interface DatingProfile {

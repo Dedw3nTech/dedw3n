@@ -211,6 +211,7 @@ import SocialConsolePage from "@/pages/social-console";
 import NotificationsPage from "@/pages/notifications";
 import PostDetailPage from "@/pages/post-detail";
 import DatingProfilePage from "@/pages/dating-profile";
+import DatingProfileView from "@/pages/dating-profile-view";
 import PaymentGateway from "@/pages/payment-gateway";
 import UserProfilePage from "@/pages/profile";
 import CheckoutNew from "@/pages/checkout-new";
@@ -391,6 +392,7 @@ function Router() {
       <ProtectedRoute path="/profile/:username" component={ProfilePage} />
       <ProtectedRoute path="/profile-settings" component={ProfileSettingsPage} />
       <ProtectedRoute path="/dating-profile" component={DatingProfilePage} />
+      <ProtectedRoute path="/dating-profile/:profileId" component={DatingProfileView} />
       <ProtectedRoute path="/settings" component={SettingsPage} />
       <ProtectedRoute path="/wall" component={WallPage} />
       <Route path="/community">

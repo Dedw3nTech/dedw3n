@@ -4890,6 +4890,21 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getDatingProfileById(profileId: number): Promise<DatingProfile | undefined> {
+    try {
+      const [profile] = await db
+        .select()
+        .from(datingProfiles)
+        .where(eq(datingProfiles.id, profileId))
+        .limit(1);
+      
+      return profile;
+    } catch (error) {
+      console.error('Error getting dating profile by ID:', error);
+      return undefined;
+    }
+  }
+
   async createDatingProfile(profileData: InsertDatingProfile): Promise<DatingProfile> {
     try {
       const [profile] = await db
