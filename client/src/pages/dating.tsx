@@ -191,18 +191,48 @@ export default function DatingPage() {
     const tierInfo = getTierInfo(profile.datingRoomTier || "normal");
     const TierIcon = tierInfo.icon;
 
+    // Handle profile picture display
+    const getProfilePicture = () => {
+      if (profile.profileImages && profile.profileImages.length > 0) {
+        return profile.profileImages[0];
+      }
+      // Default placeholder image
+      return "/attached_assets/image_1754808686003.png";
+    };
+
+    const handleViewProfile = () => {
+      if (profile.id) {
+        setLocation(`/dating-profile/${profile.id}`);
+      }
+    };
+
     return (
       <Card className="hover:shadow-lg transition-shadow">
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <TierIcon className={`h-5 w-5 ${tierInfo.color}`} />
-              {profile.displayName}
-              <span className="text-sm font-normal text-gray-500">({profile.age})</span>
-            </CardTitle>
-            <Badge variant="secondary" className={tierInfo.bgColor}>
-              {profile.datingRoomTier?.toUpperCase() || normalText}
-            </Badge>
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <img 
+                src={getProfilePicture()} 
+                alt={`${profile.displayName}'s profile`}
+                className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "/attached_assets/image_1754808686003.png";
+                }}
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <TierIcon className={`h-5 w-5 ${tierInfo.color}`} />
+                  {profile.displayName}
+                  <span className="text-sm font-normal text-gray-500">({profile.age})</span>
+                </CardTitle>
+                <Badge variant="secondary" className={tierInfo.bgColor}>
+                  {profile.datingRoomTier?.toUpperCase() || normalText}
+                </Badge>
+              </div>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -227,7 +257,7 @@ export default function DatingPage() {
               <MessageCircle className="h-4 w-4 mr-1" />
               {messageText}
             </Button>
-            <Button size="sm" variant="outline">
+            <Button size="sm" variant="outline" onClick={handleViewProfile}>
               <Eye className="h-4 w-4 mr-1" />
               {viewText}
             </Button>

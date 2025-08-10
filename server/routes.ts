@@ -8891,6 +8891,80 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // Individual dating profile endpoint
+  app.get('/api/dating-profile/:profileId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const profileId = parseInt(req.params.profileId);
+      console.log(`[DEBUG] Getting individual dating profile for ID: ${profileId}`);
+      
+      if (!profileId || isNaN(profileId)) {
+        return res.status(400).json({ message: 'Invalid profile ID' });
+      }
+
+      const authenticatedUser = req.user;
+      if (!authenticatedUser) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      // For now, using mock data - in production this would query the database
+      const allProfiles = [
+        {
+          id: 1,
+          userId: 101,
+          displayName: "Sarah M.",
+          age: 28,
+          gender: "Female",
+          bio: "Love hiking and coffee dates. Looking for genuine connections and meaningful conversations. I enjoy exploring new places, reading good books, and having deep conversations over a cup of coffee. My ideal weekend involves a good hike in nature followed by a cozy evening at home with a book.",
+          location: "London, UK",
+          interests: ["Hiking", "Coffee", "Books", "Travel", "Photography"],
+          lookingFor: "Genuine connections",
+          relationshipType: "serious",
+          profileImages: ["/attached_assets/image_1754808686003.png", "https://images.unsplash.com/random/400x600?sig=1b"],
+          isActive: true,
+          isPremium: false,
+          datingRoomTier: "normal",
+          height: "5'6\"",
+          education: "Master's Degree",
+          incomeRange: "£35,000 - £50,000",
+          createdAt: "2024-01-15T10:30:00Z"
+        },
+        {
+          id: 2,
+          userId: 102,
+          displayName: "Mike R.",
+          age: 32,
+          gender: "Male",
+          bio: "Entrepreneur and fitness enthusiast. Love trying new restaurants and weekend adventures. Building my own tech startup while staying fit and exploring Manchester's food scene.",
+          location: "Manchester, UK",
+          interests: ["Fitness", "Business", "Food", "Technology", "Music"],
+          lookingFor: "Adventure partner",
+          relationshipType: "casual",
+          profileImages: ["/attached_assets/image_1754808686003.png", "https://images.unsplash.com/random/400x600?sig=2b"],
+          isActive: true,
+          isPremium: false,
+          datingRoomTier: "normal",
+          height: "5'10\"",
+          education: "Bachelor's in Computer Science",
+          incomeRange: "£45,000 - £65,000",
+          createdAt: "2024-02-20T14:15:00Z"
+        }
+      ];
+
+      const profile = allProfiles.find(p => p.id === profileId);
+      
+      if (!profile) {
+        return res.status(404).json({ message: 'Dating profile not found' });
+      }
+
+      console.log(`[DEBUG] Returning individual dating profile for ${profile.displayName}`);
+      res.json(profile);
+      
+    } catch (error) {
+      console.error('Error fetching individual dating profile:', error);
+      res.status(500).json({ message: 'Failed to fetch dating profile' });
+    }
+  });
+
   // General dating profiles endpoint (returns Normal room profiles by default)
   app.get('/api/dating-profiles', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
@@ -8919,7 +8993,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           interests: ["Hiking", "Coffee", "Books", "Travel", "Photography"],
           lookingFor: "Long-term relationship",
           relationshipType: "serious",
-          profileImages: ["https://images.unsplash.com/random/400x600?sig=1"],
+          profileImages: ["/attached_assets/image_1754808686003.png"],
           isActive: true,
           isPremium: false,
           datingRoomTier: "normal",
@@ -8938,7 +9012,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           interests: ["Fitness", "Business", "Food", "Music", "Cycling"],
           lookingFor: "Someone adventurous",
           relationshipType: "casual",
-          profileImages: ["https://images.unsplash.com/random/400x600?sig=2"],
+          profileImages: ["/attached_assets/image_1754808686003.png"],
           isActive: true,
           isPremium: false,
           datingRoomTier: "normal",
