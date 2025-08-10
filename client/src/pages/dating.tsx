@@ -207,60 +207,80 @@ export default function DatingPage() {
     };
 
     return (
-      <Card className="hover:shadow-lg transition-shadow">
-        <CardHeader className="pb-3">
-          <div className="flex items-start gap-4">
-            <div className="flex-shrink-0">
-              <img 
-                src={getProfilePicture()} 
-                alt={`${profile.displayName}'s profile`}
-                className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = "/attached_assets/image_1754808686003.png";
-                }}
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <TierIcon className={`h-5 w-5 ${tierInfo.color}`} />
-                  {profile.displayName}
-                  <span className="text-sm font-normal text-gray-500">({profile.age})</span>
-                </CardTitle>
-                <Badge variant="secondary" className={tierInfo.bgColor}>
-                  {profile.datingRoomTier?.toUpperCase() || normalText}
-                </Badge>
-              </div>
-            </div>
+      <Card className="hover:shadow-lg transition-shadow overflow-hidden">
+        {/* Large image section at the top */}
+        <div className="relative">
+          <div className="aspect-[4/3] overflow-hidden">
+            <img 
+              src={getProfilePicture()} 
+              alt={`${profile.displayName}'s profile`}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = "/attached_assets/image_1754808686003.png";
+              }}
+            />
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-gray-600">{profile.location}</p>
-          <p className="text-sm">{profile.bio}</p>
-          
-          <div className="flex flex-wrap gap-1">
-            {profile.interests?.slice(0, 3).map((interest) => (
-              <Badge key={interest} variant="outline" className="text-xs">
-                {interest}
-              </Badge>
-            ))}
-            {(profile.interests?.length || 0) > 3 && (
-              <Badge variant="outline" className="text-xs">
-                +{(profile.interests?.length || 0) - 3} {moreText}
-              </Badge>
-            )}
+          {/* Tier badge positioned in top-left corner */}
+          <div className="absolute top-3 left-3">
+            <Badge variant="secondary" className={`${tierInfo.bgColor} border-0 shadow-sm`}>
+              <TierIcon className={`h-4 w-4 ${tierInfo.color} mr-1`} />
+              {profile.datingRoomTier?.toUpperCase() || normalText}
+            </Badge>
           </div>
+        </div>
 
-          <div className="flex gap-2 pt-2">
-            <Button size="sm" className="flex-1">
-              <MessageCircle className="h-4 w-4 mr-1" />
-              {messageText}
-            </Button>
-            <Button size="sm" variant="outline" onClick={handleViewProfile}>
-              <Eye className="h-4 w-4 mr-1" />
-              {viewText}
-            </Button>
+        {/* Footer section with profile information */}
+        <CardContent className="p-4">
+          <div className="space-y-3">
+            {/* Name and age */}
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-lg flex items-center gap-2">
+                <Heart className="h-4 w-4 text-red-500" />
+                {profile.displayName}
+                <span className="text-sm font-normal text-gray-500">({profile.age})</span>
+              </h3>
+            </div>
+
+            {/* Location */}
+            {profile.location && (
+              <p className="text-sm text-gray-600">{profile.location}</p>
+            )}
+
+            {/* Bio - truncated for card view */}
+            {profile.bio && (
+              <p className="text-sm text-gray-800 line-clamp-2">
+                {profile.bio.length > 100 ? `${profile.bio.substring(0, 100)}...` : profile.bio}
+              </p>
+            )}
+            
+            {/* Interests tags */}
+            {profile.interests && profile.interests.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {profile.interests.slice(0, 3).map((interest) => (
+                  <Badge key={interest} variant="outline" className="text-xs">
+                    {interest}
+                  </Badge>
+                ))}
+                {profile.interests.length > 3 && (
+                  <Badge variant="outline" className="text-xs">
+                    +{profile.interests.length - 3} {moreText}
+                  </Badge>
+                )}
+              </div>
+            )}
+
+            {/* Action buttons */}
+            <div className="flex gap-2 pt-2">
+              <Button size="sm" className="flex-1 bg-blue-500 hover:bg-blue-600">
+                <MessageCircle className="h-4 w-4 mr-1" />
+                {messageText}
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleViewProfile} className="flex items-center">
+                <Eye className="h-4 w-4 mr-1" />
+                {viewText}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
