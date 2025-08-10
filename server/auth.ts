@@ -17,8 +17,18 @@ import QRCode from "qrcode";
 // Google reCAPTCHA v3 verification
 async function verifyRecaptcha(token: string, action: string): Promise<boolean> {
   try {
-    // Use the provided secret key for the site key 6LcFQForAAAAAAN8Qb50X0uJxT4mcIKLzrM1cKTJ
-    const secretKey = '6LcFQForAAAAABwvKEH8n2tYvXBh5k0_wFvFYr8V'; // Secret key corresponding to the site key
+    // Use environment variable for secret key
+    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+    
+    // Check if secret key is configured
+    if (!secretKey) {
+      console.error('[RECAPTCHA] Secret key not configured');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[RECAPTCHA] Development bypass: Missing secret key');
+        return true;
+      }
+      return false;
+    }
     
     // Handle development bypass tokens
     if (token === 'development-bypass-token' || token === 'dev_bypass_token') {
@@ -50,11 +60,19 @@ async function verifyRecaptcha(token: string, action: string): Promise<boolean> 
     const data = await response.json();
     console.log(`[RECAPTCHA] Google verification response:`, data);
     
-    // Handle domain configuration issues in development
-    if (!data.success && data['error-codes'] && data['error-codes'].includes('invalid-input-secret')) {
+    // Handle reCAPTCHA errors gracefully
+    if (!data.success) {
+      const errorCodes = data['error-codes'] || [];
+      console.warn(`[RECAPTCHA] Verification failed with errors:`, errorCodes);
+      
+      // Allow bypass in development for configuration issues
       if (process.env.NODE_ENV === 'development') {
-        console.log('[RECAPTCHA] Development environment detected, allowing verification bypass for domain configuration');
-        return true;
+        if (errorCodes.includes('invalid-input-secret') || 
+            errorCodes.includes('invalid-input-response') ||
+            errorCodes.includes('hostname-not-allowed')) {
+          console.log('[RECAPTCHA] Development bypass: Configuration issue detected');
+          return true;
+        }
       }
     }
     

@@ -35,7 +35,7 @@ interface CaptchaProviderProps {
   children: ReactNode;
 }
 
-const RECAPTCHA_SITE_KEY = '6LcFQForAAAAAAN8Qb50X0uJxT4mcIKLzrM1cKTJ';
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LcFQForAAAAAAN8Qb50X0uJxT4mcIKLzrM1cKTJ';
 
 export function UnifiedRecaptchaProvider({ children }: CaptchaProviderProps) {
   const [isReady, setIsReady] = useState(false);
@@ -89,9 +89,19 @@ export function UnifiedRecaptchaProvider({ children }: CaptchaProviderProps) {
 
   // Execute reCAPTCHA for given action
   const executeRecaptcha = useCallback(async (action: string): Promise<string> => {
+    // Check if site key is available
+    if (!RECAPTCHA_SITE_KEY) {
+      console.warn('[RECAPTCHA] Site key not configured');
+      if (import.meta.env.MODE === 'development') {
+        return 'dev_bypass_token';
+      }
+      throw new Error('reCAPTCHA site key not configured');
+    }
+
     if (!isReady || !window.grecaptcha) {
-      console.log('[RECAPTCHA] Not ready, using development bypass');
-      if (process.env.NODE_ENV === 'development') {
+      console.log('[RECAPTCHA] Not ready, checking environment');
+      if (import.meta.env.MODE === 'development') {
+        console.log('[RECAPTCHA] Using development bypass token');
         return 'dev_bypass_token';
       }
       throw new Error('reCAPTCHA not ready');
@@ -100,11 +110,22 @@ export function UnifiedRecaptchaProvider({ children }: CaptchaProviderProps) {
     try {
       console.log(`[RECAPTCHA] Executing for action: ${action}`);
       const token = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action });
-      console.log(`[RECAPTCHA] Token generated successfully for action: ${action}`);
+      console.log(`[RECAPTCHA] Token generated successfully for action: ${action} (length: ${token.length})`);
+      
+      // Validate token format
+      if (!token || token.length < 20) {
+        console.error('[RECAPTCHA] Invalid token format received');
+        if (import.meta.env.MODE === 'development') {
+          return 'dev_bypass_token';
+        }
+        throw new Error('Invalid reCAPTCHA token format');
+      }
+      
       return token;
     } catch (error) {
       console.error('[RECAPTCHA] Execution error:', error);
-      if (process.env.NODE_ENV === 'development') {
+      if (import.meta.env.MODE === 'development') {
+        console.log('[RECAPTCHA] Using development bypass due to error');
         return 'dev_bypass_token';
       }
       throw error;
