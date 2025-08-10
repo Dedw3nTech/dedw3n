@@ -11,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getInitials } from "@/lib/utils";
 import { sanitizeImageUrl } from "@/lib/queryClient";
 import { Loader2, User, Settings, MessageSquare, Bell, Heart, Store, Shield, LogOut, ChevronDown, Users } from "lucide-react";
-import { performUnifiedLogout } from "@/utils/unified-logout-system";
+// Note: performUnifiedLogout removed - using proper logoutMutation from useAuth
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 
 export default function UserMenu() {
@@ -98,17 +98,11 @@ export default function UserMenu() {
   }
 
   const handleLogout = () => {
-    // Close menu and start logout immediately
+    // Close menu first
     setIsOpen(false);
     
-    // Start instant logout process (non-blocking)
-    performUnifiedLogout({
-      redirectToSuccessPage: true,
-      clearRememberedCredentials: false,
-      broadcastToTabs: true
-    }).catch(() => {
-      // Silent fail - user already redirected
-    });
+    // Use proper React Query mutation for server-side logout
+    logoutMutation.mutate();
   };
 
   const handleSwitchToDashboard = () => {
