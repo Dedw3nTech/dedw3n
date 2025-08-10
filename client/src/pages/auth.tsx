@@ -232,7 +232,7 @@ export default function AuthPage() {
         await loginMutation.mutateAsync({
           username: formData.username,
           password: formData.password,
-          recaptchaToken
+          recaptchaToken: recaptchaToken || undefined
         });
         
         // Handle remember password functionality
@@ -264,7 +264,7 @@ export default function AuthPage() {
           region: formData.region as "Africa" | "South Asia" | "East Asia" | "Oceania" | "North America" | "Central America" | "South America" | "Middle East" | "Europe" | "Central Asia" | null,
           country: formData.country,
           city: formData.city,
-          recaptchaToken
+          recaptchaToken: recaptchaToken || undefined
         });
         toast({
           title: t["Account created!"] || "Account created!",
