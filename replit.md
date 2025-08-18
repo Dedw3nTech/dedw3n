@@ -17,7 +17,7 @@ The platform is built with a modular, layered architecture for maintainability a
 - **Frontend**: React with TypeScript, utilizing Vite for building.
 - **Backend**: Express.js with TypeScript, designed with a clear separation of concerns (controllers, services, repositories).
 - **Database**: PostgreSQL, managed with Drizzle ORM for data interaction.
-- **Authentication**: Robust authentication and authorization module using Passport.js for session management, JWT tokens, and secure cookie handling, with production-grade rate limiting and input validation.
+- **Authentication**: Robust authentication and authorization module using Passport.js for session management, JWT tokens, and secure cookie handling, with production-grade rate limiting, input validation, and mandatory 18+ age verification for account creation with real-time visual feedback.
 - **File Management**: Multer handles media uploads efficiently.
 - **Real-time Communication**: WebSocket for live messaging and notifications.
 - **Marketplace Core**: Comprehensive modules for product management (CRUD, search, filtering, stock), vendor management (accounts, profiles, commissions), and order processing (lifecycle, status tracking).
@@ -28,6 +28,7 @@ The platform is built with a modular, layered architecture for maintainability a
 - **Internationalization**: Integrated translation system for multi-language support.
 - **Global Currency Support**: Comprehensive 100+ currency system with professional selection interface, search functionality, and regional grouping for true international marketplace capabilities.
 - **Mobile Responsiveness**: Comprehensive mobile-first responsive design with optimized touch targets (44px minimum), fluid grids, flexible images using max-width: 100% and height: auto principles, progressive text sizing, and enhanced mobile performance optimizations. Successfully resolved mobile hero section text cutoff issues with custom CSS classes and proper viewport handling.
+- **Age Verification**: Comprehensive 18+ age verification system implemented across all registration forms (LoginPromptModal, auth.tsx) with real-time validation, visual feedback indicators (green checkmarks for valid ages, red error messages for under-18), and automatic account creation prevention for users under 18 years old.
 
 ## External Dependencies
 - **PostgreSQL**: Primary database for data storage.

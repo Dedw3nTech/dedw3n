@@ -139,7 +139,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     if (dateValue) {
       const age = calculateAge(dateValue);
       if (age < 18) {
-        setAgeError(t["You must be at least 13 years old to register"] || "You must be at least 18 years old to create an account.");
+        setAgeError(t["You must be at least 18 years old to create an account"] || "You must be at least 18 years old to create an account.");
       } else {
         setAgeError("");
       }
@@ -421,22 +421,35 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
               <Label htmlFor="dateOfBirth" className="flex items-center">
                 <Calendar className="mr-2 h-4 w-4" />
                 {t["Date of Birth"] || "Date of Birth"}
+                <span className="ml-1 text-xs text-gray-500">(18+ required)</span>
               </Label>
-              <Input
-                id="dateOfBirth"
-                type="date"
-                value={formData.dateOfBirth}
-                onChange={handleDateOfBirthChange}
-                required={!isLogin}
-                max={new Date().toISOString().split('T')[0]}
-                className={ageError ? "border-red-500" : ""}
-              />
-              {ageError && (
+              <div className="relative">
+                <Input
+                  id="dateOfBirth"
+                  type="date"
+                  value={formData.dateOfBirth}
+                  onChange={handleDateOfBirthChange}
+                  required={!isLogin}
+                  max={new Date().toISOString().split('T')[0]}
+                  className={ageError ? "border-red-500" : formData.dateOfBirth && !ageError ? "border-green-500" : ""}
+                />
+                {formData.dateOfBirth && !ageError && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  </div>
+                )}
+              </div>
+              {ageError ? (
                 <p className="text-sm text-red-500 flex items-center mt-1">
-                  <Calendar className="mr-1 h-3 w-3" />
+                  <XCircle className="mr-1 h-3 w-3" />
                   {ageError}
                 </p>
-              )}
+              ) : formData.dateOfBirth && !ageError ? (
+                <p className="text-sm text-green-600 flex items-center mt-1">
+                  <CheckCircle className="mr-1 h-3 w-3" />
+                  {t["Age verified - you are eligible to create an account"] || "Age verified - you are eligible to create an account"}
+                </p>
+              ) : null}
             </div>
           )}
 
