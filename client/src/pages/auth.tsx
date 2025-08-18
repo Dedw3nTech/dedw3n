@@ -21,20 +21,11 @@ import { useAffiliateVerification } from "@/hooks/use-affiliate-verification";
 import { ReportButton } from "@/components/ui/report-button";
 // Remove usePageTitle import as it's not needed
 import { 
-  User, 
   Eye, 
   EyeOff, 
-  Heart,
-  MessageCircle,
-  Share2,
-  ShoppingBag,
-  Users,
-  Globe,
-  Calendar,
   XCircle,
   CheckCircle,
   Loader2,
-  Mail,
   ArrowLeft
 } from "lucide-react";
 
@@ -421,8 +412,7 @@ export default function AuthPage() {
 
               {!isLogin && (
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="flex items-center">
-                    <Mail className="mr-2 h-4 w-4" />
+                  <Label htmlFor="email">
                     {t["Email"] || "Email"}
                   </Label>
                   <div className="relative">
@@ -482,10 +472,8 @@ export default function AuthPage() {
 
               {!isLogin && (
                 <div className="space-y-2">
-                  <Label htmlFor="dateOfBirth" className="flex items-center">
-                    <Calendar className="mr-2 h-4 w-4" />
-                    {t["Date of Birth"] || "Date of Birth"}
-                    <span className="ml-1 text-xs text-gray-500">(18+ required)</span>
+                  <Label htmlFor="dateOfBirth">
+                    {t["Date of Birth"] || "Date of Birth"} <span className="text-red-500 ml-1">(18+ required)</span>
                   </Label>
                   <div className="relative">
                     <Input
@@ -535,8 +523,7 @@ export default function AuthPage() {
 
               {!isLogin && (
                 <div className="space-y-2">
-                  <Label className="flex items-center">
-                    <Globe className="mr-2 h-4 w-4" />
+                  <Label>
                     {t["Location"] || "Location"}
                   </Label>
                   <RegionSelector
@@ -549,8 +536,7 @@ export default function AuthPage() {
 
               {!isLogin && (
                 <div className="space-y-2">
-                  <Label htmlFor="affiliatePartnerCode" className="flex items-center">
-                    <Users className="mr-2 h-4 w-4" />
+                  <Label htmlFor="affiliatePartnerCode">
                     {t["Affiliate Partner"] || "Affiliate Partner"}
                   </Label>
                   <div className="relative">
