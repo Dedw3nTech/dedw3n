@@ -24,21 +24,12 @@ import { useEmailValidation } from "@/hooks/use-email-validation";
 import { useUnifiedRecaptcha } from '@/components/UnifiedRecaptchaProvider';
 
 import { 
-  User, 
   Eye, 
   EyeOff, 
-  Heart,
-  MessageCircle,
-  Share2,
-  ShoppingBag,
-  Users,
-  Globe,
-  Calendar,
   CheckCircle,
   AlertTriangle,
   XCircle,
-  Loader2,
-  Mail
+  Loader2
 } from "lucide-react";
 
 interface LoginPromptModalProps {
@@ -357,8 +348,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
           {!isLogin && (
             <div className="space-y-2">
-              <Label htmlFor="email" className="flex items-center">
-                <Mail className="mr-2 h-4 w-4" />
+              <Label htmlFor="email">
                 {t["Email"] || "Email"}
               </Label>
               <div className="relative">
@@ -418,10 +408,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
           {!isLogin && (
             <div className="space-y-2">
-              <Label htmlFor="dateOfBirth" className="flex items-center">
-                <Calendar className="mr-2 h-4 w-4" />
-                {t["Date of Birth"] || "Date of Birth"}
-                <span className="ml-1 text-xs text-gray-500">(18+ required)</span>
+              <Label htmlFor="dateOfBirth">
+                {t["Date of Birth"] || "Date of Birth"} <span className="text-red-500 ml-1">(18+ required)</span>
               </Label>
               <div className="relative">
                 <Input
@@ -471,8 +459,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
           {!isLogin && (
             <div className="space-y-2">
-              <Label className="flex items-center">
-                <Globe className="mr-2 h-4 w-4" />
+              <Label>
                 {t["Location"] || "Location"}
               </Label>
               <RegionSelector 
