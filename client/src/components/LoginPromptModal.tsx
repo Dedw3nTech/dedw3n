@@ -22,6 +22,7 @@ import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidato
 
 import { useEmailValidation } from "@/hooks/use-email-validation";
 import { useUnifiedRecaptcha } from '@/components/UnifiedRecaptchaProvider';
+import { useAffiliateVerification } from "@/hooks/use-affiliate-verification";
 
 import { 
   User,
@@ -60,6 +61,15 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     resetValidation 
   } = useEmailValidation();
 
+  const {
+    verifyPartnerCode,
+    isVerifying: isVerifyingAffiliate,
+    isValid: affiliateIsValid,
+    partner: affiliatePartner,
+    error: affiliateError,
+    message: affiliateMessage
+  } = useAffiliateVerification();
+
   const [formData, setFormData] = useState({
     name: "",
     username: "",
@@ -77,6 +87,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
   const [ageError, setAgeError] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
+  const [affiliateTouched, setAffiliateTouched] = useState(false);
 
 
   // Translation using typed hook
@@ -158,7 +169,18 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
   useEffect(() => {
     resetValidation();
     setEmailTouched(false);
+    setAffiliateTouched(false);
   }, [isLogin, resetValidation]);
+
+  // Affiliate partner verification effect with debouncing
+  useEffect(() => {
+    if (affiliateTouched && formData.affiliatePartner && !isLogin) {
+      const timer = setTimeout(() => {
+        verifyPartnerCode(formData.affiliatePartner);
+      }, 500); // Debounce for 500ms
+      return () => clearTimeout(timer);
+    }
+  }, [formData.affiliatePartner, affiliateTouched, isLogin, verifyPartnerCode]);
 
   // No longer need CAPTCHA validation handler for Google reCAPTCHA v3
 
@@ -516,13 +538,59 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           {!isLogin && (
             <div className="space-y-2">
               <Label htmlFor="affiliatePartner">{t["Affiliate Partner"] || "Affiliate Partner"}</Label>
-              <Input
-                id="affiliatePartner"
-                type="text"
-                placeholder={t["Enter affiliate partner code (optional)"] || "Enter affiliate partner code (optional)"}
-                value={formData.affiliatePartner}
-                onChange={(e) => setFormData({ ...formData, affiliatePartner: e.target.value })}
-              />
+              <div className="relative">
+                <Input
+                  id="affiliatePartner"
+                  type="text"
+                  placeholder={t["Enter affiliate partner code (optional)"] || "Enter affiliate partner code (optional)"}
+                  value={formData.affiliatePartner}
+                  onChange={(e) => {
+                    setFormData({ ...formData, affiliatePartner: e.target.value });
+                    if (!affiliateTouched && e.target.value) setAffiliateTouched(true);
+                  }}
+                  onBlur={() => {
+                    if (formData.affiliatePartner) setAffiliateTouched(true);
+                  }}
+                  className={`pr-10 ${
+                    affiliateTouched && formData.affiliatePartner ? (
+                      affiliateIsValid === true ? "border-green-500 focus:ring-green-500" :
+                      affiliateIsValid === false ? "border-red-500 focus:ring-red-500" :
+                      "border-blue-500 focus:ring-blue-500"
+                    ) : ""
+                  }`}
+                />
+                {affiliateTouched && formData.affiliatePartner && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    {isVerifyingAffiliate ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                    ) : affiliateIsValid === true ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : affiliateIsValid === false ? (
+                      <XCircle className="h-4 w-4 text-red-500" />
+                    ) : null}
+                  </div>
+                )}
+              </div>
+              {affiliateTouched && formData.affiliatePartner && (
+                <div className="text-sm">
+                  {isVerifyingAffiliate ? (
+                    <p className="text-blue-600 flex items-center">
+                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                      {t["Verifying affiliate partner..."] || "Verifying affiliate partner..."}
+                    </p>
+                  ) : affiliateIsValid === true && affiliatePartner ? (
+                    <p className="text-green-600 flex items-center">
+                      <CheckCircle className="mr-1 h-3 w-3" />
+                      {t["Affiliate partner verified:"] || "Affiliate partner verified:"} {affiliatePartner.name} ({affiliatePartner.company || "Individual"})
+                    </p>
+                  ) : affiliateIsValid === false ? (
+                    <p className="text-red-500 flex items-center">
+                      <XCircle className="mr-1 h-3 w-3" />
+                      {affiliateError || t["Affiliate partner code not found"] || "Affiliate partner code not found"}
+                    </p>
+                  ) : null}
+                </div>
+              )}
             </div>
           )}
 
