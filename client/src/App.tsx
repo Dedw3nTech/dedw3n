@@ -225,7 +225,7 @@ import VideoDemo from "@/pages/video-demo";
 import TestCookiesPage from "@/pages/test-cookies";
 import VendorProfile from "@/pages/vendor-profile";
 import MarketplaceRQST from "@/pages/marketplace-rqst";
-import ValidationDemo from "@/pages/validation-demo";
+// import ValidationDemo from "@/pages/validation-demo";
 
 
 // SEO wrapper component for routing
@@ -257,10 +257,10 @@ function Router() {
         <TestCookiesPage />
       </Route>
 
-      <Route path="/validation-demo">
+      {/* <Route path="/validation-demo">
         <SEOHead title="Real-time Contact Validation Demo - Dedw3n" description="Experience instant email, phone, and name validation powered by Clearout API. See real-time feedback and validation in action." />
         <ValidationDemo />
-      </Route>
+      </Route> */}
 
       <Route path="/auth">
         <SEOHead title="Authentication - Dedw3n" description="Sign in to your account or create a new one to access all Dedw3n features." />
