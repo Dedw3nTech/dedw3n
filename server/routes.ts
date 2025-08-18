@@ -82,6 +82,9 @@ import {
   insertVideoProductOverlaySchema, insertCommunityContentSchema,
   chatrooms, chatroomMessages, chatroomMembers, insertChatroomMessageSchema
 } from "@shared/schema";
+
+// Import validation routes
+import validationRoutes from "./routes/validation";
 import { z } from "zod";
 
 // Email notification function for vendor registration
@@ -12017,6 +12020,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       res.status(500).json({ message: "Failed to get user analytics" });
     }
   });
+
+  // Real-time contact validation routes
+  app.use('/api/validation', validationRoutes);
 
   // Add canonical URL headers for API responses
   app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
