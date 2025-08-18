@@ -24,8 +24,14 @@ import { useEmailValidation } from "@/hooks/use-email-validation";
 import { useUnifiedRecaptcha } from '@/components/UnifiedRecaptchaProvider';
 
 import { 
+  User,
   Eye, 
   EyeOff, 
+  Heart,
+  MessageCircle,
+  Share2,
+  ShoppingBag,
+  Users,
   CheckCircle,
   AlertTriangle,
   XCircle,
@@ -409,7 +415,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           {!isLogin && (
             <div className="space-y-2">
               <Label htmlFor="dateOfBirth">
-                {t["Date of Birth"] || "Date of Birth"} <span className="text-red-500 ml-1">(18+ required)</span>
+                {t["Date of Birth"] || "Date of Birth"} <span className="text-gray-500 ml-1">(18+ required)</span>
               </Label>
               <div className="relative">
                 <Input
