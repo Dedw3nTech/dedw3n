@@ -16,6 +16,7 @@ import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidato
 
 import { useEmailValidation } from "@/hooks/use-email-validation";
 import { useUnifiedRecaptcha } from '@/components/UnifiedRecaptchaProvider';
+import { useAffiliateVerification } from "@/hooks/use-affiliate-verification";
 
 import { ReportButton } from "@/components/ui/report-button";
 // Remove usePageTitle import as it's not needed
@@ -74,12 +75,25 @@ export default function AuthPage() {
     country: "",
     city: "",
     dateOfBirth: "",
-    gender: ""
+    gender: "",
+    affiliatePartnerCode: ""
   });
 
   const [rememberPassword, setRememberPassword] = useState(false);
   const [ageError, setAgeError] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
+  const [affiliateCodeTouched, setAffiliateCodeTouched] = useState(false);
+  
+  // Use the affiliate verification hook
+  const {
+    isVerifying: isVerifyingAffiliate,
+    isValid: isAffiliateValid,
+    partner: affiliatePartner,
+    error: affiliateError,
+    message: affiliateMessage,
+    verifyPartnerCode,
+    clearVerification: clearAffiliateVerification
+  } = useAffiliateVerification();
   // No longer need captcha state for Google reCAPTCHA v3 (invisible)
 
   // Translation using typed hook
@@ -147,6 +161,25 @@ export default function AuthPage() {
         setAgeError("");
       }
     }
+  };
+
+  // Affiliate partner code verification with debouncing
+  const handleAffiliateCodeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const code = e.target.value;
+    setFormData({ ...formData, affiliatePartnerCode: code });
+    setAffiliateCodeTouched(true);
+
+    if (code.trim().length === 0) {
+      clearAffiliateVerification();
+      return;
+    }
+
+    // Debounce the verification
+    setTimeout(async () => {
+      if (formData.affiliatePartnerCode === code) {
+        await verifyPartnerCode(code);
+      }
+    }, 500);
   };
 
   const isFormValid = useMemo(() => {
@@ -511,6 +544,70 @@ export default function AuthPage() {
                     onCountryChange={(country) => setFormData({ ...formData, country, city: "" })}
                     onCityChange={(city) => setFormData({ ...formData, city })}
                   />
+                </div>
+              )}
+
+              {!isLogin && (
+                <div className="space-y-2">
+                  <Label htmlFor="affiliatePartnerCode" className="flex items-center">
+                    <Users className="mr-2 h-4 w-4" />
+                    {t["Affiliate Partner"] || "Affiliate Partner"}
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="affiliatePartnerCode"
+                      type="text"
+                      placeholder={t["Enter affiliate partner code (optional)"] || "Enter affiliate partner code (optional)"}
+                      value={formData.affiliatePartnerCode}
+                      onChange={handleAffiliateCodeChange}
+                      className={`pr-10 ${
+                        affiliateCodeTouched && formData.affiliatePartnerCode ? (
+                          isAffiliateValid === true ? "border-green-500 focus:ring-green-500" :
+                          isAffiliateValid === false ? "border-red-500 focus:ring-red-500" :
+                          isVerifyingAffiliate ? "border-blue-500 focus:ring-blue-500" :
+                          ""
+                        ) : ""
+                      }`}
+                    />
+                    {affiliateCodeTouched && formData.affiliatePartnerCode && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        {isVerifyingAffiliate ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                        ) : isAffiliateValid === true ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        ) : isAffiliateValid === false ? (
+                          <XCircle className="h-4 w-4 text-red-500" />
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
+                  {affiliateCodeTouched && formData.affiliatePartnerCode && (
+                    <div className="text-sm">
+                      {isVerifyingAffiliate ? (
+                        <p className="text-blue-600 flex items-center">
+                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                          {t["Verifying affiliate partner code..."] || "Verifying affiliate partner code..."}
+                        </p>
+                      ) : isAffiliateValid === true && affiliatePartner ? (
+                        <div className="text-green-600">
+                          <p className="flex items-center">
+                            <CheckCircle className="mr-1 h-3 w-3" />
+                            {t["Valid affiliate partner:"] || "Valid affiliate partner:"} <strong className="ml-1">{affiliatePartner.name}</strong>
+                          </p>
+                          {affiliatePartner.company && (
+                            <p className="text-xs mt-1 text-gray-600">
+                              {t["Company"] || "Company"}: {affiliatePartner.company}
+                            </p>
+                          )}
+                        </div>
+                      ) : isAffiliateValid === false ? (
+                        <p className="text-red-500 flex items-center">
+                          <XCircle className="mr-1 h-3 w-3" />
+                          {affiliateError || (t["Invalid affiliate partner code"] || "Invalid affiliate partner code")}
+                        </p>
+                      ) : null}
+                    </div>
+                  )}
                 </div>
               )}
 

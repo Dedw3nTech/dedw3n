@@ -3675,6 +3675,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Import the required dependencies
       const { promisify } = await import('util');
       const { scrypt, randomBytes } = await import('crypto');
+      const { affiliateVerificationService } = await import('./services/affiliate-verification');
       
       // Define scryptAsync function
       const scryptAsync = promisify(scrypt);
@@ -3693,13 +3694,38 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       console.log('[DEBUG] Creating new user:', req.body.username);
       
+      // Handle affiliate partner verification and attribution
+      let affiliatePartnerId = null;
+      if (req.body.affiliatePartnerCode) {
+        console.log('[DEBUG] Processing affiliate partner code:', req.body.affiliatePartnerCode);
+        const affiliatePartner = await affiliateVerificationService.verifyPartnerCode(req.body.affiliatePartnerCode);
+        if (affiliatePartner) {
+          affiliatePartnerId = affiliatePartner.id;
+          console.log('[DEBUG] Valid affiliate partner found:', affiliatePartner.name, 'ID:', affiliatePartnerId);
+        } else {
+          console.log('[DEBUG] Invalid affiliate partner code provided');
+        }
+      }
+      
       // Create user
       const user = await storage.createUser({
         ...req.body,
         password: hashedPassword,
+        affiliatePartner: req.body.affiliatePartnerCode || null, // Store the partner code directly
       });
       
       console.log('[DEBUG] User created successfully:', user.id);
+      
+      // Increment affiliate partner referral count if applicable
+      if (affiliatePartnerId && req.body.affiliatePartnerCode) {
+        try {
+          await affiliateVerificationService.incrementReferralCount(req.body.affiliatePartnerCode);
+          console.log('[DEBUG] Affiliate partner referral count incremented');
+        } catch (error) {
+          console.error('[ERROR] Failed to increment affiliate referral count:', error);
+          // Don't fail registration if this fails
+        }
+      }
       
       // Login the user
       req.login(user, (err) => {
@@ -14789,6 +14815,44 @@ This is a test email from the Dedw3n marketplace system.
   });
 
   // Affiliate Partnership API Routes
+  
+  // Import affiliate verification service
+  const { affiliateVerificationService } = await import('./services/affiliate-verification');
+  
+  // Affiliate partner code verification endpoint
+  app.post('/api/affiliate-partners/verify', async (req: Request, res: Response) => {
+    try {
+      const { partnerCode } = req.body;
+      
+      if (!partnerCode) {
+        return res.status(400).json({ 
+          message: "Partner code is required",
+          success: false 
+        });
+      }
+
+      const partner = await affiliateVerificationService.verifyPartnerCode(partnerCode);
+      
+      if (partner) {
+        return res.status(200).json({
+          success: true,
+          partner: partner,
+          message: "Valid affiliate partner code"
+        });
+      } else {
+        return res.status(404).json({
+          success: false,
+          message: "Invalid affiliate partner code"
+        });
+      }
+    } catch (error) {
+      console.error('Error verifying affiliate partner code:', error);
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error during verification"
+      });
+    }
+  });
   app.get('/api/affiliate-partnership/profile', isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
