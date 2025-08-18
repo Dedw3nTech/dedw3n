@@ -23,6 +23,7 @@ import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidato
 import { useEmailValidation } from "@/hooks/use-email-validation";
 import { useUnifiedRecaptcha } from '@/components/UnifiedRecaptchaProvider';
 import { useAffiliateVerification } from "@/hooks/use-affiliate-verification";
+import { useUsernameVerification } from "@/hooks/use-username-verification";
 
 import { 
   User,
@@ -70,6 +71,15 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     message: affiliateMessage
   } = useAffiliateVerification();
 
+  const {
+    verifyUsername,
+    isVerifying: isVerifyingUsername,
+    isAvailable: usernameIsAvailable,
+    error: usernameError,
+    message: usernameMessage,
+    resetVerification: resetUsernameVerification
+  } = useUsernameVerification();
+
   const [formData, setFormData] = useState({
     name: "",
     username: "",
@@ -88,6 +98,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
   const [ageError, setAgeError] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
   const [affiliateTouched, setAffiliateTouched] = useState(false);
+  const [usernameTouched, setUsernameTouched] = useState(false);
 
 
   // Translation using typed hook
@@ -168,9 +179,11 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
   // Reset email validation when switching between login/register
   useEffect(() => {
     resetValidation();
+    resetUsernameVerification();
     setEmailTouched(false);
     setAffiliateTouched(false);
-  }, [isLogin, resetValidation]);
+    setUsernameTouched(false);
+  }, [isLogin, resetValidation, resetUsernameVerification]);
 
   // Affiliate partner verification effect with debouncing
   useEffect(() => {
@@ -181,6 +194,16 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
       return () => clearTimeout(timer);
     }
   }, [formData.affiliatePartner, affiliateTouched, isLogin, verifyPartnerCode]);
+
+  // Username verification effect with debouncing
+  useEffect(() => {
+    if (usernameTouched && formData.username && !isLogin) {
+      const timer = setTimeout(() => {
+        verifyUsername(formData.username);
+      }, 500); // Debounce for 500ms
+      return () => clearTimeout(timer);
+    }
+  }, [formData.username, usernameTouched, isLogin, verifyUsername]);
 
   // No longer need CAPTCHA validation handler for Google reCAPTCHA v3
 
@@ -364,14 +387,60 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
           <div className="space-y-2">
             <Label htmlFor="username">{t["Username"] || "Username"}</Label>
-            <Input
-              id="username"
-              type="text"
-              placeholder={t["Choose a username"] || "Choose a username"}
-              value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              required
-            />
+            <div className="relative">
+              <Input
+                id="username"
+                type="text"
+                placeholder={t["Choose a username"] || "Choose a username"}
+                value={formData.username}
+                onChange={(e) => {
+                  setFormData({ ...formData, username: e.target.value });
+                  if (!usernameTouched && e.target.value && !isLogin) setUsernameTouched(true);
+                }}
+                onBlur={() => {
+                  if (formData.username && !isLogin) setUsernameTouched(true);
+                }}
+                required
+                className={`pr-10 ${
+                  usernameTouched && formData.username && !isLogin ? (
+                    usernameIsAvailable === true ? "border-green-500 focus:ring-green-500" :
+                    usernameIsAvailable === false ? "border-red-500 focus:ring-red-500" :
+                    "border-blue-500 focus:ring-blue-500"
+                  ) : ""
+                }`}
+              />
+              {usernameTouched && formData.username && !isLogin && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  {isVerifyingUsername ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                  ) : usernameIsAvailable === true ? (
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  ) : usernameIsAvailable === false ? (
+                    <XCircle className="h-4 w-4 text-red-500" />
+                  ) : null}
+                </div>
+              )}
+            </div>
+            {usernameTouched && formData.username && !isLogin && (
+              <div className="text-sm">
+                {isVerifyingUsername ? (
+                  <p className="text-blue-600 flex items-center">
+                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                    {t["Checking username availability..."] || "Checking username availability..."}
+                  </p>
+                ) : usernameIsAvailable === true ? (
+                  <p className="text-green-600 flex items-center">
+                    <CheckCircle className="mr-1 h-3 w-3" />
+                    {usernameMessage || t["Username is available"] || "Username is available"}
+                  </p>
+                ) : usernameIsAvailable === false ? (
+                  <p className="text-red-500 flex items-center">
+                    <XCircle className="mr-1 h-3 w-3" />
+                    {usernameError || usernameMessage || t["Username is not available"] || "Username is not available"}
+                  </p>
+                ) : null}
+              </div>
+            )}
           </div>
 
           {!isLogin && (

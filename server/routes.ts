@@ -2925,6 +2925,66 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     });
   }
   
+  // Username availability check endpoint
+  app.post('/api/auth/check-username', async (req: Request, res: Response) => {
+    try {
+      const { username } = req.body;
+
+      if (!username || typeof username !== 'string') {
+        return res.status(400).json({
+          available: false,
+          message: 'Username is required'
+        });
+      }
+
+      const trimmedUsername = username.trim();
+
+      // Basic validation
+      if (trimmedUsername.length < 3) {
+        return res.status(400).json({
+          available: false,
+          message: 'Username must be at least 3 characters long'
+        });
+      }
+
+      if (trimmedUsername.length > 20) {
+        return res.status(400).json({
+          available: false,
+          message: 'Username must be no more than 20 characters'
+        });
+      }
+
+      if (!/^[a-zA-Z0-9_-]+$/.test(trimmedUsername)) {
+        return res.status(400).json({
+          available: false,
+          message: 'Username can only contain letters, numbers, underscores and hyphens'
+        });
+      }
+
+      // Check if username exists in database
+      const existingUser = await storage.getUserByUsername(trimmedUsername);
+      
+      if (existingUser) {
+        return res.json({
+          available: false,
+          message: 'Username is already taken'
+        });
+      }
+
+      return res.json({
+        available: true,
+        message: 'Username is available'
+      });
+
+    } catch (error: any) {
+      console.error('Error checking username availability:', error);
+      return res.status(500).json({
+        available: false,
+        message: 'Failed to check username availability'
+      });
+    }
+  });
+
   // Authentication validation endpoints
   app.get('/api/auth/validate', (req, res) => {
     console.log('[DEBUG] /api/auth/validate - Session validation attempt');
