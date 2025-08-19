@@ -410,6 +410,40 @@ export default function AuthPage() {
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="password">{t["Password"] || "Password"}</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder={t["Enter your password"] || "Enter your password"}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    required
+                    className="pr-10"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </Button>
+                </div>
+                {!isLogin && formData.password && (
+                  <PasswordStrengthValidator 
+                    password={formData.password} 
+                    onPasswordChange={(password) => setFormData({ ...formData, password })}
+                  />
+                )}
+              </div>
+
               {!isLogin && (
                 <div className="space-y-2">
                   <Label htmlFor="email">
@@ -596,42 +630,6 @@ export default function AuthPage() {
                   )}
                 </div>
               )}
-
-              <div className="space-y-2">
-                <Label htmlFor="password">{t["Password"] || "Password"}</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder={t["Enter your password"] || "Enter your password"}
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    required
-                    className="pr-10"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-gray-400" />
-                    )}
-                  </Button>
-                </div>
-                {!isLogin && formData.password && (
-                  <PasswordStrengthValidator 
-                    password={formData.password} 
-                    onPasswordChange={(password) => setFormData({ ...formData, password })}
-                  />
-                )}
-              </div>
-
-
 
               {isLogin && (
                 <div className="flex items-center space-x-2">

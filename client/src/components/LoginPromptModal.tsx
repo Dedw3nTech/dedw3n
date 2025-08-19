@@ -443,6 +443,33 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             )}
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="password">{t["Password"] || "Password"}</Label>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder={t["Enter your password"] || "Enter your password"}
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                required
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+
           {!isLogin && (
             <div className="space-y-2">
               <Label htmlFor="email">
@@ -575,33 +602,6 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
               />
             </div>
           )}
-
-          <div className="space-y-2">
-            <Label htmlFor="password">{t["Password"] || "Password"}</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder={t["Enter your password"] || "Enter your password"}
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                required
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </div>
 
           {/* Affiliate Partner Field - Only show for registration */}
           {!isLogin && (
