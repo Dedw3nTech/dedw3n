@@ -76,6 +76,7 @@ export default function AuthPage() {
     region: "",
     country: "",
     city: "",
+    language: "",
     dateOfBirth: "",
     gender: "",
     affiliatePartnerCode: ""
@@ -202,6 +203,7 @@ export default function AuthPage() {
         formData.region &&
         formData.country &&
         formData.city &&
+        formData.language &&
         !ageError &&
         emailIsValid === true &&
         nameIsValid !== false &&
@@ -319,6 +321,8 @@ export default function AuthPage() {
           region: formData.region as "Africa" | "South Asia" | "East Asia" | "Oceania" | "North America" | "Central America" | "South America" | "Middle East" | "Europe" | "Central Asia" | null,
           country: formData.country,
           city: formData.city,
+          preferredLanguage: formData.language,
+          affiliatePartner: formData.affiliatePartnerCode,
           recaptchaToken: recaptchaToken || undefined
         });
         toast({
@@ -679,6 +683,80 @@ export default function AuthPage() {
                     onCountryChange={(country) => setFormData({ ...formData, country, city: "" })}
                     onCityChange={(city) => setFormData({ ...formData, city })}
                   />
+                </div>
+              )}
+
+              {!isLogin && (
+                <div className="space-y-2">
+                  <Label htmlFor="language">{t["Language"] || "Language"}</Label>
+                  <Select value={formData.language} onValueChange={(value) => setFormData({ ...formData, language: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t["Select your language"] || "Select your language"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en">{t["English"] || "English"}</SelectItem>
+                      <SelectItem value="es">{t["Spanish"] || "Spanish"}</SelectItem>
+                      <SelectItem value="fr">{t["French"] || "French"}</SelectItem>
+                      <SelectItem value="de">{t["German"] || "German"}</SelectItem>
+                      <SelectItem value="it">{t["Italian"] || "Italian"}</SelectItem>
+                      <SelectItem value="pt">{t["Portuguese"] || "Portuguese"}</SelectItem>
+                      <SelectItem value="ru">{t["Russian"] || "Russian"}</SelectItem>
+                      <SelectItem value="ja">{t["Japanese"] || "Japanese"}</SelectItem>
+                      <SelectItem value="ko">{t["Korean"] || "Korean"}</SelectItem>
+                      <SelectItem value="zh">{t["Chinese"] || "Chinese"}</SelectItem>
+                      <SelectItem value="ar">{t["Arabic"] || "Arabic"}</SelectItem>
+                      <SelectItem value="hi">{t["Hindi"] || "Hindi"}</SelectItem>
+                      <SelectItem value="nl">{t["Dutch"] || "Dutch"}</SelectItem>
+                      <SelectItem value="sv">{t["Swedish"] || "Swedish"}</SelectItem>
+                      <SelectItem value="da">{t["Danish"] || "Danish"}</SelectItem>
+                      <SelectItem value="no">{t["Norwegian"] || "Norwegian"}</SelectItem>
+                      <SelectItem value="fi">{t["Finnish"] || "Finnish"}</SelectItem>
+                      <SelectItem value="pl">{t["Polish"] || "Polish"}</SelectItem>
+                      <SelectItem value="tr">{t["Turkish"] || "Turkish"}</SelectItem>
+                      <SelectItem value="th">{t["Thai"] || "Thai"}</SelectItem>
+                      <SelectItem value="vi">{t["Vietnamese"] || "Vietnamese"}</SelectItem>
+                      <SelectItem value="id">{t["Indonesian"] || "Indonesian"}</SelectItem>
+                      <SelectItem value="ms">{t["Malay"] || "Malay"}</SelectItem>
+                      <SelectItem value="tl">{t["Filipino"] || "Filipino"}</SelectItem>
+                      <SelectItem value="he">{t["Hebrew"] || "Hebrew"}</SelectItem>
+                      <SelectItem value="fa">{t["Persian"] || "Persian"}</SelectItem>
+                      <SelectItem value="ur">{t["Urdu"] || "Urdu"}</SelectItem>
+                      <SelectItem value="bn">{t["Bengali"] || "Bengali"}</SelectItem>
+                      <SelectItem value="ta">{t["Tamil"] || "Tamil"}</SelectItem>
+                      <SelectItem value="te">{t["Telugu"] || "Telugu"}</SelectItem>
+                      <SelectItem value="ml">{t["Malayalam"] || "Malayalam"}</SelectItem>
+                      <SelectItem value="kn">{t["Kannada"] || "Kannada"}</SelectItem>
+                      <SelectItem value="gu">{t["Gujarati"] || "Gujarati"}</SelectItem>
+                      <SelectItem value="mr">{t["Marathi"] || "Marathi"}</SelectItem>
+                      <SelectItem value="pa">{t["Punjabi"] || "Punjabi"}</SelectItem>
+                      <SelectItem value="or">{t["Odia"] || "Odia"}</SelectItem>
+                      <SelectItem value="as">{t["Assamese"] || "Assamese"}</SelectItem>
+                      <SelectItem value="ne">{t["Nepali"] || "Nepali"}</SelectItem>
+                      <SelectItem value="si">{t["Sinhala"] || "Sinhala"}</SelectItem>
+                      <SelectItem value="my">{t["Myanmar"] || "Myanmar"}</SelectItem>
+                      <SelectItem value="km">{t["Khmer"] || "Khmer"}</SelectItem>
+                      <SelectItem value="lo">{t["Lao"] || "Lao"}</SelectItem>
+                      <SelectItem value="ka">{t["Georgian"] || "Georgian"}</SelectItem>
+                      <SelectItem value="hy">{t["Armenian"] || "Armenian"}</SelectItem>
+                      <SelectItem value="az">{t["Azerbaijani"] || "Azerbaijani"}</SelectItem>
+                      <SelectItem value="kk">{t["Kazakh"] || "Kazakh"}</SelectItem>
+                      <SelectItem value="ky">{t["Kyrgyz"] || "Kyrgyz"}</SelectItem>
+                      <SelectItem value="uz">{t["Uzbek"] || "Uzbek"}</SelectItem>
+                      <SelectItem value="tk">{t["Turkmen"] || "Turkmen"}</SelectItem>
+                      <SelectItem value="tg">{t["Tajik"] || "Tajik"}</SelectItem>
+                      <SelectItem value="mn">{t["Mongolian"] || "Mongolian"}</SelectItem>
+                      <SelectItem value="bo">{t["Tibetan"] || "Tibetan"}</SelectItem>
+                      <SelectItem value="dz">{t["Dzongkha"] || "Dzongkha"}</SelectItem>
+                      <SelectItem value="am">{t["Amharic"] || "Amharic"}</SelectItem>
+                      <SelectItem value="sw">{t["Swahili"] || "Swahili"}</SelectItem>
+                      <SelectItem value="zu">{t["Zulu"] || "Zulu"}</SelectItem>
+                      <SelectItem value="xh">{t["Xhosa"] || "Xhosa"}</SelectItem>
+                      <SelectItem value="af">{t["Afrikaans"] || "Afrikaans"}</SelectItem>
+                      <SelectItem value="ig">{t["Igbo"] || "Igbo"}</SelectItem>
+                      <SelectItem value="yo">{t["Yoruba"] || "Yoruba"}</SelectItem>
+                      <SelectItem value="ha">{t["Hausa"] || "Hausa"}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
 
