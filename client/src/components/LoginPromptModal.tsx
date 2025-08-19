@@ -104,6 +104,11 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
   // Translation using typed hook
   const t = useTypedTranslation();
 
+  // Sync isLogin state with action prop changes
+  useEffect(() => {
+    setIsLogin(action !== "register");
+  }, [action]);
+
   // Load remembered credentials on component mount
   useEffect(() => {
     if (isLogin) {
