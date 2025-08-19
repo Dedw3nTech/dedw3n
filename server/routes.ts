@@ -10099,7 +10099,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Enhanced name validation endpoint using Clearout API
+  // Inclusive name validation endpoint - focuses only on obvious gibberish patterns
   app.post('/api/validate-name', async (req: Request, res: Response) => {
     try {
       const { name } = req.body;
@@ -10114,141 +10114,20 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       const trimmedName = name.trim();
       
-      // Basic validation - check for minimum length and basic format
-      if (trimmedName.length < 2) {
-        return res.status(200).json({
-          status: 'invalid',
-          message: 'Name is too short',
-          confidence: 0
-        });
-      }
-
-      // Check for obvious gibberish patterns
-      const gibberishPatterns = [
-        /^[aeiou]{3,}$/i, // Only vowels
-        /^[bcdfghjklmnpqrstvwxyz]{4,}$/i, // Only consonants
-        /(.)\1{3,}/, // Same character repeated 4+ times
-        /^[0-9]+$/, // Only numbers
-        /[!@#$%^&*(),.?":{}|<>]/, // Special characters
-        /^[a-z]{1,2}$/i, // Too short (1-2 chars)
-        /^(test|demo|fake|abc|xyz|qwerty|asdf|zxcv)$/i // Common test names
-      ];
-
-      for (const pattern of gibberishPatterns) {
-        if (pattern.test(trimmedName)) {
-          return res.status(200).json({
-            status: 'invalid',
-            message: 'Name appears to be invalid or test data',
-            confidence: 10
-          });
-        }
-      }
-
-      const clearoutApiKey = process.env.CLEAROUT_API_KEY;
-      if (!clearoutApiKey) {
-        console.error('[NAME_VALIDATION] Clearout API key not configured');
-        // Fallback to basic validation when API is not available
-        const basicValidation = validateNameBasic(trimmedName);
-        return res.status(200).json({
-          status: basicValidation.isValid ? 'valid' : 'invalid',
-          message: basicValidation.message,
-          confidence: basicValidation.confidence,
-          details: {
-            is_real_name: basicValidation.isValid,
-            confidence_score: basicValidation.confidence
-          }
-        });
-      }
-
       console.log(`[NAME_VALIDATION] Validating name: ${trimmedName.substring(0, 3)}***`);
-
-      // Split name into parts for validation
-      const nameParts = trimmedName.split(/\s+/).filter(part => part.length > 0);
       
-      if (nameParts.length < 1 || nameParts.length > 4) {
-        return res.status(200).json({
-          status: 'invalid',
-          message: 'Name should have 1-4 parts',
-          confidence: 20
-        });
-      }
-
-      // Validate each name part using Clearout API
-      const validationPromises = nameParts.map(async (part, index) => {
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-          // Use Clearout's name validation endpoint
-          const response = await fetch(`https://api.clearout.io/v2/name_verify/instant`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${clearoutApiKey}`,
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-              name: part.toLowerCase(),
-              type: index === 0 ? 'first_name' : 'last_name'
-            }),
-            signal: controller.signal
-          });
-
-          clearTimeout(timeoutId);
-
-          if (!response.ok) {
-            console.warn(`[NAME_VALIDATION] API error for "${part}": ${response.status}`);
-            return { part, valid: null, confidence: 50 };
-          }
-
-          const data = await response.json();
-          const isValid = data.data?.status === 'valid' || data.data?.is_name === true;
-          const confidence = data.data?.confidence_score || (isValid ? 80 : 30);
-
-          return { part, valid: isValid, confidence };
-        } catch (error) {
-          console.warn(`[NAME_VALIDATION] Error validating "${part}":`, error);
-          return { part, valid: null, confidence: 50 };
-        }
-      });
-
-      const validationResults = await Promise.all(validationPromises);
+      // Perform inclusive validation - only flag obvious gibberish
+      const validation = validateNameInclusive(trimmedName);
       
-      // Calculate overall confidence
-      const validParts = validationResults.filter(r => r.valid === true).length;
-      const invalidParts = validationResults.filter(r => r.valid === false).length;
-      const unknownParts = validationResults.filter(r => r.valid === null).length;
-      
-      const avgConfidence = validationResults.reduce((sum, r) => sum + r.confidence, 0) / validationResults.length;
-      
-      let overallStatus: 'valid' | 'invalid' | 'error';
-      let message: string;
-      let finalConfidence: number;
-
-      if (invalidParts > validParts) {
-        overallStatus = 'invalid';
-        message = 'Name appears to contain invalid or gibberish parts';
-        finalConfidence = Math.max(20, avgConfidence * 0.5);
-      } else if (validParts >= nameParts.length * 0.7) {
-        overallStatus = 'valid';
-        message = 'Name verified as genuine';
-        finalConfidence = Math.min(95, avgConfidence * 1.1);
-      } else {
-        overallStatus = 'invalid';
-        message = 'Unable to verify name authenticity';
-        finalConfidence = Math.max(30, avgConfidence * 0.8);
-      }
-
       const result = {
-        status: overallStatus,
-        message,
-        confidence: Math.round(finalConfidence),
+        status: validation.isValid ? 'valid' : 'invalid',
+        message: validation.message,
+        confidence: validation.confidence,
         details: {
-          first_name: nameParts[0] || '',
-          last_name: nameParts.slice(1).join(' ') || '',
-          is_real_name: overallStatus === 'valid',
-          confidence_score: Math.round(finalConfidence),
-          part_results: validationResults
+          first_name: trimmedName.split(' ')[0] || '',
+          last_name: trimmedName.split(' ').slice(1).join(' ') || '',
+          is_real_name: validation.isValid,
+          confidence_score: validation.confidence
         }
       };
 
@@ -10265,55 +10144,107 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Helper function for basic name validation (fallback)
-  function validateNameBasic(name: string): { isValid: boolean; message: string; confidence: number } {
+  // Inclusive name validation function - only flags obvious gibberish patterns
+  function validateNameInclusive(name: string): { isValid: boolean; message: string; confidence: number } {
     const trimmedName = name.trim();
     
-    // Check for common real name patterns
-    const namePattern = /^[a-zA-Z]+(?:[\s\-'\.][a-zA-Z]+)*$/;
-    if (!namePattern.test(trimmedName)) {
+    // Check minimum length
+    if (trimmedName.length < 2) {
+      return {
+        isValid: false,
+        message: 'Name is too short',
+        confidence: 10
+      };
+    }
+
+    // Check maximum reasonable length
+    if (trimmedName.length > 100) {
+      return {
+        isValid: false,
+        message: 'Name is too long',
+        confidence: 10
+      };
+    }
+
+    // Check for obvious gibberish patterns only
+    const gibberishPatterns = [
+      // Only numbers
+      /^[0-9]+$/,
+      // Only special characters
+      /^[!@#$%^&*(),.?":{}|<>]+$/,
+      // Same character repeated 4+ times consecutively
+      /(.)\1{3,}/,
+      // Keyboard patterns (qwerty, asdf, zxcv style)
+      /^(qwerty|asdf|zxcv|qazwsx|plmnko|lkjhgf|poiuyt|mnbvcx|wertyui|sdfghj|xcvbnm|qwertyui|asdfghjk|zxcvbnm)+$/i,
+      // Random character sequences (3+ consonants or vowels in a row with no pattern)
+      /^[bcdfghjklmnpqrstvwxyz]{5,}$/i, // 5+ consonants only
+      /^[aeiou]{4,}$/i, // 4+ vowels only
+      // Common test/dummy patterns
+      /^(test|demo|fake|dummy|sample|example|placeholder|abc|xyz|null|undefined|none|n\/a)$/i,
+      // Random alphanumeric gibberish patterns
+      /^[a-z0-9]{1,3}$/i, // Very short random sequences
+      /^[0-9]+[a-z]+[0-9]+$/i // Mixed numbers and letters in suspicious patterns
+    ];
+
+    // Only reject if it matches obvious gibberish patterns
+    for (const pattern of gibberishPatterns) {
+      if (pattern.test(trimmedName)) {
+        return {
+          isValid: false,
+          message: 'Please enter a valid name',
+          confidence: 20
+        };
+      }
+    }
+
+    // Accept Unicode letters for international names
+    const validCharPattern = /^[\p{L}\p{M}\p{N}\s\-'\.]+$/u;
+    if (!validCharPattern.test(trimmedName)) {
       return {
         isValid: false,
         message: 'Name contains invalid characters',
-        confidence: 20
-      };
-    }
-
-    // Check length
-    if (trimmedName.length < 2 || trimmedName.length > 50) {
-      return {
-        isValid: false,
-        message: 'Name length is invalid',
-        confidence: 25
-      };
-    }
-
-    // Check for reasonable word count
-    const parts = trimmedName.split(/\s+/);
-    if (parts.length > 4) {
-      return {
-        isValid: false,
-        message: 'Too many name parts',
         confidence: 30
       };
     }
 
-    // Check each part has reasonable length
+    // Split into parts and do basic sanity checks
+    const parts = trimmedName.split(/\s+/).filter(part => part.length > 0);
+    
+    // Allow up to 6 name parts for complex international names
+    if (parts.length > 6) {
+      return {
+        isValid: false,
+        message: 'Name has too many parts',
+        confidence: 40
+      };
+    }
+
+    // Check if each part has at least one letter (not just numbers/symbols)
+    const hasLetterPattern = /[\p{L}]/u;
     for (const part of parts) {
-      if (part.length < 2 || part.length > 20) {
+      if (!hasLetterPattern.test(part)) {
         return {
           isValid: false,
-          message: 'Name parts have invalid length',
+          message: 'Each name part must contain at least one letter',
+          confidence: 30
+        };
+      }
+      
+      // Allow longer name parts for international names
+      if (part.length > 30) {
+        return {
+          isValid: false,
+          message: 'Name parts are too long',
           confidence: 35
         };
       }
     }
 
-    // Basic validation passed
+    // All checks passed - accept the name
     return {
       isValid: true,
-      message: 'Name appears valid (basic validation)',
-      confidence: 70
+      message: 'Name is valid',
+      confidence: 85
     };
   }
 
