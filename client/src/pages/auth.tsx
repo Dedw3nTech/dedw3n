@@ -18,6 +18,7 @@ import { useEmailValidation } from "@/hooks/use-email-validation";
 import { useNameValidation } from "@/hooks/use-name-validation";
 import { useUnifiedRecaptcha } from '@/components/UnifiedRecaptchaProvider';
 import { useAffiliateVerification } from "@/hooks/use-affiliate-verification";
+import { usePasswordStrength } from "@/hooks/use-password-strength";
 
 import { ReportButton } from "@/components/ui/report-button";
 // Remove usePageTitle import as it's not needed
@@ -27,7 +28,8 @@ import {
   XCircle,
   CheckCircle,
   Loader2,
-  ArrowLeft
+  ArrowLeft,
+  AlertTriangle
 } from "lucide-react";
 
 export default function AuthPage() {
@@ -78,6 +80,9 @@ export default function AuthPage() {
     gender: "",
     affiliatePartnerCode: ""
   });
+
+  // Password strength validation (only for registration)
+  const { result: passwordStrength, isValidating: isValidatingPassword } = usePasswordStrength(!isLogin ? formData.password : '');
 
   const [rememberPassword, setRememberPassword] = useState(false);
   const [ageError, setAgeError] = useState("");
@@ -199,10 +204,11 @@ export default function AuthPage() {
         formData.city &&
         !ageError &&
         emailIsValid === true &&
-        nameIsValid !== false
+        nameIsValid !== false &&
+        (!passwordStrength?.isWeak || formData.password.length === 0)
       );
     }
-  }, [formData, isLogin, ageError, emailIsValid, nameIsValid]);
+  }, [formData, isLogin, ageError, emailIsValid, nameIsValid, passwordStrength]);
 
   // Trigger email validation when email changes
   useEffect(() => {
@@ -476,7 +482,11 @@ export default function AuthPage() {
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     required
-                    className="pr-10"
+                    className={`pr-10 ${!isLogin && formData.password && passwordStrength ? (
+                      passwordStrength.isSecure ? "border-green-500 focus:ring-green-500" :
+                      passwordStrength.isWeak ? "border-red-500 focus:ring-red-500" :
+                      "border-orange-500 focus:ring-orange-500"
+                    ) : ""}`}
                   />
                   <Button
                     type="button"
@@ -492,11 +502,59 @@ export default function AuthPage() {
                     )}
                   </Button>
                 </div>
-                {!isLogin && formData.password && (
-                  <PasswordStrengthValidator 
-                    password={formData.password} 
-                    onPasswordChange={(password) => setFormData({ ...formData, password })}
-                  />
+                {/* Password Strength Indicator - Only show for registration */}
+                {!isLogin && formData.password && passwordStrength && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Password Strength:</span>
+                      <span className={`text-sm font-semibold ${passwordStrength.color}`}>
+                        {passwordStrength.strengthLabel}
+                      </span>
+                    </div>
+                    {/* Password strength progress bar */}
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full transition-all duration-300 ${
+                          passwordStrength.score <= 1 ? 'bg-red-500' :
+                          passwordStrength.score <= 2 ? 'bg-orange-500' :
+                          passwordStrength.score <= 3 ? 'bg-yellow-500' :
+                          passwordStrength.score <= 4 ? 'bg-green-500' :
+                          'bg-green-600'
+                        }`}
+                        style={{ width: `${(passwordStrength.score / 5) * 100}%` }}
+                      ></div>
+                    </div>
+                    {/* Feedback messages */}
+                    <div className="text-xs space-y-1">
+                      {passwordStrength.feedback.map((message, index) => (
+                        <div key={index} className={`flex items-start ${passwordStrength.color}`}>
+                          {passwordStrength.isSecure ? (
+                            <CheckCircle className="h-3 w-3 mr-1 mt-0.5 flex-shrink-0" />
+                          ) : (
+                            <AlertTriangle className="h-3 w-3 mr-1 mt-0.5 flex-shrink-0" />
+                          )}
+                          <span>{message}</span>
+                        </div>
+                      ))}
+                      {passwordStrength.isWeak && passwordStrength.suggestions.length > 0 && (
+                        <div className="mt-2 pt-2 border-t border-gray-100">
+                          <p className="text-gray-600 font-medium">Suggestions:</p>
+                          {passwordStrength.suggestions.slice(0, 3).map((suggestion, index) => (
+                            <div key={index} className="flex items-start text-gray-600 mt-1">
+                              <span className="w-1 h-1 bg-gray-400 rounded-full mr-2 mt-2 flex-shrink-0"></span>
+                              <span>{suggestion}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {passwordStrength.estimatedCrackTime !== 'Unknown' && (
+                        <div className="flex items-center justify-between pt-1 text-gray-500">
+                          <span>Estimated crack time:</span>
+                          <span className="font-medium">{passwordStrength.estimatedCrackTime}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
 
@@ -707,7 +765,8 @@ export default function AuthPage() {
                   !isFormValid || 
                   loginMutation.isPending || 
                   registerMutation.isPending ||
-                  (!isLogin && (isValidating || isValidatingName))
+                  (!isLogin && (isValidating || isValidatingName)) ||
+                  (!isLogin && passwordStrength?.isWeak && formData.password.length > 0)
                 )}
               >
                 {loginMutation.isPending || registerMutation.isPending ? (
