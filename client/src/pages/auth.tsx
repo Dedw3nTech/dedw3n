@@ -15,6 +15,7 @@ import { useTypedTranslation, useMasterBatchTranslation } from "@/hooks/use-mast
 import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidator";
 
 import { useEmailValidation } from "@/hooks/use-email-validation";
+import { useNameValidation } from "@/hooks/use-name-validation";
 import { useUnifiedRecaptcha } from '@/components/UnifiedRecaptchaProvider';
 import { useAffiliateVerification } from "@/hooks/use-affiliate-verification";
 
@@ -56,6 +57,14 @@ export default function AuthPage() {
     resetValidation 
   } = useEmailValidation();
 
+  const {
+    validateName,
+    isValidating: isValidatingName,
+    isValid: nameIsValid,
+    getValidationMessage: getNameValidationMessage,
+    resetValidation: resetNameValidation
+  } = useNameValidation();
+
   const [authError, setAuthError] = useState<{type: string, message: string, show: boolean} | null>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -73,6 +82,7 @@ export default function AuthPage() {
   const [rememberPassword, setRememberPassword] = useState(false);
   const [ageError, setAgeError] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
+  const [nameTouched, setNameTouched] = useState(false);
   const [affiliateCodeTouched, setAffiliateCodeTouched] = useState(false);
   
   // Use the affiliate verification hook
@@ -188,10 +198,11 @@ export default function AuthPage() {
         formData.country &&
         formData.city &&
         !ageError &&
-        emailIsValid === true
+        emailIsValid === true &&
+        nameIsValid !== false
       );
     }
-  }, [formData, isLogin, ageError, emailIsValid]);
+  }, [formData, isLogin, ageError, emailIsValid, nameIsValid]);
 
   // Trigger email validation when email changes
   useEffect(() => {
@@ -203,6 +214,19 @@ export default function AuthPage() {
       return () => clearTimeout(timeoutId);
     }
   }, [formData.email, isLogin, emailTouched, validateEmail]);
+
+  // Trigger name validation when name changes
+  useEffect(() => {
+    if (!isLogin && formData.name && nameTouched) {
+      const timeoutId = setTimeout(() => {
+        validateName(formData.name);
+      }, 500); // Debounce validation
+      
+      return () => clearTimeout(timeoutId);
+    } else if (!formData.name || isLogin) {
+      resetNameValidation();
+    }
+  }, [formData.name, isLogin, nameTouched, validateName, resetNameValidation]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -231,11 +255,11 @@ export default function AuthPage() {
       return;
     }
 
-    // Prevent submission while email is being validated
-    if (!isLogin && isValidating) {
+    // Prevent submission while email or name is being validated
+    if (!isLogin && (isValidating || isValidatingName)) {
       toast({
         title: t["Please wait"] || "Please wait",
-        description: t["Email validation in progress..."] || "Email validation in progress...",
+        description: t["Validation in progress..."] || "Validation in progress...",
         variant: "default"
       });
       return;
@@ -387,14 +411,46 @@ export default function AuthPage() {
               {!isLogin && (
                 <div className="space-y-2">
                   <Label htmlFor="name">{t["Full Name"] || "Full Name"}</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder={t["Enter your full name"] || "Enter your full name"}
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required={!isLogin}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="name"
+                      type="text"
+                      placeholder={t["Enter your full name"] || "Enter your full name"}
+                      value={formData.name}
+                      onChange={(e) => {
+                        setFormData({ ...formData, name: e.target.value });
+                        if (!nameTouched) setNameTouched(true);
+                      }}
+                      required={!isLogin}
+                      className={`pr-10 ${
+                        !formData.name || !nameTouched
+                          ? ""
+                          : isValidatingName
+                          ? "border-blue-500"
+                          : nameIsValid === true
+                          ? "border-green-500"
+                          : nameIsValid === false
+                          ? "border-red-500"
+                          : ""
+                      }`}
+                    />
+                    {formData.name && nameTouched && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        {isValidatingName ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                        ) : nameIsValid === true ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        ) : nameIsValid === false ? (
+                          <XCircle className="h-4 w-4 text-red-500" />
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
+                  {formData.name && nameTouched && nameIsValid === false && (
+                    <p className="text-sm text-red-600">
+                      {getNameValidationMessage() || t["Please enter a valid full name"] || "Please enter a valid full name"}
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -647,7 +703,12 @@ export default function AuthPage() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={!isFormValid || loginMutation.isPending || registerMutation.isPending}
+                disabled={Boolean(
+                  !isFormValid || 
+                  loginMutation.isPending || 
+                  registerMutation.isPending ||
+                  (!isLogin && (isValidating || isValidatingName))
+                )}
               >
                 {loginMutation.isPending || registerMutation.isPending ? (
                   <>

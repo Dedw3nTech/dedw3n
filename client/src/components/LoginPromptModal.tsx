@@ -21,6 +21,7 @@ import { useTypedTranslation, useMasterBatchTranslation } from "@/hooks/use-mast
 import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidator";
 
 import { useEmailValidation } from "@/hooks/use-email-validation";
+import { useNameValidation } from "@/hooks/use-name-validation";
 import { useUnifiedRecaptcha } from '@/components/UnifiedRecaptchaProvider';
 import { useAffiliateVerification } from "@/hooks/use-affiliate-verification";
 import { useUsernameVerification } from "@/hooks/use-username-verification";
@@ -63,6 +64,14 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
   } = useEmailValidation();
 
   const {
+    validateName,
+    isValidating: isValidatingName,
+    isValid: nameIsValid,
+    getValidationMessage: getNameValidationMessage,
+    resetValidation: resetNameValidation
+  } = useNameValidation();
+
+  const {
     verifyPartnerCode,
     isVerifying: isVerifyingAffiliate,
     isValid: affiliateIsValid,
@@ -97,6 +106,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
   const [ageError, setAgeError] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
+  const [nameTouched, setNameTouched] = useState(false);
   const [affiliateTouched, setAffiliateTouched] = useState(false);
   const [usernameTouched, setUsernameTouched] = useState(false);
 
@@ -181,14 +191,28 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     }
   }, [formData.email, emailTouched, isLogin, validateEmail, resetValidation]);
 
-  // Reset email validation when switching between login/register
+  // Name validation effect with debouncing
+  useEffect(() => {
+    if (formData.name && nameTouched && !isLogin) {
+      const timer = setTimeout(() => {
+        validateName(formData.name);
+      }, 500); // Debounce for 500ms
+      return () => clearTimeout(timer);
+    } else if (!formData.name || isLogin) {
+      resetNameValidation();
+    }
+  }, [formData.name, nameTouched, isLogin, validateName, resetNameValidation]);
+
+  // Reset validation when switching between login/register
   useEffect(() => {
     resetValidation();
+    resetNameValidation();
     resetUsernameVerification();
     setEmailTouched(false);
+    setNameTouched(false);
     setAffiliateTouched(false);
     setUsernameTouched(false);
-  }, [isLogin, resetValidation, resetUsernameVerification]);
+  }, [isLogin, resetValidation, resetNameValidation, resetUsernameVerification]);
 
   // Affiliate partner verification effect with debouncing
   useEffect(() => {
@@ -379,14 +403,60 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           {!isLogin && (
             <div className="space-y-2">
               <Label htmlFor="name">{t["Full Name"] || "Full Name"}</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder={t["Enter your full name"] || "Enter your full name"}
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required={!isLogin}
-              />
+              <div className="relative">
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder={t["Enter your full name"] || "Enter your full name"}
+                  value={formData.name}
+                  onChange={(e) => {
+                    setFormData({ ...formData, name: e.target.value });
+                    if (!nameTouched && e.target.value) setNameTouched(true);
+                  }}
+                  onBlur={() => {
+                    if (formData.name) setNameTouched(true);
+                  }}
+                  required={!isLogin}
+                  className={`pr-10 ${
+                    nameTouched && formData.name ? (
+                      nameIsValid === true ? "border-green-500 focus:ring-green-500" :
+                      nameIsValid === false ? "border-red-500 focus:ring-red-500" :
+                      "border-blue-500 focus:ring-blue-500"
+                    ) : ""
+                  }`}
+                />
+                {nameTouched && formData.name && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    {isValidatingName ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                    ) : nameIsValid === true ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : nameIsValid === false ? (
+                      <XCircle className="h-4 w-4 text-red-500" />
+                    ) : null}
+                  </div>
+                )}
+              </div>
+              {nameTouched && formData.name && (
+                <div className="text-sm">
+                  {isValidatingName ? (
+                    <p className="text-blue-600 flex items-center">
+                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                      {t["Verifying name authenticity..."] || "Verifying name authenticity..."}
+                    </p>
+                  ) : nameIsValid === true ? (
+                    <p className="text-green-600 flex items-center">
+                      <CheckCircle className="mr-1 h-3 w-3" />
+                      {getNameValidationMessage() || t["Name verified as genuine"] || "Name verified as genuine"}
+                    </p>
+                  ) : nameIsValid === false ? (
+                    <p className="text-red-500 flex items-center">
+                      <XCircle className="mr-1 h-3 w-3" />
+                      {getNameValidationMessage() || t["Name appears invalid or gibberish"] || "Name appears invalid or gibberish"}
+                    </p>
+                  ) : null}
+                </div>
+              )}
             </div>
           )}
 
@@ -697,7 +767,9 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                 registerMutation.isPending || 
                 (!isLogin && ageError) ||
                 (!isLogin && isValidating) ||
-                (!isLogin && emailTouched && emailIsValid === false)
+                (!isLogin && isValidatingName) ||
+                (!isLogin && emailTouched && emailIsValid === false) ||
+                (!isLogin && nameTouched && nameIsValid === false)
               )}
             >
               {(loginMutation.isPending || registerMutation.isPending) ? 
