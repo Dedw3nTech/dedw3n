@@ -449,7 +449,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                placeholder={t["Enter your password"] || "Enter your password"}
+                placeholder={isLogin ? (t["Enter your password"] || "Enter your password") : (t["Create your password"] || "Create your password")}
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
