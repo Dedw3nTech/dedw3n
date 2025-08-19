@@ -249,7 +249,8 @@ export default function RegionSelector({
     "Choose your city",
     "Please select a city",
     "City not available for manual entry",
-    "Please select a country first"
+    "Please select a country first",
+    "Please select a region first"
   ], []);
   
   const { translations } = useMasterBatchTranslation(regionTexts, 'high');
@@ -331,9 +332,9 @@ export default function RegionSelector({
         <Label htmlFor="country" className={`text-xs ${isCountryMissing ? 'text-red-600' : ''}`}>
           {t["Select Your Country"]} {showErrors && <span className="text-red-600">*</span>}
         </Label>
-        <Select value={selectedCountry} onValueChange={handleCountryChange} disabled={disabled}>
+        <Select value={selectedCountry} onValueChange={handleCountryChange} disabled={disabled || !selectedRegion}>
           <SelectTrigger className={isCountryMissing ? 'border-red-500 focus:border-red-500' : ''}>
-            <SelectValue placeholder={t["Choose your country"]} />
+            <SelectValue placeholder={selectedRegion ? (t["Choose your country"] || "Choose your country") : (t["Please select a region first"] || "Please select a region first")} />
           </SelectTrigger>
           <SelectContent className="max-h-60 overflow-y-auto">
             {availableCountries.map((country) => (
