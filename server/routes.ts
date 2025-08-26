@@ -20,7 +20,7 @@ import { fileURLToPath } from 'url';
 import { storage } from "./storage";
 import { db } from "./db";
 import { eq, or, like, ilike, sql, and, ne, inArray, desc, count, sum, avg, isNull, gte, lte, between, notInArray, isNotNull } from "drizzle-orm";
-import { users, products, orders, vendors, carts, orderItems, reviews, messages, vendorPaymentInfo, insertVendorPaymentInfoSchema, vendorDiscounts, discountUsages, promotionalCampaigns, insertVendorDiscountSchema, insertDiscountUsageSchema, insertPromotionalCampaignSchema, returns, insertReturnSchema, marketingCampaigns, campaignActivities, campaignTouchpoints, campaignAnalytics, campaignProducts, insertMarketingCampaignSchema, insertCampaignActivitySchema, insertCampaignTouchpointSchema, insertCampaignAnalyticsSchema, storeUsers } from "@shared/schema";
+import { users, products, orders, vendors, carts, orderItems, reviews, messages, vendorPaymentInfo, insertVendorPaymentInfoSchema, vendorDiscounts, discountUsages, promotionalCampaigns, insertVendorDiscountSchema, insertDiscountUsageSchema, insertPromotionalCampaignSchema, returns, insertReturnSchema, marketingCampaigns, campaignActivities, campaignTouchpoints, campaignAnalytics, campaignProducts, insertMarketingCampaignSchema, insertCampaignActivitySchema, insertCampaignTouchpointSchema, insertCampaignAnalyticsSchema, storeUsers, cities } from "@shared/schema";
 
 import { setupAuth, hashPassword, verifyRecaptcha, comparePasswords } from "./auth";
 import { setupJwtAuth, verifyToken, revokeToken } from "./jwt-auth";
@@ -4103,6 +4103,109 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error) {
       console.error('Error getting user recommendations:', error);
       res.status(500).json({ message: 'Failed to get user recommendations' });
+    }
+  });
+
+  // Cities API endpoints for comprehensive global city database
+  app.get('/api/cities/countries', async (req: Request, res: Response) => {
+    try {
+      // Get all unique countries from the cities database
+      const countries = await db
+        .selectDistinct({ country: cities.country })
+        .from(cities)
+        .orderBy(cities.country);
+      
+      const countryList = countries.map(c => c.country);
+      console.log(`[DEBUG] Found ${countryList.length} countries in database`);
+      
+      res.json(countryList);
+    } catch (error) {
+      console.error('Error fetching countries:', error);
+      res.status(500).json({ message: 'Failed to fetch countries' });
+    }
+  });
+
+  app.get('/api/cities/by-country/:country', async (req: Request, res: Response) => {
+    try {
+      const { country } = req.params;
+      const { limit = 100, search = '' } = req.query;
+      
+      console.log(`[DEBUG] Fetching cities for country: ${country}, search: ${search}, limit: ${limit}`);
+      
+      let query = db
+        .select({ 
+          id: cities.id,
+          name: cities.name, 
+          population: cities.population,
+          latitude: cities.latitude,
+          longitude: cities.longitude
+        })
+        .from(cities)
+        .where(eq(cities.country, country));
+      
+      // Add search filter if provided
+      if (search && typeof search === 'string') {
+        query = query.where(
+          and(
+            eq(cities.country, country),
+            ilike(cities.name, `%${search}%`)
+          )
+        );
+      }
+      
+      // Add ordering by population (descending) and then by name
+      const citiesResult = await query
+        .orderBy(desc(cities.population), cities.name)
+        .limit(Number(limit));
+      
+      console.log(`[DEBUG] Found ${citiesResult.length} cities for ${country}`);
+      
+      // Return just the city names for the dropdown
+      const cityNames = citiesResult.map(city => city.name);
+      res.json(cityNames);
+    } catch (error) {
+      console.error('Error fetching cities by country:', error);
+      res.status(500).json({ message: 'Failed to fetch cities' });
+    }
+  });
+
+  app.get('/api/cities/regions', async (req: Request, res: Response) => {
+    try {
+      // Get all unique regions from the cities database
+      const regions = await db
+        .selectDistinct({ region: cities.region })
+        .from(cities)
+        .orderBy(cities.region);
+      
+      const regionList = regions.map(r => r.region);
+      console.log(`[DEBUG] Found ${regionList.length} regions in database`);
+      
+      res.json(regionList);
+    } catch (error) {
+      console.error('Error fetching regions:', error);
+      res.status(500).json({ message: 'Failed to fetch regions' });
+    }
+  });
+
+  app.get('/api/cities/by-region/:region', async (req: Request, res: Response) => {
+    try {
+      const { region } = req.params;
+      
+      console.log(`[DEBUG] Fetching countries for region: ${region}`);
+      
+      const countries = await db
+        .selectDistinct({ country: cities.country })
+        .from(cities)
+        .where(eq(cities.region, region))
+        .orderBy(cities.country);
+      
+      const countryList = countries.map(c => c.country);
+      console.log(`[DEBUG] Found ${countryList.length} countries in region ${region}`);
+      
+      res.json(countryList);
+    } catch (error) {
+      console.error('Error fetching countries by region:', error);
+      res.status(500).json({ message: 'Failed to fetch countries by region' });
     }
   });
 

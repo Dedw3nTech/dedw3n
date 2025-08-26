@@ -2,62 +2,26 @@ import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from 'react-i18next';
-import { COMPREHENSIVE_CITIES_BY_COUNTRY } from '../data/enhancedCityData';
+import { useQuery } from '@tanstack/react-query';
 
-// Regional organization of countries for better UX
-const COUNTRIES_BY_REGION: Record<string, string[]> = {
-  'North America': [
-    'Canada', 'United States', 'Mexico', 'Guatemala', 'Belize', 'El Salvador', 'Honduras',
-    'Nicaragua', 'Costa Rica', 'Panama'
-  ],
-  'Asia': [
-    'Afghanistan', 'Armenia', 'Azerbaijan', 'Bahrain', 'Bangladesh', 'Bhutan', 'Brunei',
-    'Cambodia', 'China', 'Georgia', 'India', 'Indonesia', 'Iran', 'Iraq', 'Israel',
-    'Japan', 'Jordan', 'Kazakhstan', 'Kuwait', 'Kyrgyzstan', 'Laos', 'Lebanon',
-    'Malaysia', 'Maldives', 'Mongolia', 'Myanmar', 'Nepal', 'North Korea', 'Oman',
-    'Pakistan', 'Palestine', 'Philippines', 'Qatar', 'Saudi Arabia', 'Singapore',
-    'South Korea', 'Sri Lanka', 'Syria', 'Taiwan', 'Tajikistan', 'Thailand',
-    'Timor-Leste', 'Turkey', 'Turkmenistan', 'United Arab Emirates', 'Uzbekistan',
-    'Vietnam', 'Yemen'
-  ],
-  'Africa': [
-    'Algeria', 'Angola', 'Benin', 'Botswana', 'Burkina Faso', 'Burundi', 'Cameroon',
-    'Cape Verde', 'Central African Republic', 'Chad', 'Comoros', 'Democratic Republic of the Congo',
-    'Republic of the Congo', 'Djibouti', 'Egypt', 'Equatorial Guinea', 'Eritrea',
-    'Eswatini', 'Ethiopia', 'Gabon', 'Gambia', 'Ghana', 'Guinea', 'Guinea-Bissau',
-    'Ivory Coast', 'Kenya', 'Lesotho', 'Liberia', 'Libya', 'Madagascar', 'Malawi',
-    'Mali', 'Mauritania', 'Mauritius', 'Morocco', 'Mozambique', 'Namibia', 'Niger',
-    'Nigeria', 'Rwanda', 'São Tomé and Príncipe', 'Senegal', 'Seychelles',
-    'Sierra Leone', 'Somalia', 'South Africa', 'South Sudan', 'Sudan', 'Tanzania',
-    'Togo', 'Tunisia', 'Uganda', 'Zambia', 'Zimbabwe'
-  ],
-  'South America': [
-    'Argentina', 'Bolivia', 'Brazil', 'Chile', 'Colombia', 'Ecuador', 'Guyana', 'Paraguay',
-    'Peru', 'Suriname', 'Uruguay', 'Venezuela'
-  ],
-  'Middle East': [
-    'Bahrain', 'Cyprus', 'Iran', 'Iraq', 'Israel', 'Jordan', 'Kuwait', 'Lebanon', 'Oman',
-    'Qatar', 'Saudi Arabia', 'Syria', 'Turkey', 'United Arab Emirates', 'Yemen'
-  ],
-  'Europe': [
-    'Albania', 'Andorra', 'Armenia', 'Austria', 'Azerbaijan', 'Belarus', 'Belgium',
-    'Bosnia and Herzegovina', 'Bulgaria', 'Croatia', 'Czech Republic', 'Denmark', 'Estonia',
-    'Finland', 'France', 'Georgia', 'Germany', 'Greece', 'Hungary', 'Iceland', 'Ireland',
-    'Italy', 'Latvia', 'Liechtenstein', 'Lithuania', 'Luxembourg', 'Macedonia', 'Malta',
-    'Moldova', 'Monaco', 'Montenegro', 'Netherlands', 'Norway', 'Poland', 'Portugal',
-    'Romania', 'Russia', 'San Marino', 'Serbia', 'Slovakia', 'Slovenia', 'Spain', 'Sweden',
-    'Switzerland', 'Ukraine', 'United Kingdom', 'Vatican City'
-  ],
-  'Central Asia': [
-    'Kazakhstan', 'Kyrgyzstan', 'Mongolia', 'Tajikistan', 'Turkmenistan', 'Uzbekistan'
-  ]
+// API functions to fetch data from our comprehensive city database
+const fetchRegions = async (): Promise<string[]> => {
+  const response = await fetch('/api/cities/regions');
+  if (!response.ok) throw new Error('Failed to fetch regions');
+  return response.json();
 };
 
+const fetchCountriesByRegion = async (region: string): Promise<string[]> => {
+  const response = await fetch(`/api/cities/by-region/${encodeURIComponent(region)}`);
+  if (!response.ok) throw new Error('Failed to fetch countries');
+  return response.json();
+};
 
-
-// Using comprehensive global city database from enhancedCityData.ts
-// This includes thousands of cities, towns, and villages from all 195+ countries
-const CITIES_BY_COUNTRY = COMPREHENSIVE_CITIES_BY_COUNTRY;
+const fetchCitiesByCountry = async (country: string): Promise<string[]> => {
+  const response = await fetch(`/api/cities/by-country/${encodeURIComponent(country)}?limit=200`);
+  if (!response.ok) throw new Error('Failed to fetch cities');
+  return response.json();
+};
 
 interface RegionSelectorProps {
   currentRegion?: string | null;
@@ -126,18 +90,28 @@ function EnhancedCitySelector({
           disabled={disabled}
         >
           <SelectTrigger className={`w-full ${showErrors && isCityMissing ? 'border-red-500' : ''}`}>
-            <SelectValue placeholder={t.selectCity || 'Select your City'} />
+            <SelectValue placeholder={
+              citiesLoading 
+                ? 'Loading cities...' 
+                : t.selectCity || 'Select your City'
+            } />
           </SelectTrigger>
           <SelectContent>
-            {availableCities.slice(0, 50).map((city) => (
-              <SelectItem key={city} value={city}>
-                {city}
-              </SelectItem>
-            ))}
-            {availableCities.length > 50 && (
-              <SelectItem value="__search_more__" disabled>
-                ... and {availableCities.length - 50} more cities
-              </SelectItem>
+            {citiesLoading ? (
+              <SelectItem value="" disabled>Loading cities...</SelectItem>
+            ) : (
+              <>
+                {availableCities.slice(0, 100).map((city) => (
+                  <SelectItem key={city} value={city}>
+                    {city}
+                  </SelectItem>
+                ))}
+                {availableCities.length > 100 && (
+                  <SelectItem value="__search_more__" disabled>
+                    ... and {availableCities.length - 100} more cities available
+                  </SelectItem>
+                )}
+              </>
             )}
           </SelectContent>
         </Select>
@@ -186,24 +160,31 @@ export default function RegionSelector({
 }: RegionSelectorProps) {
   const { t } = useTranslation();
   
-  // Get countries for the selected region
-  const getCountriesForRegion = (region: string): string[] => {
-    return COUNTRIES_BY_REGION[region] || [];
-  };
+  // React Query hooks for fetching data from API
+  const { data: regions = [], isLoading: regionsLoading } = useQuery({
+    queryKey: ['regions'],
+    queryFn: fetchRegions,
+    staleTime: 1000 * 60 * 60, // Cache for 1 hour
+  });
 
-  // Get cities for the selected country
-  const getCitiesForCountry = (country: string): string[] => {
-    return CITIES_BY_COUNTRY[country] || [];
-  };
+  const { data: availableCountries = [], isLoading: countriesLoading } = useQuery({
+    queryKey: ['countries', currentRegion],
+    queryFn: () => fetchCountriesByRegion(currentRegion!),
+    enabled: !!currentRegion,
+    staleTime: 1000 * 60 * 60,
+  });
+
+  const { data: availableCities = [], isLoading: citiesLoading } = useQuery({
+    queryKey: ['cities', currentCountry],
+    queryFn: () => fetchCitiesByCountry(currentCountry!),
+    enabled: !!currentCountry,
+    staleTime: 1000 * 60 * 30, // Cache for 30 minutes
+  });
 
   // Check if fields are missing (for error display)
   const isRegionMissing = showErrors && !currentRegion;
   const isCountryMissing = showErrors && !currentCountry;
   const isCityMissing = showErrors && !currentCity;
-
-  // Available options based on current selections
-  const availableCountries = currentRegion ? getCountriesForRegion(currentRegion) : [];
-  const availableCities = currentCountry ? getCitiesForCountry(currentCountry) : [];
 
   // Reset dependent fields when parent field changes
   const handleRegionChange = (region: string) => {
@@ -237,11 +218,15 @@ export default function RegionSelector({
             <SelectValue placeholder="Select your region" />
           </SelectTrigger>
           <SelectContent>
-            {Object.keys(COUNTRIES_BY_REGION).sort().map((region) => (
-              <SelectItem key={region} value={region}>
-                {region}
-              </SelectItem>
-            ))}
+            {regionsLoading ? (
+              <SelectItem value="" disabled>Loading regions...</SelectItem>
+            ) : (
+              regions.sort().map((region) => (
+                <SelectItem key={region} value={region}>
+                  {region}
+                </SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
         {isRegionMissing && (
@@ -257,21 +242,27 @@ export default function RegionSelector({
         <Select
           value={currentCountry || ''}
           onValueChange={handleCountryChange}
-          disabled={disabled || !currentRegion}
+          disabled={disabled || !currentRegion || countriesLoading}
         >
           <SelectTrigger className={`w-full ${isCountryMissing ? 'border-red-500' : ''}`}>
             <SelectValue placeholder={
               !currentRegion 
                 ? 'Select region first'
+                : countriesLoading
+                ? 'Loading countries...'
                 : 'Select your country'
             } />
           </SelectTrigger>
           <SelectContent>
-            {availableCountries.sort().map((country) => (
-              <SelectItem key={country} value={country}>
-                {country}
-              </SelectItem>
-            ))}
+            {countriesLoading ? (
+              <SelectItem value="" disabled>Loading countries...</SelectItem>
+            ) : (
+              availableCountries.sort().map((country) => (
+                <SelectItem key={country} value={country}>
+                  {country}
+                </SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
         {isCountryMissing && (
