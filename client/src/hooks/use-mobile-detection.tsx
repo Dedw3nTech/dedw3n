@@ -28,30 +28,28 @@ export function useMobileDetection(): UseMobileDetectionResult {
     const detectionResult = detectMobileDevice();
     setDetection(detectionResult);
 
-    const shouldPerformRedirect = shouldRedirectToMobile();
-    setShouldRedirect(shouldPerformRedirect);
+    // Mobile redirect functionality disabled - always set shouldRedirect to false
+    setShouldRedirect(false);
 
-    // Log detection results for debugging
+    // Log detection results for debugging (redirect disabled)
     console.log('[MOBILE-DETECTION]', {
       deviceType: detectionResult.deviceType,
       isMobile: detectionResult.isMobile,
       isTablet: detectionResult.isTablet,
-      shouldRedirect: shouldPerformRedirect,
-      userAgent: detectionResult.userAgent.substring(0, 50) + '...'
+      shouldRedirect: false, // Always false - redirect disabled
+      userAgent: detectionResult.userAgent.substring(0, 50) + '...',
+      redirectDisabled: true
     });
   }, []);
 
   const performRedirect = () => {
-    if (!isRedirecting && shouldRedirect) {
-      setIsRedirecting(true);
-      console.log('[MOBILE-DETECTION] Performing redirect to mobile version');
-      redirectToMobile();
-    }
+    // Redirect functionality disabled - no action taken
+    console.log('[MOBILE-DETECTION] Redirect attempted but disabled by system');
   };
 
   const forceDesktop = () => {
-    console.log('[MOBILE-DETECTION] User chose desktop version');
-    setDesktopPreference(true);
+    // Force desktop functionality disabled - redirect already disabled system-wide
+    console.log('[MOBILE-DETECTION] Desktop preference set (redirect already disabled)');
     setShouldRedirect(false);
     setIsRedirecting(false);
   };

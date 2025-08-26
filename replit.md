@@ -30,6 +30,7 @@ The platform is built with a modular, layered architecture for maintainability a
 - **Mobile Responsiveness**: Comprehensive mobile-first responsive design with optimized touch targets (44px minimum), fluid grids, flexible images using max-width: 100% and height: auto principles, progressive text sizing, and enhanced mobile performance optimizations. Successfully resolved mobile hero section text cutoff issues with custom CSS classes and proper viewport handling.
 - **Age Verification**: Comprehensive 18+ age verification system implemented across all registration forms (LoginPromptModal, auth.tsx) with real-time validation, visual feedback indicators (green checkmarks for valid ages, red error messages for under-18), and automatic account creation prevention for users under 18 years old.
 - **Email Auto-Translation**: Password reset emails automatically translate to match user's selected language preference using EmailTranslationService with 50+ language support, intelligent user language detection, and English fallback.
+- **Mobile Detection**: Comprehensive mobile device detection system for responsive design purposes only. Auto-redirect functionality and countdown modals have been removed to improve user experience and eliminate disruptive redirect behavior.
 
 ## External Dependencies
 - **PostgreSQL**: Primary database for data storage.

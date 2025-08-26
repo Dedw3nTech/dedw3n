@@ -88,54 +88,21 @@ export function detectMobileDevice(): MobileDetectionResult {
 
 /**
  * Check if user should be redirected to mobile version
+ * DISABLED: Mobile auto-redirect functionality has been disabled system-wide
  */
 export function shouldRedirectToMobile(): boolean {
-  const detection = detectMobileDevice();
-  
-  // Only redirect mobile devices, not tablets
-  if (!detection.isMobile) {
-    return false;
-  }
-  
-  // Check if user has explicitly chosen desktop version
-  const desktopPreference = localStorage.getItem('dedw3n_force_desktop');
-  if (desktopPreference === 'true') {
-    return false;
-  }
-  
-  // Check if already on mobile subdomain
-  if (window.location.hostname.includes('mobile.') || window.location.pathname.startsWith('/mobile')) {
-    return false;
-  }
-  
-  return true;
+  // Mobile auto-redirect functionality disabled - always return false
+  console.log('[MOBILE-DETECTION] shouldRedirectToMobile called but redirect functionality is disabled');
+  return false;
 }
 
 /**
  * Perform mobile redirection
+ * DISABLED: Mobile auto-redirect functionality has been disabled system-wide
  */
 export function redirectToMobile(): void {
-  const currentUrl = window.location.href;
-  const currentDomain = window.location.hostname;
-  
-  try {
-    // Option 1: Redirect to mobile subdomain if main domain
-    if (currentDomain === 'dedw3n.com' || currentDomain.includes('dedw3n.com')) {
-      const mobileUrl = currentUrl.replace(currentDomain, 'mobile.dedw3n.com');
-      window.location.href = mobileUrl;
-      return;
-    }
-    
-    // Option 2: Redirect to /mobile path for development or other domains
-    const pathOnly = window.location.pathname + window.location.search + window.location.hash;
-    const mobileUrl = window.location.origin + '/mobile' + (pathOnly === '/' ? '' : pathOnly);
-    window.location.href = mobileUrl;
-    
-  } catch (error) {
-    console.error('Error redirecting to mobile version:', error);
-    // Fallback: redirect to /mobile route
-    window.location.href = '/mobile';
-  }
+  // Mobile redirect functionality disabled - no action taken
+  console.log('[MOBILE-DETECTION] redirectToMobile called but redirect functionality is disabled');
 }
 
 /**
@@ -171,28 +138,14 @@ export function isDesktopPreferenceExpired(expiryHours: number = 24): boolean {
 
 /**
  * Initialize mobile detection and redirection
- * Call this early in app initialization
+ * DISABLED: Mobile auto-redirect functionality has been disabled system-wide
  */
 export function initializeMobileRedirection(): void {
-  // Only run on client side
-  if (typeof window === 'undefined') {
-    return;
-  }
-  
-  // Wait for DOM to be ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', performMobileCheck);
-  } else {
-    performMobileCheck();
-  }
+  // Mobile redirect initialization disabled - only detection remains active
+  console.log('[MOBILE-DETECTION] Mobile redirect initialization disabled - detection only mode');
 }
 
 function performMobileCheck(): void {
-  // Add small delay to ensure proper page load
-  setTimeout(() => {
-    if (shouldRedirectToMobile()) {
-      console.log('[MOBILE] Redirecting to mobile version');
-      redirectToMobile();
-    }
-  }, 100);
+  // Mobile check disabled - redirect functionality removed
+  console.log('[MOBILE-DETECTION] Mobile check called but redirect functionality is disabled');
 }
