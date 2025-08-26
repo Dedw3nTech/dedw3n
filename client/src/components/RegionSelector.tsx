@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -20,6 +21,13 @@ const fetchCountriesByRegion = async (region: string): Promise<string[]> => {
 const fetchCitiesByCountry = async (country: string): Promise<string[]> => {
   const response = await fetch(`/api/cities/by-country/${encodeURIComponent(country)}`);
   if (!response.ok) throw new Error('Failed to fetch cities');
+  return response.json();
+};
+
+const searchCities = async (country: string, query: string): Promise<string[]> => {
+  if (!query || query.length < 1) return [];
+  const response = await fetch(`/api/cities/search/${encodeURIComponent(country)}?q=${encodeURIComponent(query)}&limit=10`);
+  if (!response.ok) throw new Error('Failed to search cities');
   return response.json();
 };
 
@@ -58,24 +66,52 @@ function EnhancedCitySelector({
   citiesLoading,
   translations: t
 }: EnhancedCitySelectorProps) {
+  const [inputValue, setInputValue] = useState(selectedCity || '');
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showCustomInput, setShowCustomInput] = useState(false);
 
-  // Filter cities based on search term
-  const filteredCities = availableCities.filter(city =>
-    city.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Search for cities as user types
+  const { data: suggestions = [], isLoading: searchLoading } = useQuery({
+    queryKey: ['citySearch', selectedCountry, searchTerm],
+    queryFn: () => searchCities(selectedCountry, searchTerm),
+    enabled: !!selectedCountry && !!searchTerm && searchTerm.length > 0,
+    staleTime: 1000 * 30, // Cache for 30 seconds
+  });
+
+  // Update input value when selectedCity changes from parent
+  useEffect(() => {
+    setInputValue(selectedCity || '');
+  }, [selectedCity]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInputValue(value);
+    setSearchTerm(value);
+    setShowSuggestions(value.length > 0);
+  };
 
   const handleCitySelect = (city: string) => {
+    setInputValue(city);
     onCityChange(city);
+    setShowSuggestions(false);
     setSearchTerm('');
   };
 
-  const handleCustomCity = () => {
-    if (searchTerm.trim()) {
-      onCityChange(searchTerm.trim());
-      setSearchTerm('');
-      setShowCustomInput(false);
+  const handleInputBlur = () => {
+    // Delay hiding suggestions to allow for selection
+    setTimeout(() => {
+      setShowSuggestions(false);
+      // Update parent with current input value when user finishes typing
+      if (inputValue !== selectedCity) {
+        onCityChange(inputValue);
+      }
+    }, 200);
+  };
+
+  const handleInputFocus = () => {
+    if (inputValue.length > 0) {
+      setSearchTerm(inputValue);
+      setShowSuggestions(true);
     }
   };
 
@@ -85,53 +121,44 @@ function EnhancedCitySelector({
         {t.city || 'City'}
       </label>
       
-      <div className="space-y-2">
-        <Select
-          value={selectedCity}
-          onValueChange={handleCitySelect}
+      <div className="relative">
+        <Input
+          type="text"
+          value={inputValue}
+          onChange={handleInputChange}
+          onFocus={handleInputFocus}
+          onBlur={handleInputBlur}
+          placeholder={t.selectCity || 'Type your city name...'}
           disabled={disabled}
-        >
-          <SelectTrigger className={`w-full ${showErrors && isCityMissing ? 'border-red-500' : ''}`}>
-            <SelectValue placeholder={
-              citiesLoading 
-                ? 'Loading cities...' 
-                : t.selectCity || 'Select your City'
-            } />
-          </SelectTrigger>
-          <SelectContent>
-            {citiesLoading ? (
-              <SelectItem value="__loading__" disabled>Loading cities...</SelectItem>
+          className={`w-full ${showErrors && isCityMissing ? 'border-red-500' : ''}`}
+        />
+        
+        {/* Autocomplete suggestions dropdown */}
+        {showSuggestions && searchTerm && suggestions.length > 0 && (
+          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+            {searchLoading ? (
+              <div className="px-3 py-2 text-gray-500">Searching...</div>
             ) : (
-              availableCities.map((city, index) => (
-                <SelectItem key={`${city}-${index}`} value={city}>
+              suggestions.map((city, index) => (
+                <div
+                  key={`${city}-${index}`}
+                  className="px-3 py-2 cursor-pointer hover:bg-gray-100 border-b last:border-b-0"
+                  onMouseDown={(e) => {
+                    e.preventDefault(); // Prevent input blur
+                    handleCitySelect(city);
+                  }}
+                >
                   {city}
-                </SelectItem>
+                </div>
               ))
             )}
-          </SelectContent>
-        </Select>
+          </div>
+        )}
         
-        
-        {showCustomInput && (
-          <div className="flex space-x-2">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Type your city name..."
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <Button type="button" onClick={handleCustomCity} size="sm">
-              Add
-            </Button>
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => { setShowCustomInput(false); setSearchTerm(''); }}
-              size="sm"
-            >
-              Cancel
-            </Button>
+        {/* Show message when no suggestions found */}
+        {showSuggestions && searchTerm && !searchLoading && suggestions.length === 0 && (
+          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
+            <div className="px-3 py-2 text-gray-500">No cities found. You can still type your city name.</div>
           </div>
         )}
       </div>

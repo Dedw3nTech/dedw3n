@@ -4162,6 +4162,38 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // City search autocomplete endpoint
+  app.get('/api/cities/search/:country', async (req: Request, res: Response) => {
+    try {
+      const { country } = req.params;
+      const { q = '', limit = '10' } = req.query;
+      
+      console.log(`[DEBUG] Searching cities for country: ${country}, query: ${q}, limit: ${limit}`);
+      
+      let query = db
+        .selectDistinct({ name: cities.name })
+        .from(cities)
+        .where(
+          and(
+            eq(cities.country, country),
+            ilike(cities.name, `%${q}%`)
+          )
+        )
+        .orderBy(cities.name)
+        .limit(parseInt(limit as string) || 10);
+      
+      const citiesResult = await query;
+      
+      console.log(`[DEBUG] Found ${citiesResult.length} cities matching "${q}" for ${country}`);
+      
+      const cityNames = citiesResult.map(city => city.name);
+      res.json(cityNames);
+    } catch (error) {
+      console.error('Error searching cities:', error);
+      res.status(500).json({ message: 'Failed to search cities' });
+    }
+  });
+
   app.get('/api/cities/regions', async (req: Request, res: Response) => {
     try {
       // Get all unique regions from the cities database - alphabetically sorted, excluding "Other"
