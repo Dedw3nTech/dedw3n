@@ -706,8 +706,8 @@ export default function AuthPage() {
                       <SelectValue placeholder={t["Select your gender"] || "Select your gender"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="male">{t["Male"] || "Male"}</SelectItem>
                       <SelectItem value="female">{t["Female"] || "Female"}</SelectItem>
+                      <SelectItem value="male">{t["Male"] || "Male"}</SelectItem>
                       <SelectItem value="other">{t["Other"] || "Other"}</SelectItem>
                     </SelectContent>
                   </Select>
