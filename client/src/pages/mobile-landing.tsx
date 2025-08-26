@@ -2,29 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Monitor } from 'lucide-react';
-import { setDesktopPreference } from '@/lib/mobile-detection';
-import { Link } from 'wouter';
 
 export default function MobileLanding() {
-  const [showDesktopOption, setShowDesktopOption] = useState(false);
-
-  useEffect(() => {
-    // Show desktop option after 3 seconds
-    const timer = setTimeout(() => {
-      setShowDesktopOption(true);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleViewDesktop = () => {
-    // Set preference to force desktop version
-    setDesktopPreference(true);
-    
-    // Redirect to main desktop site
-    window.location.href = '/';
-  };
+  // Simplified mobile landing - no interactive elements needed
 
   return (
     <>
@@ -43,8 +23,7 @@ export default function MobileLanding() {
           backgroundPosition: 'center'
         }}
       >
-        {/* Subtle overlay for button readability */}
-        <div className="absolute inset-0 bg-black/5"></div>
+        {/* No overlay needed - pure background image */}
         
         {/* Content positioned over background */}
         <div className="relative z-10 flex-1 flex flex-col justify-between px-4 py-8">
@@ -58,33 +37,9 @@ export default function MobileLanding() {
             {/* Main background image takes up the space */}
           </div>
 
-          {/* Bottom Section - Minimal Actions */}
+          {/* Bottom Section - Pure Background Image */}
           <div className="flex-shrink-0">
-            <div className="max-w-sm mx-auto">
-              {/* Call to Action Buttons */}
-              <div className="space-y-3 mb-4">
-                <Link href="/auth">
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg">
-                    Get Started
-                  </Button>
-                </Link>
-              </div>
-
-              {/* Desktop Option */}
-              {showDesktopOption && (
-                <div className="p-3 bg-white/80 backdrop-blur-sm rounded-lg">
-                  <Button 
-                    onClick={handleViewDesktop}
-                    variant="ghost" 
-                    size="sm"
-                    className="w-full text-blue-600 hover:bg-blue-50"
-                  >
-                    <Monitor className="mr-2 h-4 w-4" />
-                    Switch to Desktop Version
-                  </Button>
-                </div>
-              )}
-            </div>
+            {/* No buttons or UI elements - pure background image experience */}
           </div>
         </div>
       </div>
