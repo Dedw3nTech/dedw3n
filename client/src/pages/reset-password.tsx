@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, ArrowLeft, CheckCircle } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
+import logoImage from "@assets/Dedw3n Logo.png";
 // import { useTranslation } from "react-i18next";
 
 export default function ResetPassword() {
@@ -62,8 +63,12 @@ export default function ResetPassword() {
         <div className="max-w-md w-full space-y-8">
           <Card>
             <CardHeader className="text-center">
-              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100">
-                <CheckCircle className="h-8 w-8 text-green-600" />
+              <div className="mx-auto flex items-center justify-center h-16 w-16">
+                <img 
+                  src={logoImage} 
+                  alt="Dedw3n Logo" 
+                  className="h-12 w-12 object-contain"
+                />
               </div>
               <CardTitle className="text-2xl">
                 Check your email
