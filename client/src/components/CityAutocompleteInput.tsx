@@ -36,7 +36,7 @@ export const CityAutocompleteInput: React.FC<CityAutocompleteInputProps> = ({
   staticCities = [],
 }) => {
   const [inputValue, setInputValue] = useState(value);
-  const [suggestions, setSuggestions] = useState<Array<{ name: string; source: 'static' | 'google'; coordinates?: { lat: number; lng: number } }>>([]);
+  const [suggestions, setSuggestions] = useState<Array<{ name: string; source: 'local' }>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,45 +46,81 @@ export const CityAutocompleteInput: React.FC<CityAutocompleteInputProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Check if Google Maps is available
-  const isGoogleMapsAvailable = cityDataService.isGoogleMapsAvailable();
+  // Removed Google Maps dependency - using comprehensive local data only
 
-  // Filter static cities based on input
-  const getStaticSuggestions = useCallback((query: string) => {
+
+
+  // Enhanced local search with fuzzy matching
+  const getEnhancedLocalSuggestions = useCallback((query: string) => {
     if (!query.trim() || query.length < 1) return [];
     
     const lowerQuery = query.toLowerCase();
-    return staticCities
-      .filter(city => city.toLowerCase().includes(lowerQuery))
-      .slice(0, 5)
-      .map(city => ({
-        name: city,
-        source: 'static' as const
-      }));
+    const suggestions: Array<{ name: string; source: 'local'; score: number }> = [];
+    
+    staticCities.forEach(city => {
+      const lowerCity = city.toLowerCase();
+      let score = 0;
+      
+      // Exact match gets highest score
+      if (lowerCity === lowerQuery) {
+        score = 100;
+      }
+      // Starts with query gets high score
+      else if (lowerCity.startsWith(lowerQuery)) {
+        score = 90;
+      }
+      // Contains query gets medium score
+      else if (lowerCity.includes(lowerQuery)) {
+        score = 70;
+      }
+      // Fuzzy match for typos (simple Levenshtein-like)
+      else if (calculateSimilarity(lowerQuery, lowerCity) > 0.7) {
+        score = 50;
+      }
+      
+      if (score > 0) {
+        suggestions.push({ name: city, source: 'local', score });
+      }
+    });
+    
+    // Sort by score and return top results
+    return suggestions
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10)
+      .map(({ name, source }) => ({ name, source }));
   }, [staticCities]);
 
-  // Get Google Maps suggestions
-  const getGoogleSuggestions = useCallback(async (query: string): Promise<Array<{ name: string; source: 'google'; coordinates?: { lat: number; lng: number } }>> => {
-    if (!isGoogleMapsAvailable || !query.trim() || query.length < 2) return [];
+  // Simple similarity calculation for fuzzy matching
+  const calculateSimilarity = (str1: string, str2: string): number => {
+    const longer = str1.length > str2.length ? str1 : str2;
+    const shorter = str1.length > str2.length ? str2 : str1;
     
-    try {
-      const cities = await cityDataService.searchCities({
-        countryCode,
-        query,
-        limit: 5,
-        includeCoordinates: true,
-      });
+    if (longer.length === 0) return 1.0;
+    
+    const editDistance = levenshteinDistance(longer, shorter);
+    return (longer.length - editDistance) / longer.length;
+  };
 
-      return cities.map(city => ({
-        name: city.name,
-        source: 'google' as const,
-        coordinates: city.coordinates
-      }));
-    } catch (err) {
-      console.warn('[CITY-AUTOCOMPLETE] Google search failed:', err);
-      return [];
+  // Levenshtein distance calculation for fuzzy matching
+  const levenshteinDistance = (str1: string, str2: string): number => {
+    const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
+    
+    for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
+    for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
+    
+    for (let j = 1; j <= str2.length; j++) {
+      for (let i = 1; i <= str1.length; i++) {
+        const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
+        matrix[j][i] = Math.min(
+          matrix[j][i - 1] + 1,     // deletion
+          matrix[j - 1][i] + 1,     // insertion
+          matrix[j - 1][i - 1] + indicator // substitution
+        );
+      }
     }
-  }, [countryCode, isGoogleMapsAvailable]);
+    
+    return matrix[str2.length][str1.length];
+  };
 
   // Debounced search effect
   useEffect(() => {
@@ -104,27 +140,11 @@ export const CityAutocompleteInput: React.FC<CityAutocompleteInputProps> = ({
       setError(null);
 
       try {
-        // Get static suggestions
-        const staticSuggestions = getStaticSuggestions(inputValue);
-        
-        // Get Google suggestions if available
-        const googleSuggestions = await getGoogleSuggestions(inputValue);
-        
-        // Combine and deduplicate suggestions
-        const allSuggestions = [...staticSuggestions];
-        
-        // Add Google suggestions that aren't already in static suggestions
-        googleSuggestions.forEach(googleCity => {
-          const isDuplicate = staticSuggestions.some(
-            staticCity => staticCity.name.toLowerCase() === googleCity.name.toLowerCase()
-          );
-          if (!isDuplicate) {
-            allSuggestions.push(googleCity as any); // Type assertion to handle union type
-          }
-        });
+        // Get enhanced local suggestions with fuzzy matching
+        const enhancedSuggestions = getEnhancedLocalSuggestions(inputValue);
 
-        setSuggestions(allSuggestions.slice(0, 8)); // Limit total suggestions
-        setIsOpen(allSuggestions.length > 0);
+        setSuggestions(enhancedSuggestions.slice(0, 8));
+        setIsOpen(enhancedSuggestions.length > 0);
         setSelectedIndex(-1);
 
       } catch (err) {
@@ -134,14 +154,14 @@ export const CityAutocompleteInput: React.FC<CityAutocompleteInputProps> = ({
       } finally {
         setIsLoading(false);
       }
-    }, 200); // Faster response for better UX
+    }, 150); // Even faster response for local data
 
     return () => {
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [inputValue, getStaticSuggestions, getGoogleSuggestions]);
+  }, [inputValue, getEnhancedLocalSuggestions]);
 
   // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -261,13 +281,9 @@ export const CityAutocompleteInput: React.FC<CityAutocompleteInputProps> = ({
                 <span className="text-sm">{suggestion.name}</span>
               </div>
               
-              {/* Source indicator */}
+              {/* Local data indicator */}
               <div className="flex items-center text-xs text-gray-500">
-                {suggestion.source === 'google' ? (
-                  <Globe className="h-3 w-3" />
-                ) : (
-                  <span className="px-1 bg-gray-100 rounded text-xs">Local</span>
-                )}
+                <span className="px-1 bg-green-100 text-green-700 rounded text-xs">✓</span>
               </div>
             </button>
           ))}
@@ -276,10 +292,7 @@ export const CityAutocompleteInput: React.FC<CityAutocompleteInputProps> = ({
           <div className="px-3 py-2 border-t border-gray-100 bg-gray-50">
             <p className="text-xs text-gray-500 flex items-center">
               <MapPin className="h-3 w-3 mr-1" />
-              {isGoogleMapsAvailable ? 
-                `${suggestions.length} cities found (static + live data)` : 
-                `${suggestions.length} cities from local data`
-              }
+              {suggestions.length} cities from comprehensive local database
             </p>
           </div>
         </div>
@@ -290,11 +303,9 @@ export const CityAutocompleteInput: React.FC<CityAutocompleteInputProps> = ({
         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg p-3">
           <p className="text-sm text-gray-500 text-center">
             No cities found matching "{inputValue}"
-            {isGoogleMapsAvailable && (
-              <span className="block text-xs mt-1">
-                Try different spelling or check if city is in {countryName || countryCode}
-              </span>
-            )}
+            <span className="block text-xs mt-1">
+              Try different spelling or check if city is in {countryName || countryCode}
+            </span>
           </p>
         </div>
       )}

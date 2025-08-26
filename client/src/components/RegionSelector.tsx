@@ -7,6 +7,7 @@ import { Search, Globe } from 'lucide-react';
 import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 import { cityDataService, type City } from '@/services/cityDataService';
 import { CityAutocompleteInput } from './CityAutocompleteInput';
+import { COMPREHENSIVE_CITIES_BY_COUNTRY } from '@/data/enhancedCityData';
 
 const REGIONS = [
   'Africa',
@@ -251,16 +252,15 @@ function EnhancedCitySelector({
 }: EnhancedCitySelectorProps) {
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialize city data service with static data
+  // Initialize city data service with comprehensive static data
   useEffect(() => {
     if (!isInitialized) {
-      cityDataService.setStaticCityData(CITIES_BY_COUNTRY);
+      cityDataService.setStaticCityData(COMPREHENSIVE_CITIES_BY_COUNTRY);
       setIsInitialized(true);
     }
   }, [isInitialized]);
 
-  // Check if Google Maps is available
-  const isGoogleMapsAvailable = cityDataService.isGoogleMapsAvailable();
+  // Using comprehensive local city database
 
   const handleCitySelect = (city: City | string) => {
     if (typeof city === 'string') {
@@ -277,12 +277,10 @@ function EnhancedCitySelector({
           {t["Select Your City"]} {showErrors && <span className="text-red-600">*</span>}
         </Label>
         
-        {isGoogleMapsAvailable && (
-          <div className="flex items-center text-xs text-gray-500">
-            <Globe className="h-3 w-3 mr-1" />
-            Enhanced with live city data
-          </div>
-        )}
+        <div className="flex items-center text-xs text-gray-500">
+          <Globe className="h-3 w-3 mr-1" />
+          Comprehensive global city database
+        </div>
       </div>
 
       <CityAutocompleteInput
@@ -383,10 +381,10 @@ export default function RegionSelector({
     return COUNTRIES_BY_REGION[selectedRegion] || [];
   }, [selectedRegion]);
 
-  // Get available cities for the selected country
+  // Get available cities for the selected country from comprehensive database
   const availableCities = useMemo(() => {
     if (!selectedCountry) return [];
-    return CITIES_BY_COUNTRY[selectedCountry] || [];
+    return COMPREHENSIVE_CITIES_BY_COUNTRY[selectedCountry] || CITIES_BY_COUNTRY[selectedCountry] || [];
   }, [selectedCountry]);
 
   return (

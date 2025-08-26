@@ -31,7 +31,7 @@ The platform is built with a modular, layered architecture for maintainability a
 - **Age Verification**: Comprehensive 18+ age verification system implemented across all registration forms (LoginPromptModal, auth.tsx) with real-time validation, visual feedback indicators (green checkmarks for valid ages, red error messages for under-18), and automatic account creation prevention for users under 18 years old.
 - **Email Auto-Translation**: Password reset emails automatically translate to match user's selected language preference using EmailTranslationService with 50+ language support, intelligent user language detection, and English fallback.
 - **Mobile Detection**: Comprehensive mobile device detection with instant auto-redirect functionality. Mobile users are automatically redirected to dedw3n.com/mobile without countdown modals or opt-in options for seamless mobile experience.
-- **Google Maps API Integration**: Comprehensive city data integration using Google Maps Places API with hybrid fallback system. Features real-time city search with autocomplete for all 195 countries, smart caching for performance optimization, and graceful fallback to existing static city data when API is unavailable. Users can toggle between browsing pre-loaded cities and searching live city data from Google Maps.
+- **Comprehensive City Database**: Enhanced local city database with expanded coverage including major cities, towns, and villages for all 195+ countries. Features intelligent autocomplete with fuzzy matching, typo correction, and performance-optimized search algorithms. Completely self-contained without external API dependencies for maximum reliability.
 
 ## External Dependencies
 - **PostgreSQL**: Primary database for data storage.
