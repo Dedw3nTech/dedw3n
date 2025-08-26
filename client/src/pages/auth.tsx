@@ -388,6 +388,35 @@ export default function AuthPage() {
                 (t["Create your account to get started"] || "Create your account to get started")
               }
             </p>
+            
+            {/* Account Switch Link in Header */}
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <p className="text-sm text-gray-600">
+                {isLogin ? (
+                  <>
+                    {t["Don't have an account?"] || "Don't have an account?"}{" "}
+                    <button
+                      type="button"
+                      className="text-blue-600 hover:text-blue-500 font-medium underline"
+                      onClick={() => setIsLogin(false)}
+                    >
+                      {t["Sign up"] || "Sign up"}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {t["Already have an account?"] || "Already have an account?"}{" "}
+                    <button
+                      type="button"
+                      className="text-blue-600 hover:text-blue-500 font-medium underline"
+                      onClick={() => setIsLogin(true)}
+                    >
+                      {t["Sign in"] || "Sign in"}
+                    </button>
+                  </>
+                )}
+              </p>
+            </div>
           </CardHeader>
 
           <CardContent className="space-y-4">
@@ -916,31 +945,7 @@ export default function AuthPage() {
               </div>
             )}
 
-            <div className="text-center text-sm text-gray-600">
-              {isLogin ? (
-                <>
-                  {t["Don't have an account?"] || "Don't have an account?"}{" "}
-                  <button
-                    type="button"
-                    className="text-blue-600 hover:text-blue-500 font-medium"
-                    onClick={() => setIsLogin(false)}
-                  >
-                    {t["Sign up"] || "Sign up"}
-                  </button>
-                </>
-              ) : (
-                <>
-                  {t["Already have an account?"] || "Already have an account?"}{" "}
-                  <button
-                    type="button"
-                    className="text-blue-600 hover:text-blue-500 font-medium"
-                    onClick={() => setIsLogin(true)}
-                  >
-                    {t["Sign in"] || "Sign in"}
-                  </button>
-                </>
-              )}
-            </div>
+
           </CardContent>
         </Card>
 
