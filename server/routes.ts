@@ -72,6 +72,7 @@ import {
 } from './ai-product-upload';
 
 import { handleRecaptchaVerification, requireRecaptcha, getRecaptchaConfig } from "./recaptcha";
+import { createAssessment, testAssessment } from "./recaptcha-enterprise";
 
 import { 
   insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
@@ -15798,6 +15799,86 @@ The Dedw3n Team
     } catch (error) {
       console.error('Error registering for event:', error);
       res.status(500).json({ error: 'Failed to register for event' });
+    }
+  });
+
+  // ===== RECAPTCHA ENTERPRISE ENDPOINTS =====
+  
+  // Test reCAPTCHA Enterprise assessment endpoint
+  app.post('/api/recaptcha/test-assessment', async (req: Request, res: Response) => {
+    try {
+      const { token, action } = req.body;
+      
+      if (!token) {
+        return res.status(400).json({ 
+          error: 'Token is required',
+          message: 'Please provide a reCAPTCHA token'
+        });
+      }
+
+      console.log('[RECAPTCHA-TEST] Testing assessment with:', {
+        tokenLength: token.length,
+        action: action || 'test-action'
+      });
+
+      const result = await createAssessment({
+        token: token,
+        recaptchaAction: action || 'test-action'
+      });
+
+      if (result) {
+        res.json({
+          success: true,
+          score: result.score,
+          action: result.action,
+          valid: result.valid,
+          reasons: result.reasons
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: 'Assessment failed',
+          message: 'reCAPTCHA assessment could not be completed'
+        });
+      }
+
+    } catch (error) {
+      console.error('[RECAPTCHA-TEST] Assessment error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Server error',
+        message: 'Failed to process reCAPTCHA assessment'
+      });
+    }
+  });
+
+  // Test reCAPTCHA Enterprise with sample data from request.json
+  app.get('/api/recaptcha/test-sample', async (req: Request, res: Response) => {
+    try {
+      console.log('[RECAPTCHA-TEST] Running sample test assessment');
+      
+      const result = await testAssessment();
+      
+      if (result) {
+        res.json({
+          success: true,
+          message: 'Sample assessment completed',
+          ...result
+        });
+      } else {
+        res.json({
+          success: false,
+          message: 'Sample assessment failed - likely due to placeholder token'
+        });
+      }
+
+    } catch (error) {
+      console.error('[RECAPTCHA-TEST] Sample test error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Server error',
+        message: 'Failed to run sample assessment'
+      });
     }
   });
 
