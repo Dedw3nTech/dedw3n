@@ -98,7 +98,7 @@ function EnhancedCitySelector({
           </SelectTrigger>
           <SelectContent>
             {citiesLoading ? (
-              <SelectItem value="" disabled>Loading cities...</SelectItem>
+              <SelectItem value="__loading__" disabled>Loading cities...</SelectItem>
             ) : (
               <>
                 {availableCities.slice(0, 100).map((city) => (
@@ -219,7 +219,7 @@ export default function RegionSelector({
           </SelectTrigger>
           <SelectContent>
             {regionsLoading ? (
-              <SelectItem value="" disabled>Loading regions...</SelectItem>
+              <SelectItem value="__loading__" disabled>Loading regions...</SelectItem>
             ) : (
               regions.sort().map((region) => (
                 <SelectItem key={region} value={region}>
@@ -255,7 +255,7 @@ export default function RegionSelector({
           </SelectTrigger>
           <SelectContent>
             {countriesLoading ? (
-              <SelectItem value="" disabled>Loading countries...</SelectItem>
+              <SelectItem value="__loading__" disabled>Loading countries...</SelectItem>
             ) : (
               availableCountries.sort().map((country) => (
                 <SelectItem key={country} value={country}>
