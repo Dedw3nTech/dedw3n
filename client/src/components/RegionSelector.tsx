@@ -142,21 +142,6 @@ function EnhancedCitySelector({
           </SelectContent>
         </Select>
         
-        {availableCities.length > 50 && (
-          <div className="text-sm text-gray-600">
-            Showing first 50 cities out of {availableCities.length} available.
-            {!showCustomInput && (
-              <Button
-                type="button"
-                variant="link"
-                className="p-0 h-auto ml-1"
-                onClick={() => setShowCustomInput(true)}
-              >
-                Search or add custom city
-              </Button>
-            )}
-          </div>
-        )}
         
         {showCustomInput && (
           <div className="flex space-x-2">
