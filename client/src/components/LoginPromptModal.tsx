@@ -73,6 +73,14 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
   } = useNameValidation();
 
   const {
+    validateName: validateLastName,
+    isValidating: isValidatingLastName,
+    isValid: lastNameIsValid,
+    getValidationMessage: getLastNameValidationMessage,
+    resetValidation: resetLastNameValidation
+  } = useNameValidation();
+
+  const {
     verifyPartnerCode,
     isVerifying: isVerifyingAffiliate,
     isValid: affiliateIsValid,
@@ -113,6 +121,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
   const [ageError, setAgeError] = useState("");
   const [emailTouched, setEmailTouched] = useState(false);
   const [nameTouched, setNameTouched] = useState(false);
+  const [lastNameTouched, setLastNameTouched] = useState(false);
   const [affiliateTouched, setAffiliateTouched] = useState(false);
   const [usernameTouched, setUsernameTouched] = useState(false);
 
@@ -209,16 +218,30 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     }
   }, [formData.firstName, nameTouched, isLogin, validateName, resetNameValidation]);
 
+  // Last name validation effect with debouncing
+  useEffect(() => {
+    if (formData.lastName && lastNameTouched && !isLogin) {
+      const timer = setTimeout(() => {
+        validateLastName(formData.lastName);
+      }, 500); // Debounce for 500ms
+      return () => clearTimeout(timer);
+    } else if (!formData.lastName || isLogin) {
+      resetLastNameValidation();
+    }
+  }, [formData.lastName, lastNameTouched, isLogin, validateLastName, resetLastNameValidation]);
+
   // Reset validation when switching between login/register
   useEffect(() => {
     resetValidation();
     resetNameValidation();
+    resetLastNameValidation();
     resetUsernameVerification();
     setEmailTouched(false);
     setNameTouched(false);
+    setLastNameTouched(false);
     setAffiliateTouched(false);
     setUsernameTouched(false);
-  }, [isLogin, resetValidation, resetNameValidation, resetUsernameVerification]);
+  }, [isLogin, resetValidation, resetNameValidation, resetLastNameValidation, resetUsernameVerification]);
 
   // Affiliate partner verification effect with debouncing
   useEffect(() => {
@@ -471,16 +494,60 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
               
               <div className="space-y-2">
                 <Label htmlFor="lastName">{t["Surname"] || "Surname"}</Label>
-                <Input
-                  id="lastName"
-                  type="text"
-                  placeholder={t["Enter your surname"] || "Enter your surname"}
-                  value={formData.lastName}
-                  onChange={(e) => {
-                    setFormData({ ...formData, lastName: e.target.value });
-                  }}
-                  required={!isLogin}
-                />
+                <div className="relative">
+                  <Input
+                    id="lastName"
+                    type="text"
+                    placeholder={t["Enter your surname"] || "Enter your surname"}
+                    value={formData.lastName}
+                    onChange={(e) => {
+                      setFormData({ ...formData, lastName: e.target.value });
+                      if (!lastNameTouched && e.target.value && !isLogin) setLastNameTouched(true);
+                    }}
+                    onBlur={() => {
+                      if (formData.lastName && !isLogin) setLastNameTouched(true);
+                    }}
+                    required={!isLogin}
+                    className={`pr-10 ${
+                      lastNameTouched && formData.lastName && !isLogin ? (
+                        lastNameIsValid === true ? "border-green-500 focus:ring-green-500" :
+                        lastNameIsValid === false ? "border-red-500 focus:ring-red-500" :
+                        "border-blue-500 focus:ring-blue-500"
+                      ) : ""
+                    }`}
+                  />
+                  {lastNameTouched && formData.lastName && !isLogin && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      {isValidatingLastName ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                      ) : lastNameIsValid === true ? (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      ) : lastNameIsValid === false ? (
+                        <XCircle className="h-4 w-4 text-red-500" />
+                      ) : null}
+                    </div>
+                  )}
+                </div>
+                {lastNameTouched && formData.lastName && !isLogin && (
+                  <div className="text-sm">
+                    {isValidatingLastName ? (
+                      <p className="text-blue-600 flex items-center">
+                        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                        {t["Verifying name authenticity..."] || "Verifying name authenticity..."}
+                      </p>
+                    ) : lastNameIsValid === true ? (
+                      <p className="text-green-600 flex items-center">
+                        <CheckCircle className="mr-1 h-3 w-3" />
+                        {getLastNameValidationMessage() || t["Name verified as genuine"] || "Name verified as genuine"}
+                      </p>
+                    ) : lastNameIsValid === false ? (
+                      <p className="text-red-500 flex items-center">
+                        <XCircle className="mr-1 h-3 w-3" />
+                        {getLastNameValidationMessage() || t["Name appears invalid or gibberish"] || "Name appears invalid or gibberish"}
+                      </p>
+                    ) : null}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -863,8 +930,10 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                 (!isLogin && ageError) ||
                 (!isLogin && isValidating) ||
                 (!isLogin && isValidatingName) ||
+                (!isLogin && isValidatingLastName) ||
                 (!isLogin && emailTouched && emailIsValid === false) ||
                 (!isLogin && nameTouched && nameIsValid === false) ||
+                (!isLogin && lastNameTouched && lastNameIsValid === false) ||
                 (!isLogin && passwordStrength?.isWeak && formData.password.length > 0) ||
                 (!isLogin && (!formData.firstName || !formData.lastName || !formData.username || !formData.email || !formData.password || !formData.dateOfBirth || !formData.language))
               )}
