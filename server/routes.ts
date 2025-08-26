@@ -4153,9 +4153,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         );
       }
       
-      // Add ordering by population (descending) and then by name - NO LIMIT
+      // Order cities alphabetically by name
       const citiesResult = await query
-        .orderBy(desc(cities.population), cities.name);
+        .orderBy(cities.name);
       
       console.log(`[DEBUG] Found ${citiesResult.length} cities for ${country}`);
       
