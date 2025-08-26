@@ -196,66 +196,62 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
-              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 relative"
+              className="px-4 py-2 hover:bg-gray-50 relative"
               onClick={() => handlePageNavigation("/liked")}
             >
-              <div className="relative">
-                <Heart className="h-4 w-4" />
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.likedText}</span>
                 {likedProductsCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold">
+                  <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold">
                     {likedProductsCount > 99 ? '99+' : likedProductsCount}
                   </span>
                 )}
               </div>
-              <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.likedText}</span>
             </Button>
 
 
             <Button
               variant="ghost"
-              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 relative"
+              className="px-4 py-2 hover:bg-gray-50 relative"
               onClick={() => handlePageNavigation("/cart")}
             >
-              <div className="relative">
-                <ShoppingBag className="h-4 w-4" />
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.cartText}</span>
                 {cartItemCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold">
+                  <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold">
                     {cartItemCount > 99 ? '99+' : cartItemCount}
                   </span>
                 )}
               </div>
-              <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.cartText}</span>
             </Button>
             
             <Button
               variant="ghost"
-              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 relative"
+              className="px-4 py-2 hover:bg-gray-50 relative"
               onClick={() => handlePageNavigation("/orders-returns")}
             >
-              <div className="relative">
-                <Package className="h-4 w-4" />
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.ordersText}</span>
                 {ordersNotificationsCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold">
+                  <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold">
                     {ordersNotificationsCount > 99 ? '99+' : ordersNotificationsCount}
                   </span>
                 )}
               </div>
-              <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.ordersText}</span>
             </Button>
             
             <Button
               variant="ghost"
-              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
+              className="px-4 py-2 hover:bg-gray-50"
               onClick={() => handlePageNavigation("/vendor-dashboard")}
             >
-              <Store className="h-4 w-4" />
               <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.vendorText}</span>
             </Button>
             
             {isAuthenticated && (
               <Button
                 variant="ghost"
-                className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
+                className="px-4 py-2 hover:bg-gray-50"
                 onClick={() => {
                   if (userVendor && userVendor.storeName) {
                     const slug = createStoreSlug(userVendor.storeName);
@@ -270,7 +266,6 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                   }
                 }}
               >
-                <Building2 className="h-4 w-4" />
                 <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.vendorPageText}</span>
               </Button>
             )}
