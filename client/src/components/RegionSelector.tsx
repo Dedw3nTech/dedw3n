@@ -126,7 +126,7 @@ function EnhancedCitySelector({
           disabled={disabled}
         >
           <SelectTrigger className={`w-full ${showErrors && isCityMissing ? 'border-red-500' : ''}`}>
-            <SelectValue placeholder={t.selectCity || 'Select your city'} />
+            <SelectValue placeholder={t.selectCity || 'Select your City'} />
           </SelectTrigger>
           <SelectContent>
             {availableCities.slice(0, 50).map((city) => (
@@ -291,7 +291,7 @@ export default function RegionSelector({
           showErrors={showErrors}
           translations={{
             city: t('city') || 'City',
-            selectCity: t('selectCity') || 'Select or type your city',
+            selectCity: t('selectCity') || 'Select your City',
             cityRequired: t('cityRequired') || 'City is required'
           }}
         />
