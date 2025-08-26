@@ -101,11 +101,11 @@ export const CitySearchAutocomplete: React.FC<CitySearchAutocompleteProps> = ({
         setIsOpen(cities.length > 0);
 
         if (cities.length === 0) {
-          setError(t["No cities found"]);
+          setError("No cities found");
         }
       } catch (err) {
         console.error('[CITY-SEARCH] Search failed:', err);
-        setError(t["City search unavailable"]);
+        setError("City search unavailable");
         setSuggestions([]);
       } finally {
         setIsLoading(false);
@@ -117,7 +117,7 @@ export const CitySearchAutocomplete: React.FC<CitySearchAutocompleteProps> = ({
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [searchQuery, countryCode, t]);
+  }, [searchQuery, countryCode]);
 
   // Handle city selection
   const handleCitySelect = async (city: City) => {
