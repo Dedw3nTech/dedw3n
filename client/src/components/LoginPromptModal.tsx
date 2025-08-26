@@ -401,6 +401,35 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                 (t["Create your account to get started with Dedw3n."] || "Create your account to get started with Dedw3n.")
               }
             </DialogDescription>
+            
+            {/* Account Switch Link in Header */}
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <p className="text-sm text-gray-600">
+                {isLogin ? (
+                  <>
+                    {t["Don't have an account?"] || "Don't have an account?"}{" "}
+                    <Button
+                      variant="link"
+                      className="p-0 h-auto font-medium text-blue-600 underline"
+                      onClick={() => setIsLogin(false)}
+                    >
+                      {t["Sign up"] || "Sign up"}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    {t["Already have an account?"] || "Already have an account?"}{" "}
+                    <Button
+                      variant="link"
+                      className="p-0 h-auto font-medium text-blue-600 underline"
+                      onClick={() => setIsLogin(true)}
+                    >
+                      {t["Sign in"] || "Sign in"}
+                    </Button>
+                  </>
+                )}
+              </p>
+            </div>
           </DialogHeader>
         </div>
 
@@ -936,25 +965,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             </Button>
           </form>
 
-          <div className="text-center">
-            <Separator className="my-4" />
-            <p className="text-sm text-gray-600">
-              {isLogin ? 
-                (t["Don't have an account?"] || "Don't have an account?") : 
-                (t["Already have an account?"] || "Already have an account?")
-              }{" "}
-              <Button
-                variant="link"
-                className="p-0 h-auto font-semibold text-blue-600"
-                onClick={() => setIsLogin(!isLogin)}
-              >
-                {isLogin ? 
-                  (t["Sign up"] || "Sign up") : 
-                  (t["Sign in"] || "Sign in")
-                }
-              </Button>
-            </p>
-          </div>
+
 
           <div className="text-center pt-2">
             <p className="text-xs text-gray-500">
