@@ -12,6 +12,7 @@ import { Loader2, ArrowLeft, CreditCard, Globe, Smartphone, Building2, Check } f
 import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import PayPalButton from "@/components/PayPalButton";
 
 // Load Stripe conditionally
 const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 
@@ -101,62 +102,37 @@ const StripeCheckoutForm = ({ tier, onSuccess }: { tier: string; onSuccess: () =
 // PayPal Payment Form Component
 const PayPalCheckoutForm = ({ tier, onSuccess }: { tier: string; onSuccess: () => void }) => {
   const { toast } = useToast();
-  const [isProcessing, setIsProcessing] = useState(false);
   const { formatPrice } = useCurrency();
-
-  const handlePayPalPayment = async () => {
-    setIsProcessing(true);
-    try {
-      // Simulate PayPal payment processing
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      toast({
-        title: "PayPal Integration",
-        description: "PayPal payment integration is in development. Please use card payment for now.",
-        variant: "destructive",
-      });
-    } catch (error) {
-      toast({
-        title: "PayPal Error",
-        description: "Failed to process PayPal payment.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
 
   const getTierPrice = (tier: string) => {
     switch (tier) {
-      case "vip": return formatPrice(199.99);
-      case "vvip": return formatPrice(1999.99);
-      default: return "N/A";
+      case "vip": return 199.99;
+      case "vvip": return 1999.99;
+      default: return 0;
     }
+  };
+
+  const getTierPriceFormatted = (tier: string) => {
+    return formatPrice(getTierPrice(tier));
   };
 
   return (
     <div className="space-y-4">
-      <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-        <Globe className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold mb-2">PayPal Payment</h3>
-        <p className="text-gray-600 mb-4">You will be redirected to PayPal to complete your payment</p>
-        <Button
-          onClick={handlePayPalPayment}
-          disabled={isProcessing}
-          className="bg-blue-600 hover:bg-blue-700 text-white"
-        >
-          {isProcessing ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Redirecting to PayPal...
-            </>
-          ) : (
-            <>
-              <Globe className="mr-2 h-4 w-4" />
-              Pay with PayPal - {getTierPrice(tier)}
-            </>
-          )}
-        </Button>
+      <div className="border-2 border-solid border-blue-200 rounded-lg p-6 bg-blue-50">
+        <div className="flex items-center justify-center mb-4">
+          <Globe className="h-8 w-8 text-blue-600 mr-2" />
+          <h3 className="text-lg font-semibold text-blue-900">PayPal Payment</h3>
+        </div>
+        <p className="text-blue-800 text-center mb-4">
+          Secure payment with PayPal - {getTierPriceFormatted(tier)}
+        </p>
+        <div className="flex justify-center">
+          <PayPalButton 
+            amount={getTierPrice(tier).toString()}
+            currency="GBP"
+            intent="CAPTURE"
+          />
+        </div>
       </div>
     </div>
   );

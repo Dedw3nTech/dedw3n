@@ -1833,6 +1833,20 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // PayPal payment routes
+  app.get("/paypal/setup", async (req, res) => {
+    await loadPaypalDefault(req, res);
+  });
+
+  app.post("/paypal/order", async (req, res) => {
+    // Request body should contain: { intent, amount, currency }
+    await createPaypalOrder(req, res);
+  });
+
+  app.post("/paypal/order/:orderID/capture", async (req, res) => {
+    await capturePaypalOrder(req, res);
+  });
+
   // Escrow.com API Integration
   app.post('/api/escrow/create-transaction', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
