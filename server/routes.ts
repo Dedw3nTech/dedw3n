@@ -113,12 +113,40 @@ const requireRecaptchaEnterprise = (action: string, minScore: number = 0.5) => {
         recaptchaAction: action
       });
       
-      if (!assessment || !assessment.valid || assessment.score < minScore) {
-        console.log(`[RECAPTCHA-ENTERPRISE] ${action} verification failed - Score: ${assessment?.score || 0}`);
+      if (!assessment || !assessment.valid) {
+        console.log(`[RECAPTCHA-ENTERPRISE] ${action} verification failed - Error: ${assessment?.error || 'Unknown'}`);
+        
+        // Handle specific error types
+        if (assessment?.errorType === 'SERVER_ERROR') {
+          return res.status(500).json({ 
+            message: "Security verification temporarily unavailable. Please try again.",
+            code: "RECAPTCHA_SERVER_ERROR"
+          });
+        } else if (assessment?.errorType === 'INVALID_TOKEN') {
+          return res.status(400).json({ 
+            message: "Invalid security token. Please refresh and try again.",
+            code: "RECAPTCHA_INVALID_TOKEN"
+          });
+        } else if (assessment?.errorType === 'ACTION_MISMATCH') {
+          return res.status(400).json({ 
+            message: "Security verification mismatch. Please try again.",
+            code: "RECAPTCHA_ACTION_MISMATCH"
+          });
+        } else {
+          return res.status(400).json({ 
+            message: "Security verification failed. Please try again.",
+            code: "RECAPTCHA_FAILED"
+          });
+        }
+      }
+      
+      if (assessment.score < minScore) {
+        console.log(`[RECAPTCHA-ENTERPRISE] ${action} verification failed - Score too low: ${assessment.score} < ${minScore}`);
         return res.status(400).json({ 
-          message: "Security verification failed. Please try again.",
-          code: "RECAPTCHA_FAILED",
-          riskScore: assessment?.score || 0
+          message: "Security verification failed due to suspicious activity. Please try again.",
+          code: "RECAPTCHA_LOW_SCORE",
+          riskScore: assessment.score,
+          minRequired: minScore
         });
       }
       

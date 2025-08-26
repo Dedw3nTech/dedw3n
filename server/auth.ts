@@ -577,11 +577,39 @@ export function setupAuth(app: Express) {
             recaptchaAction: 'register'
           });
           
-          if (!assessment || !assessment.valid || assessment.score < 0.5) {
-            console.log(`[SECURITY] reCAPTCHA Enterprise verification failed for registration: ${req.body.username}, score: ${assessment?.score || 0}`);
+          if (!assessment || !assessment.valid) {
+            console.log(`[SECURITY] reCAPTCHA Enterprise verification failed for registration: ${req.body.username}, error: ${assessment?.error || 'Unknown'}`);
+            
+            // Handle specific error types
+            if (assessment?.errorType === 'SERVER_ERROR') {
+              return res.status(500).json({ 
+                message: "Security verification temporarily unavailable. Please try again.",
+                code: "RECAPTCHA_SERVER_ERROR"
+              });
+            } else if (assessment?.errorType === 'INVALID_TOKEN') {
+              return res.status(400).json({ 
+                message: "Invalid security token. Please refresh and try again.",
+                code: "RECAPTCHA_INVALID_TOKEN"
+              });
+            } else if (assessment?.errorType === 'ACTION_MISMATCH') {
+              return res.status(400).json({ 
+                message: "Security verification mismatch. Please try again.",
+                code: "RECAPTCHA_ACTION_MISMATCH"
+              });
+            } else {
+              return res.status(400).json({ 
+                message: "Security verification failed. Please try again.",
+                code: "RECAPTCHA_FAILED"
+              });
+            }
+          }
+          
+          if (assessment.score < 0.5) {
+            console.log(`[SECURITY] reCAPTCHA Enterprise score too low for registration: ${req.body.username}, score: ${assessment.score}`);
             return res.status(400).json({ 
-              message: "Security verification failed. Please try again.",
-              code: "INVALID_CAPTCHA"
+              message: "Security verification failed due to suspicious activity. Please try again.",
+              code: "RECAPTCHA_LOW_SCORE",
+              score: assessment.score
             });
           }
           
@@ -679,11 +707,39 @@ export function setupAuth(app: Express) {
           recaptchaAction: 'login'
         });
         
-        if (!assessment || !assessment.valid || assessment.score < 0.5) {
-          console.log(`[SECURITY] reCAPTCHA Enterprise verification failed for login: ${req.body.username}, score: ${assessment?.score || 0}`);
+        if (!assessment || !assessment.valid) {
+          console.log(`[SECURITY] reCAPTCHA Enterprise verification failed for login: ${req.body.username}, error: ${assessment?.error || 'Unknown'}`);
+          
+          // Handle specific error types
+          if (assessment?.errorType === 'SERVER_ERROR') {
+            return res.status(500).json({ 
+              message: "Security verification temporarily unavailable. Please try again.",
+              code: "RECAPTCHA_SERVER_ERROR"
+            });
+          } else if (assessment?.errorType === 'INVALID_TOKEN') {
+            return res.status(400).json({ 
+              message: "Invalid security token. Please refresh and try again.",
+              code: "RECAPTCHA_INVALID_TOKEN"
+            });
+          } else if (assessment?.errorType === 'ACTION_MISMATCH') {
+            return res.status(400).json({ 
+              message: "Security verification mismatch. Please try again.",
+              code: "RECAPTCHA_ACTION_MISMATCH"
+            });
+          } else {
+            return res.status(400).json({ 
+              message: "Security verification failed. Please try again.",
+              code: "RECAPTCHA_FAILED"
+            });
+          }
+        }
+        
+        if (assessment.score < 0.5) {
+          console.log(`[SECURITY] reCAPTCHA Enterprise score too low for login: ${req.body.username}, score: ${assessment.score}`);
           return res.status(400).json({ 
-            message: "Security verification failed. Please try again.",
-            code: "INVALID_CAPTCHA"
+            message: "Security verification failed due to suspicious activity. Please try again.",
+            code: "RECAPTCHA_LOW_SCORE",
+            score: assessment.score
           });
         }
         

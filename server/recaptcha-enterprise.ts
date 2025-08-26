@@ -56,13 +56,27 @@ export async function createAssessment({
     // Check if the token is valid
     if (!response.tokenProperties?.valid) {
       console.log(`[RECAPTCHA-ENTERPRISE] Assessment failed: ${response.tokenProperties?.invalidReason}`);
-      return null;
+      return {
+        score: 0,
+        valid: false,
+        action: response.tokenProperties?.action || '',
+        reasons: ['INVALID_TOKEN'],
+        error: response.tokenProperties?.invalidReason || 'Token validation failed',
+        errorType: 'INVALID_TOKEN'
+      };
     }
 
     // Check if the expected action was executed (if provided)
     if (recaptchaAction && response.tokenProperties.action !== recaptchaAction) {
       console.log(`[RECAPTCHA-ENTERPRISE] Action mismatch: expected '${recaptchaAction}', got '${response.tokenProperties.action}'`);
-      return null;
+      return {
+        score: response.riskAnalysis?.score ?? 0,
+        valid: false,
+        action: response.tokenProperties.action || '',
+        reasons: ['ACTION_MISMATCH'],
+        error: `Expected action '${recaptchaAction}', got '${response.tokenProperties.action}'`,
+        errorType: 'ACTION_MISMATCH'
+      };
     }
 
     const score = response.riskAnalysis?.score ?? 0;
@@ -88,7 +102,16 @@ export async function createAssessment({
 
   } catch (error) {
     console.error('[RECAPTCHA-ENTERPRISE] Assessment error:', error);
-    return null;
+    
+    // Return structured error information instead of null
+    return {
+      score: 0,
+      valid: false,
+      action: '',
+      reasons: ['ASSESSMENT_ERROR'],
+      error: error instanceof Error ? error.message : 'Unknown error',
+      errorType: 'SERVER_ERROR'
+    };
   }
 }
 
