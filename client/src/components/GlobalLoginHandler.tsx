@@ -2,10 +2,12 @@ import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLoginPrompt } from "@/hooks/use-login-prompt";
 import { LoginPromptModal } from "@/components/LoginPromptModal";
+import { useLocation } from "wouter";
 
 export function GlobalLoginHandler() {
   const { user } = useAuth();
   const { isOpen, action, showLoginPrompt, closePrompt } = useLoginPrompt();
+  const [location] = useLocation();
 
   // Close login modal when user becomes authenticated
   useEffect(() => {
@@ -18,6 +20,11 @@ export function GlobalLoginHandler() {
     // Only add global click handler if user is not authenticated
     if (!user) {
       const handleGlobalClick = (event: MouseEvent) => {
+        // Skip if on password reset pages - these should work without authentication
+        if (location === '/reset-password' || location === '/reset-password-confirm' || location.startsWith('/reset-password-confirm?')) {
+          return;
+        }
+        
         // Prevent showing login popup if user clicked on existing modal/dialog elements
         const target = event.target as HTMLElement;
         
@@ -50,7 +57,7 @@ export function GlobalLoginHandler() {
         document.removeEventListener('click', handleGlobalClick, true);
       };
     }
-  }, [user, showLoginPrompt]);
+  }, [user, showLoginPrompt, location]);
 
   // Render the login modal
   return (
