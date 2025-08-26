@@ -109,6 +109,13 @@ export default function ResetPassword() {
       <div className="max-w-md w-full space-y-8">
         <Card>
           <CardHeader>
+            <div className="mx-auto flex items-center justify-center h-16 w-16 mb-4">
+              <img 
+                src={logoImage} 
+                alt="Dedw3n Logo" 
+                className="h-12 w-12 object-contain"
+              />
+            </div>
             <CardTitle className="text-2xl text-center">
               Reset your password
             </CardTitle>

@@ -12,6 +12,7 @@ import { Link } from "wouter";
 // import { useTranslation } from "react-i18next";
 import { usePasswordStrength } from "@/hooks/use-password-strength";
 import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidator";
+import logoImage from "@assets/Dedw3n Logo.png";
 
 export default function ResetPasswordConfirm() {
   const [password, setPassword] = useState("");
@@ -162,6 +163,13 @@ export default function ResetPasswordConfirm() {
       <div className="max-w-md w-full space-y-8">
         <Card>
           <CardHeader>
+            <div className="mx-auto flex items-center justify-center h-16 w-16 mb-4">
+              <img 
+                src={logoImage} 
+                alt="Dedw3n Logo" 
+                className="h-12 w-12 object-contain"
+              />
+            </div>
             <CardTitle className="text-2xl text-center">
               Set new password
             </CardTitle>
@@ -198,6 +206,7 @@ export default function ResetPasswordConfirm() {
                 {password && (
                   <PasswordStrengthValidator 
                     password={password}
+                    onPasswordChange={setPassword}
                   />
                 )}
               </div>
