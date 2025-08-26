@@ -50,6 +50,7 @@ import { SEOHead, seoConfigs } from "@/components/seo/SEOHead";
 import { GPCBanner } from "@/components/GPCBanner";
 import AICommunityTools from "@/components/AICommunityTools";
 import AIDatingTools from "@/components/AIDatingTools";
+import VerifyEmail from "@/pages/verify-email";
 
 // Community Navigation wrapper
 function CommunityNavWrapper() {
@@ -278,6 +279,11 @@ function Router() {
       <Route path="/reset-password-confirm">
         <SEOHead title="Confirm Password Reset - Dedw3n" description="Set your new password to complete the password reset process." />
         <ResetPasswordConfirm />
+      </Route>
+
+      <Route path="/verify-email">
+        <SEOHead title="Verify Email - Dedw3n" description="Complete your email verification to activate your Dedw3n account." />
+        <VerifyEmail />
       </Route>
 
       <Route path="/mobile">

@@ -650,13 +650,109 @@ export function setupAuth(app: Express) {
       // Hash password
       const hashedPassword = await hashPassword(req.body.password);
 
-      // Create user
+      // Generate verification token
+      const verificationToken = randomBytes(32).toString("hex");
+
+      // Create user with verification token
       console.log(`[DEBUG] Creating new user ${req.body.username} in storage`);
       const user = await storage.createUser({
         ...req.body,
         password: hashedPassword,
+        emailVerified: false,
+        verificationToken: verificationToken,
       });
       console.log(`[DEBUG] User created with ID: ${user.id}, username: ${user.username}`);
+
+      // Send verification email
+      try {
+        const verificationLink = `${req.protocol}://${req.get('host')}/verify-email?token=${verificationToken}`;
+        
+        const emailHtml = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Verify Your Email - Dedw3n</title>
+          </head>
+          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+              <h1 style="color: white; margin: 0; font-size: 28px;">Welcome to Dedw3n!</h1>
+            </div>
+            
+            <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #ddd;">
+              <h2 style="color: #333; margin-top: 0;">Verify Your Email Address</h2>
+              
+              <p>Hello <strong>${user.name || user.username}</strong>,</p>
+              
+              <p>Thank you for creating an account with Dedw3n! To complete your registration and access all features, please verify your email address by clicking the button below:</p>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${verificationLink}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block; transition: all 0.3s;">
+                  Verify Email Address
+                </a>
+              </div>
+              
+              <p>If the button doesn't work, you can also copy and paste this link into your browser:</p>
+              <p style="word-break: break-all; background: #fff; padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
+                ${verificationLink}
+              </p>
+              
+              <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 15px; margin: 20px 0;">
+                <p style="margin: 0; color: #856404;"><strong>Important:</strong> This verification link will expire in 24 hours for security reasons.</p>
+              </div>
+              
+              <p>If you didn't create this account, please ignore this email.</p>
+              
+              <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+              
+              <p style="font-size: 14px; color: #666;">
+                Best regards,<br>
+                The Dedw3n Team
+              </p>
+              
+              <p style="font-size: 12px; color: #999; margin-top: 30px;">
+                This is an automated message, please do not reply to this email.
+              </p>
+            </div>
+          </body>
+          </html>
+        `;
+
+        const emailText = `
+Welcome to Dedw3n!
+
+Hello ${user.name || user.username},
+
+Thank you for creating an account with Dedw3n! To complete your registration and access all features, please verify your email address by visiting this link:
+
+${verificationLink}
+
+This verification link will expire in 24 hours for security reasons.
+
+If you didn't create this account, please ignore this email.
+
+Best regards,
+The Dedw3n Team
+        `;
+
+        const emailSent = await sendEmail({
+          to: user.email,
+          from: 'noreply@dedw3n.com',
+          subject: 'Welcome to Dedw3n - Please Verify Your Email',
+          text: emailText,
+          html: emailHtml
+        });
+
+        if (emailSent) {
+          console.log(`[EMAIL] Verification email sent successfully to ${user.email}`);
+        } else {
+          console.error(`[EMAIL] Failed to send verification email to ${user.email}`);
+        }
+      } catch (emailError) {
+        console.error(`[EMAIL] Error sending verification email:`, emailError);
+        // Continue with registration even if email fails
+      }
 
       // Log in the user
       console.log(`[DEBUG] Calling req.login for newly created user ${user.username}`);
@@ -674,9 +770,13 @@ export function setupAuth(app: Express) {
         console.log(`[DEBUG] Authentication status after login: ${req.isAuthenticated()}`);
         console.log(`[DEBUG] User in session:`, req.user);
         
-        // Return user without password
-        const { password, ...userWithoutPassword } = user;
-        res.status(201).json(userWithoutPassword);
+        // Return user without password and verification token
+        const { password, verificationToken: token, ...userWithoutPassword } = user;
+        res.status(201).json({
+          ...userWithoutPassword,
+          emailVerificationSent: true,
+          message: "Account created successfully! Please check your email to verify your account."
+        });
       });
     } catch (error) {
       console.error(`[ERROR] Registration failed:`, error);
