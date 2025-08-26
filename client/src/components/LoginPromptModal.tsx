@@ -91,7 +91,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
   } = useUsernameVerification();
 
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     username: "",
     email: "",
     password: "",
@@ -198,15 +199,15 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
   // Name validation effect with debouncing
   useEffect(() => {
-    if (formData.name && nameTouched && !isLogin) {
+    if (formData.firstName && nameTouched && !isLogin) {
       const timer = setTimeout(() => {
-        validateName(formData.name);
+        validateName(formData.firstName);
       }, 500); // Debounce for 500ms
       return () => clearTimeout(timer);
-    } else if (!formData.name || isLogin) {
+    } else if (!formData.firstName || isLogin) {
       resetNameValidation();
     }
-  }, [formData.name, nameTouched, isLogin, validateName, resetNameValidation]);
+  }, [formData.firstName, nameTouched, isLogin, validateName, resetNameValidation]);
 
   // Reset validation when switching between login/register
   useEffect(() => {
@@ -319,7 +320,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           username: formData.username,
           email: formData.email,
           password: formData.password,
-          name: formData.name,
+          name: `${formData.firstName} ${formData.lastName}`.trim(),
           affiliatePartner: formData.affiliatePartner,
           dateOfBirth: formData.dateOfBirth,
           gender: formData.gender as "male" | "female" | "other" | null,
@@ -409,62 +410,78 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
         <div className="flex-1 overflow-y-auto min-h-0 px-1">
           <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
-            <div className="space-y-2">
-              <Label htmlFor="name">{t["Full Name"] || "Full Name"}</Label>
-              <div className="relative">
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder={t["Enter your full name"] || "Enter your full name"}
-                  value={formData.name}
-                  onChange={(e) => {
-                    setFormData({ ...formData, name: e.target.value });
-                    if (!nameTouched && e.target.value) setNameTouched(true);
-                  }}
-                  onBlur={() => {
-                    if (formData.name) setNameTouched(true);
-                  }}
-                  required={!isLogin}
-                  className={`pr-10 ${
-                    nameTouched && formData.name ? (
-                      nameIsValid === true ? "border-green-500 focus:ring-green-500" :
-                      nameIsValid === false ? "border-red-500 focus:ring-red-500" :
-                      "border-blue-500 focus:ring-blue-500"
-                    ) : ""
-                  }`}
-                />
-                {nameTouched && formData.name && (
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">{t["First Name"] || "First Name"}</Label>
+                <div className="relative">
+                  <Input
+                    id="firstName"
+                    type="text"
+                    placeholder={t["Enter your first name"] || "Enter your first name"}
+                    value={formData.firstName}
+                    onChange={(e) => {
+                      setFormData({ ...formData, firstName: e.target.value });
+                      if (!nameTouched && e.target.value) setNameTouched(true);
+                    }}
+                    onBlur={() => {
+                      if (formData.firstName) setNameTouched(true);
+                    }}
+                    required={!isLogin}
+                    className={`pr-10 ${
+                      nameTouched && formData.firstName ? (
+                        nameIsValid === true ? "border-green-500 focus:ring-green-500" :
+                        nameIsValid === false ? "border-red-500 focus:ring-red-500" :
+                        "border-blue-500 focus:ring-blue-500"
+                      ) : ""
+                    }`}
+                  />
+                  {nameTouched && formData.firstName && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      {isValidatingName ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                      ) : nameIsValid === true ? (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      ) : nameIsValid === false ? (
+                        <XCircle className="h-4 w-4 text-red-500" />
+                      ) : null}
+                    </div>
+                  )}
+                </div>
+                {nameTouched && formData.firstName && (
+                  <div className="text-sm">
                     {isValidatingName ? (
-                      <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                      <p className="text-blue-600 flex items-center">
+                        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                        {t["Verifying name authenticity..."] || "Verifying name authenticity..."}
+                      </p>
                     ) : nameIsValid === true ? (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <p className="text-green-600 flex items-center">
+                        <CheckCircle className="mr-1 h-3 w-3" />
+                        {getNameValidationMessage() || t["Name verified as genuine"] || "Name verified as genuine"}
+                      </p>
                     ) : nameIsValid === false ? (
-                      <XCircle className="h-4 w-4 text-red-500" />
+                      <p className="text-red-500 flex items-center">
+                        <XCircle className="mr-1 h-3 w-3" />
+                        {getNameValidationMessage() || t["Name appears invalid or gibberish"] || "Name appears invalid or gibberish"}
+                      </p>
                     ) : null}
                   </div>
                 )}
               </div>
-              {nameTouched && formData.name && (
-                <div className="text-sm">
-                  {isValidatingName ? (
-                    <p className="text-blue-600 flex items-center">
-                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                      {t["Verifying name authenticity..."] || "Verifying name authenticity..."}
-                    </p>
-                  ) : nameIsValid === true ? (
-                    <p className="text-green-600 flex items-center">
-                      <CheckCircle className="mr-1 h-3 w-3" />
-                      {getNameValidationMessage() || t["Name verified as genuine"] || "Name verified as genuine"}
-                    </p>
-                  ) : nameIsValid === false ? (
-                    <p className="text-red-500 flex items-center">
-                      <XCircle className="mr-1 h-3 w-3" />
-                      {getNameValidationMessage() || t["Name appears invalid or gibberish"] || "Name appears invalid or gibberish"}
-                    </p>
-                  ) : null}
-                </div>
-              )}
+              
+              <div className="space-y-2">
+                <Label htmlFor="lastName">{t["Surname"] || "Surname"}</Label>
+                <Input
+                  id="lastName"
+                  type="text"
+                  placeholder={t["Enter your surname"] || "Enter your surname"}
+                  value={formData.lastName}
+                  onChange={(e) => {
+                    setFormData({ ...formData, lastName: e.target.value });
+                  }}
+                  required={!isLogin}
+                />
+              </div>
             </div>
           )}
 
@@ -905,7 +922,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                 (!isLogin && emailTouched && emailIsValid === false) ||
                 (!isLogin && nameTouched && nameIsValid === false) ||
                 (!isLogin && passwordStrength?.isWeak && formData.password.length > 0) ||
-                (!isLogin && (!formData.name || !formData.username || !formData.email || !formData.password || !formData.dateOfBirth || !formData.gender || !formData.language))
+                (!isLogin && (!formData.firstName || !formData.lastName || !formData.username || !formData.email || !formData.password || !formData.dateOfBirth || !formData.gender || !formData.language))
               )}
             >
               {(loginMutation.isPending || registerMutation.isPending) ? 
