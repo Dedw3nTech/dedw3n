@@ -112,9 +112,6 @@ export function MyMatches() {
         {matches.length === 0 ? (
           /* No matches state */
           <div className="text-center py-16">
-            <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-              <Users className="h-12 w-12 text-gray-400" />
-            </div>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">{noMatchesText}</h2>
             <p className="text-gray-600 mb-8 max-w-md mx-auto">{keepBrowsingText}</p>
             <Button 
