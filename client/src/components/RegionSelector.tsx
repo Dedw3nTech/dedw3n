@@ -282,7 +282,7 @@ export default function RegionSelector({
             } />
           </SelectTrigger>
           <SelectContent>
-            {availableCountries.map((country) => (
+            {availableCountries.sort().map((country) => (
               <SelectItem key={country} value={country}>
                 {country}
               </SelectItem>

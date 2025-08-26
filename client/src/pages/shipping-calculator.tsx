@@ -280,7 +280,7 @@ export default function ShippingCalculator() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {countries.map((country) => (
+                    {countries.sort().map((country) => (
                       <SelectItem key={country} value={country}>
                         {country}
                       </SelectItem>
@@ -308,7 +308,7 @@ export default function ShippingCalculator() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {countries.map((country) => (
+                    {countries.sort().map((country) => (
                       <SelectItem key={country} value={country}>
                         {country}
                       </SelectItem>

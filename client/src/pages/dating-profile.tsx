@@ -1125,7 +1125,7 @@ export default function DatingProfilePage() {
                       <SelectValue placeholder="Select your country of origin" />
                     </SelectTrigger>
                     <SelectContent>
-                      {COUNTRIES.map((country) => (
+                      {COUNTRIES.sort().map((country) => (
                         <SelectItem key={country} value={country}>
                           {country}
                         </SelectItem>
@@ -1141,7 +1141,7 @@ export default function DatingProfilePage() {
                       <SelectValue placeholder="Select your primary language" />
                     </SelectTrigger>
                     <SelectContent>
-                      {LANGUAGE_OPTIONS.map((lang) => (
+                      {LANGUAGE_OPTIONS.sort().map((lang) => (
                         <SelectItem key={lang} value={lang}>
                           {lang}
                         </SelectItem>
@@ -1157,7 +1157,7 @@ export default function DatingProfilePage() {
                       <SelectValue placeholder="Select your secondary language" />
                     </SelectTrigger>
                     <SelectContent>
-                      {LANGUAGE_OPTIONS.map((lang) => (
+                      {LANGUAGE_OPTIONS.sort().map((lang) => (
                         <SelectItem key={lang} value={lang}>
                           {lang}
                         </SelectItem>
