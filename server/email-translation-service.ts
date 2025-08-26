@@ -15,6 +15,22 @@ export interface PasswordResetEmailContent {
   copyrightText: string;
 }
 
+export interface WelcomeEmailContent {
+  subject: string;
+  title: string;
+  welcomeMessage: string;
+  accountCreatedText: string;
+  getStartedText: string;
+  actionButtonText: string;
+  featuresTitle: string;
+  feature1: string;
+  feature2: string;
+  feature3: string;
+  supportText: string;
+  contactText: string;
+  copyrightText: string;
+}
+
 // Default English content for password reset emails
 const defaultEmailContent: PasswordResetEmailContent = {
   subject: "Reset Your Dedw3n Password",
@@ -25,6 +41,23 @@ const defaultEmailContent: PasswordResetEmailContent = {
   securityNoticeTitle: "Security Notice:",
   securityNoticeText: "This link will expire in 1 hour for your security. If you didn't request this password reset, please ignore this email.",
   contactText: "If you have any questions, contact us at",
+  copyrightText: "All rights reserved."
+};
+
+// Default English content for welcome emails
+const defaultWelcomeEmailContent: WelcomeEmailContent = {
+  subject: "Welcome to Dedw3n - Your Account is Ready!",
+  title: "Welcome to Dedw3n!",
+  welcomeMessage: "Thank you for joining Dedw3n, the leading social platform for modern commerce.",
+  accountCreatedText: "Your account has been successfully created and you're ready to start exploring our marketplace, community features, and connect with people worldwide.",
+  getStartedText: "Here's what you can do now:",
+  actionButtonText: "Start Exploring",
+  featuresTitle: "What's Available:",
+  feature1: "• Browse thousands of products from verified vendors",
+  feature2: "• Connect with like-minded community members",
+  feature3: "• Enjoy secure transactions and worldwide shipping",
+  supportText: "If you need any help getting started, our support team is here to assist you.",
+  contactText: "Questions? Contact us at",
   copyrightText: "All rights reserved."
 };
 
@@ -41,6 +74,69 @@ export class EmailTranslationService {
       EmailTranslationService.instance = new EmailTranslationService();
     }
     return EmailTranslationService.instance;
+  }
+
+  /**
+   * Translates welcome email content to the target language
+   */
+  public async translateWelcomeEmail(
+    targetLanguage: string,
+    userName: string,
+    userEmail: string
+  ): Promise<{ subject: string; html: string }> {
+    // Return English content if target language is English
+    if (targetLanguage === 'EN') {
+      return this.generateWelcomeEmailHtml(defaultWelcomeEmailContent, userName);
+    }
+
+    console.log(`[EMAIL-TRANSLATION] Translating welcome email to ${targetLanguage} for ${userEmail}`);
+
+    try {
+      // Prepare texts for batch translation
+      const textsToTranslate = [
+        defaultWelcomeEmailContent.subject,
+        defaultWelcomeEmailContent.title,
+        defaultWelcomeEmailContent.welcomeMessage,
+        defaultWelcomeEmailContent.accountCreatedText,
+        defaultWelcomeEmailContent.getStartedText,
+        defaultWelcomeEmailContent.actionButtonText,
+        defaultWelcomeEmailContent.featuresTitle,
+        defaultWelcomeEmailContent.feature1,
+        defaultWelcomeEmailContent.feature2,
+        defaultWelcomeEmailContent.feature3,
+        defaultWelcomeEmailContent.supportText,
+        defaultWelcomeEmailContent.contactText,
+        defaultWelcomeEmailContent.copyrightText
+      ];
+
+      // Use batch translation for efficiency
+      const translations = await this.batchTranslateTexts(textsToTranslate, targetLanguage);
+
+      // Map translations back to content structure
+      const translatedContent: WelcomeEmailContent = {
+        subject: translations[0] || defaultWelcomeEmailContent.subject,
+        title: translations[1] || defaultWelcomeEmailContent.title,
+        welcomeMessage: translations[2] || defaultWelcomeEmailContent.welcomeMessage,
+        accountCreatedText: translations[3] || defaultWelcomeEmailContent.accountCreatedText,
+        getStartedText: translations[4] || defaultWelcomeEmailContent.getStartedText,
+        actionButtonText: translations[5] || defaultWelcomeEmailContent.actionButtonText,
+        featuresTitle: translations[6] || defaultWelcomeEmailContent.featuresTitle,
+        feature1: translations[7] || defaultWelcomeEmailContent.feature1,
+        feature2: translations[8] || defaultWelcomeEmailContent.feature2,
+        feature3: translations[9] || defaultWelcomeEmailContent.feature3,
+        supportText: translations[10] || defaultWelcomeEmailContent.supportText,
+        contactText: translations[11] || defaultWelcomeEmailContent.contactText,
+        copyrightText: translations[12] || defaultWelcomeEmailContent.copyrightText
+      };
+
+      console.log(`[EMAIL-TRANSLATION] Successfully translated welcome email to ${targetLanguage}`);
+      return this.generateWelcomeEmailHtml(translatedContent, userName);
+
+    } catch (error) {
+      console.error(`[EMAIL-TRANSLATION] Welcome email translation failed for ${targetLanguage}, using English fallback:`, error);
+      // Fallback to English if translation fails
+      return this.generateWelcomeEmailHtml(defaultWelcomeEmailContent, userName);
+    }
   }
 
   /**
@@ -152,6 +248,69 @@ export class EmailTranslationService {
       console.error('[EMAIL-TRANSLATION] Translation API request failed:', error);
       throw error;
     }
+  }
+
+  /**
+   * Generate HTML welcome email content from translated content
+   */
+  private generateWelcomeEmailHtml(content: WelcomeEmailContent, userName: string): { subject: string; html: string } {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #333; margin: 0;">Dedw3n</h1>
+          <p style="color: #666; margin: 5px 0 0 0;">${content.title}</p>
+        </div>
+        
+        <div style="background-color: #f8f9fa; border-radius: 8px; padding: 30px; margin-bottom: 30px;">
+          <h2 style="color: #333; margin-top: 0;">Hello ${userName}!</h2>
+          <p style="color: #555; line-height: 1.6; font-size: 16px; margin-bottom: 20px;">
+            ${content.welcomeMessage}
+          </p>
+          <p style="color: #555; line-height: 1.6;">
+            ${content.accountCreatedText}
+          </p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="https://dedw3n.com" 
+               style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; 
+                      border-radius: 5px; font-weight: bold; display: inline-block;">
+              ${content.actionButtonText}
+            </a>
+          </div>
+        </div>
+        
+        <div style="background-color: #fff; border: 1px solid #e9ecef; border-radius: 5px; padding: 20px; margin-bottom: 20px;">
+          <h3 style="color: #333; margin-top: 0;">${content.featuresTitle}</h3>
+          <p style="color: #555; margin-bottom: 10px;">${content.getStartedText}</p>
+          <div style="color: #555; line-height: 1.8; font-size: 15px;">
+            <p style="margin: 8px 0;">${content.feature1}</p>
+            <p style="margin: 8px 0;">${content.feature2}</p>
+            <p style="margin: 8px 0;">${content.feature3}</p>
+          </div>
+        </div>
+        
+        <div style="background-color: #e7f3ff; border: 1px solid #b8daff; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
+          <p style="color: #004085; margin: 0; font-size: 14px;">
+            ${content.supportText}
+          </p>
+        </div>
+        
+        <div style="text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
+          <p style="color: #666; font-size: 12px; margin: 0;">
+            ${content.contactText} 
+            <a href="mailto:love@dedw3n.com" style="color: #007bff;">love@dedw3n.com</a>
+          </p>
+          <p style="color: #666; font-size: 12px; margin: 5px 0 0 0;">
+            © ${new Date().getFullYear()} Dedw3n. ${content.copyrightText}
+          </p>
+        </div>
+      </div>
+    `;
+
+    return {
+      subject: content.subject,
+      html
+    };
   }
 
   /**

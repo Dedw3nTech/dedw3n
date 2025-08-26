@@ -58,6 +58,7 @@ import {
 
 import { setupWebSocket } from "./websocket-handler";
 import { sendContactEmail, setBrevoApiKey, sendEmail } from "./email-service";
+import EmailTranslationService from "./email-translation-service";
 import { upload } from "./multer-config";
 import { updateVendorBadge, getVendorBadgeStats, updateAllVendorBadges } from "./vendor-badges";
 import TranslationOptimizer from "./translation-optimizer";
@@ -2345,7 +2346,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // reCAPTCHA Enterprise-protected registration endpoint  
   app.post('/api/auth/register-with-recaptcha', async (req: Request, res: Response) => {
-    const { username, email, password, name, recaptchaToken } = req.body;
+    const { username, email, password, name, preferredLanguage, recaptchaToken } = req.body;
     
     try {
       // Verify reCAPTCHA Enterprise token
@@ -2417,7 +2418,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         email,
         password: hashedPassword,
         name: name || username,
-        role: "user"
+        role: "user",
+        preferredLanguage: preferredLanguage || 'EN'
       });
       
       // Login the user
@@ -2428,6 +2430,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         }
         
         console.log(`[DEBUG] reCAPTCHA-protected registration and login successful for: ${user.username}`);
+        
+        // Send welcome email asynchronously
+        sendWelcomeEmail(user).catch(error => {
+          console.error('[WELCOME-EMAIL] Failed to send welcome email:', error);
+        });
         
         // Return user without password
         const { password: _, ...userWithoutPassword } = user;
@@ -3877,6 +3884,44 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Use provided server - don't create a new one to avoid port conflicts
   // const server = httpServer; // Removed duplicate declaration
   
+  // Welcome email helper function
+  async function sendWelcomeEmail(user: any): Promise<void> {
+    try {
+      console.log(`[WELCOME-EMAIL] Sending welcome email to ${user.email}`);
+      
+      // Get email translation service instance
+      const emailTranslationService = EmailTranslationService.getInstance();
+      
+      // Determine user's preferred language (defaulting to EN if not provided)
+      const userLanguage = user.preferredLanguage || user.language || 'EN';
+      console.log(`[WELCOME-EMAIL] User language preference: ${userLanguage}`);
+      
+      // Translate welcome email content
+      const { subject, html } = await emailTranslationService.translateWelcomeEmail(
+        userLanguage,
+        user.name || user.username,
+        user.email
+      );
+      
+      // Send the email
+      const emailSent = await sendEmail({
+        to: user.email,
+        from: 'love@dedw3n.com',
+        subject: subject,
+        html: html
+      });
+      
+      if (emailSent) {
+        console.log(`[WELCOME-EMAIL] Welcome email sent successfully to ${user.email} in ${userLanguage}`);
+      } else {
+        console.error(`[WELCOME-EMAIL] Failed to send welcome email to ${user.email}`);
+      }
+    } catch (error) {
+      console.error(`[WELCOME-EMAIL] Error sending welcome email:`, error);
+      // Don't fail the registration if email sending fails
+    }
+  }
+
   // Seed the database with initial data
   await seedDatabase();
 
@@ -3926,6 +3971,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         ...req.body,
         password: hashedPassword,
         affiliatePartner: req.body.affiliatePartnerCode || null, // Store the partner code directly
+        preferredLanguage: req.body.preferredLanguage || 'EN'
       });
       
       console.log('[DEBUG] User created successfully:', user.id);
@@ -3948,6 +3994,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           return next(err);
         }
         console.log('[DEBUG] User registered and logged in successfully:', user.id);
+        
+        // Send welcome email asynchronously
+        sendWelcomeEmail(user).catch(error => {
+          console.error('[WELCOME-EMAIL] Failed to send welcome email:', error);
+        });
+        
         res.status(201).json(user);
       });
     } catch (error) {
