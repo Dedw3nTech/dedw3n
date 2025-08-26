@@ -40,12 +40,12 @@ export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
 
   // Dating Navigation Translation Batch (8 texts)
   const datingNavTexts = useMemo(() => [
-    "Browse Profiles", "My Dating Profile", "Dating Dashboard", "Discover", "Dating Room", "VIP Room", "VVIP Room", "My Matches"
+    "Browse Profiles", "My Dating Profile", "My Dating Setting", "Discover", "Dating Room", "VIP Room", "VVIP Room", "My Matches"
   ], []);
 
   // Use Master Translation System
   const { translations: t } = useMasterBatchTranslation(datingNavTexts);
-  const [browseProfilesText, myDatingProfileText, datingDashboardText, discoverText, datingRoomText, vipRoomText, vvipRoomText, myMatchesText] = t || datingNavTexts;
+  const [browseProfilesText, myDatingProfileText, myDatingSettingText, discoverText, datingRoomText, vipRoomText, vvipRoomText, myMatchesText] = t || datingNavTexts;
 
   // Fetch current user's dating profile to check if active
   const { data: datingProfile } = useQuery<DatingProfile>({
@@ -129,7 +129,7 @@ export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
               className="px-4 py-2 hover:bg-gray-50"
               onClick={() => setLocation("/dating-profile")}
             >
-              <span className="text-sm font-medium">{datingDashboardText}</span>
+              <span className="text-sm font-medium">{myDatingSettingText}</span>
             </Button>
           </div>
         </div>
