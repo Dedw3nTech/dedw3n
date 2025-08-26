@@ -71,6 +71,8 @@ import {
   createAIAssistedProduct 
 } from './ai-product-upload';
 
+import { handleRecaptchaVerification, requireRecaptcha, getRecaptchaConfig } from "./recaptcha";
+
 import { 
   insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
   insertMessageSchema, insertReviewSchema, insertCartSchema, insertWalletSchema, 
