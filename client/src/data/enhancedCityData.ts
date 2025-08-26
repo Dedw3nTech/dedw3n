@@ -132,6 +132,19 @@ export const ENHANCED_CITIES_BY_COUNTRY: Record<string, string[]> = {
   ],
 
   // Africa - Major countries expanded
+  'Algeria': [
+    'Algiers', 'Oran', 'Constantine', 'Annaba', 'Blida', 'Batna', 'Djelfa', 'Sétif', 'Sidi Bel Abbès', 'Biskra',
+    'Tébessa', 'El Oued', 'Skikda', 'Tiaret', 'Béjaïa', 'Tlemcen', 'Ouargla', 'Béchar', 'Mostaganem', 'Bordj Bou Arréridj',
+    'Chlef', 'Médéa', 'Tizi Ouzou', 'Mascara', 'Oum el Bouaghi', 'Guelma', 'Laghouat', 'Kenchela', 'Souk Ahras', 'Saïda',
+    'Aïn Defla', 'Aïn Témouchent', 'Ghardaïa', 'Relizane', 'Tindouf', 'Tissemsilt', 'El Bayadh', 'Khenchela', 'Mila', 'Aïn Beïda',
+    'Aïn Oussera', 'Aflou', 'Barika', 'Aïn M\'Lila', 'Aïn Touta', 'Aïn Sefra', 'Arzew', 'Azzaba', 'Bab Ezzouar', 'Baraki',
+    'Ben Mehidi', 'Beni Saf', 'Berriane', 'Aïn el Turk', 'Aïn el Hammam', 'Aïn Fakroun', 'Aïn Kercha', 'Aïn Oulmene', 'Aïn Smara', 'Aïn Taya',
+    'Akbou', 'Ali Mendjeli', 'Amizour', 'Ammi Moussa', 'Aoulef', 'Arbatache', 'Arhribs', 'Arris', 'Assi Bou Nif', 'Azazga',
+    'BABOR', 'Barbacha', 'Béni Abbès', 'Beni Amrane', 'Beni Douala', 'Beni Mered', 'Beni Mester', 'Beni Tamou', 'Bensekrane', 'Berrahal',
+    'Aïn Abid', 'Aïn Azel', 'Aïn Benian', 'Aïn Boucif', 'Aïn Deheb', 'Aïn el Bell', 'Aïn el Berd', 'Aïn el Hadjar', 'Aïn el Melh', 'Aïn Merane',
+    'Abadla', 'Abou el Hassan', 'Adrar', 'Ahmed Bel Hadj', 'Aïn Arnat', 'Aïn Bessem', 'Aïn el Bya', 'Ain el Hadjel', 'Ait Yahia'
+  ],
+
   'South Africa': [
     'Johannesburg', 'Cape Town', 'Durban', 'Pretoria', 'Port Elizabeth', 'Pietermaritzburg', 'Benoni', 'Tembisa', 'East London', 'Vereeniging',
     'Bloemfontein', 'Boksburg', 'Welkom', 'Newcastle', 'Krugersdorp', 'Diepsloot', 'Botshabelo', 'Brakpan', 'Witbank', 'Oberholzer',
