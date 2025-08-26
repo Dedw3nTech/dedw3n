@@ -1841,7 +1841,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   setupJwtAuth(app);
   
   // Stripe payment intent creation
-  app.post("/api/create-payment-intent", async (req: Request, res: Response) => {
+  app.post("/api/create-payment-intent", requireRecaptchaEnterprise('checkout', 0.8), async (req: Request, res: Response) => {
     try {
       const { amount } = req.body;
       if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
@@ -3173,7 +3173,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Stripe payment route for one-time payments
-  app.post("/api/create-payment-intent", async (req, res) => {
+  app.post("/api/create-payment-intent", requireRecaptchaEnterprise('checkout', 0.8), async (req, res) => {
     try {
       const { amount } = req.body;
       const paymentIntent = await stripe.paymentIntents.create({
@@ -7437,7 +7437,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Suggest price range based on product specs
-  app.post('/api/ai/suggest-price', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+  app.post('/api/ai/suggest-price', requireRecaptchaEnterprise('get_price', 0.5), unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -8760,7 +8760,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  app.post('/api/cart', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+  app.post('/api/cart', requireRecaptchaEnterprise('cart_add', 0.6), unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -11140,7 +11140,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     res.json(currencies);
   });
 
-  app.post('/api/convert-price', (req: Request, res: Response) => {
+  app.post('/api/convert-price', requireRecaptchaEnterprise('get_price', 0.4), (req: Request, res: Response) => {
     try {
       const { price, fromCurrency = 'USD', toCurrency } = req.body;
       
@@ -12351,7 +12351,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Dating room payment processing
-  app.post('/api/dating-room/payment-intent', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+  app.post('/api/dating-room/payment-intent', requireRecaptchaEnterprise('payment_add', 0.8), unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const { tier } = req.body;
       const userId = req.user!.id;
@@ -14858,7 +14858,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Create payment intent for commission payment with multiple gateways
-  app.post('/api/commission-periods/:periodId/payment-intent', async (req: Request, res: Response) => {
+  app.post('/api/commission-periods/:periodId/payment-intent', requireRecaptchaEnterprise('payment_add', 0.8), async (req: Request, res: Response) => {
     try {
       const periodId = parseInt(req.params.periodId);
       const { gateway = 'stripe' } = req.body;

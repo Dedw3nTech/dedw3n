@@ -3,6 +3,60 @@ import { storage } from "./storage";
 import { hashPassword } from "./auth";
 import { randomBytes } from "crypto";
 import { User } from "@shared/schema";
+import { createAssessment } from "./recaptcha-enterprise";
+
+// Import reCAPTCHA Enterprise middleware
+const requireRecaptchaEnterprise = (action: string, minScore: number = 0.5) => {
+  return async (req: any, res: any, next: any) => {
+    const { recaptchaToken } = req.body;
+    
+    // Development bypass (already configured in main routes)
+    if (process.env.NODE_ENV === 'development' && !recaptchaToken) {
+      console.log('[RECAPTCHA-ENTERPRISE] Development environment: allowing request without token');
+      return next();
+    }
+    
+    if (!recaptchaToken) {
+      return res.status(400).json({
+        message: "reCAPTCHA verification required for security",
+        code: "RECAPTCHA_REQUIRED"
+      });
+    }
+    
+    try {
+      const assessment = await createAssessment({
+        token: recaptchaToken,
+        recaptchaAction: action
+      });
+      
+      if (!assessment || !assessment.valid) {
+        console.log(`[RECAPTCHA-ENTERPRISE] Invalid assessment for action ${action}:`, assessment?.error);
+        return res.status(400).json({
+          message: "Security verification failed. Please try again.",
+          code: "RECAPTCHA_FAILED"
+        });
+      }
+      
+      if (assessment.score < minScore) {
+        console.log(`[RECAPTCHA-ENTERPRISE] Low score ${assessment.score} for action ${action}, required: ${minScore}`);
+        return res.status(400).json({
+          message: "Security verification failed. Please try again.",
+          code: "RECAPTCHA_LOW_SCORE"
+        });
+      }
+      
+      console.log(`[RECAPTCHA-ENTERPRISE] ✅ ${action} verified with score ${assessment.score}`);
+      (req as any).recaptchaScore = assessment.score;
+      next();
+    } catch (error) {
+      console.error(`[RECAPTCHA-ENTERPRISE] Error verifying ${action}:`, error);
+      return res.status(500).json({
+        message: "Security verification error. Please try again.",
+        code: "RECAPTCHA_ERROR"
+      });
+    }
+  };
+};
 
 // Simple token-based authentication 
 interface TokenData {
@@ -279,7 +333,7 @@ export function setupSimpleAuth(app: Express) {
   });
   
   // Password reset request
-  app.post("/api/v2/auth/forgot-password", async (req, res) => {
+  app.post("/api/v2/auth/forgot-password", requireRecaptchaEnterprise('password_reset', 0.7), async (req, res) => {
     try {
       const { email } = req.body;
       
@@ -323,7 +377,7 @@ export function setupSimpleAuth(app: Express) {
   });
   
   // Password reset confirmation
-  app.post("/api/v2/auth/reset-password", async (req, res) => {
+  app.post("/api/v2/auth/reset-password", requireRecaptchaEnterprise('password_reset', 0.7), async (req, res) => {
     try {
       const { token, password } = req.body;
       
