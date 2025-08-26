@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Monitor, Globe, Store, MessageCircle, Heart, ArrowRight } from 'lucide-react';
+import { Monitor } from 'lucide-react';
 import { setDesktopPreference } from '@/lib/mobile-detection';
 import { Link } from 'wouter';
 
@@ -43,8 +43,8 @@ export default function MobileLanding() {
           backgroundPosition: 'center'
         }}
       >
-        {/* Optional overlay for better readability */}
-        <div className="absolute inset-0 bg-black/10"></div>
+        {/* Subtle overlay for button readability */}
+        <div className="absolute inset-0 bg-black/5"></div>
         
         {/* Content positioned over background */}
         <div className="relative z-10 flex-1 flex flex-col justify-between px-4 py-8">
@@ -58,51 +58,9 @@ export default function MobileLanding() {
             {/* Main background image takes up the space */}
           </div>
 
-          {/* Bottom Section - Navigation */}
+          {/* Bottom Section - Minimal Actions */}
           <div className="flex-shrink-0">
             <div className="max-w-sm mx-auto">
-              {/* Quick Access Navigation Cards - positioned at bottom */}
-              <div className="space-y-3 mb-6">
-                <Link href="/marketplace">
-                  <Card className="text-left bg-white/90 backdrop-blur-sm hover:bg-white/95 transition-colors">
-                    <CardContent className="p-4 flex items-center">
-                      <Store className="h-8 w-8 text-blue-600 mr-3 flex-shrink-0" />
-                      <div>
-                        <h3 className="font-semibold text-sm">Marketplace</h3>
-                        <p className="text-xs text-gray-600">Shop from global vendors</p>
-                      </div>
-                      <ArrowRight className="h-4 w-4 text-gray-400 ml-auto" />
-                    </CardContent>
-                  </Card>
-                </Link>
-
-                <Link href="/community">
-                  <Card className="text-left bg-white/90 backdrop-blur-sm hover:bg-white/95 transition-colors">
-                    <CardContent className="p-4 flex items-center">
-                      <MessageCircle className="h-8 w-8 text-green-600 mr-3 flex-shrink-0" />
-                      <div>
-                        <h3 className="font-semibold text-sm">Community</h3>
-                        <p className="text-xs text-gray-600">Connect with like-minded people</p>
-                      </div>
-                      <ArrowRight className="h-4 w-4 text-gray-400 ml-auto" />
-                    </CardContent>
-                  </Card>
-                </Link>
-
-                <Link href="/dating">
-                  <Card className="text-left bg-white/90 backdrop-blur-sm hover:bg-white/95 transition-colors">
-                    <CardContent className="p-4 flex items-center">
-                      <Heart className="h-8 w-8 text-red-600 mr-3 flex-shrink-0" />
-                      <div>
-                        <h3 className="font-semibold text-sm">Dating</h3>
-                        <p className="text-xs text-gray-600">Find meaningful connections</p>
-                      </div>
-                      <ArrowRight className="h-4 w-4 text-gray-400 ml-auto" />
-                    </CardContent>
-                  </Card>
-                </Link>
-              </div>
-
               {/* Call to Action Buttons */}
               <div className="space-y-3 mb-4">
                 <Link href="/auth">
