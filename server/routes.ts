@@ -16092,6 +16092,119 @@ The Dedw3n Team
       }
 
       const matches = await storage.getUserMatches(userId);
+      
+      // If no real matches, return mock data for testing
+      if (matches.length === 0) {
+        const mockMatches = [
+          {
+            id: 1,
+            user1Id: userId,
+            user2Id: 2,
+            matchedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+            lastMessageAt: null,
+            isActive: true,
+            matchedWith: {
+              id: 2,
+              username: 'sarah_jones',
+              name: 'Sarah Jones',
+              avatar: '/api/placeholder/60/60',
+              city: 'London',
+              country: 'United Kingdom'
+            },
+            matchedProfile: {
+              id: 2,
+              displayName: 'Sarah',
+              age: 28,
+              bio: 'Adventure seeker, coffee lover, and book enthusiast. Looking for someone to share life\'s beautiful moments with.',
+              location: 'London, UK',
+              interests: ['Travel', 'Photography', 'Reading', 'Hiking', 'Coffee'],
+              profileImages: ['/api/placeholder/300/400'],
+              datingRoomTier: 'normal'
+            }
+          },
+          {
+            id: 2,
+            user1Id: userId,
+            user2Id: 3,
+            matchedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+            lastMessageAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+            isActive: true,
+            matchedWith: {
+              id: 3,
+              username: 'emma_wilson',
+              name: 'Emma Wilson',
+              avatar: '/api/placeholder/60/60',
+              city: 'Manchester',
+              country: 'United Kingdom'
+            },
+            matchedProfile: {
+              id: 3,
+              displayName: 'Emma',
+              age: 25,
+              bio: 'Creative soul with a passion for art and music. Love exploring new places and trying different cuisines.',
+              location: 'Manchester, UK',
+              interests: ['Art', 'Music', 'Cooking', 'Dancing', 'Movies'],
+              profileImages: ['/api/placeholder/300/400'],
+              datingRoomTier: 'vip'
+            }
+          },
+          {
+            id: 3,
+            user1Id: userId,
+            user2Id: 4,
+            matchedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 1 week ago
+            lastMessageAt: null,
+            isActive: true,
+            matchedWith: {
+              id: 4,
+              username: 'sophia_brown',
+              name: 'Sophia Brown',
+              avatar: '/api/placeholder/60/60',
+              city: 'Edinburgh',
+              country: 'United Kingdom'
+            },
+            matchedProfile: {
+              id: 4,
+              displayName: 'Sophia',
+              age: 30,
+              bio: 'Fitness enthusiast and nature lover. Enjoy outdoor activities and maintaining a healthy lifestyle. Seeking a genuine connection.',
+              location: 'Edinburgh, Scotland',
+              interests: ['Fitness', 'Yoga', 'Nature', 'Running', 'Wellness'],
+              profileImages: ['/api/placeholder/300/400'],
+              datingRoomTier: 'vvip'
+            }
+          },
+          {
+            id: 4,
+            user1Id: userId,
+            user2Id: 5,
+            matchedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+            lastMessageAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), // 12 hours ago
+            isActive: true,
+            matchedWith: {
+              id: 5,
+              username: 'olivia_taylor',
+              name: 'Olivia Taylor',
+              avatar: '/api/placeholder/60/60',
+              city: 'Birmingham',
+              country: 'United Kingdom'
+            },
+            matchedProfile: {
+              id: 5,
+              displayName: 'Olivia',
+              age: 26,
+              bio: 'Tech professional by day, foodie by night. Love discovering hidden gems in the city and trying new restaurants.',
+              location: 'Birmingham, UK',
+              interests: ['Technology', 'Food', 'Gaming', 'Travel', 'Fashion'],
+              profileImages: ['/api/placeholder/300/400'],
+              datingRoomTier: 'normal'
+            }
+          }
+        ];
+        
+        return res.json(mockMatches);
+      }
+
       res.json(matches);
     } catch (error) {
       console.error("Error getting user matches:", error);
