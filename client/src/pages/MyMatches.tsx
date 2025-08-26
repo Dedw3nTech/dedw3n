@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, MapPin, Calendar, Sparkles } from "lucide-react";
+import { MessageCircle, MapPin, Calendar, Users } from "lucide-react";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import { useLocation } from 'wouter';
 
@@ -106,7 +106,6 @@ export function MyMatches() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
-          <Heart className="h-8 w-8 text-red-500" />
           <h1 className="text-3xl font-bold text-gray-900">{myMatchesText}</h1>
         </div>
 
@@ -114,15 +113,14 @@ export function MyMatches() {
           /* No matches state */
           <div className="text-center py-16">
             <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-              <Heart className="h-12 w-12 text-gray-400" />
+              <Users className="h-12 w-12 text-gray-400" />
             </div>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">{noMatchesText}</h2>
             <p className="text-gray-600 mb-8 max-w-md mx-auto">{keepBrowsingText}</p>
             <Button 
               onClick={() => setLocation('/dating')}
-              className="bg-red-500 hover:bg-red-600 text-white"
+              className="bg-blue-500 hover:bg-blue-600 text-white"
             >
-              <Sparkles className="h-4 w-4 mr-2" />
               {browseProfilesText}
             </Button>
           </div>
