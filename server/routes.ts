@@ -4128,9 +4128,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.get('/api/cities/by-country/:country', async (req: Request, res: Response) => {
     try {
       const { country } = req.params;
-      const { limit = 100, search = '' } = req.query;
+      const { search = '' } = req.query;
       
-      console.log(`[DEBUG] Fetching cities for country: ${country}, search: ${search}, limit: ${limit}`);
+      console.log(`[DEBUG] Fetching ALL cities for country: ${country}, search: ${search}`);
       
       let query = db
         .select({ 
@@ -4153,10 +4153,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         );
       }
       
-      // Add ordering by population (descending) and then by name
+      // Add ordering by population (descending) and then by name - NO LIMIT
       const citiesResult = await query
-        .orderBy(desc(cities.population), cities.name)
-        .limit(Number(limit));
+        .orderBy(desc(cities.population), cities.name);
       
       console.log(`[DEBUG] Found ${citiesResult.length} cities for ${country}`);
       

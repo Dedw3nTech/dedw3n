@@ -18,7 +18,7 @@ const fetchCountriesByRegion = async (region: string): Promise<string[]> => {
 };
 
 const fetchCitiesByCountry = async (country: string): Promise<string[]> => {
-  const response = await fetch(`/api/cities/by-country/${encodeURIComponent(country)}?limit=200`);
+  const response = await fetch(`/api/cities/by-country/${encodeURIComponent(country)}`);
   if (!response.ok) throw new Error('Failed to fetch cities');
   return response.json();
 };
@@ -102,18 +102,11 @@ function EnhancedCitySelector({
             {citiesLoading ? (
               <SelectItem value="__loading__" disabled>Loading cities...</SelectItem>
             ) : (
-              <>
-                {availableCities.slice(0, 100).map((city) => (
-                  <SelectItem key={city} value={city}>
-                    {city}
-                  </SelectItem>
-                ))}
-                {availableCities.length > 100 && (
-                  <SelectItem value="__search_more__" disabled>
-                    ... and {availableCities.length - 100} more cities available
-                  </SelectItem>
-                )}
-              </>
+              availableCities.map((city, index) => (
+                <SelectItem key={`${city}-${index}`} value={city}>
+                  {city}
+                </SelectItem>
+              ))
             )}
           </SelectContent>
         </Select>
