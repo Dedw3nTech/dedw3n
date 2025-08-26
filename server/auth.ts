@@ -8,7 +8,10 @@ import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
-import { User as SelectUser } from "@shared/schema";
+import { User as SelectUser, users } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, isNotNull } from "drizzle-orm";
+import { sendEmail } from "./email-service";
 import createMemoryStore from "memorystore";
 import speakeasy from "speakeasy";
 import QRCode from "qrcode";
@@ -979,6 +982,297 @@ export function setupAuth(app: Express) {
   });
 
 
+
+  // Password reset endpoints
+  app.post("/api/auth/forgot-password", async (req: Request, res: Response) => {
+    try {
+      const { email } = req.body;
+
+      // Validate input
+      if (!email?.trim()) {
+        return res.status(400).json({ 
+          message: "Email address is required" 
+        });
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        return res.status(400).json({ 
+          message: "Invalid email address format" 
+        });
+      }
+
+      // Find user by email
+      const user = await db.select()
+        .from(users)
+        .where(eq(users.email, email.trim().toLowerCase()))
+        .limit(1);
+
+      // Always return success message for security (prevent email enumeration)
+      if (user.length === 0) {
+        return res.json({ 
+          message: "If an account with that email exists, a password reset link has been sent" 
+        });
+      }
+
+      const foundUser = user[0];
+
+      // Check if user account is locked
+      if (foundUser.isLocked) {
+        return res.status(423).json({ 
+          message: "Account is locked. Please contact support." 
+        });
+      }
+
+      // Generate secure reset token
+      const resetToken = randomBytes(32).toString('hex');
+      const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+
+      // Update user with reset token and expiry
+      await db.update(users)
+        .set({
+          passwordResetToken: resetToken,
+          passwordResetExpires: resetExpires,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, foundUser.id));
+
+      // Create reset URL
+      const resetUrl = `${req.protocol}://${req.get('host')}/reset-password-confirm?token=${resetToken}`;
+
+      // Send password reset email using Brevo
+      const emailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #333; margin: 0;">Dedw3n</h1>
+            <p style="color: #666; margin: 5px 0 0 0;">Password Reset Request</p>
+          </div>
+          
+          <div style="background-color: #f8f9fa; border-radius: 8px; padding: 30px; margin-bottom: 30px;">
+            <h2 style="color: #333; margin-top: 0;">Reset Your Password</h2>
+            <p style="color: #555; line-height: 1.6;">
+              We received a request to reset your password for your Dedw3n account. If you made this request, 
+              click the button below to reset your password.
+            </p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${resetUrl}" 
+                 style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; 
+                        border-radius: 5px; font-weight: bold; display: inline-block;">
+                Reset Password
+              </a>
+            </div>
+            
+            <p style="color: #666; font-size: 14px; line-height: 1.5;">
+              If the button doesn't work, you can copy and paste this link into your browser:<br>
+              <a href="${resetUrl}" style="color: #007bff; word-break: break-all;">${resetUrl}</a>
+            </p>
+          </div>
+          
+          <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
+            <p style="color: #856404; margin: 0; font-size: 14px;">
+              <strong>Security Notice:</strong> This link will expire in 1 hour for your security. 
+              If you didn't request this password reset, please ignore this email.
+            </p>
+          </div>
+          
+          <div style="text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
+            <p style="color: #666; font-size: 12px; margin: 0;">
+              If you have any questions, contact us at 
+              <a href="mailto:love@dedw3n.com" style="color: #007bff;">love@dedw3n.com</a>
+            </p>
+            <p style="color: #666; font-size: 12px; margin: 5px 0 0 0;">
+              © ${new Date().getFullYear()} Dedw3n. All rights reserved.
+            </p>
+          </div>
+        </div>
+      `;
+
+      try {
+        await sendEmail({
+          to: [{ email: foundUser.email, name: foundUser.name }],
+          subject: "Reset Your Dedw3n Password",
+          htmlContent: emailHtml
+        });
+
+        console.log(`[AUTH] Password reset email sent to ${foundUser.email}`);
+      } catch (emailError) {
+        console.error(`[AUTH] Failed to send reset email to ${foundUser.email}:`, emailError);
+        
+        // Clear the reset token since email failed
+        await db.update(users)
+          .set({
+            passwordResetToken: null,
+            passwordResetExpires: null,
+            updatedAt: new Date()
+          })
+          .where(eq(users.id, foundUser.id));
+
+        return res.status(500).json({ 
+          message: "Failed to send password reset email. Please try again later." 
+        });
+      }
+
+      res.json({ 
+        message: "If an account with that email exists, a password reset link has been sent" 
+      });
+
+    } catch (error) {
+      console.error("[AUTH] Password reset request error:", error);
+      res.status(500).json({ 
+        message: "An error occurred while processing your request" 
+      });
+    }
+  });
+
+  app.post("/api/auth/reset-password", async (req: Request, res: Response) => {
+    try {
+      const { token, password } = req.body;
+
+      // Validate input
+      if (!token?.trim()) {
+        return res.status(400).json({ 
+          message: "Reset token is required" 
+        });
+      }
+
+      if (!password?.trim()) {
+        return res.status(400).json({ 
+          message: "New password is required" 
+        });
+      }
+
+      // Validate password strength
+      if (password.length < 8) {
+        return res.status(400).json({ 
+          message: "Password must be at least 8 characters long" 
+        });
+      }
+
+      // Enhanced password strength validation
+      const hasUppercase = /[A-Z]/.test(password);
+      const hasLowercase = /[a-z]/.test(password);
+      const hasNumbers = /\d/.test(password);
+      const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+      if (!hasUppercase || !hasLowercase || !hasNumbers) {
+        return res.status(400).json({ 
+          message: "Password must contain at least one uppercase letter, one lowercase letter, and one number" 
+        });
+      }
+
+      // Find user by reset token
+      const user = await db.select()
+        .from(users)
+        .where(and(
+          eq(users.passwordResetToken, token.trim()),
+          isNotNull(users.passwordResetExpires)
+        ))
+        .limit(1);
+
+      if (user.length === 0) {
+        return res.status(400).json({ 
+          message: "Invalid or expired reset token" 
+        });
+      }
+
+      const foundUser = user[0];
+
+      // Check if token has expired
+      if (!foundUser.passwordResetExpires || new Date() > foundUser.passwordResetExpires) {
+        // Clear expired token
+        await db.update(users)
+          .set({
+            passwordResetToken: null,
+            passwordResetExpires: null,
+            updatedAt: new Date()
+          })
+          .where(eq(users.id, foundUser.id));
+
+        return res.status(400).json({ 
+          message: "Reset token has expired. Please request a new password reset." 
+        });
+      }
+
+      // Check if user account is locked
+      if (foundUser.isLocked) {
+        return res.status(423).json({ 
+          message: "Account is locked. Please contact support." 
+        });
+      }
+
+      // Hash the new password
+      const hashedPassword = await hashPassword(password);
+
+      // Update user password and clear reset token
+      await db.update(users)
+        .set({
+          password: hashedPassword,
+          passwordResetToken: null,
+          passwordResetExpires: null,
+          failedLoginAttempts: 0, // Reset failed login attempts
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, foundUser.id));
+
+      console.log(`[AUTH] Password reset successful for user ${foundUser.email}`);
+
+      // Send confirmation email
+      const confirmationEmailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #333; margin: 0;">Dedw3n</h1>
+            <p style="color: #666; margin: 5px 0 0 0;">Password Reset Confirmation</p>
+          </div>
+          
+          <div style="background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 5px; padding: 20px; margin-bottom: 20px;">
+            <h2 style="color: #155724; margin-top: 0;">Password Reset Successful</h2>
+            <p style="color: #155724; margin: 0;">
+              Your password has been successfully reset. You can now sign in to your account with your new password.
+            </p>
+          </div>
+          
+          <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
+            <p style="color: #856404; margin: 0; font-size: 14px;">
+              <strong>Security Notice:</strong> If you did not make this change, please contact us immediately at 
+              <a href="mailto:love@dedw3n.com" style="color: #856404;">love@dedw3n.com</a>
+            </p>
+          </div>
+          
+          <div style="text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
+            <p style="color: #666; font-size: 12px; margin: 0;">
+              Reset completed on ${new Date().toLocaleString()}
+            </p>
+            <p style="color: #666; font-size: 12px; margin: 5px 0 0 0;">
+              © ${new Date().getFullYear()} Dedw3n. All rights reserved.
+            </p>
+          </div>
+        </div>
+      `;
+
+      try {
+        await sendEmail({
+          to: [{ email: foundUser.email, name: foundUser.name }],
+          subject: "Your Dedw3n Password Has Been Reset",
+          htmlContent: confirmationEmailHtml
+        });
+      } catch (emailError) {
+        console.error(`[AUTH] Failed to send confirmation email to ${foundUser.email}:`, emailError);
+        // Don't fail the request if confirmation email fails
+      }
+
+      res.json({ 
+        message: "Password reset successful. You can now sign in with your new password." 
+      });
+
+    } catch (error) {
+      console.error("[AUTH] Password reset confirmation error:", error);
+      res.status(500).json({ 
+        message: "An error occurred while resetting your password" 
+      });
+    }
+  });
 
   // Middleware to check if user is authenticated
   app.use((req, res, next) => {

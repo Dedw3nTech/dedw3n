@@ -824,15 +824,20 @@ export default function AuthPage() {
               )}
 
               {isLogin && (
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="remember"
-                    checked={rememberPassword}
-                    onCheckedChange={(checked) => setRememberPassword(checked as boolean)}
-                  />
-                  <Label htmlFor="remember" className="text-sm text-gray-600">
-                    {t["Remember my login details"] || "Remember my login details"}
-                  </Label>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="remember"
+                      checked={rememberPassword}
+                      onCheckedChange={(checked) => setRememberPassword(checked as boolean)}
+                    />
+                    <Label htmlFor="remember" className="text-sm text-gray-600">
+                      {t["Remember my login details"] || "Remember my login details"}
+                    </Label>
+                  </div>
+                  <Link href="/reset-password" className="text-sm text-blue-600 hover:text-blue-500">
+                    {t["Forgot password?"] || "Forgot password?"}
+                  </Link>
                 </div>
               )}
 

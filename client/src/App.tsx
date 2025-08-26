@@ -194,6 +194,8 @@ import CommunityPage from "@/pages/community";
 import RemoveAdsPage from "@/pages/remove-ads";
 import AdminEmail from "@/pages/admin-email";
 import AuthPage from "@/pages/auth";
+import ResetPassword from "@/pages/reset-password";
+import ResetPasswordConfirm from "@/pages/reset-password-confirm";
 import { SiteMap } from "@/components/layout/SiteMap";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 
@@ -265,6 +267,16 @@ function Router() {
       <Route path="/auth">
         <SEOHead title="Authentication - Dedw3n" description="Sign in to your account or create a new one to access all Dedw3n features." />
         <AuthPage />
+      </Route>
+
+      <Route path="/reset-password">
+        <SEOHead title="Reset Password - Dedw3n" description="Reset your password to regain access to your Dedw3n account." />
+        <ResetPassword />
+      </Route>
+
+      <Route path="/reset-password-confirm">
+        <SEOHead title="Confirm Password Reset - Dedw3n" description="Set your new password to complete the password reset process." />
+        <ResetPasswordConfirm />
       </Route>
 
       <Route path="/mobile">
