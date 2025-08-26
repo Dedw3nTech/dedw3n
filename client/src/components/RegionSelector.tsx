@@ -252,7 +252,7 @@ export default function RegionSelector({
             <SelectValue placeholder={t('selectRegion') || 'Select your region'} />
           </SelectTrigger>
           <SelectContent>
-            {Object.keys(COUNTRIES_BY_REGION).map((region) => (
+            {Object.keys(COUNTRIES_BY_REGION).sort().map((region) => (
               <SelectItem key={region} value={region}>
                 {region}
               </SelectItem>
