@@ -249,7 +249,7 @@ export default function RegionSelector({
           disabled={disabled}
         >
           <SelectTrigger className={`w-full ${isRegionMissing ? 'border-red-500' : ''}`}>
-            <SelectValue placeholder={t('selectRegion') || 'Select your region'} />
+            <SelectValue placeholder="Select your region" />
           </SelectTrigger>
           <SelectContent>
             {Object.keys(COUNTRIES_BY_REGION).sort().map((region) => (
@@ -277,8 +277,8 @@ export default function RegionSelector({
           <SelectTrigger className={`w-full ${isCountryMissing ? 'border-red-500' : ''}`}>
             <SelectValue placeholder={
               !currentRegion 
-                ? (t('selectRegionFirst') || 'Select region first')
-                : (t('selectCountry') || 'Select your country')
+                ? 'Select region first'
+                : 'Select your country'
             } />
           </SelectTrigger>
           <SelectContent>
