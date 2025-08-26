@@ -614,10 +614,11 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
               <div className="text-right">
                 <Link 
                   href="/reset-password" 
-                  className="text-sm text-blue-600 hover:text-blue-500 hover:underline"
+                  className="text-sm hover:underline"
                   onClick={() => onClose()}
                 >
-                  Forgot password? Click here to reset
+                  <span className="text-gray-500">Forgot password? </span>
+                  <span className="text-blue-600 hover:text-blue-500">Click here to reset</span>
                 </Link>
               </div>
             )}
