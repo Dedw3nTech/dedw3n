@@ -35,7 +35,7 @@ interface CacheEntry {
  */
 class GoogleMapsService {
   private isLoaded = false;
-  private placesService?: google.maps.places.PlacesService;
+  private placesService?: any;
 
   constructor() {
     this.initializeGoogleMaps();
@@ -211,19 +211,11 @@ export class CityDataService {
     if (staticData) {
       this.staticCityData = staticData;
     }
-    this.initializeStaticData();
   }
 
-  private async initializeStaticData(): Promise<void> {
-    // Import static city data if not provided
-    if (Object.keys(this.staticCityData).length === 0) {
-      try {
-        // This would be imported from the existing RegionSelector data
-        console.log('[CITY-DATA] Static city data will be loaded from RegionSelector');
-      } catch (error) {
-        console.warn('[CITY-DATA] Failed to load static city data:', error);
-      }
-    }
+  setStaticCityData(data: Record<string, string[]>): void {
+    this.staticCityData = data;
+    console.log('[CITY-DATA] Static city data updated with', Object.keys(data).length, 'countries');
   }
 
   async getCitiesForCountry(countryCode: string): Promise<City[]> {
@@ -327,9 +319,12 @@ export class CityDataService {
     return Boolean(import.meta.env.VITE_GOOGLE_MAPS_API_KEY);
   }
 
-  setStaticCityData(data: Record<string, string[]>): void {
-    this.staticCityData = data;
-    console.log('[CITY-DATA] Static city data updated');
+  getServiceStatus(): { googleMapsAvailable: boolean; staticDataAvailable: boolean; cacheStats: any } {
+    return {
+      googleMapsAvailable: this.isGoogleMapsAvailable(),
+      staticDataAvailable: Object.keys(this.staticCityData).length > 0,
+      cacheStats: this.getCacheStats(),
+    };
   }
 }
 

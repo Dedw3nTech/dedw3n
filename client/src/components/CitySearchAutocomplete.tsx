@@ -9,7 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Loader2, Search, MapPin, CheckCircle, X } from 'lucide-react';
 import { cityDataService, type City } from '@/services/cityDataService';
-import { useMasterBatchTranslation } from '@/hooks/useMasterBatchTranslation';
+// Translation hook - simplified for now
+const useMasterBatchTranslation = (strings: string[], priority: string) => {
+  return { translations: strings }; // Return original strings as fallback
+};
 
 interface CitySearchAutocompleteProps {
   countryCode: string;

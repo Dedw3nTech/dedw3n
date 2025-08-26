@@ -2,7 +2,11 @@ import { useState, useEffect, useMemo } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Search, Globe } from 'lucide-react';
 import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
+import { cityDataService, type City } from '@/services/cityDataService';
+import { CitySearchAutocomplete } from './CitySearchAutocomplete';
 
 const REGIONS = [
   'Africa',
@@ -223,6 +227,156 @@ interface RegionSelectorProps {
   disabled?: boolean;
 }
 
+// Enhanced City Selector Component with Google Maps integration
+interface EnhancedCitySelectorProps {
+  selectedCountry: string;
+  selectedCity: string;
+  availableCities: string[];
+  onCityChange: (city: string) => void;
+  disabled: boolean;
+  isCityMissing: boolean;
+  showErrors: boolean;
+  translations: Record<string, string>;
+}
+
+function EnhancedCitySelector({
+  selectedCountry,
+  selectedCity,
+  availableCities,
+  onCityChange,
+  disabled,
+  isCityMissing,
+  showErrors,
+  translations: t
+}: EnhancedCitySelectorProps) {
+  const [useGoogleMaps, setUseGoogleMaps] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Initialize city data service with static data
+  useEffect(() => {
+    if (!isInitialized) {
+      cityDataService.setStaticCityData(CITIES_BY_COUNTRY);
+      setIsInitialized(true);
+    }
+  }, [isInitialized]);
+
+  // Check if Google Maps is available
+  const isGoogleMapsAvailable = cityDataService.isGoogleMapsAvailable();
+
+  const handleGoogleMapsToggle = () => {
+    setUseGoogleMaps(!useGoogleMaps);
+  };
+
+  const handleCitySelect = (city: City | string) => {
+    if (typeof city === 'string') {
+      onCityChange(city);
+    } else {
+      onCityChange(city.name);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label htmlFor="city" className={`text-xs ${isCityMissing ? 'text-red-600' : 'text-black'}`}>
+          {t["Select Your City"]} {showErrors && <span className="text-red-600">*</span>}
+        </Label>
+        
+        {isGoogleMapsAvailable && selectedCountry && (
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant={useGoogleMaps ? "default" : "outline"}
+              size="sm"
+              onClick={handleGoogleMapsToggle}
+              className="text-xs h-7 px-2"
+            >
+              <Search className="h-3 w-3 mr-1" />
+              Search
+            </Button>
+            <Button
+              type="button"
+              variant={!useGoogleMaps ? "default" : "outline"}
+              size="sm"
+              onClick={handleGoogleMapsToggle}
+              className="text-xs h-7 px-2"
+            >
+              <Globe className="h-3 w-3 mr-1" />
+              Browse
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {useGoogleMaps && isGoogleMapsAvailable && selectedCountry ? (
+        <CitySearchAutocomplete
+          countryCode={selectedCountry}
+          countryName={selectedCountry}
+          currentCity={selectedCity}
+          onCitySelect={handleCitySelect}
+          disabled={disabled}
+          showErrors={showErrors}
+          required={true}
+        />
+      ) : (
+        <>
+          {availableCities.length > 0 ? (
+            <Select value={selectedCity} onValueChange={handleCitySelect} disabled={disabled || !selectedCountry}>
+              <SelectTrigger className={isCityMissing ? 'border-red-500 focus:border-red-500' : ''}>
+                <SelectValue placeholder={t["Choose your city"]} />
+              </SelectTrigger>
+              <SelectContent className="max-h-60 overflow-y-auto">
+                {availableCities.map((city) => (
+                  <SelectItem key={city} value={city}>
+                    {city}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : selectedCountry ? (
+            <div className="text-sm text-gray-500 p-3 border border-gray-200 rounded-md bg-gray-50">
+              {isGoogleMapsAvailable ? (
+                <div className="space-y-2">
+                  <p>{t["City not available for manual entry"]}</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setUseGoogleMaps(true)}
+                    className="text-xs"
+                  >
+                    <Search className="h-3 w-3 mr-1" />
+                    Search cities instead
+                  </Button>
+                </div>
+              ) : (
+                t["City not available for manual entry"]
+              )}
+            </div>
+          ) : (
+            <Select value="" onValueChange={() => {}} disabled={true}>
+              <SelectTrigger className="text-gray-400">
+                <SelectValue placeholder={t["Please select a country first"]} />
+              </SelectTrigger>
+            </Select>
+          )}
+        </>
+      )}
+
+      {isCityMissing && (
+        <p className="text-red-600 text-sm">{t["Please select a city"]}</p>
+      )}
+
+      {isGoogleMapsAvailable && (
+        <div className="text-xs text-gray-500 flex items-center">
+          <Globe className="h-3 w-3 mr-1" />
+          {useGoogleMaps ? 'Using real-time city data' : `${availableCities.length} cities available`}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function RegionSelector({ 
   currentRegion, 
   currentCountry, 
@@ -349,38 +503,16 @@ export default function RegionSelector({
         )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="city" className={`text-xs ${isCityMissing ? 'text-red-600' : 'text-black'}`}>
-          {t["Select Your City"]} {showErrors && <span className="text-red-600">*</span>}
-        </Label>
-        {availableCities.length > 0 ? (
-          <Select value={selectedCity} onValueChange={handleCityChange} disabled={disabled || !selectedCountry}>
-            <SelectTrigger className={isCityMissing ? 'border-red-500 focus:border-red-500' : ''}>
-              <SelectValue placeholder={t["Choose your city"]} />
-            </SelectTrigger>
-            <SelectContent className="max-h-60 overflow-y-auto">
-              {availableCities.map((city) => (
-                <SelectItem key={city} value={city}>
-                  {city}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : selectedCountry ? (
-          <div className="text-sm text-gray-500 p-3 border border-gray-200 rounded-md bg-gray-50">
-            {t["City not available for manual entry"]}
-          </div>
-        ) : (
-          <Select value="" onValueChange={() => {}} disabled={true}>
-            <SelectTrigger className="text-gray-400">
-              <SelectValue placeholder={t["Please select a country first"]} />
-            </SelectTrigger>
-          </Select>
-        )}
-        {isCityMissing && (
-          <p className="text-red-600 text-sm">{t["Please select a city"]}</p>
-        )}
-      </div>
+      <EnhancedCitySelector
+        selectedCountry={selectedCountry}
+        selectedCity={selectedCity}
+        availableCities={availableCities}
+        onCityChange={handleCityChange}
+        disabled={disabled}
+        isCityMissing={isCityMissing}
+        showErrors={showErrors}
+        translations={t}
+      />
     </div>
   );
 }
