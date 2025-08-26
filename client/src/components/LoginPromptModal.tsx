@@ -737,27 +737,6 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             </div>
           )}
 
-          {!isLogin && (
-            <div className="space-y-2">
-              <Label>
-                {t["Location"] || "Location"}
-              </Label>
-              <RegionSelector 
-                currentRegion={formData.region}
-                currentCountry={formData.country}
-                currentCity={formData.city}
-                onRegionChange={(region) => {
-                  setFormData(prev => ({ ...prev, region }));
-                }}
-                onCountryChange={(country) => {
-                  setFormData(prev => ({ ...prev, country }));
-                }}
-                onCityChange={(city) => {
-                  setFormData(prev => ({ ...prev, city }));
-                }}
-              />
-            </div>
-          )}
 
           {!isLogin && (
             <div className="space-y-2">
@@ -926,7 +905,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                 (!isLogin && emailTouched && emailIsValid === false) ||
                 (!isLogin && nameTouched && nameIsValid === false) ||
                 (!isLogin && passwordStrength?.isWeak && formData.password.length > 0) ||
-                (!isLogin && (!formData.name || !formData.username || !formData.email || !formData.password || !formData.dateOfBirth || !formData.gender || !formData.region || !formData.country || !formData.city || !formData.language))
+                (!isLogin && (!formData.name || !formData.username || !formData.email || !formData.password || !formData.dateOfBirth || !formData.gender || !formData.language))
               )}
             >
               {(loginMutation.isPending || registerMutation.isPending) ? 
