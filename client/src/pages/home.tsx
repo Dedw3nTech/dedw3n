@@ -321,10 +321,19 @@ export default function Home() {
         <img 
           src="/attached_assets/hero-image-mobile.png"
           alt="Spend more time enjoying life - Dedw3n"
-          className="absolute inset-0 w-full h-full"
+          className="absolute inset-0 w-full h-full object-cover"
           loading="eager"
           decoding="async"
         />
+        
+        {/* Translatable text overlay */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center px-4">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-4 drop-shadow-2xl">
+              {t("Spend more time enjoying life.") || "Spend more time enjoying life."}
+            </h1>
+          </div>
+        </div>
 
       </div>
 
