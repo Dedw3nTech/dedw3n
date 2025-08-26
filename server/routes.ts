@@ -2109,11 +2109,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       emailContent += `User Agent: ${userAgent || 'Not provided'}\n`;
       
       if (req.user) {
+        const user = req.user as any; // Type assertion to access user properties
         emailContent += `\nUser Information:\n`;
-        emailContent += `- User ID: ${req.user.id}\n`;
-        emailContent += `- Username: ${req.user.username}\n`;
-        emailContent += `- Email: ${req.user.email}\n`;
-        emailContent += `- Role: ${req.user.role}\n`;
+        emailContent += `- User ID: ${user.id}\n`;
+        emailContent += `- Username: ${user.username || 'N/A'}\n`;
+        emailContent += `- Email: ${user.email || 'N/A'}\n`;
+        emailContent += `- Role: ${user.role || 'N/A'}\n`;
       } else if (userEmail) {
         emailContent += `\nReporter Email: ${userEmail}\n`;
       }

@@ -121,26 +121,27 @@ export function Breadcrumbs() {
     vendor: translatedTexts[44] || "Vendor"
   }), [translatedTexts]);
 
-  const getBreadcrumbs = (path: string): BreadcrumbItem[] => {
-    const segments = path.split('/').filter(Boolean);
-    const breadcrumbs: BreadcrumbItem[] = [{ label: translatedLabels.home, path: '/' }];
-    
-    // Special handling for vendor detail pages to show vendor store name
-    if (vendorMatch && specificVendor) {
-      breadcrumbs.push({ label: translatedLabels.vendor });
-      breadcrumbs.push({ label: specificVendor.storeName });
-      return breadcrumbs;
-    }
-
-    // Special handling for product detail pages to show product name
-    if (productMatch && productData) {
-      breadcrumbs.push({ label: translatedLabels.marketplace, path: '/marketplace' });
-      if (productData.category) {
-        breadcrumbs.push({ label: productData.category, path: `/category/${encodeURIComponent(productData.category)}` });
+  const getBreadcrumbs = useMemo(() => {
+    const generateBreadcrumbs = (path: string): BreadcrumbItem[] => {
+      const segments = path.split('/').filter(Boolean);
+      const breadcrumbs: BreadcrumbItem[] = [{ label: translatedLabels.home, path: '/' }];
+      
+      // Special handling for vendor detail pages to show vendor store name
+      if (vendorMatch && specificVendor) {
+        breadcrumbs.push({ label: translatedLabels.vendor });
+        breadcrumbs.push({ label: specificVendor.storeName });
+        return breadcrumbs;
       }
-      breadcrumbs.push({ label: productData.name });
-      return breadcrumbs;
-    }
+
+      // Special handling for product detail pages to show product name
+      if (productMatch && productData) {
+        breadcrumbs.push({ label: translatedLabels.marketplace, path: '/marketplace' });
+        if (productData.category) {
+          breadcrumbs.push({ label: productData.category, path: `/category/${encodeURIComponent(productData.category)}` });
+        }
+        breadcrumbs.push({ label: productData.name });
+        return breadcrumbs;
+      }
     
     // Special handling for dating-profile to show proper hierarchy
     if (path === '/dating-profile') {
@@ -329,11 +330,14 @@ export function Breadcrumbs() {
         path: index === segments.length - 1 ? undefined : currentPath
       });
     }
+      
+      return breadcrumbs;
+    };
     
-    return breadcrumbs;
-  };
+    return generateBreadcrumbs(location);
+  }, [location, translatedLabels, vendorMatch, specificVendor, productMatch, productData, vendorData]);
 
-  const breadcrumbs = getBreadcrumbs(location);
+  const breadcrumbs = getBreadcrumbs;
   
   // Don't show breadcrumbs on home page or if only one item
   if (location === '/' || breadcrumbs.length <= 1) {
