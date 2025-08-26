@@ -7,7 +7,8 @@ import {
   Star,
   Settings,
   Compass,
-  Heart
+  Heart,
+  Users
 } from "lucide-react";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 
@@ -37,14 +38,14 @@ export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
   const [, setLocation] = useLocation();
   const [activeSection, setActiveSection] = useState<string>("discover");
 
-  // Dating Navigation Translation Batch (7 texts)
+  // Dating Navigation Translation Batch (8 texts)
   const datingNavTexts = useMemo(() => [
-    "Browse Profiles", "My Dating Profile", "Dating Dashboard", "Discover", "Dating Room", "VIP Room", "VVIP Room"
+    "Browse Profiles", "My Dating Profile", "Dating Dashboard", "Discover", "Dating Room", "VIP Room", "VVIP Room", "My Matches"
   ], []);
 
   // Use Master Translation System
   const { translations: t } = useMasterBatchTranslation(datingNavTexts);
-  const [browseProfilesText, myDatingProfileText, datingDashboardText, discoverText, datingRoomText, vipRoomText, vvipRoomText] = t || datingNavTexts;
+  const [browseProfilesText, myDatingProfileText, datingDashboardText, discoverText, datingRoomText, vipRoomText, vvipRoomText, myMatchesText] = t || datingNavTexts;
 
   // Fetch current user's dating profile to check if active
   const { data: datingProfile } = useQuery<DatingProfile>({
@@ -107,6 +108,18 @@ export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
               </Button>
             )}
             
+            {/* My Matches button - only visible if dating account is active */}
+            {datingProfile && datingProfile.isActive && (
+              <Button
+                variant="ghost"
+                className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
+                onClick={() => setLocation("/my-matches")}
+              >
+                <Users className="h-4 w-4" />
+                <span className="text-sm font-medium">{myMatchesText}</span>
+              </Button>
+            )}
+
             {/* My Dating Profile button - only visible if dating account is active */}
             {datingProfile && datingProfile.isActive && (
               <Button

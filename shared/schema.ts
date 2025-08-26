@@ -1198,6 +1198,49 @@ export type InsertFollow = z.infer<typeof insertFollowSchema>;
 export type LikedEvent = typeof likedEvents.$inferSelect;
 export type InsertLikedEvent = z.infer<typeof insertLikedEventSchema>;
 
+// Dating likes system
+export const datingLikes = pgTable("dating_likes", {
+  id: serial("id").primaryKey(),
+  likerId: integer("liker_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  likedId: integer("liked_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  isLike: boolean("is_like").notNull().default(true), // true for like, false for pass
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    likerLikedIdx: unique().on(table.likerId, table.likedId), // Prevent duplicate likes
+    likerIdx: index("dating_likes_liker_idx").on(table.likerId),
+    likedIdx: index("dating_likes_liked_idx").on(table.likedId),
+  };
+});
+
+export const insertDatingLikeSchema = createInsertSchema(datingLikes)
+  .omit({ id: true, createdAt: true });
+
+export type DatingLike = typeof datingLikes.$inferSelect;
+export type InsertDatingLike = z.infer<typeof insertDatingLikeSchema>;
+
+// Dating matches (when two users like each other)
+export const datingMatches = pgTable("dating_matches", {
+  id: serial("id").primaryKey(),
+  user1Id: integer("user1_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  user2Id: integer("user2_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  matchedAt: timestamp("matched_at").defaultNow(),
+  isActive: boolean("is_active").default(true), // Can be deactivated if one user blocks/reports
+  lastMessageAt: timestamp("last_message_at"),
+}, (table) => {
+  return {
+    user1User2Idx: unique().on(table.user1Id, table.user2Id), // Prevent duplicate matches
+    user1Idx: index("dating_matches_user1_idx").on(table.user1Id),
+    user2Idx: index("dating_matches_user2_idx").on(table.user2Id),
+  };
+});
+
+export const insertDatingMatchSchema = createInsertSchema(datingMatches)
+  .omit({ id: true, matchedAt: true });
+
+export type DatingMatch = typeof datingMatches.$inferSelect;
+export type InsertDatingMatch = z.infer<typeof insertDatingMatchSchema>;
+
 // Dating profile model
 export const datingProfiles = pgTable("dating_profiles", {
   id: serial("id").primaryKey(),

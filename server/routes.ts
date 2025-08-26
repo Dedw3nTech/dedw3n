@@ -16041,6 +16041,64 @@ The Dedw3n Team
     }
   });
 
+  // Dating likes and matches routes
+  app.post("/api/dating/like/:profileId", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const likedId = parseInt(req.params.profileId);
+
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      if (isNaN(likedId)) {
+        return res.status(400).json({ message: "Invalid profile ID" });
+      }
+
+      const result = await storage.likeDatingProfile(userId, likedId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error liking dating profile:", error);
+      res.status(500).json({ message: "Failed to like profile" });
+    }
+  });
+
+  app.post("/api/dating/pass/:profileId", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const passedId = parseInt(req.params.profileId);
+
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      if (isNaN(passedId)) {
+        return res.status(400).json({ message: "Invalid profile ID" });
+      }
+
+      const result = await storage.passDatingProfile(userId, passedId);
+      res.json({ passed: result });
+    } catch (error) {
+      console.error("Error passing dating profile:", error);
+      res.status(500).json({ message: "Failed to pass profile" });
+    }
+  });
+
+  app.get("/api/dating/matches", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const matches = await storage.getUserMatches(userId);
+      res.json(matches);
+    } catch (error) {
+      console.error("Error getting user matches:", error);
+      res.status(500).json({ message: "Failed to get matches" });
+    }
+  });
+
   app.get('/api/dating/featured-profiles', async (req: Request, res: Response) => {
     try {
       // Mock dating profiles data

@@ -3,7 +3,7 @@ import createMemoryStore from "memorystore";
 import { hashPassword } from "./auth";
 import connectPg from "connect-pg-simple";
 import { pool, db } from "./db";
-import { eq, like, and, or, desc, asc, sql, count, inArray, lte } from "drizzle-orm";
+import { eq, like, and, or, desc, asc, sql, count, inArray, lte, ne } from "drizzle-orm";
 import { generateProductCode } from "./product-code-generator";
 
 import {
@@ -18,7 +18,7 @@ import {
   callSessions, callMetadata, connections, userSessions, trafficAnalytics, savedPosts,
   likedProducts, friendRequests, giftPropositions, likedEvents,
   chatrooms, chatroomMessages, chatroomMembers, privateRoomInvitations, audioSessions, audioSessionParticipants,
-  datingProfiles, storeUsers, affiliatePartners, vendorAffiliatePartners,
+  datingProfiles, datingLikes, datingMatches, storeUsers, affiliatePartners, vendorAffiliatePartners,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
   type Post, type InsertPost, type Comment, type InsertComment,
@@ -33,7 +33,7 @@ import {
   type Event, type InsertEvent, type LikedEvent, type InsertLikedEvent,
   type Chatroom, type InsertChatroom, type PrivateRoomInvitation, type InsertPrivateRoomInvitation,
   type AudioSession, type InsertAudioSession, type AudioSessionParticipant, type InsertAudioSessionParticipant,
-  type DatingProfile, type InsertDatingProfile, type StoreUser, type InsertStoreUser,
+  type DatingProfile, type InsertDatingProfile, type DatingLike, type InsertDatingLike, type DatingMatch, type InsertDatingMatch, type StoreUser, type InsertStoreUser,
   type AffiliatePartner, type InsertAffiliatePartner, type VendorAffiliatePartner, type InsertVendorAffiliatePartner
 } from "@shared/schema";
 
@@ -277,6 +277,13 @@ export interface IStorage {
   addGiftToDatingProfile(userId: number, productId: number): Promise<boolean>;
   removeGiftFromDatingProfile(userId: number, productId: number): Promise<boolean>;
   getDatingProfileGifts(userId: number): Promise<Product[]>;
+
+  // Dating likes and matches operations
+  likeDatingProfile(likerId: number, likedId: number): Promise<{ liked: boolean; matched: boolean }>;
+  passDatingProfile(userId: number, passedId: number): Promise<boolean>;
+  getUserMatches(userId: number): Promise<any[]>;
+  checkExistingLike(likerId: number, likedId: number): Promise<DatingLike | undefined>;
+  createMatch(user1Id: number, user2Id: number): Promise<DatingMatch>;
 
   // Affiliate partnership operations
   getAffiliatePartnerByUserId(userId: number): Promise<any | undefined>;
@@ -5033,6 +5040,164 @@ export class DatabaseStorage implements IStorage {
       })) as Product[];
     } catch (error) {
       console.error('Error getting dating profile gifts:', error);
+      return [];
+    }
+  }
+
+  // Dating likes and matches operations
+  async checkExistingLike(likerId: number, likedId: number): Promise<DatingLike | undefined> {
+    try {
+      const [existingLike] = await db
+        .select()
+        .from(datingLikes)
+        .where(and(
+          eq(datingLikes.likerId, likerId),
+          eq(datingLikes.likedId, likedId)
+        ))
+        .limit(1);
+      
+      return existingLike;
+    } catch (error) {
+      console.error('Error checking existing like:', error);
+      return undefined;
+    }
+  }
+
+  async likeDatingProfile(likerId: number, likedId: number): Promise<{ liked: boolean; matched: boolean }> {
+    try {
+      // Check if user is trying to like themselves
+      if (likerId === likedId) {
+        return { liked: false, matched: false };
+      }
+
+      // Check if already liked/passed
+      const existingLike = await this.checkExistingLike(likerId, likedId);
+      if (existingLike) {
+        return { liked: existingLike.isLike, matched: false };
+      }
+
+      // Create the like
+      await db.insert(datingLikes).values({
+        likerId,
+        likedId,
+        isLike: true
+      });
+
+      // Check if there's a mutual like (match)
+      const mutualLike = await this.checkExistingLike(likedId, likerId);
+      let matched = false;
+
+      if (mutualLike && mutualLike.isLike) {
+        // Create a match
+        await this.createMatch(likerId, likedId);
+        matched = true;
+      }
+
+      return { liked: true, matched };
+    } catch (error) {
+      console.error('Error liking dating profile:', error);
+      return { liked: false, matched: false };
+    }
+  }
+
+  async passDatingProfile(userId: number, passedId: number): Promise<boolean> {
+    try {
+      // Check if user is trying to pass themselves
+      if (userId === passedId) {
+        return false;
+      }
+
+      // Check if already liked/passed
+      const existingLike = await this.checkExistingLike(userId, passedId);
+      if (existingLike) {
+        return true; // Already processed
+      }
+
+      // Create the pass
+      await db.insert(datingLikes).values({
+        likerId: userId,
+        likedId: passedId,
+        isLike: false
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error passing dating profile:', error);
+      return false;
+    }
+  }
+
+  async createMatch(user1Id: number, user2Id: number): Promise<DatingMatch> {
+    try {
+      // Ensure consistent ordering (lower ID first)
+      const [firstUserId, secondUserId] = user1Id < user2Id ? [user1Id, user2Id] : [user2Id, user1Id];
+
+      const [match] = await db.insert(datingMatches).values({
+        user1Id: firstUserId,
+        user2Id: secondUserId,
+        isActive: true
+      }).returning();
+
+      return match;
+    } catch (error) {
+      console.error('Error creating match:', error);
+      throw error;
+    }
+  }
+
+  async getUserMatches(userId: number): Promise<any[]> {
+    try {
+      const matches = await db
+        .select({
+          id: datingMatches.id,
+          user1Id: datingMatches.user1Id,
+          user2Id: datingMatches.user2Id,
+          matchedAt: datingMatches.matchedAt,
+          lastMessageAt: datingMatches.lastMessageAt,
+          isActive: datingMatches.isActive,
+          // Get the other user's info
+          otherUser: {
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar,
+            city: users.city,
+            country: users.country
+          },
+          // Get the other user's dating profile
+          otherProfile: {
+            id: datingProfiles.id,
+            displayName: datingProfiles.displayName,
+            age: datingProfiles.age,
+            bio: datingProfiles.bio,
+            location: datingProfiles.location,
+            interests: datingProfiles.interests,
+            profileImages: datingProfiles.profileImages,
+            datingRoomTier: datingProfiles.datingRoomTier
+          }
+        })
+        .from(datingMatches)
+        .innerJoin(users, or(
+          and(eq(datingMatches.user1Id, userId), eq(users.id, datingMatches.user2Id)),
+          and(eq(datingMatches.user2Id, userId), eq(users.id, datingMatches.user1Id))
+        ))
+        .innerJoin(datingProfiles, eq(datingProfiles.userId, users.id))
+        .where(and(
+          or(
+            eq(datingMatches.user1Id, userId),
+            eq(datingMatches.user2Id, userId)
+          ),
+          eq(datingMatches.isActive, true)
+        ))
+        .orderBy(desc(datingMatches.matchedAt));
+
+      return matches.map(match => ({
+        ...match,
+        matchedWith: match.otherUser,
+        matchedProfile: match.otherProfile
+      }));
+    } catch (error) {
+      console.error('Error getting user matches:', error);
       return [];
     }
   }
