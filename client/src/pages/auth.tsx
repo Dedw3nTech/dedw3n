@@ -560,6 +560,18 @@ export default function AuthPage() {
                     </div>
                   </div>
                 )}
+                
+                {/* Forgot Password Link - Show only on login */}
+                {isLogin && (
+                  <div className="text-right">
+                    <Link 
+                      href="/reset-password" 
+                      className="text-sm text-blue-600 hover:text-blue-500 hover:underline"
+                    >
+                      Forgot password? Click here to reset
+                    </Link>
+                  </div>
+                )}
               </div>
 
               {!isLogin && (
