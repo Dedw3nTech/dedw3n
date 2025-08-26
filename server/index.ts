@@ -470,7 +470,7 @@ app.use((req, res, next) => {
       '/profile', '/settings', '/messages', '/notifications', '/cart', '/shipping-calculator',
       '/checkout', '/orders', '/dashboard', '/admin', '/unified-admin-dashboard', '/admin-dashboard', '/admin-control-center', '/moderator',
       '/feed', '/explore', '/search', '/favorites', '/liked-products',
-      '/subscriptions', '/verify', '/reset-password', '/help', '/logout-success',
+      '/subscriptions', '/verify', '/reset-password', '/reset-password-confirm', '/help', '/logout-success',
       '/add-product', '/upload-product', '/vendor-dashboard', '/become-vendor', '/become-business-vendor',
       '/marketplace', '/marketplace/b2b', '/marketplace/b2c', '/marketplace/c2c', '/marketplace/rqst'
     ];

@@ -74,7 +74,7 @@ export default function ResetPasswordConfirm() {
       return;
     }
 
-    if (passwordStrength?.isWeak) {
+    if (passwordStrength?.result?.isWeak) {
       toast({
         title: "Error",
         description: "Password is too weak. Please choose a stronger password",
@@ -198,7 +198,6 @@ export default function ResetPasswordConfirm() {
                 {password && (
                   <PasswordStrengthValidator 
                     password={password}
-                    showScore={true}
                   />
                 )}
               </div>
@@ -242,7 +241,7 @@ export default function ResetPasswordConfirm() {
                   !password.trim() || 
                   !confirmPassword.trim() ||
                   password !== confirmPassword ||
-                  passwordStrength?.isWeak
+                  passwordStrength?.result?.isWeak
                 }
               >
                 {resetMutation.isPending ? (
