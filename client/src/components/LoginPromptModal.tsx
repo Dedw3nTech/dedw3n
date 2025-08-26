@@ -220,16 +220,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
   // Last name validation effect with debouncing
   useEffect(() => {
-    console.log('[DEBUG] LastName validation effect triggered:', {
-      lastName: formData.lastName,
-      lastNameTouched,
-      isLogin,
-      shouldValidate: formData.lastName && lastNameTouched && !isLogin
-    });
-    
     if (formData.lastName && lastNameTouched && !isLogin) {
       const timer = setTimeout(() => {
-        console.log('[DEBUG] Calling validateLastName for:', formData.lastName);
         validateLastName(formData.lastName);
       }, 500); // Debounce for 500ms
       return () => clearTimeout(timer);
@@ -526,17 +518,6 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                   />
                   {lastNameTouched && formData.lastName && !isLogin && (
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                      {(() => {
-                        console.log('[DEBUG] LastName validation UI state:', {
-                          lastNameTouched,
-                          lastName: formData.lastName,
-                          isLogin,
-                          isValidatingLastName,
-                          lastNameIsValid,
-                          showIcon: lastNameTouched && formData.lastName && !isLogin
-                        });
-                        return null;
-                      })()}
                       {isValidatingLastName ? (
                         <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
                       ) : lastNameIsValid === true ? (
