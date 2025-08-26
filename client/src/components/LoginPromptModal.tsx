@@ -323,7 +323,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           name: `${formData.firstName} ${formData.lastName}`.trim(),
           affiliatePartner: formData.affiliatePartner,
           dateOfBirth: formData.dateOfBirth,
-          gender: formData.gender as "male" | "female" | "other" | null,
+          gender: null,
           region: formData.region as "Africa" | "South Asia" | "East Asia" | "Oceania" | "North America" | "Central America" | "South America" | "Middle East" | "Europe" | "Central Asia" | null,
           country: formData.country,
           city: formData.city,
@@ -738,21 +738,6 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             </div>
           )}
 
-          {!isLogin && (
-            <div className="space-y-2">
-              <Label htmlFor="gender">{t["Gender"] || "Gender"}</Label>
-              <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t["Select your gender"] || "Select your gender"} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="female">{t["Female"] || "Female"}</SelectItem>
-                  <SelectItem value="male">{t["Male"] || "Male"}</SelectItem>
-                  <SelectItem value="other">{t["Other"] || "Other"}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
 
 
           {!isLogin && (
@@ -922,7 +907,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                 (!isLogin && emailTouched && emailIsValid === false) ||
                 (!isLogin && nameTouched && nameIsValid === false) ||
                 (!isLogin && passwordStrength?.isWeak && formData.password.length > 0) ||
-                (!isLogin && (!formData.firstName || !formData.lastName || !formData.username || !formData.email || !formData.password || !formData.dateOfBirth || !formData.gender || !formData.language))
+                (!isLogin && (!formData.firstName || !formData.lastName || !formData.username || !formData.email || !formData.password || !formData.dateOfBirth || !formData.language))
               )}
             >
               {(loginMutation.isPending || registerMutation.isPending) ? 
