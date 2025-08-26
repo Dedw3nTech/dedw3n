@@ -6,7 +6,8 @@ import {
   User, 
   Star,
   Settings,
-  Compass
+  Compass,
+  Heart
 } from "lucide-react";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 
