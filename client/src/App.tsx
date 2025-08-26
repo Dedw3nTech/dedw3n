@@ -43,6 +43,7 @@ import { LazyImage } from "@/components/ui/lazy-image";
 // Auto-login helper removed for security compliance
 
 import { GlobalLoginHandler } from "@/components/GlobalLoginHandler";
+import { MobileRedirectHandler } from "@/components/MobileRedirectHandler";
 import { CommunityNav } from "@/components/layout/CommunityNav";
 import { DatingNav } from "@/components/layout/DatingNav";
 import { SEOHead, seoConfigs } from "@/components/seo/SEOHead";
@@ -280,7 +281,7 @@ function Router() {
       </Route>
 
       <Route path="/mobile">
-        <SEOHead title="Dedw3n Mobile - Marketplace & Social Platform" description="Mobile-optimized experience for Dedw3n. Shop, connect, and discover with our comprehensive mobile platform." />
+        <SEOHead title="Dedw3n Mobile - Spend More Time Enjoying Life" description="Mobile-optimized experience for Dedw3n. Shop, connect, and discover with our comprehensive mobile platform designed for smartphones." />
         <MobileLanding />
       </Route>
 
@@ -548,6 +549,7 @@ function App() {
                           <LowerCookieBanner />
 
                           <GlobalLoginHandler />
+                          <MobileRedirectHandler />
                           {/* Offline simulator hidden as requested */}
                           {/* Chatbot will be implemented later when API key is available */}
                           {/* <ChatbotWindow /> */}
