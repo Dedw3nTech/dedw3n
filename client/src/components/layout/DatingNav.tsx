@@ -68,28 +68,25 @@ export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
             {/* Dating Room Navigation Links */}
             <Button
               variant="ghost"
-              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
+              className="px-4 py-2 hover:bg-gray-50"
               onClick={() => handleSectionChange("dating-room", "/dating?tier=normal")}
             >
-              <Heart className="h-4 w-4" />
               <span className="text-sm font-medium">{datingRoomText}</span>
             </Button>
             
             <Button
               variant="ghost"
-              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
+              className="px-4 py-2 hover:bg-gray-50"
               onClick={() => handleSectionChange("vip-room", "/dating?tier=vip")}
             >
-              <Star className="h-4 w-4" />
               <span className="text-sm font-medium">{vipRoomText}</span>
             </Button>
             
             <Button
               variant="ghost"
-              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
+              className="px-4 py-2 hover:bg-gray-50"
               onClick={() => handleSectionChange("vvip-room", "/dating?tier=vvip")}
             >
-              <Star className="h-4 w-4 text-yellow-500" />
               <span className="text-sm font-medium">{vvipRoomText}</span>
             </Button>
           </div>
@@ -100,10 +97,9 @@ export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
             {datingProfile && datingProfile.isActive && (
               <Button
                 variant="ghost"
-                className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
+                className="px-4 py-2 hover:bg-gray-50"
                 onClick={() => setLocation("/dating")}
               >
-                <Compass className="h-4 w-4" />
                 <span className="text-sm font-medium">{browseProfilesText}</span>
               </Button>
             )}
@@ -111,10 +107,9 @@ export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
             {/* My Matches button - visible for all authenticated users */}
             <Button
               variant="ghost"
-              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
+              className="px-4 py-2 hover:bg-gray-50"
               onClick={() => setLocation("/my-matches")}
             >
-              <Users className="h-4 w-4" />
               <span className="text-sm font-medium">{myMatchesText}</span>
             </Button>
 
@@ -122,20 +117,18 @@ export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
             {datingProfile && datingProfile.isActive && (
               <Button
                 variant="ghost"
-                className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
+                className="px-4 py-2 hover:bg-gray-50"
                 onClick={() => setLocation(`/profile/${datingProfile.userId}`)}
               >
-                <User className="h-4 w-4" />
                 <span className="text-sm font-medium">{myDatingProfileText}</span>
               </Button>
             )}
             
             <Button
               variant="ghost"
-              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
+              className="px-4 py-2 hover:bg-gray-50"
               onClick={() => setLocation("/dating-profile")}
             >
-              <Settings className="h-4 w-4" />
               <span className="text-sm font-medium">{datingDashboardText}</span>
             </Button>
           </div>
