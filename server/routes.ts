@@ -4164,14 +4164,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   app.get('/api/cities/regions', async (req: Request, res: Response) => {
     try {
-      // Get all unique regions from the cities database - alphabetically sorted
+      // Get all unique regions from the cities database - alphabetically sorted, excluding "Other"
       const regions = await db
         .selectDistinct({ region: cities.region })
         .from(cities)
+        .where(ne(cities.region, 'Other'))
         .orderBy(cities.region);
       
       const regionList = regions.map(r => r.region);
-      console.log(`[DEBUG] Found ${regionList.length} regions in database`);
+      console.log(`[DEBUG] Found ${regionList.length} regions in database (excluding Other)`);
       
       res.json(regionList);
     } catch (error) {
