@@ -4109,7 +4109,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Cities API endpoints for comprehensive global city database
   app.get('/api/cities/countries', async (req: Request, res: Response) => {
     try {
-      // Get all unique countries from the cities database
+      // Get all unique countries from the cities database - alphabetically sorted
       const countries = await db
         .selectDistinct({ country: cities.country })
         .from(cities)
@@ -4133,13 +4133,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.log(`[DEBUG] Fetching ALL cities for country: ${country}, search: ${search}`);
       
       let query = db
-        .select({ 
-          id: cities.id,
-          name: cities.name, 
-          population: cities.population,
-          latitude: cities.latitude,
-          longitude: cities.longitude
-        })
+        .selectDistinct({ name: cities.name })
         .from(cities)
         .where(eq(cities.country, country));
       
@@ -4157,7 +4151,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const citiesResult = await query
         .orderBy(cities.name);
       
-      console.log(`[DEBUG] Found ${citiesResult.length} cities for ${country}`);
+      console.log(`[DEBUG] Found ${citiesResult.length} unique cities for ${country}`);
       
       // Return just the city names for the dropdown
       const cityNames = citiesResult.map(city => city.name);
@@ -4170,7 +4164,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   app.get('/api/cities/regions', async (req: Request, res: Response) => {
     try {
-      // Get all unique regions from the cities database
+      // Get all unique regions from the cities database - alphabetically sorted
       const regions = await db
         .selectDistinct({ region: cities.region })
         .from(cities)
