@@ -166,10 +166,10 @@ export function LanguageSwitcher({
         <Button 
           variant="outline" 
           className={`h-10 px-3 language-switcher ${className}`}
-          disabled={isChanging || isTranslating}
+          disabled={isChanging}
           data-language-selector="true"
         >
-          {isChanging || isTranslating ? (
+          {isChanging ? (
             <Loader2 className="h-4 w-4 animate-spin mr-2" />
           ) : (
             <>

@@ -49,7 +49,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 const translationCache = new Map<string, string>();
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [selectedLanguage, setSelectedLanguage] = useState<Language>(supportedLanguages[0]); // Default to English
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>(supportedLanguages.find(lang => lang.code === 'EN') || supportedLanguages[0]); // Default to English
   const [isTranslating, setIsTranslating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -68,8 +68,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
         if (response.ok) {
           const data = await response.json();
+          console.log('[Language Context] Language from backend:', data.language);
           const language = supportedLanguages.find(lang => lang.code === data.language);
           if (language) {
+            console.log('[Language Context] Setting language from backend:', language.code, language.nativeName);
             setSelectedLanguage(language);
             localStorage.setItem('dedw3n-language', language.code);
             setIsLoading(false);
@@ -82,9 +84,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
       // Fallback to localStorage
       const savedLanguage = localStorage.getItem('dedw3n-language');
+      console.log('[Language Context] Saved language from localStorage:', savedLanguage);
       if (savedLanguage) {
         const language = supportedLanguages.find(lang => lang.code === savedLanguage);
         if (language) {
+          console.log('[Language Context] Setting language from localStorage:', language.code, language.nativeName);
           setSelectedLanguage(language);
         }
       }
