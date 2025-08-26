@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, Crown, Gem, Lock, MessageCircle, Eye, Users, Star, Shield } from "lucide-react";
+import { Heart, Crown, Gem, Lock, MessageCircle, Eye, Users, Star, Shield, Grid3X3, List, ChevronDown, RotateCcw, Plus } from "lucide-react";
 import { useLoginPrompt } from "@/hooks/use-login-prompt";
 import { useLocation } from "wouter";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -38,16 +38,20 @@ interface User {
 
 export default function DatingPage() {
   const [selectedTier, setSelectedTier] = useState("normal");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [itemsPerPage, setItemsPerPage] = useState(30);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState("newest");
   const { showLoginPrompt } = useLoginPrompt();
   const [, setLocation] = useLocation();
   const { formatPrice, formatPriceFromGBP } = useCurrency();
 
   // Dating Page Master Translation Mega-Batch (115 texts)
   const datingTexts = useMemo(() => [
-    // Page Headers & Navigation (12 texts)
+    // Page Headers & Navigation (20 texts)
     "Dating Rooms", "Find Your Perfect Match", "Connect with like-minded people", "Welcome to Premium Dating",
     "Normal Room", "VIP Room", "VVIP Room", "Exclusive Dating Experience", "Premium Members Only", 
-    "Dating Profile", "Browse Profiles", "My Matches",
+    "Dating Profile", "Browse Profiles", "My Matches", "Clear All", "Create Dating Profile", "Show", "Sort by", "Newest", "Popular", "Online", "Nearby",
     
     // Profile Card Elements (18 texts)
     "Message", "View", "Profile", "Age", "Location", "Interests", "Looking for", "Relationship Type",
@@ -98,14 +102,14 @@ export default function DatingPage() {
 
   // Destructure translations in order
   const [
-    // Page Headers & Navigation (12 texts)
+    // Page Headers & Navigation (20 texts)
     datingRoomsText, findMatchText, connectText, welcomePremiumText,
     normalRoomText, vipRoomText, vvipRoomText, exclusiveExpText, premiumOnlyText,
-    datingProfileText, browseProfilesText, myMatchesText,
+    datingProfileText, browseProfilesText, myMatchesText, clearAllText, createDatingProfileNavText, showText, sortByText, newestText, popularText, onlineText, nearbyText,
     
     // Profile Card Elements (18 texts)
     messageText, viewText, profileText, ageText, locationText, interestsText, lookingForText, relationshipTypeText,
-    bioText, moreText, onlineText, activeText, premiumText, verifiedText, newMemberText, popularText, featuredText, availableText,
+    bioText, moreText, onlineStatusText, activeText, premiumText, verifiedText, newMemberText, popularStatusText, featuredText, availableText,
     
     // Tier Information (15 texts)
     normalText, vipText, vvipText, roomAccessText, upgradeToText, membershipText, exclusiveRoomText,
@@ -159,10 +163,44 @@ export default function DatingPage() {
   });
 
   // Fetch dating profiles for selected tier
-  const { data: datingProfiles = [], isLoading } = useQuery<DatingProfile[]>({
+  const { data: allDatingProfiles = [], isLoading } = useQuery<DatingProfile[]>({
     queryKey: ["/api/dating-profiles", selectedTier],
     enabled: !!user && !!userProfile,
   });
+
+  // Apply sorting and pagination
+  const sortedProfiles = useMemo(() => {
+    if (!allDatingProfiles) return [];
+    
+    const sorted = [...allDatingProfiles].sort((a, b) => {
+      switch (sortBy) {
+        case "newest":
+          return new Date(b.createdAt || "").getTime() - new Date(a.createdAt || "").getTime();
+        case "popular":
+          return (b.isPremium ? 1 : 0) - (a.isPremium ? 1 : 0);
+        case "online":
+          return (b.isActive ? 1 : 0) - (a.isActive ? 1 : 0);
+        case "nearby":
+          return a.location.localeCompare(b.location);
+        default:
+          return 0;
+      }
+    });
+    
+    return sorted;
+  }, [allDatingProfiles, sortBy]);
+
+  // Calculate pagination
+  const totalProfiles = sortedProfiles.length;
+  const totalPages = Math.ceil(totalProfiles / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const datingProfiles = sortedProfiles.slice(startIndex, endIndex);
+
+  // Reset current page when changing tiers or items per page
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedTier, itemsPerPage]);
 
   // Get user's tier from their profile
   const userTier = userProfile?.datingRoomTier || "normal";
@@ -563,8 +601,103 @@ export default function DatingPage() {
             })}
           </div>
 
-          {/* Dating Profiles Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Navigation Controls */}
+          <div className="bg-white border rounded-lg p-4 mb-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              {/* Results and Clear All */}
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-600">
+                  {totalProfiles} {totalProfiles === 1 ? 'profile' : 'profiles'} found
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSortBy("newest");
+                    setCurrentPage(1);
+                  }}
+                  className="text-sm"
+                >
+                  {clearAllText}
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => setLocation("/dating-profile")}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  {createDatingProfileNavText}
+                </Button>
+              </div>
+
+              {/* View Controls */}
+              <div className="flex items-center gap-4">
+                {/* Items per page */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">{showText}</span>
+                  <div className="flex gap-1">
+                    {[30, 60, 120].map((count) => (
+                      <Button
+                        key={count}
+                        variant={itemsPerPage === count ? "default" : "ghost"}
+                        size="sm"
+                        onClick={() => setItemsPerPage(count)}
+                        className="min-w-[40px] text-sm"
+                      >
+                        {count}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* View mode toggles */}
+                <div className="flex border rounded">
+                  <Button
+                    variant={viewMode === "grid" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setViewMode("grid")}
+                    className="rounded-r-none border-0"
+                  >
+                    <Grid3X3 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === "list" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setViewMode("list")}
+                    className="rounded-l-none border-0"
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                {/* Sort dropdown */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">{sortByText}</span>
+                  <div className="relative">
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="appearance-none bg-white border rounded px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="newest">{newestText}</option>
+                      <option value="popular">{popularText}</option>
+                      <option value="online">{onlineText}</option>
+                      <option value="nearby">{nearbyText}</option>
+                    </select>
+                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Dating Profiles Grid/List */}
+          <div className={
+            viewMode === "grid" 
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              : "space-y-4"
+          }>
             {isLoading ? (
               <div className="col-span-full text-center py-12">
                 <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
@@ -588,6 +721,46 @@ export default function DatingPage() {
               </div>
             )}
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-8">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                if (pageNum > totalPages) return null;
+                
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(pageNum)}
+                    className="min-w-[40px]"
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>
