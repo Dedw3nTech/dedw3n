@@ -87,6 +87,8 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByVerificationToken(token: string): Promise<User | undefined>;
+  getUserByResetToken(token: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, userData: Partial<User>): Promise<User | undefined>;
   
@@ -707,6 +709,28 @@ export class DatabaseStorage implements IStorage {
       return user;
     } catch (error) {
       console.error(`[ERROR] getUserByEmail error for '${email}':`, error);
+      return undefined;
+    }
+  }
+
+  async getUserByVerificationToken(token: string): Promise<User | undefined> {
+    try {
+      const [user] = await db.select().from(users).where(eq(users.verificationToken, token));
+      console.log(`[DEBUG] getUserByVerificationToken: ${user ? 'Found user' : 'Token not found'}`);
+      return user;
+    } catch (error) {
+      console.error(`[ERROR] getUserByVerificationToken error:`, error);
+      return undefined;
+    }
+  }
+
+  async getUserByResetToken(token: string): Promise<User | undefined> {
+    try {
+      const [user] = await db.select().from(users).where(eq(users.passwordResetToken, token));
+      console.log(`[DEBUG] getUserByResetToken: ${user ? 'Found user' : 'Token not found'}`);
+      return user;
+    } catch (error) {
+      console.error(`[ERROR] getUserByResetToken error:`, error);
       return undefined;
     }
   }
