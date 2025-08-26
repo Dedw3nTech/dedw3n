@@ -472,6 +472,7 @@ app.use((req, res, next) => {
       '/feed', '/explore', '/search', '/favorites', '/liked-products',
       '/subscriptions', '/verify', '/reset-password', '/reset-password-confirm', '/help', '/logout-success',
       '/add-product', '/upload-product', '/vendor-dashboard', '/become-vendor', '/become-business-vendor',
+      '/my-matches', '/dating-profile', '/events', '/premium-videos', '/orders-returns', '/payment-gateway', '/commission-payment', '/test-cookies', '/video-demo',
       '/marketplace', '/marketplace/b2b', '/marketplace/b2c', '/marketplace/c2c', '/marketplace/rqst'
     ];
     
