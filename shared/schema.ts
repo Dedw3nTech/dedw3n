@@ -321,6 +321,7 @@ export const users = pgTable("users", {
   // Profile preferences
   useShippingAsBilling: boolean("use_shipping_as_billing").default(true),
   preferredLanguage: text("preferred_language").default('EN'),
+  language: text("language").default('EN'), // User's selected language for web app interface
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

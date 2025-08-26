@@ -1001,59 +1001,26 @@ export function setupAuth(app: Express) {
       // Create reset URL
       const resetUrl = `${req.protocol}://${req.get('host')}/reset-password-confirm?token=${resetToken}`;
 
-      // Send password reset email using Brevo
-      const emailHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #333; margin: 0;">Dedw3n</h1>
-            <p style="color: #666; margin: 5px 0 0 0;">Password Reset Request</p>
-          </div>
-          
-          <div style="background-color: #f8f9fa; border-radius: 8px; padding: 30px; margin-bottom: 30px;">
-            <h2 style="color: #333; margin-top: 0;">Reset Your Password</h2>
-            <p style="color: #555; line-height: 1.6;">
-              We received a request to reset your password for your Dedw3n account. If you made this request, 
-              click the button below to reset your password.
-            </p>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${resetUrl}" 
-                 style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; 
-                        border-radius: 5px; font-weight: bold; display: inline-block;">
-                Reset Password
-              </a>
-            </div>
-            
-            <p style="color: #666; font-size: 14px; line-height: 1.5;">
-              If the button doesn't work, you can copy and paste this link into your browser:<br>
-              <a href="${resetUrl}" style="color: #007bff; word-break: break-all;">${resetUrl}</a>
-            </p>
-          </div>
-          
-          <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
-            <p style="color: #856404; margin: 0; font-size: 14px;">
-              <strong>Security Notice:</strong> This link will expire in 1 hour for your security. 
-              If you didn't request this password reset, please ignore this email.
-            </p>
-          </div>
-          
-          <div style="text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
-            <p style="color: #666; font-size: 12px; margin: 0;">
-              If you have any questions, contact us at 
-              <a href="mailto:love@dedw3n.com" style="color: #007bff;">love@dedw3n.com</a>
-            </p>
-            <p style="color: #666; font-size: 12px; margin: 5px 0 0 0;">
-              © ${new Date().getFullYear()} Dedw3n. All rights reserved.
-            </p>
-          </div>
-        </div>
-      `;
+      // Get user's preferred language and translate email content
+      const { EmailTranslationService } = await import('./email-translation-service');
+      const emailTranslationService = EmailTranslationService.getInstance();
+      
+      // Get user's language preference (try multiple sources)
+      const userLanguage = await emailTranslationService.getUserLanguagePreference(foundUser.email, foundUser.id);
+      console.log(`[AUTH] Using language ${userLanguage} for password reset email to ${foundUser.email}`);
+      
+      // Get translated email content
+      const { subject: translatedSubject, html: emailHtml } = await emailTranslationService.translatePasswordResetEmail(
+        userLanguage,
+        resetUrl,
+        foundUser.email
+      );
 
       try {
         await sendEmail({
           to: foundUser.email,
           from: "noreply@dedw3n.com",
-          subject: "Reset Your Dedw3n Password",
+          subject: translatedSubject,
           html: emailHtml
         });
 

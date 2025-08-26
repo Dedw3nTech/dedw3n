@@ -11441,7 +11441,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       res.json({ 
-        language: user.preferredLanguage || 'EN',
+        language: user.language || user.preferredLanguage || 'EN',
         success: true 
       });
     } catch (error) {
@@ -11469,7 +11469,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       await db.update(users)
-        .set({ preferredLanguage: language })
+        .set({ 
+          language: language,
+          preferredLanguage: language // Keep both for backward compatibility
+        })
         .where(eq(users.id, userId));
 
       res.json({ 
