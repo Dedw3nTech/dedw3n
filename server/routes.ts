@@ -16113,7 +16113,7 @@ The Dedw3n Team
               id: 2,
               username: 'sarah_jones',
               name: 'Sarah Jones',
-              avatar: '/api/placeholder/60/60',
+              avatar: 'https://images.unsplash.com/photo-1494790108755-2616c179289e?w=150&h=150&fit=crop&crop=face',
               city: 'London',
               country: 'United Kingdom'
             },
@@ -16124,7 +16124,7 @@ The Dedw3n Team
               bio: 'Adventure seeker, coffee lover, and book enthusiast. Looking for someone to share life\'s beautiful moments with.',
               location: 'London, UK',
               interests: ['Travel', 'Photography', 'Reading', 'Hiking', 'Coffee'],
-              profileImages: ['/api/placeholder/300/400'],
+              profileImages: ['https://images.unsplash.com/photo-1494790108755-2616c179289e?w=300&h=400&fit=crop&crop=face'],
               datingRoomTier: 'normal'
             }
           },
@@ -16139,7 +16139,7 @@ The Dedw3n Team
               id: 3,
               username: 'emma_wilson',
               name: 'Emma Wilson',
-              avatar: '/api/placeholder/60/60',
+              avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
               city: 'Manchester',
               country: 'United Kingdom'
             },
@@ -16150,7 +16150,7 @@ The Dedw3n Team
               bio: 'Creative soul with a passion for art and music. Love exploring new places and trying different cuisines.',
               location: 'Manchester, UK',
               interests: ['Art', 'Music', 'Cooking', 'Dancing', 'Movies'],
-              profileImages: ['/api/placeholder/300/400'],
+              profileImages: ['https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=400&fit=crop&crop=face'],
               datingRoomTier: 'vip'
             }
           },
@@ -16165,7 +16165,7 @@ The Dedw3n Team
               id: 4,
               username: 'sophia_brown',
               name: 'Sophia Brown',
-              avatar: '/api/placeholder/60/60',
+              avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face',
               city: 'Edinburgh',
               country: 'United Kingdom'
             },
@@ -16176,7 +16176,7 @@ The Dedw3n Team
               bio: 'Fitness enthusiast and nature lover. Enjoy outdoor activities and maintaining a healthy lifestyle. Seeking a genuine connection.',
               location: 'Edinburgh, Scotland',
               interests: ['Fitness', 'Yoga', 'Nature', 'Running', 'Wellness'],
-              profileImages: ['/api/placeholder/300/400'],
+              profileImages: ['https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&h=400&fit=crop&crop=face'],
               datingRoomTier: 'vvip'
             }
           },
@@ -16191,7 +16191,7 @@ The Dedw3n Team
               id: 5,
               username: 'olivia_taylor',
               name: 'Olivia Taylor',
-              avatar: '/api/placeholder/60/60',
+              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face',
               city: 'Birmingham',
               country: 'United Kingdom'
             },
@@ -16202,7 +16202,7 @@ The Dedw3n Team
               bio: 'Tech professional by day, foodie by night. Love discovering hidden gems in the city and trying new restaurants.',
               location: 'Birmingham, UK',
               interests: ['Technology', 'Food', 'Gaming', 'Travel', 'Fashion'],
-              profileImages: ['/api/placeholder/300/400'],
+              profileImages: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=400&fit=crop&crop=face'],
               datingRoomTier: 'normal'
             }
           }
