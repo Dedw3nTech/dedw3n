@@ -116,7 +116,7 @@ export function MyMatches() {
             <p className="text-gray-600 mb-8 max-w-md mx-auto">{keepBrowsingText}</p>
             <Button 
               onClick={() => setLocation('/dating')}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
+              className="bg-black hover:bg-gray-800 text-white"
             >
               {browseProfilesText}
             </Button>
