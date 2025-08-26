@@ -40,7 +40,20 @@ export function GlobalLoginHandler() {
           target.closest('.no-login-trigger') || // Elements marked to skip login
           target.closest('input') || // Form inputs
           target.closest('textarea') || // Text areas
-          target.closest('[role="button"][aria-label*="close"]') // Close buttons
+          target.closest('[role="button"][aria-label*="close"]') || // Close buttons
+          target.closest('footer') || // Footer elements
+          target.closest('[data-radix-popper-content-wrapper]') || // Dropdown menus (language, currency)
+          target.closest('[role="menuitem"]') || // Dropdown menu items
+          target.closest('[role="menu"]') || // Dropdown menus
+          target.closest('[data-state="open"]') || // Open dropdowns
+          target.closest('[data-radix-select-content]') || // Select dropdowns
+          target.closest('[data-radix-select-item]') || // Select dropdown items
+          target.closest('[data-radix-dropdown-menu-content]') || // Dropdown menu content
+          target.closest('[data-radix-dropdown-menu-item]') || // Dropdown menu items
+          target.closest('.language-switcher') || // Language switcher elements
+          target.closest('.currency-selector') || // Currency selector elements
+          target.closest('[data-language-selector]') || // Language selector marked elements
+          target.closest('[data-currency-selector]') // Currency selector marked elements
         ) {
           return;
         }

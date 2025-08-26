@@ -65,8 +65,9 @@ export function LanguageSwitcher({
           <Button 
             variant="ghost" 
             size="sm" 
-            className={`w-9 h-9 p-0 ${className}`}
+            className={`w-9 h-9 p-0 language-switcher ${className}`}
             disabled={isChanging}
+            data-language-selector="true"
           >
             {isChanging ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -108,8 +109,9 @@ export function LanguageSwitcher({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <span 
-            className={`text-xs font-medium cursor-pointer flex items-center gap-1 ${className}`}
+            className={`text-xs font-medium cursor-pointer flex items-center gap-1 language-switcher ${className}`}
             style={{ fontSize: '12px' }}
+            data-language-selector="true"
           >
             {isChanging ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -147,8 +149,9 @@ export function LanguageSwitcher({
       <DropdownMenuTrigger asChild>
         <Button 
           variant="outline" 
-          className={`h-10 px-3 ${className}`}
+          className={`h-10 px-3 language-switcher ${className}`}
           disabled={isChanging || isTranslating}
+          data-language-selector="true"
         >
           {isChanging || isTranslating ? (
             <Loader2 className="h-4 w-4 animate-spin mr-2" />
