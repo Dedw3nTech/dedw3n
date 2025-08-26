@@ -17,7 +17,7 @@ The platform is built with a modular, layered architecture for maintainability a
 - **Frontend**: React with TypeScript, utilizing Vite for building.
 - **Backend**: Express.js with TypeScript, designed with a clear separation of concerns (controllers, services, repositories).
 - **Database**: PostgreSQL, managed with Drizzle ORM for data interaction.
-- **Authentication**: Robust authentication and authorization module using Passport.js for session management, JWT tokens, and secure cookie handling, with production-grade rate limiting, input validation, and mandatory 18+ age verification for account creation with real-time visual feedback.
+- **Authentication**: Robust authentication and authorization module using Passport.js for session management, JWT tokens, and secure cookie handling, with production-grade rate limiting, input validation, mandatory 18+ age verification for account creation with real-time visual feedback, and comprehensive password reset system with Brevo SMTP email integration.
 - **File Management**: Multer handles media uploads efficiently.
 - **Real-time Communication**: WebSocket for live messaging and notifications.
 - **Marketplace Core**: Comprehensive modules for product management (CRUD, search, filtering, stock), vendor management (accounts, profiles, commissions), and order processing (lifecycle, status tracking).

@@ -3,7 +3,7 @@ import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as FacebookStrategy } from "passport-facebook";
 import { Strategy as GitHubStrategy } from "passport-github2";
-import { Express } from "express";
+import { Express, Request, Response } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
@@ -775,47 +775,7 @@ export function setupAuth(app: Express) {
   });
   */
 
-  // Password reset request
-  app.post("/api/auth/forgot-password", async (req, res) => {
-    try {
-      const { email } = req.body;
-      
-      if (!email) {
-        return res.status(400).json({ message: "Email is required" });
-      }
-      
-      console.log(`[DEBUG] Password reset request for email: ${email}`);
-      
-      // Find user by email
-      const user = await storage.getUserByEmail(email);
-      if (!user) {
-        // Don't reveal that the email doesn't exist for security reasons
-        return res.status(200).json({ message: "If your email exists in our system, you will receive a password reset link shortly." });
-      }
-      
-      // Generate token
-      const resetToken = randomBytes(32).toString("hex");
-      const resetExpires = new Date(Date.now() + 3600000); // 1 hour
-      
-      // Save token to user
-      await storage.updateUser(user.id, {
-        passwordResetToken: resetToken,
-        passwordResetExpires: resetExpires
-      });
-      
-      // In a real app, we would send an email here with the reset link
-      console.log(`[DEBUG] Password reset token for ${email}: ${resetToken}`);
-      
-      res.status(200).json({
-        message: "If your email exists in our system, you will receive a password reset link shortly.",
-        // Include token in response for easy testing (remove in production)
-        token: resetToken
-      });
-    } catch (error) {
-      console.error(`[ERROR] Password reset request failed:`, error);
-      res.status(500).json({ message: "Password reset request failed" });
-    }
-  });
+  // First password reset endpoint removed - using the complete implementation below
   
   // Password reset confirmation
   app.post("/api/auth/reset-password", async (req, res) => {
@@ -984,7 +944,7 @@ export function setupAuth(app: Express) {
 
 
   // Password reset endpoints
-  app.post("/api/auth/forgot-password", async (req: Request, res: Response) => {
+  app.post("/api/auth/forgot-password", async (req, res) => {
     try {
       const { email } = req.body;
 
@@ -1091,9 +1051,10 @@ export function setupAuth(app: Express) {
 
       try {
         await sendEmail({
-          to: [{ email: foundUser.email, name: foundUser.name }],
+          to: foundUser.email,
+          from: "noreply@dedw3n.com",
           subject: "Reset Your Dedw3n Password",
-          htmlContent: emailHtml
+          html: emailHtml
         });
 
         console.log(`[AUTH] Password reset email sent to ${foundUser.email}`);
@@ -1126,7 +1087,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/auth/reset-password", async (req: Request, res: Response) => {
+  app.post("/api/auth/reset-password", async (req, res) => {
     try {
       const { token, password } = req.body;
 
@@ -1253,9 +1214,10 @@ export function setupAuth(app: Express) {
 
       try {
         await sendEmail({
-          to: [{ email: foundUser.email, name: foundUser.name }],
+          to: foundUser.email,
+          from: "noreply@dedw3n.com",
           subject: "Your Dedw3n Password Has Been Reset",
-          htmlContent: confirmationEmailHtml
+          html: confirmationEmailHtml
         });
       } catch (emailError) {
         console.error(`[AUTH] Failed to send confirmation email to ${foundUser.email}:`, emailError);
