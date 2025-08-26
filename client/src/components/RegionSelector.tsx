@@ -116,7 +116,7 @@ function EnhancedCitySelector({
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium text-gray-700">
-        {t.city || 'City'} <span className="text-red-500">*</span>
+        {t.city || 'City'}
       </label>
       
       <div className="space-y-2">
@@ -241,7 +241,7 @@ export default function RegionSelector({
       {/* Region Selection */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-gray-700">
-          {t('region') || 'Region'} <span className="text-red-500">*</span>
+          {t('region') || 'Region'}
         </label>
         <Select
           value={currentRegion || ''}
@@ -267,7 +267,7 @@ export default function RegionSelector({
       {/* Country Selection */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-gray-700">
-          {t('country') || 'Country'} <span className="text-red-500">*</span>
+          {t('country') || 'Country'}
         </label>
         <Select
           value={currentCountry || ''}
