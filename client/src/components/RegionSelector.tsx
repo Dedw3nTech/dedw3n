@@ -43,6 +43,7 @@ interface EnhancedCitySelectorProps {
   disabled: boolean;
   isCityMissing: boolean;
   showErrors: boolean;
+  citiesLoading: boolean;
   translations: Record<string, string>;
 }
 
@@ -54,6 +55,7 @@ function EnhancedCitySelector({
   disabled,
   isCityMissing,
   showErrors,
+  citiesLoading,
   translations: t
 }: EnhancedCitySelectorProps) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -280,6 +282,7 @@ export default function RegionSelector({
           disabled={disabled}
           isCityMissing={isCityMissing}
           showErrors={showErrors}
+          citiesLoading={citiesLoading}
           translations={{
             city: t('city') || 'City',
             selectCity: t('selectCity') || 'Select your City',
