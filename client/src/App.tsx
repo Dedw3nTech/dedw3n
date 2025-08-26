@@ -217,7 +217,7 @@ import DatingProfilePage from "@/pages/dating-profile";
 import DatingProfileView from "@/pages/dating-profile-view";
 import PaymentGateway from "@/pages/payment-gateway";
 import UserProfilePage from "@/pages/profile";
-import CheckoutNew from "@/pages/checkout-new";
+
 import CommissionPayment from "@/pages/commission-payment";
 import PawapayDepositCallback from "@/pages/pawapay-deposit-callback";
 import PawapayPayoutCallback from "@/pages/pawapay-payout-callback";
@@ -351,8 +351,6 @@ function Router() {
         <DatingPage />
       </Route>
       <Route path="/profile/:username" component={UserProfilePage} />
-      <ProtectedRoute path="/checkout" component={Checkout} />
-      <ProtectedRoute path="/checkout-new" component={CheckoutNew} />
       <ProtectedRoute path="/commission-payment/:periodId" component={CommissionPayment} />
       
       {/* Pawapay callback routes */}

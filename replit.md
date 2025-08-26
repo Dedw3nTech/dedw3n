@@ -38,8 +38,8 @@ The platform is built with a modular, layered architecture for maintainability a
 ## External Dependencies
 - **PostgreSQL**: Primary database for data storage.
 - **Brevo SMTP**: Used for email notifications (user and vendor registration, error reports).
-- **Stripe**: Payment gateway for secure transactions (architecture ready for integration).
-- **PayPal**: Payment gateway (architecture ready for integration).
+- **Stripe**: Payment gateway for secure transactions (fully integrated and operational).
+- **PayPal**: Payment gateway (fully integrated with PayPal Server SDK, configured for sandbox/production environments).
 - **KPM Logistics**: Integrated for international shipping rate calculations.
 - **Bpost**: Integrated for domestic and European shipping rate calculations.
 - **FedEx, DHL, Maersk, UPS**: Carrier assignment and rate integration in shipping calculator.
