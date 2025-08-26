@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 const dedw3nLogo = "/attached_assets/Dedw3n Logo.png";
 import {
   Dialog,
@@ -606,6 +606,19 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+            
+            {/* Forgot Password Link - Show only on login */}
+            {isLogin && (
+              <div className="text-right">
+                <Link 
+                  href="/reset-password" 
+                  className="text-sm text-blue-600 hover:text-blue-500 hover:underline"
+                  onClick={() => onClose()}
+                >
+                  Forgot password? Click here to reset
+                </Link>
               </div>
             )}
           </div>
