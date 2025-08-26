@@ -167,7 +167,7 @@ export const moderationMatchTypeEnum = pgEnum('moderation_match_type', ['exact',
 export const moderationSeverityEnum = pgEnum('moderation_severity', ['low', 'medium', 'high']);
 export const flaggedContentTypeEnum = pgEnum('flagged_content_type', ['post', 'comment', 'message', 'product', 'profile', 'community']);
 export const flaggedContentStatusEnum = pgEnum('flagged_content_status', ['pending', 'approved', 'rejected']);
-export const notificationTypeEnum = pgEnum('notification_type', ['like', 'comment', 'follow', 'mention', 'message', 'order', 'payment', 'system']);
+export const notificationTypeEnum = pgEnum('notification_type', ['like', 'comment', 'follow', 'mention', 'message', 'order', 'payment', 'system', 'gift_received']);
 export const notificationChannelEnum = pgEnum('notification_channel', ['app', 'email', 'push', 'sms']);
 
 // Fraud prevention enums
@@ -352,7 +352,9 @@ export const vendors = pgTable("vendors", {
   // Badge system fields
   badgeLevel: vendorBadgeLevelEnum("badge_level").default("new_vendor"),
   totalSalesAmount: doublePrecision("total_sales_amount").default(0), // Total sales in GBP
+  totalSales: doublePrecision("total_sales").default(0), // Alias for totalSalesAmount
   totalTransactions: integer("total_transactions").default(0), // Total number of transactions
+  verificationStatus: text("verification_status").default('pending'), // pending, verified, rejected
   lastBadgeUpdate: timestamp("last_badge_update").defaultNow(),
   isApproved: boolean("is_approved").default(false),
   isActive: boolean("is_active").default(true), // Allow users to activate/deactivate vendor accounts
@@ -399,13 +401,18 @@ export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   vendorId: integer("vendor_id").notNull().references(() => vendors.id),
   name: text("name").notNull(),
+  title: text("title"), // Alias for name
   slug: text("slug").notNull().unique(),
   description: text("description").notNull(),
   price: doublePrecision("price").notNull(),
+  currency: text("currency").default('GBP').notNull(), // Currency code
   discountPrice: doublePrecision("discount_price"),
   category: text("category").notNull(),
+  subcategory: text("subcategory"), // Product subcategory
+  condition: text("condition").default('new'), // new, used, refurbished
   imageUrl: text("image_url").notNull(),
   inventory: integer("inventory").default(1),
+  stockQuantity: integer("stock_quantity").default(1), // Alias for inventory
   isNew: boolean("is_new").default(false),
   isOnSale: boolean("is_on_sale").default(false),
   productType: productTypeEnum("product_type").default('product').notNull(),
