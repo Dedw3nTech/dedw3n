@@ -331,7 +331,7 @@ export default function Home() {
         />
         
         {/* Translatable text overlay */}
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center" style={{ paddingTop: '20vh' }}>
           <div className="text-center px-4 max-w-6xl">
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-4 drop-shadow-2xl leading-tight">
               {t("Spend more time enjoying life.") || "Spend more time enjoying life."}
