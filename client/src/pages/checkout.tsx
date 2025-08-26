@@ -247,8 +247,12 @@ export default function Checkout() {
     const tierParam = urlParams.get("tier");
     const typeParam = urlParams.get("type");
 
+    // Default to marketplace checkout if no specific parameters
     if (!paymentMethodParam || !tierParam) {
-      setLocation("/payment-gateway");
+      setPaymentMethod("marketplace");
+      setTier("standard");
+      setType("marketplace");
+      setIsLoading(false);
       return;
     }
 
@@ -316,9 +320,21 @@ export default function Checkout() {
             "Priority customer support"
           ]
         };
+      case "standard":
+        return {
+          name: "Marketplace Checkout",
+          price: "Cart Total",
+          period: "",
+          features: [
+            "Secure payment processing",
+            "Multiple payment options",
+            "Order tracking",
+            "Customer support"
+          ]
+        };
       default:
         return {
-          name: "Unknown Tier",
+          name: "Checkout",
           price: "N/A",
           period: "",
           features: []
@@ -350,6 +366,47 @@ export default function Checkout() {
   };
 
   const renderPaymentForm = () => {
+    // Marketplace checkout - show payment options
+    if (paymentMethod === "marketplace") {
+      return (
+        <div className="space-y-6">
+          <h3 className="text-lg font-semibold">Choose Payment Method</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Stripe Option */}
+            <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer border-2 hover:border-black">
+              <div className="flex items-center space-x-3">
+                <CreditCard className="h-6 w-6" />
+                <div>
+                  <h4 className="font-medium">Credit/Debit Card</h4>
+                  <p className="text-sm text-gray-600">Secure payment with Stripe</p>
+                </div>
+              </div>
+            </Card>
+            
+            {/* PayPal Option */}
+            <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer border-2 hover:border-blue-500">
+              <div className="flex items-center space-x-3">
+                <Globe className="h-6 w-6 text-blue-600" />
+                <div>
+                  <h4 className="font-medium">PayPal</h4>
+                  <p className="text-sm text-gray-600">Pay with PayPal account</p>
+                </div>
+              </div>
+            </Card>
+          </div>
+          
+          <div className="space-y-4">
+            <PayPalButton
+              amount="29.99"
+              currency="GBP"
+              intent="CAPTURE"
+            />
+          </div>
+        </div>
+      );
+    }
+    
     if (paymentMethod === "stripe" && stripePromise && clientSecret) {
       return (
         <Elements
@@ -405,11 +462,11 @@ export default function Checkout() {
         <div className="mb-8">
           <Button
             variant="ghost"
-            onClick={() => setLocation("/payment-gateway")}
+            onClick={() => setLocation(paymentMethod === "marketplace" ? "/cart" : "/payment-gateway")}
             className="mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            {translateText('Back to Payment Gateway')}
+            {translateText(paymentMethod === "marketplace" ? 'Back to Cart' : 'Back to Payment Gateway')}
           </Button>
           
           <div className="text-center">
