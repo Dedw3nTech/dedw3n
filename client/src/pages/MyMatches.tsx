@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle, MapPin, Calendar, Users } from "lucide-react";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import { useLocation } from 'wouter';
+import { DatingNav } from "@/components/layout/DatingNav";
 
 interface MatchedUser {
   id: number;
@@ -102,12 +103,16 @@ export function MyMatches() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">{myMatchesText}</h1>
-        </div>
+    <div>
+      {/* Dating Navigation Header */}
+      <DatingNav />
+      
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">{myMatchesText}</h1>
+          </div>
 
         {matches.length === 0 ? (
           /* No matches state */
@@ -214,6 +219,7 @@ export function MyMatches() {
             ))}
           </div>
         )}
+        </div>
       </div>
     </div>
   );
