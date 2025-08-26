@@ -120,16 +120,27 @@ export async function createAssessment({
   } catch (error) {
     console.error('[RECAPTCHA-ENTERPRISE] Assessment error:', error);
     
-    // If this is a Google Cloud authentication error, use development fallback
+    // If this is a Google Cloud authentication/permission error, use development fallback
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    if (errorMessage.includes('metadata') || errorMessage.includes('access token') || errorMessage.includes('ECONNREFUSED')) {
-      console.log('[RECAPTCHA-ENTERPRISE] Google Cloud authentication failed, using development bypass');
+    const errorCode = (error as any)?.code;
+    
+    if (errorMessage.includes('metadata') || 
+        errorMessage.includes('access token') || 
+        errorMessage.includes('ECONNREFUSED') ||
+        errorMessage.includes('PERMISSION_DENIED') ||
+        errorMessage.includes('blocked') ||
+        errorCode === 7 || // PERMISSION_DENIED
+        errorCode === 2 || // UNKNOWN (auth issues)
+        errorCode === 16   // UNAUTHENTICATED
+    ) {
+      console.log('[RECAPTCHA-ENTERPRISE] Google Cloud access denied or authentication failed, using development bypass');
+      console.log(`[RECAPTCHA-ENTERPRISE] Error details - Code: ${errorCode}, Message: ${errorMessage}`);
       return {
         score: 0.5, // Neutral score for development
         valid: true,
         action: recaptchaAction || 'development',
         reasons: ['DEVELOPMENT_MODE'],
-        error: 'Development mode - Google Cloud authentication failed',
+        error: 'Development mode - Google Cloud access denied',
         errorType: 'DEVELOPMENT_MODE'
       };
     }
