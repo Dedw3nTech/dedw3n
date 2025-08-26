@@ -15,6 +15,7 @@ import { sendEmail } from "./email-service";
 import createMemoryStore from "memorystore";
 import speakeasy from "speakeasy";
 import QRCode from "qrcode";
+import { createAssessment } from "./recaptcha-enterprise";
 // SVG CAPTCHA removed - using math CAPTCHA only
 
 // Google reCAPTCHA v3 verification
@@ -568,13 +569,28 @@ export function setupAuth(app: Express) {
         });
       }
 
-      // Verify reCAPTCHA if provided
+      // Verify reCAPTCHA Enterprise if provided
       if (req.body.recaptchaToken) {
-        if (!await verifyRecaptcha(req.body.recaptchaToken, "register")) {
-          console.log(`[SECURITY] Invalid reCAPTCHA for registration attempt: ${req.body.username}`);
-          return res.status(400).json({ 
-            message: "Invalid reCAPTCHA. Please try again.",
-            code: "INVALID_CAPTCHA"
+        try {
+          const assessment = await createAssessment({
+            token: req.body.recaptchaToken,
+            recaptchaAction: 'register'
+          });
+          
+          if (!assessment || !assessment.valid || assessment.score < 0.5) {
+            console.log(`[SECURITY] reCAPTCHA Enterprise verification failed for registration: ${req.body.username}, score: ${assessment?.score || 0}`);
+            return res.status(400).json({ 
+              message: "Security verification failed. Please try again.",
+              code: "INVALID_CAPTCHA"
+            });
+          }
+          
+          console.log(`[SECURITY] reCAPTCHA Enterprise verification passed for registration: ${req.body.username}, score: ${assessment.score}`);
+        } catch (error) {
+          console.error(`[ERROR] reCAPTCHA Enterprise verification error during registration:`, error);
+          return res.status(500).json({ 
+            message: "Security verification error. Please try again.",
+            code: "CAPTCHA_ERROR"
           });
         }
       }
@@ -653,20 +669,32 @@ export function setupAuth(app: Express) {
       });
     }
 
-    // Verify reCAPTCHA if provided
+    // Verify reCAPTCHA Enterprise if provided
     if (req.body.recaptchaToken) {
-      console.log(`[DEBUG] reCAPTCHA verification - Token: ${req.body.recaptchaToken.substring(0, 20)}...`);
-      const captchaResult = await verifyRecaptcha(req.body.recaptchaToken, "login");
-      console.log(`[DEBUG] reCAPTCHA verification result: ${captchaResult}`);
+      console.log(`[DEBUG] reCAPTCHA Enterprise verification - Token: ${req.body.recaptchaToken.substring(0, 20)}...`);
       
-      if (!captchaResult) {
-        console.log(`[SECURITY] Invalid reCAPTCHA for login attempt: ${req.body.username}`);
-        return res.status(400).json({ 
-          message: "Invalid reCAPTCHA. Please try again.",
-          code: "INVALID_CAPTCHA"
+      try {
+        const assessment = await createAssessment({
+          token: req.body.recaptchaToken,
+          recaptchaAction: 'login'
+        });
+        
+        if (!assessment || !assessment.valid || assessment.score < 0.5) {
+          console.log(`[SECURITY] reCAPTCHA Enterprise verification failed for login: ${req.body.username}, score: ${assessment?.score || 0}`);
+          return res.status(400).json({ 
+            message: "Security verification failed. Please try again.",
+            code: "INVALID_CAPTCHA"
+          });
+        }
+        
+        console.log(`[DEBUG] reCAPTCHA Enterprise verification passed for user: ${req.body.username}, score: ${assessment.score}`);
+      } catch (error) {
+        console.error(`[ERROR] reCAPTCHA Enterprise verification error during login:`, error);
+        return res.status(500).json({ 
+          message: "Security verification error. Please try again.",
+          code: "CAPTCHA_ERROR"
         });
       }
-      console.log(`[DEBUG] reCAPTCHA verification passed for user: ${req.body.username}`);
     }
 
     // Check for account lockout first
