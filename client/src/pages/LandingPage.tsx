@@ -8,8 +8,7 @@ export default function LandingPage() {
   // Hero text translations
   const heroTexts = [
     "Spend more time enjoying life.",
-    "Together for a prosperous and green planet",
-    "We develop software today that will facilitate life in the world of tomorrow."
+    "Together for a prosperous and green planet"
   ];
 
   // Use Master Translation System
@@ -43,12 +42,9 @@ export default function LandingPage() {
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-4 drop-shadow-2xl leading-tight">
               {t("Spend more time enjoying life.") || "Spend more time enjoying life."}
             </h1>
-            <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-white mb-3 drop-shadow-lg">
+            <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-white mb-6 drop-shadow-lg">
               {t("Together for a prosperous and green planet") || "Together for a prosperous and green planet"}
             </h2>
-            <p className="text-sm md:text-base lg:text-lg text-white/90 mb-6 drop-shadow-md">
-              {t("We develop software today that will facilitate life in the world of tomorrow.") || "We develop software today that will facilitate life in the world of tomorrow."}
-            </p>
           </div>
         </div>
       </section>
