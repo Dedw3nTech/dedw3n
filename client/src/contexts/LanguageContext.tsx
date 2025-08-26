@@ -8,28 +8,28 @@ export interface Language {
   flag: string;
 }
 
-// DeepL supported languages - only authentic translations
+// DeepL supported languages - only authentic translations (alphabetically ordered)
 export const supportedLanguages: Language[] = [
+  { code: 'AR', name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦' },
+  { code: 'ZH', name: 'Chinese', nativeName: '中文', flag: '🇨🇳' },
+  { code: 'CS', name: 'Czech', nativeName: 'Čeština', flag: '🇨🇿' },
+  { code: 'DA', name: 'Danish', nativeName: 'Dansk', flag: '🇩🇰' },
+  { code: 'NL', name: 'Dutch', nativeName: 'Nederlands', flag: '🇳🇱' },
   { code: 'EN', name: 'English', nativeName: 'English', flag: '🇺🇸' },
-  { code: 'ES', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
+  { code: 'FI', name: 'Finnish', nativeName: 'Suomi', flag: '🇫🇮' },
   { code: 'FR', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
   { code: 'DE', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪' },
+  { code: 'HU', name: 'Hungarian', nativeName: 'Magyar', flag: '🇭🇺' },
   { code: 'IT', name: 'Italian', nativeName: 'Italiano', flag: '🇮🇹' },
+  { code: 'JA', name: 'Japanese', nativeName: '日本語', flag: '🇯🇵' },
+  { code: 'KO', name: 'Korean', nativeName: '한국어', flag: '🇰🇷' },
+  { code: 'NO', name: 'Norwegian', nativeName: 'Norsk', flag: '🇳🇴' },
+  { code: 'PL', name: 'Polish', nativeName: 'Polski', flag: '🇵🇱' },
   { code: 'PT', name: 'Portuguese', nativeName: 'Português', flag: '🇵🇹' },
   { code: 'RU', name: 'Russian', nativeName: 'Русский', flag: '🇷🇺' },
-  { code: 'JA', name: 'Japanese', nativeName: '日本語', flag: '🇯🇵' },
-  { code: 'ZH', name: 'Chinese', nativeName: '中文', flag: '🇨🇳' },
-  { code: 'KO', name: 'Korean', nativeName: '한국어', flag: '🇰🇷' },
-  { code: 'NL', name: 'Dutch', nativeName: 'Nederlands', flag: '🇳🇱' },
-  { code: 'PL', name: 'Polish', nativeName: 'Polski', flag: '🇵🇱' },
+  { code: 'ES', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
   { code: 'SV', name: 'Swedish', nativeName: 'Svenska', flag: '🇸🇪' },
-  { code: 'DA', name: 'Danish', nativeName: 'Dansk', flag: '🇩🇰' },
-  { code: 'FI', name: 'Finnish', nativeName: 'Suomi', flag: '🇫🇮' },
-  { code: 'NO', name: 'Norwegian', nativeName: 'Norsk', flag: '🇳🇴' },
-  { code: 'CS', name: 'Czech', nativeName: 'Čeština', flag: '🇨🇿' },
-  { code: 'HU', name: 'Hungarian', nativeName: 'Magyar', flag: '🇭🇺' },
   { code: 'TR', name: 'Turkish', nativeName: 'Türkçe', flag: '🇹🇷' },
-  { code: 'AR', name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦' },
 ];
 
 interface LanguageContextType {

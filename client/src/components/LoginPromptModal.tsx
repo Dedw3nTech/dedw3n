@@ -748,26 +748,26 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                   <SelectValue placeholder={t["Select your language"] || "Select your language"} />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="ar">{t["Arabic"] || "Arabic"}</SelectItem>
+                  <SelectItem value="zh">{t["Chinese"] || "Chinese"}</SelectItem>
+                  <SelectItem value="cs">{t["Czech"] || "Czech"}</SelectItem>
+                  <SelectItem value="da">{t["Danish"] || "Danish"}</SelectItem>
+                  <SelectItem value="nl">{t["Dutch"] || "Dutch"}</SelectItem>
                   <SelectItem value="en">{t["English"] || "English"}</SelectItem>
-                  <SelectItem value="es">{t["Spanish"] || "Spanish"}</SelectItem>
+                  <SelectItem value="fi">{t["Finnish"] || "Finnish"}</SelectItem>
                   <SelectItem value="fr">{t["French"] || "French"}</SelectItem>
                   <SelectItem value="de">{t["German"] || "German"}</SelectItem>
+                  <SelectItem value="hu">{t["Hungarian"] || "Hungarian"}</SelectItem>
                   <SelectItem value="it">{t["Italian"] || "Italian"}</SelectItem>
+                  <SelectItem value="ja">{t["Japanese"] || "Japanese"}</SelectItem>
+                  <SelectItem value="ko">{t["Korean"] || "Korean"}</SelectItem>
+                  <SelectItem value="no">{t["Norwegian"] || "Norwegian"}</SelectItem>
+                  <SelectItem value="pl">{t["Polish"] || "Polish"}</SelectItem>
                   <SelectItem value="pt">{t["Portuguese"] || "Portuguese"}</SelectItem>
                   <SelectItem value="ru">{t["Russian"] || "Russian"}</SelectItem>
-                  <SelectItem value="ja">{t["Japanese"] || "Japanese"}</SelectItem>
-                  <SelectItem value="zh">{t["Chinese"] || "Chinese"}</SelectItem>
-                  <SelectItem value="ko">{t["Korean"] || "Korean"}</SelectItem>
-                  <SelectItem value="nl">{t["Dutch"] || "Dutch"}</SelectItem>
-                  <SelectItem value="pl">{t["Polish"] || "Polish"}</SelectItem>
+                  <SelectItem value="es">{t["Spanish"] || "Spanish"}</SelectItem>
                   <SelectItem value="sv">{t["Swedish"] || "Swedish"}</SelectItem>
-                  <SelectItem value="da">{t["Danish"] || "Danish"}</SelectItem>
-                  <SelectItem value="fi">{t["Finnish"] || "Finnish"}</SelectItem>
-                  <SelectItem value="no">{t["Norwegian"] || "Norwegian"}</SelectItem>
-                  <SelectItem value="cs">{t["Czech"] || "Czech"}</SelectItem>
-                  <SelectItem value="hu">{t["Hungarian"] || "Hungarian"}</SelectItem>
                   <SelectItem value="tr">{t["Turkish"] || "Turkish"}</SelectItem>
-                  <SelectItem value="ar">{t["Arabic"] || "Arabic"}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

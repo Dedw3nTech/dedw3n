@@ -4,18 +4,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Globe } from 'lucide-react';
 
 const languages = [
+  { code: 'AR', name: 'العربية', nativeName: 'العربية', flag: '🇸🇦' },
+  { code: 'ZH', name: '中文', nativeName: '中文', flag: '🇨🇳' },
+  { code: 'DE', name: 'Deutsch', nativeName: 'Deutsch', flag: '🇩🇪' },
   { code: 'EN', name: 'English', nativeName: 'English', flag: '🇺🇸' },
   { code: 'ES', name: 'Español', nativeName: 'Español', flag: '🇪🇸' },
   { code: 'FR', name: 'Français', nativeName: 'Français', flag: '🇫🇷' },
-  { code: 'DE', name: 'Deutsch', nativeName: 'Deutsch', flag: '🇩🇪' },
+  { code: 'HI', name: 'हिन्दी', nativeName: 'हिन्दी', flag: '🇮🇳' },
   { code: 'IT', name: 'Italiano', nativeName: 'Italiano', flag: '🇮🇹' },
-  { code: 'PT', name: 'Português', nativeName: 'Português', flag: '🇵🇹' },
-  { code: 'RU', name: 'Русский', nativeName: 'Русский', flag: '🇷🇺' },
-  { code: 'ZH', name: '中文', nativeName: '中文', flag: '🇨🇳' },
   { code: 'JA', name: '日本語', nativeName: '日本語', flag: '🇯🇵' },
   { code: 'KO', name: '한국어', nativeName: '한국어', flag: '🇰🇷' },
-  { code: 'AR', name: 'العربية', nativeName: 'العربية', flag: '🇸🇦' },
-  { code: 'HI', name: 'हिन्दी', nativeName: 'हिन्दी', flag: '🇮🇳' },
+  { code: 'PT', name: 'Português', nativeName: 'Português', flag: '🇵🇹' },
+  { code: 'RU', name: 'Русский', nativeName: 'Русский', flag: '🇷🇺' },
 ];
 
 export function LanguageSelector() {
