@@ -28,23 +28,34 @@ export function useMobileDetection(): UseMobileDetectionResult {
     const detectionResult = detectMobileDevice();
     setDetection(detectionResult);
 
-    // Mobile redirect functionality disabled - always set shouldRedirect to false
-    setShouldRedirect(false);
+    // Check if mobile redirect should happen instantly
+    const shouldPerformRedirect = shouldRedirectToMobile();
+    setShouldRedirect(shouldPerformRedirect);
 
-    // Log detection results for debugging (redirect disabled)
+    // Instant redirect for mobile devices - no delays or modals
+    if (shouldPerformRedirect && detectionResult.isMobile) {
+      console.log('[MOBILE-DETECTION] Instant mobile redirect triggered');
+      redirectToMobile();
+      setIsRedirecting(true);
+    }
+
+    // Log detection results for debugging
     console.log('[MOBILE-DETECTION]', {
       deviceType: detectionResult.deviceType,
       isMobile: detectionResult.isMobile,
       isTablet: detectionResult.isTablet,
-      shouldRedirect: false, // Always false - redirect disabled
+      shouldRedirect: shouldPerformRedirect,
       userAgent: detectionResult.userAgent.substring(0, 50) + '...',
-      redirectDisabled: true
+      instantRedirect: shouldPerformRedirect && detectionResult.isMobile
     });
   }, []);
 
   const performRedirect = () => {
-    // Redirect functionality disabled - no action taken
-    console.log('[MOBILE-DETECTION] Redirect attempted but disabled by system');
+    if (!isRedirecting && shouldRedirect) {
+      setIsRedirecting(true);
+      console.log('[MOBILE-DETECTION] Performing instant mobile redirect');
+      redirectToMobile();
+    }
   };
 
   const forceDesktop = () => {

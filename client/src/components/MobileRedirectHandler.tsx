@@ -5,13 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Smartphone, Monitor } from 'lucide-react';
 
 export function MobileRedirectHandler() {
-  // Mobile redirect handler disabled - no longer shows countdown modal or auto-redirects
-  // Mobile detection functionality preserved for responsive design purposes only
-  const { isMobile } = useMobileDetection();
+  // Instant mobile redirect handler - no modals, no countdown, immediate redirect
+  const { shouldRedirect, isMobile, isRedirecting } = useMobileDetection();
 
-  // Log mobile detection for debugging purposes only (no redirect behavior)
-  console.log('[MOBILE-DETECTION] Device detected as mobile:', isMobile, '(redirect disabled)');
+  // Log mobile detection for debugging
+  console.log('[MOBILE-DETECTION] Device detected as mobile:', isMobile, 'shouldRedirect:', shouldRedirect, 'isRedirecting:', isRedirecting);
 
-  // Return null - no modal or redirect behavior
+  // No UI needed - redirect happens instantly in the hook
+  // Return null as redirect is handled automatically
   return null;
 }
