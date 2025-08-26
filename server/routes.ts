@@ -4162,32 +4162,101 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // City search autocomplete endpoint
+  // City search autocomplete endpoint with enhanced fuzzy matching
+  // Major cities fallback for countries with missing data
+  function getMajorCitiesForCountry(country: string, searchTerm: string): string[] {
+    const majorCitiesMap: Record<string, string[]> = {
+      'Algeria': ['Algiers', 'Oran', 'Constantine', 'Annaba', 'Blida', 'Batna', 'Djelfa', 'Sétif', 'Sidi Bel Abbès', 'Biskra'],
+      'Belgium': ['Brussels', 'Antwerp', 'Ghent', 'Charleroi', 'Liège', 'Bruges', 'Namur', 'Leuven', 'Mons', 'Aalst'],
+      'France': ['Paris', 'Marseille', 'Lyon', 'Toulouse', 'Nice', 'Nantes', 'Strasbourg', 'Montpellier', 'Bordeaux', 'Lille'],
+      'Germany': ['Berlin', 'Hamburg', 'Munich', 'Cologne', 'Frankfurt', 'Stuttgart', 'Düsseldorf', 'Dortmund', 'Essen', 'Leipzig'],
+      'Spain': ['Madrid', 'Barcelona', 'Valencia', 'Seville', 'Zaragoza', 'Málaga', 'Murcia', 'Palma', 'Las Palmas', 'Bilbao'],
+      'Italy': ['Rome', 'Milan', 'Naples', 'Turin', 'Palermo', 'Genoa', 'Bologna', 'Florence', 'Bari', 'Catania'],
+      'United Kingdom': ['London', 'Birmingham', 'Manchester', 'Glasgow', 'Liverpool', 'Leeds', 'Sheffield', 'Edinburgh', 'Bristol', 'Cardiff'],
+      'Netherlands': ['Amsterdam', 'Rotterdam', 'The Hague', 'Utrecht', 'Eindhoven', 'Tilburg', 'Groningen', 'Almere', 'Breda', 'Nijmegen'],
+      'Poland': ['Warsaw', 'Kraków', 'Łódź', 'Wrocław', 'Poznań', 'Gdańsk', 'Szczecin', 'Bydgoszcz', 'Lublin', 'Katowice'],
+      'Portugal': ['Lisbon', 'Porto', 'Vila Nova de Gaia', 'Amadora', 'Braga', 'Funchal', 'Coimbra', 'Setúbal', 'Almada', 'Agualva-Cacém'],
+      'United States': ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 'Philadelphia', 'San Antonio', 'San Diego', 'Dallas', 'San Jose'],
+      'Canada': ['Toronto', 'Montreal', 'Vancouver', 'Calgary', 'Ottawa', 'Edmonton', 'Mississauga', 'Winnipeg', 'Quebec City', 'Hamilton'],
+      'Australia': ['Sydney', 'Melbourne', 'Brisbane', 'Perth', 'Adelaide', 'Gold Coast', 'Newcastle', 'Canberra', 'Sunshine Coast', 'Wollongong'],
+      'Japan': ['Tokyo', 'Yokohama', 'Osaka', 'Nagoya', 'Sapporo', 'Fukuoka', 'Kobe', 'Kawasaki', 'Kyoto', 'Saitama'],
+      'Brazil': ['São Paulo', 'Rio de Janeiro', 'Brasília', 'Salvador', 'Fortaleza', 'Belo Horizonte', 'Manaus', 'Curitiba', 'Recife', 'Goiânia'],
+      'Mexico': ['Mexico City', 'Guadalajara', 'Monterrey', 'Puebla', 'Tijuana', 'León', 'Juárez', 'Torreón', 'Querétaro', 'Mérida'],
+      'India': ['Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Chennai', 'Kolkata', 'Pune', 'Ahmedabad', 'Jaipur', 'Surat'],
+      'China': ['Beijing', 'Shanghai', 'Guangzhou', 'Shenzhen', 'Tianjin', 'Chongqing', 'Dongguan', 'Nanjing', 'Foshan', 'Chengdu'],
+      'Russia': ['Moscow', 'Saint Petersburg', 'Novosibirsk', 'Yekaterinburg', 'Nizhny Novgorod', 'Kazan', 'Chelyabinsk', 'Omsk', 'Samara', 'Rostov-on-Don']
+    };
+
+    const cities = majorCitiesMap[country] || [];
+    return cities.filter(city => 
+      city.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }
+
   app.get('/api/cities/search/:country', async (req: Request, res: Response) => {
     try {
       const { country } = req.params;
-      const { q = '', limit = '10' } = req.query;
+      const { q = '', limit = '15' } = req.query;
       
-      console.log(`[DEBUG] Searching cities for country: ${country}, query: ${q}, limit: ${limit}`);
+      console.log(`[DEBUG] Enhanced search for country: ${country}, query: ${q}, limit: ${limit}`);
       
-      let query = db
+      if (!q || typeof q !== 'string' || q.length < 1) {
+        res.json([]);
+        return;
+      }
+      
+      const searchTerm = q.toLowerCase();
+      
+      // Multi-level search strategy for better coverage
+      let allResults: string[] = [];
+      
+      // 1. Exact prefix match (highest priority)
+      const prefixQuery = db
         .selectDistinct({ name: cities.name })
         .from(cities)
         .where(
           and(
             eq(cities.country, country),
-            ilike(cities.name, `%${q}%`)
+            ilike(cities.name, `${searchTerm}%`)
           )
         )
         .orderBy(cities.name)
-        .limit(parseInt(limit as string) || 10);
+        .limit(8);
       
-      const citiesResult = await query;
+      const prefixResults = await prefixQuery;
+      allResults.push(...prefixResults.map(city => city.name));
       
-      console.log(`[DEBUG] Found ${citiesResult.length} cities matching "${q}" for ${country}`);
+      // 2. Contains match (if we need more results)
+      if (allResults.length < 10) {
+        const containsQuery = db
+          .selectDistinct({ name: cities.name })
+          .from(cities)
+          .where(
+            and(
+              eq(cities.country, country),
+              ilike(cities.name, `%${searchTerm}%`)
+            )
+          )
+          .orderBy(cities.name)
+          .limit(10 - allResults.length);
+        
+        const containsResults = await containsQuery;
+        allResults.push(...containsResults.map(city => city.name));
+      }
       
-      const cityNames = citiesResult.map(city => city.name);
-      res.json(cityNames);
+      // 3. Fallback for missing major cities
+      if (allResults.length < 5) {
+        const majorCities = getMajorCitiesForCountry(country, searchTerm);
+        allResults.push(...majorCities);
+      }
+      
+      // 4. Remove duplicates and limit results
+      const uniqueResults = Array.from(new Set(allResults));
+      const finalResults = uniqueResults.slice(0, parseInt(limit as string) || 15);
+      
+      console.log(`[DEBUG] Enhanced search found ${finalResults.length} cities matching "${q}" for ${country}`);
+      
+      res.json(finalResults);
     } catch (error) {
       console.error('Error searching cities:', error);
       res.status(500).json({ message: 'Failed to search cities' });
