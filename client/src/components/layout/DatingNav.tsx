@@ -108,17 +108,15 @@ export function DatingNav({ searchTerm = "", setSearchTerm }: DatingNavProps) {
               </Button>
             )}
             
-            {/* My Matches button - only visible if dating account is active */}
-            {datingProfile && datingProfile.isActive && (
-              <Button
-                variant="ghost"
-                className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
-                onClick={() => setLocation("/my-matches")}
-              >
-                <Users className="h-4 w-4" />
-                <span className="text-sm font-medium">{myMatchesText}</span>
-              </Button>
-            )}
+            {/* My Matches button - visible for all authenticated users */}
+            <Button
+              variant="ghost"
+              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
+              onClick={() => setLocation("/my-matches")}
+            >
+              <Users className="h-4 w-4" />
+              <span className="text-sm font-medium">{myMatchesText}</span>
+            </Button>
 
             {/* My Dating Profile button - only visible if dating account is active */}
             {datingProfile && datingProfile.isActive && (
