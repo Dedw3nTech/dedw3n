@@ -1,4 +1,13 @@
 import type { Express, Request, Response, NextFunction } from "express";
+
+// Extend Request interface for reCAPTCHA score
+declare global {
+  namespace Express {
+    interface Request {
+      recaptchaScore?: number;
+    }
+  }
+}
 import { createServer, type Server } from "http";
 import Stripe from "stripe";
 // WebSocket implementation moved to messaging-suite.ts
