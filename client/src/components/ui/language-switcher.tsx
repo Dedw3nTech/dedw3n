@@ -9,7 +9,7 @@ import {
 import { useLanguage, supportedLanguages, type Language } from '@/contexts/LanguageContext';
 import { ChevronDown, Globe, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useMasterTranslation } from '@/hooks/use-master-translation';
+import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 
 interface LanguageSwitcherProps {
   variant?: 'default' | 'compact' | 'icon-only';
@@ -24,8 +24,24 @@ export function LanguageSwitcher({
 }: LanguageSwitcherProps) {
   const { selectedLanguage, setSelectedLanguage, isLoading } = useLanguage();
   const [isChanging, setIsChanging] = useState(false);
-  const { isTranslating } = useMasterTranslation();
   const { toast } = useToast();
+
+  // Translation texts for language switcher
+  const languageSwitcherTexts = [
+    "Language Changed",
+    "Site language changed to",
+    "Choose Language", 
+    "Select your preferred language"
+  ];
+
+  // Use Master Translation System
+  const { translations: translatedTexts } = useMasterBatchTranslation(languageSwitcherTexts);
+  
+  // Create translation function
+  const t = (text: string) => {
+    const index = languageSwitcherTexts.indexOf(text);
+    return index >= 0 && translatedTexts ? translatedTexts[index] || text : text;
+  };
 
   const handleLanguageChange = async (language: Language) => {
     if (language.code === selectedLanguage.code) return;
@@ -39,10 +55,10 @@ export function LanguageSwitcher({
     // Save to localStorage for persistence
     localStorage.setItem('dedw3n-language', language.code);
     
-    // Show success message
+    // Show success message with translation
     toast({
-      title: "Language Changed",
-      description: `Site language changed to ${language.nativeName}`,
+      title: t("Language Changed") || "Language Changed",
+      description: `${t("Site language changed to") || "Site language changed to"} ${language.nativeName}`,
       duration: 2000,
     });
     
@@ -78,7 +94,7 @@ export function LanguageSwitcher({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
           <div className="p-2 text-xs font-medium text-muted-foreground border-b mb-1">
-            Choose Language
+            {t("Choose Language") || "Choose Language"}
           </div>
           {supportedLanguages.map((language) => (
             <DropdownMenuItem
@@ -165,7 +181,7 @@ export function LanguageSwitcher({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
         <div className="p-3 text-sm font-medium text-muted-foreground border-b mb-1">
-          Select your preferred language
+          {t("Select your preferred language") || "Select your preferred language"}
         </div>
         {supportedLanguages.map((language) => (
           <DropdownMenuItem
