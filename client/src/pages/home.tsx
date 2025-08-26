@@ -135,7 +135,13 @@ export default function Home() {
     "Social",
     "Connect with friends, share posts, and build your network.",
     "Dating",
-    "Find love or your new friend."
+    "Find love or your new friend.",
+    
+    // New Hero Overlay Text
+    "Spend more time enjoying life.",
+    "Together for a prosperous and green planet",
+    "We develop software today that will facilitate life in the world of tomorrow.",
+    "MERCHANT APP"
   ];
 
   // Use Master Translation System for optimal performance and persistence
@@ -328,10 +334,19 @@ export default function Home() {
         
         {/* Translatable text overlay */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center px-4">
+          <div className="text-center px-4 max-w-4xl">
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-4 drop-shadow-2xl">
               {t("Spend more time enjoying life.") || "Spend more time enjoying life."}
             </h1>
+            <h2 className="text-xl md:text-2xl lg:text-3xl text-white mb-3 drop-shadow-lg">
+              {t("Together for a prosperous and green planet") || "Together for a prosperous and green planet"}
+            </h2>
+            <p className="text-sm md:text-base lg:text-lg text-white/90 mb-6 drop-shadow-md">
+              {t("We develop software today that will facilitate life in the world of tomorrow.") || "We develop software today that will facilitate life in the world of tomorrow."}
+            </p>
+            <div className="text-xs md:text-sm lg:text-base text-white/80 font-semibold tracking-widest drop-shadow-md">
+              {t("MERCHANT APP") || "MERCHANT APP"}
+            </div>
           </div>
         </div>
 
