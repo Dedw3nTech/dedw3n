@@ -74,6 +74,58 @@ import {
 import { handleRecaptchaVerification, requireRecaptcha, getRecaptchaConfig } from "./recaptcha";
 import { createAssessment, testAssessment } from "./recaptcha-enterprise";
 
+// reCAPTCHA Enterprise middleware
+const requireRecaptchaEnterprise = (action: string, minScore: number = 0.5) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    const { recaptchaToken } = req.body;
+    
+    // Handle development bypass
+    if (recaptchaToken === 'dev_bypass_token') {
+      const isDevelopment = process.env.NODE_ENV === 'development' || 
+                           req.headers.host?.includes('replit.dev') ||
+                           req.headers.host?.includes('localhost');
+      
+      if (isDevelopment) {
+        console.log(`[RECAPTCHA-ENTERPRISE] Development bypass for action: ${action}`);
+        return next();
+      }
+    }
+    
+    if (!recaptchaToken) {
+      return res.status(400).json({ 
+        message: "Security verification required",
+        code: "RECAPTCHA_REQUIRED"
+      });
+    }
+    
+    try {
+      const assessment = await createAssessment({
+        token: recaptchaToken,
+        recaptchaAction: action
+      });
+      
+      if (!assessment || !assessment.valid || assessment.score < minScore) {
+        console.log(`[RECAPTCHA-ENTERPRISE] ${action} verification failed - Score: ${assessment?.score || 0}`);
+        return res.status(400).json({ 
+          message: "Security verification failed. Please try again.",
+          code: "RECAPTCHA_FAILED",
+          riskScore: assessment?.score || 0
+        });
+      }
+      
+      console.log(`[RECAPTCHA-ENTERPRISE] ${action} verification passed - Score: ${assessment.score}`);
+      req.recaptchaScore = assessment.score;
+      next();
+    } catch (error) {
+      console.error(`[RECAPTCHA-ENTERPRISE] ${action} verification error:`, error);
+      return res.status(500).json({ 
+        message: "Security verification error",
+        code: "RECAPTCHA_ERROR"
+      });
+    }
+  };
+};
+
 import { 
   insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
   insertMessageSchema, insertReviewSchema, insertCartSchema, insertWalletSchema, 
@@ -1903,11 +1955,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
   
-  // Contact form submission endpoint with file upload support
+  // Contact form submission endpoint with file upload support and reCAPTCHA Enterprise protection
   app.post('/api/contact', upload.fields([
     { name: 'titleUpload', maxCount: 1 },
     { name: 'textUpload', maxCount: 1 }
-  ]), async (req: Request, res: Response) => {
+  ]), requireRecaptchaEnterprise('contact', 0.7), async (req: Request, res: Response) => {
     try {
       const { name, email, subject, message } = req.body;
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
@@ -2124,38 +2176,55 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // reCAPTCHA-protected login endpoint
+  // reCAPTCHA Enterprise-protected login endpoint
   app.post('/api/auth/login-with-recaptcha', async (req: Request, res: Response) => {
     const { username, password, recaptchaToken } = req.body;
     
 
     try {
-      // Verify ReCAPTCHA first - fail early if invalid
+      // Verify reCAPTCHA Enterprise first - fail early if invalid
       let isRecaptchaValid = false;
+      let riskScore = 0;
       
       // Handle development bypass token
       if (recaptchaToken === 'dev_bypass_token') {
-        console.log('[RECAPTCHA] Development bypass token detected');
+        console.log('[RECAPTCHA-ENTERPRISE] Development bypass token detected');
         const isDevelopment = process.env.NODE_ENV === 'development' || 
                              req.headers.host?.includes('replit.dev') ||
                              req.headers.host?.includes('localhost');
         
         if (isDevelopment) {
-          console.log('[RECAPTCHA] Development environment detected, allowing bypass');
+          console.log('[RECAPTCHA-ENTERPRISE] Development environment detected, allowing bypass');
           isRecaptchaValid = true;
+          riskScore = 0.9; // High trust score for development
         } else {
-          console.log('[RECAPTCHA] Production environment detected, bypass not allowed');
+          console.log('[RECAPTCHA-ENTERPRISE] Production environment detected, bypass not allowed');
           isRecaptchaValid = false;
         }
       } else {
-        // Verify real reCAPTCHA token
-        isRecaptchaValid = await verifyRecaptcha(recaptchaToken, 'login');
+        // Use reCAPTCHA Enterprise assessment
+        const assessment = await createAssessment({
+          token: recaptchaToken,
+          recaptchaAction: 'login'
+        });
+        
+        if (assessment && assessment.valid) {
+          riskScore = assessment.score;
+          // Accept tokens with score >= 0.5 (configurable threshold)
+          isRecaptchaValid = riskScore >= 0.5;
+          
+          console.log(`[RECAPTCHA-ENTERPRISE] Login assessment - Score: ${riskScore}, Valid: ${isRecaptchaValid}`);
+        } else {
+          console.log('[RECAPTCHA-ENTERPRISE] Assessment failed or invalid token');
+          isRecaptchaValid = false;
+        }
       }
       
       if (!isRecaptchaValid) {
         return res.status(400).json({ 
           message: "Security verification failed. Please try again.",
-          code: "RECAPTCHA_FAILED"
+          code: "RECAPTCHA_FAILED",
+          riskScore: riskScore
         });
       }
       
@@ -2222,12 +2291,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // reCAPTCHA-protected registration endpoint  
+  // reCAPTCHA Enterprise-protected registration endpoint  
   app.post('/api/auth/register-with-recaptcha', async (req: Request, res: Response) => {
     const { username, email, password, name, recaptchaToken } = req.body;
     
     try {
-      // Verify reCAPTCHA token
+      // Verify reCAPTCHA Enterprise token
       if (!recaptchaToken) {
         return res.status(400).json({ 
           message: "reCAPTCHA verification required",
@@ -2235,15 +2304,45 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
       
-      const isRecaptchaValid = await verifyRecaptcha(recaptchaToken, 'register');
+      let isRecaptchaValid = false;
+      let riskScore = 0;
+      
+      // Handle development bypass token
+      if (recaptchaToken === 'dev_bypass_token') {
+        const isDevelopment = process.env.NODE_ENV === 'development' || 
+                             req.headers.host?.includes('replit.dev') ||
+                             req.headers.host?.includes('localhost');
+        
+        if (isDevelopment) {
+          console.log('[RECAPTCHA-ENTERPRISE] Development bypass for registration');
+          isRecaptchaValid = true;
+          riskScore = 0.9;
+        }
+      } else {
+        // Use reCAPTCHA Enterprise assessment
+        const assessment = await createAssessment({
+          token: recaptchaToken,
+          recaptchaAction: 'register'
+        });
+        
+        if (assessment && assessment.valid) {
+          riskScore = assessment.score;
+          // Higher threshold for registration (0.6) to prevent bot registrations
+          isRecaptchaValid = riskScore >= 0.6;
+          
+          console.log(`[RECAPTCHA-ENTERPRISE] Registration assessment - Score: ${riskScore}, Valid: ${isRecaptchaValid}`);
+        }
+      }
+      
       if (!isRecaptchaValid) {
         return res.status(400).json({ 
           message: "reCAPTCHA verification failed. Please try again.",
-          code: "RECAPTCHA_FAILED"
+          code: "RECAPTCHA_FAILED",
+          riskScore: riskScore
         });
       }
       
-      console.log(`[RECAPTCHA] Registration verification passed for user: ${username}`);
+      console.log(`[RECAPTCHA-ENTERPRISE] Registration verification passed for user: ${username}`);
       
       // Check if username already exists
       const existingUser = await storage.getUserByUsername(username);
@@ -4206,8 +4305,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Vendor Sub-Account registration endpoint
-  app.post('/api/vendors/register', async (req: Request, res: Response) => {
+  // Vendor Sub-Account registration endpoint with reCAPTCHA Enterprise protection
+  app.post('/api/vendors/register', requireRecaptchaEnterprise('vendor_register', 0.6), async (req: Request, res: Response) => {
     try {
       // Use the same authentication pattern as working endpoints
       let userId = (req.user as any)?.id;
@@ -9949,8 +10048,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Enhanced email validation endpoint with retry logic and app token support
-  app.post('/api/validate-email', async (req: Request, res: Response) => {
+  // Enhanced email validation endpoint with retry logic and app token support, protected by reCAPTCHA Enterprise
+  app.post('/api/validate-email', requireRecaptchaEnterprise('email_validation', 0.4), async (req: Request, res: Response) => {
     try {
       const { email } = req.body;
       const appToken = req.headers['x-clearout-app-token'] as string;
@@ -14539,8 +14638,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Process monthly billing (admin endpoint - typically called by cron job)
-  app.post('/api/admin/process-monthly-billing', async (req: Request, res: Response) => {
+  // Process monthly billing (admin endpoint with reCAPTCHA Enterprise protection)
+  app.post('/api/admin/process-monthly-billing', requireRecaptchaEnterprise('admin_billing', 0.8), async (req: Request, res: Response) => {
     try {
       await commissionService.processMonthlyBilling();
       res.json({ success: true, message: 'Monthly billing processed successfully' });
@@ -14550,8 +14649,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Process overdue payments and block accounts (admin endpoint)
-  app.post('/api/admin/process-overdue-payments', async (req: Request, res: Response) => {
+  // Process overdue payments and block accounts (admin endpoint with reCAPTCHA Enterprise protection)
+  app.post('/api/admin/process-overdue-payments', requireRecaptchaEnterprise('admin_overdue', 0.8), async (req: Request, res: Response) => {
     try {
       const blockedCount = await commissionService.processOverduePayments();
       res.json({ 
@@ -14565,8 +14664,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Process monthly commissions (admin only)
-  app.post('/api/admin/process-commissions', async (req: Request, res: Response) => {
+  // Process monthly commissions (admin only with reCAPTCHA Enterprise protection)
+  app.post('/api/admin/process-commissions', requireRecaptchaEnterprise('admin_commissions', 0.8), async (req: Request, res: Response) => {
     try {
       const { month, year } = req.body;
       
@@ -14593,8 +14692,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Suspend non-paying vendors (admin only)
-  app.post('/api/admin/suspend-non-paying-vendors', async (req: Request, res: Response) => {
+  // Suspend non-paying vendors (admin only with reCAPTCHA Enterprise protection)
+  app.post('/api/admin/suspend-non-paying-vendors', requireRecaptchaEnterprise('admin_suspend', 0.9), async (req: Request, res: Response) => {
     try {
       const results = await commissionService.suspendNonPayingVendors();
       res.json({ success: true, results });
@@ -15803,6 +15902,28 @@ The Dedw3n Team
   });
 
   // ===== RECAPTCHA ENTERPRISE ENDPOINTS =====
+  
+  // reCAPTCHA Enterprise configuration endpoint
+  app.get('/api/recaptcha/config', (req: Request, res: Response) => {
+    res.json({
+      siteKey: '6LcFQForAAAAAAN8Qb50X0uJxT4mcIKLzrM1cKTJ',
+      projectId: 'dedw3n-e440a',
+      actions: {
+        login: { minScore: 0.5 },
+        register: { minScore: 0.6 },
+        contact: { minScore: 0.7 },
+        vendor_register: { minScore: 0.6 },
+        email_validation: { minScore: 0.4 },
+        payment: { minScore: 0.8 },
+        password_reset: { minScore: 0.7 }
+      },
+      thresholds: {
+        low_risk: 0.7,
+        medium_risk: 0.5,
+        high_risk: 0.3
+      }
+    });
+  });
   
   // Test reCAPTCHA Enterprise assessment endpoint
   app.post('/api/recaptcha/test-assessment', async (req: Request, res: Response) => {
