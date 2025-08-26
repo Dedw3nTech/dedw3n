@@ -720,6 +720,9 @@ export default function AuthPage() {
                     {t["Location"] || "Location"}
                   </Label>
                   <RegionSelector
+                    currentRegion={formData.region}
+                    currentCountry={formData.country}
+                    currentCity={formData.city}
                     onRegionChange={(region) => setFormData({ ...formData, region, country: "", city: "" })}
                     onCountryChange={(country) => setFormData({ ...formData, country, city: "" })}
                     onCityChange={(city) => setFormData({ ...formData, city })}
