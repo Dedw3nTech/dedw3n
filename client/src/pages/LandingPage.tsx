@@ -1,7 +1,8 @@
 import React from 'react';
+import newHeroImage from "@assets/spend more time enjoying life (Website) (3)_1756242887808.png";
 
 export default function LandingPage() {
-  const heroImagePath = "/hero-image-new.png";
+  const heroImagePath = newHeroImage;
   
   return (
     <div className="w-full min-h-[calc(150vh-300px)] overflow-hidden">
