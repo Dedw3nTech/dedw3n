@@ -105,6 +105,31 @@ export interface AdminStats {
   shippedOrders: number;
 }
 
+// Cities table for comprehensive global city database
+export const cities = pgTable("cities", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  country: text("country").notNull(),
+  region: text("region").notNull(),
+  population: integer("population"),
+  latitude: doublePrecision("latitude"),
+  longitude: doublePrecision("longitude"),
+  timezone: text("timezone"),
+  isCapital: boolean("is_capital").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+}, (table) => ({
+  countryIdx: index("country_idx").on(table.country),
+  regionIdx: index("region_idx").on(table.region),
+  nameIdx: index("name_idx").on(table.name),
+  populationIdx: index("population_idx").on(table.population)
+}));
+
+export const insertCitySchema = createInsertSchema(cities);
+export const selectCitySchema = createSelectSchema(cities);
+export type InsertCity = z.infer<typeof insertCitySchema>;
+export type City = z.infer<typeof selectCitySchema>;
+
 export interface AdminVendorCommission {
   vendor: {
     id: number;
