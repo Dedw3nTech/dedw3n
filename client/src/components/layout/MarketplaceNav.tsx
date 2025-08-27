@@ -96,181 +96,147 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
   return (
     <div className="bg-white border-b border-gray-200 py-6">
       <div className="container mx-auto px-4">
-        <div className="flex flex-wrap justify-between items-center">
-          <div className="flex flex-wrap justify-center md:justify-start gap-8 md:gap-12">
-            <div 
-              className="cursor-pointer group transition-all duration-300"
-              onClick={() => handleMarketNavigation("c2c")}
-            >
-              <div className="mb-2 flex items-center gap-2">
-                <span className={`text-xs font-medium transition-colors duration-300 ${
-                  marketType === 'c2c' 
-                    ? 'text-black' 
-                    : 'text-black group-hover:text-black'
-                }`} style={{ fontSize: '12px' }}>
-                  {translatedLabels.c2cText}
-                </span>
-              </div>
-              <div className={`h-0.5 transition-all duration-300 ${
+        {/* Single row layout with all navigation buttons */}
+        <div className="flex flex-wrap justify-center items-center gap-4 md:gap-6 lg:gap-8">
+          {/* Market type navigation buttons */}
+          <div 
+            className="cursor-pointer group transition-all duration-300"
+            onClick={() => handleMarketNavigation("c2c")}
+          >
+            <div className="mb-2 flex items-center gap-2">
+              <span className={`text-xs font-medium transition-colors duration-300 ${
                 marketType === 'c2c' 
-                  ? 'bg-black w-full' 
-                  : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
-              }`} />
+                  ? 'text-black' 
+                  : 'text-black group-hover:text-black'
+              }`} style={{ fontSize: '12px' }}>
+                {translatedLabels.c2cText}
+              </span>
             </div>
-            
-            <div 
-              className="cursor-pointer group transition-all duration-300"
-              onClick={() => handleMarketNavigation("b2c")}
-            >
-              <div className="mb-2 flex items-center gap-2">
-                <span className={`text-xs font-medium transition-colors duration-300 ${
-                  marketType === 'b2c' 
-                    ? 'text-black' 
-                    : 'text-black group-hover:text-black'
-                }`} style={{ fontSize: '12px' }}>
-                  {translatedLabels.b2cText}
-                </span>
-              </div>
-              <div className={`h-0.5 transition-all duration-300 ${
-                marketType === 'b2c' 
-                  ? 'bg-black w-full' 
-                  : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
-              }`} />
-            </div>
-            
-            <div 
-              className="cursor-pointer group transition-all duration-300"
-              onClick={() => handleMarketNavigation("b2b")}
-            >
-              <div className="mb-2 flex items-center gap-2">
-                <span className={`text-xs font-medium transition-colors duration-300 ${
-                  marketType === 'b2b' 
-                    ? 'text-black' 
-                    : 'text-black group-hover:text-black'
-                }`} style={{ fontSize: '12px' }}>
-                  {translatedLabels.b2bText}
-                </span>
-              </div>
-              <div className={`h-0.5 transition-all duration-300 ${
-                marketType === 'b2b' 
-                  ? 'bg-black w-full' 
-                  : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
-              }`} />
-            </div>
-            
-            <div 
-              className="cursor-pointer group transition-all duration-300"
-              onClick={() => handleMarketNavigation("rqst")}
-            >
-              <div className="mb-2 flex items-center gap-2">
-                <span className={`text-xs font-medium transition-colors duration-300 ${
-                  marketType === 'rqst' 
-                    ? 'text-black' 
-                    : 'text-black group-hover:text-black'
-                }`} style={{ fontSize: '12px' }}>
-                  {translatedLabels.rqstText}
-                </span>
-              </div>
-              <div className={`h-0.5 transition-all duration-300 ${
-                marketType === 'rqst' 
-                  ? 'bg-black w-full' 
-                  : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
-              }`} />
-            </div>
-            
-            {/* Search bar */}
-            {setSearchTerm && (
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder={translatedLabels.searchPlaceholder}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-10"
-                />
-              </div>
-            )}
+            <div className={`h-0.5 transition-all duration-300 ${
+              marketType === 'c2c' 
+                ? 'bg-black w-full' 
+                : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
+            }`} />
           </div>
           
-          {/* Right corner buttons */}
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              className="px-4 py-2 hover:bg-gray-50 relative"
-              onClick={() => handlePageNavigation("/liked")}
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.likedText}</span>
-                {likedProductsCount > 0 && (
-                  <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold">
-                    {likedProductsCount > 99 ? '99+' : likedProductsCount}
-                  </span>
-                )}
-              </div>
-            </Button>
-
-
-            <Button
-              variant="ghost"
-              className="px-4 py-2 hover:bg-gray-50 relative"
-              onClick={() => handlePageNavigation("/cart")}
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.cartText}</span>
-                {cartItemCount > 0 && (
-                  <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold">
-                    {cartItemCount > 99 ? '99+' : cartItemCount}
-                  </span>
-                )}
-              </div>
-            </Button>
-            
-            <Button
-              variant="ghost"
-              className="px-4 py-2 hover:bg-gray-50 relative"
-              onClick={() => handlePageNavigation("/orders-returns")}
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.ordersText}</span>
-                {ordersNotificationsCount > 0 && (
-                  <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold">
-                    {ordersNotificationsCount > 99 ? '99+' : ordersNotificationsCount}
-                  </span>
-                )}
-              </div>
-            </Button>
-            
-            <Button
-              variant="ghost"
-              className="px-4 py-2 hover:bg-gray-50"
-              onClick={() => handlePageNavigation("/vendor-dashboard")}
-            >
-              <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.vendorText}</span>
-            </Button>
-            
-            {isAuthenticated && (
-              <Button
-                variant="ghost"
-                className="px-4 py-2 hover:bg-gray-50"
-                onClick={() => {
-                  if (userVendor && userVendor.storeName) {
-                    const slug = createStoreSlug(userVendor.storeName);
-                    handlePageNavigation(`/vendor/${slug}`);
-                  } else if (user?.isVendor) {
-                    // For admin and other vendors, try to construct slug from user data or fallback to adminstore
-                    const slug = user?.username === 'admin' ? 'adminstore' : createStoreSlug(user?.name || user?.username || '');
-                    handlePageNavigation(`/vendor/${slug}`);
-                  } else {
-                    // Non-vendors go to vendor dashboard to potentially become one
-                    handlePageNavigation(`/vendor-dashboard`);
-                  }
-                }}
-              >
-                <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.vendorPageText}</span>
-              </Button>
-            )}
-
+          <div 
+            className="cursor-pointer group transition-all duration-300"
+            onClick={() => handleMarketNavigation("b2c")}
+          >
+            <div className="mb-2 flex items-center gap-2">
+              <span className={`text-xs font-medium transition-colors duration-300 ${
+                marketType === 'b2c' 
+                  ? 'text-black' 
+                  : 'text-black group-hover:text-black'
+              }`} style={{ fontSize: '12px' }}>
+                {translatedLabels.b2cText}
+              </span>
+            </div>
+            <div className={`h-0.5 transition-all duration-300 ${
+              marketType === 'b2c' 
+                ? 'bg-black w-full' 
+                : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
+            }`} />
           </div>
+          
+          <div 
+            className="cursor-pointer group transition-all duration-300"
+            onClick={() => handleMarketNavigation("b2b")}
+          >
+            <div className="mb-2 flex items-center gap-2">
+              <span className={`text-xs font-medium transition-colors duration-300 ${
+                marketType === 'b2b' 
+                  ? 'text-black' 
+                  : 'text-black group-hover:text-black'
+              }`} style={{ fontSize: '12px' }}>
+                {translatedLabels.b2bText}
+              </span>
+            </div>
+            <div className={`h-0.5 transition-all duration-300 ${
+              marketType === 'b2b' 
+                ? 'bg-black w-full' 
+                : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
+            }`} />
+          </div>
+          
+          <div 
+            className="cursor-pointer group transition-all duration-300"
+            onClick={() => handleMarketNavigation("rqst")}
+          >
+            <div className="mb-2 flex items-center gap-2">
+              <span className={`text-xs font-medium transition-colors duration-300 ${
+                marketType === 'rqst' 
+                  ? 'text-black' 
+                  : 'text-black group-hover:text-black'
+              }`} style={{ fontSize: '12px' }}>
+                {translatedLabels.rqstText}
+              </span>
+            </div>
+            <div className={`h-0.5 transition-all duration-300 ${
+              marketType === 'rqst' 
+                ? 'bg-black w-full' 
+                : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
+            }`} />
+          </div>
+
+          {/* Action buttons - styled consistently */}
+          <Button
+            variant="ghost"
+            className="px-4 py-2 hover:bg-gray-50 relative"
+            onClick={() => handlePageNavigation("/liked")}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.likedText}</span>
+              {likedProductsCount > 0 && (
+                <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold">
+                  {likedProductsCount > 99 ? '99+' : likedProductsCount}
+                </span>
+              )}
+            </div>
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="px-4 py-2 hover:bg-gray-50 relative"
+            onClick={() => handlePageNavigation("/cart")}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.cartText}</span>
+              {cartItemCount > 0 && (
+                <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold">
+                  {cartItemCount > 99 ? '99+' : cartItemCount}
+                </span>
+              )}
+            </div>
+          </Button>
+          
+          <Button
+            variant="ghost"
+            className="px-4 py-2 hover:bg-gray-50 relative"
+            onClick={() => handlePageNavigation("/orders-returns")}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.ordersText}</span>
+              {ordersNotificationsCount > 0 && (
+                <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold">
+                  {ordersNotificationsCount > 99 ? '99+' : ordersNotificationsCount}
+                </span>
+              )}
+            </div>
+          </Button>
+
+          {/* Search bar - moved to end for better mobile layout */}
+          {setSearchTerm && (
+            <div className="relative flex-1 min-w-[200px] max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder={translatedLabels.searchPlaceholder}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-10"
+              />
+            </div>
+          )}
         </div>
       </div>
 
