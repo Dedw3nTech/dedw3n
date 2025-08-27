@@ -145,6 +145,22 @@ import Analytics from "@/pages/analytics";
 
 import OptimizedNavigation from "@/components/layout/OptimizedNavigation";
 import Footer from "@/components/layout/Footer";
+
+// Conditional Navigation Component that excludes OptimizedNavigation from mobile route
+function ConditionalNavigation() {
+  const [location] = useLocation();
+  
+  // Don't render OptimizedNavigation on mobile route
+  if (location === '/mobile') {
+    return null;
+  }
+  
+  return (
+    <SafeComponentWrapper componentName="OptimizedNavigation">
+      <OptimizedNavigation />
+    </SafeComponentWrapper>
+  );
+}
 import MobileNavigation from "@/components/layout/MobileNavigation";
 import { MarketplaceNav } from "@/components/layout/MarketplaceNav";
 import OfflineSimulator from "@/components/utils/OfflineSimulator";
@@ -514,9 +530,7 @@ function App() {
                                 <DimensionUnitProvider>
                               <ErrorBoundary>
                         <div className="flex flex-col min-h-screen">
-                          <SafeComponentWrapper componentName="OptimizedNavigation">
-                            <OptimizedNavigation />
-                          </SafeComponentWrapper>
+                          <ConditionalNavigation />
                           <GPCBanner />
                           <MarketplaceNavWrapper />
                           <SafeComponentWrapper componentName="Breadcrumbs">
