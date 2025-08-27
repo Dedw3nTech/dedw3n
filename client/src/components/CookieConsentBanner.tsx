@@ -89,7 +89,6 @@ export function CookieConsentBanner() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="flex items-center space-x-3 p-3 border rounded-lg">
-                  <CheckCircle className="h-5 w-5 text-black" />
                   <div>
                     <p className="font-medium text-sm">Necessary Cookies</p>
                     <p className="text-xs text-gray-500">Essential for website functionality</p>
@@ -97,7 +96,6 @@ export function CookieConsentBanner() {
                 </div>
                 
                 <div className="flex items-center space-x-3 p-3 border rounded-lg">
-                  <Info className="h-5 w-5 text-black" />
                   <div>
                     <p className="font-medium text-sm">Analytics Cookies</p>
                     <p className="text-xs text-gray-500">Help us improve our service</p>
@@ -105,7 +103,6 @@ export function CookieConsentBanner() {
                 </div>
                 
                 <div className="flex items-center space-x-3 p-3 border rounded-lg">
-                  <Info className="h-5 w-5 text-black" />
                   <div>
                     <p className="font-medium text-sm">Marketing Cookies</p>
                     <p className="text-xs text-gray-500">Personalized ads and content</p>
@@ -144,7 +141,6 @@ export function CookieConsentBanner() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
                   <div className="flex items-center space-x-3">
-                    <CheckCircle className="h-5 w-5 text-black" />
                     <div>
                       <Label className="font-medium">Necessary Cookies</Label>
                       <p className="text-xs text-gray-500 mt-1">
@@ -157,7 +153,6 @@ export function CookieConsentBanner() {
 
                 <div className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center space-x-3">
-                    <Info className="h-5 w-5 text-black" />
                     <div>
                       <Label className="font-medium">Analytics Cookies</Label>
                       <p className="text-xs text-gray-500 mt-1">
@@ -173,7 +168,6 @@ export function CookieConsentBanner() {
 
                 <div className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center space-x-3">
-                    <Info className="h-5 w-5 text-black" />
                     <div>
                       <Label className="font-medium">Marketing Cookies</Label>
                       <p className="text-xs text-gray-500 mt-1">
@@ -189,7 +183,6 @@ export function CookieConsentBanner() {
 
                 <div className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center space-x-3">
-                    <Settings className="h-5 w-5 text-black" />
                     <div>
                       <Label className="font-medium">Preference Cookies</Label>
                       <p className="text-xs text-gray-500 mt-1">

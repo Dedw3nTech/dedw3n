@@ -132,7 +132,6 @@ export function LowerCookieBanner() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-green-600" />
                     <CardTitle className="text-sm">Necessary Cookies</CardTitle>
                   </div>
                   <div className="flex items-center gap-2">
@@ -151,7 +150,6 @@ export function LowerCookieBanner() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Info className="h-4 w-4 text-blue-600" />
                     <CardTitle className="text-sm">Analytics Cookies</CardTitle>
                   </div>
                   <Switch
@@ -170,7 +168,6 @@ export function LowerCookieBanner() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Cookie className="h-4 w-4 text-purple-600" />
                     <CardTitle className="text-sm">Marketing Cookies</CardTitle>
                   </div>
                   <Switch
@@ -189,7 +186,6 @@ export function LowerCookieBanner() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Settings className="h-4 w-4 text-orange-600" />
                     <CardTitle className="text-sm">Preference Cookies</CardTitle>
                   </div>
                   <Switch
