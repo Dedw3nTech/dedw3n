@@ -146,15 +146,8 @@ import Analytics from "@/pages/analytics";
 import OptimizedNavigation from "@/components/layout/OptimizedNavigation";
 import Footer from "@/components/layout/Footer";
 
-// Conditional Navigation Component that excludes OptimizedNavigation from mobile route
+// Navigation component - now includes mobile route
 function ConditionalNavigation() {
-  const [location] = useLocation();
-  
-  // Don't render OptimizedNavigation on mobile route
-  if (location === '/mobile') {
-    return null;
-  }
-  
   return (
     <SafeComponentWrapper componentName="OptimizedNavigation">
       <OptimizedNavigation />
