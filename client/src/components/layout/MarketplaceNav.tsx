@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState } from 'react';
 import { useLocation } from 'wouter';
 import { useMarketType } from '@/hooks/use-market-type';
 import type { MarketType } from '@/lib/types';
@@ -13,8 +13,8 @@ import { Vendor } from '@shared/schema';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Search, ShoppingBag, Store, Heart, PoundSterling, ChevronDown, Bell, Package, Users, Building2, Warehouse } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { Search, ShoppingBag, Store, Heart, PoundSterling, ChevronDown, Bell, Package, Users, Building2, Warehouse, Menu, X } from 'lucide-react';
 
 interface MarketplaceNavProps {
   searchTerm?: string;
@@ -28,6 +28,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
   const { cartItemCount } = useCart();
   const { user } = useAuth();
   const isAuthenticated = !!user;
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Define translatable texts with stable references
   const navigationTexts = useMemo(() => [
@@ -96,8 +97,8 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
   return (
     <div className="bg-white border-b border-gray-200 py-6">
       <div className="container mx-auto px-4">
-        {/* Single row layout with all navigation buttons */}
-        <div className="flex flex-wrap justify-center items-center gap-4 md:gap-6 lg:gap-8">
+        {/* Desktop layout - horizontal navigation */}
+        <div className="hidden md:flex flex-wrap justify-center items-center gap-4 md:gap-6 lg:gap-8">
           {/* Market type navigation buttons */}
           <div 
             className="cursor-pointer group transition-all duration-300"
@@ -237,6 +238,147 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               />
             </div>
           )}
+        </div>
+
+        {/* Mobile layout - hamburger menu */}
+        <div className="md:hidden">
+          <div className="flex items-center justify-between">
+            {/* Active market type indicator */}
+            <div className="flex items-center">
+              <span className="text-sm font-medium text-gray-700">
+                {marketType === 'c2c' && translatedLabels.c2cText}
+                {marketType === 'b2c' && translatedLabels.b2cText}
+                {marketType === 'b2b' && translatedLabels.b2bText}
+                {marketType === 'rqst' && translatedLabels.rqstText}
+              </span>
+            </div>
+
+            {/* Search bar for mobile */}
+            {setSearchTerm && (
+              <div className="relative flex-1 max-w-xs mx-4">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder={translatedLabels.searchPlaceholder}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 h-8 text-sm"
+                />
+              </div>
+            )}
+
+            {/* Hamburger menu button */}
+            <DropdownMenu open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-9 w-9 p-0"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                >
+                  {isMobileMenuOpen ? (
+                    <X className="h-5 w-5" />
+                  ) : (
+                    <Menu className="h-5 w-5" />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {/* Market Type Selection */}
+                <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Market Types
+                </div>
+                <DropdownMenuItem
+                  onClick={() => {
+                    handleMarketNavigation("c2c");
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`${marketType === 'c2c' ? 'bg-gray-100' : ''}`}
+                >
+                  <Users className="mr-2 h-4 w-4" />
+                  {translatedLabels.c2cText}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    handleMarketNavigation("b2c");
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`${marketType === 'b2c' ? 'bg-gray-100' : ''}`}
+                >
+                  <Store className="mr-2 h-4 w-4" />
+                  {translatedLabels.b2cText}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    handleMarketNavigation("b2b");
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`${marketType === 'b2b' ? 'bg-gray-100' : ''}`}
+                >
+                  <Warehouse className="mr-2 h-4 w-4" />
+                  {translatedLabels.b2bText}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    handleMarketNavigation("rqst");
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`${marketType === 'rqst' ? 'bg-gray-100' : ''}`}
+                >
+                  <Bell className="mr-2 h-4 w-4" />
+                  {translatedLabels.rqstText}
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                {/* Action Buttons */}
+                <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Actions
+                </div>
+                <DropdownMenuItem
+                  onClick={() => {
+                    handlePageNavigation("/liked");
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  <Heart className="mr-2 h-4 w-4" />
+                  {translatedLabels.likedText}
+                  {likedProductsCount > 0 && (
+                    <Badge variant="destructive" className="ml-auto h-5 w-5 rounded-full p-0 text-xs">
+                      {likedProductsCount > 99 ? '99+' : likedProductsCount}
+                    </Badge>
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    handlePageNavigation("/cart");
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  <ShoppingBag className="mr-2 h-4 w-4" />
+                  {translatedLabels.cartText}
+                  {cartItemCount > 0 && (
+                    <Badge variant="destructive" className="ml-auto h-5 w-5 rounded-full p-0 text-xs">
+                      {cartItemCount > 99 ? '99+' : cartItemCount}
+                    </Badge>
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    handlePageNavigation("/orders-returns");
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  <Package className="mr-2 h-4 w-4" />
+                  {translatedLabels.ordersText}
+                  {ordersNotificationsCount > 0 && (
+                    <Badge variant="destructive" className="ml-auto h-5 w-5 rounded-full p-0 text-xs">
+                      {ordersNotificationsCount > 99 ? '99+' : ordersNotificationsCount}
+                    </Badge>
+                  )}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
 
