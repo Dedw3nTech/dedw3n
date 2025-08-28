@@ -1,5 +1,6 @@
 import React from 'react';
 import { SEOHead } from '@/components/seo/SEOHead';
+import heroBackground from "@assets/hero-background.png";
 
 export default function MobileLanding() {
   return (
@@ -14,7 +15,7 @@ export default function MobileLanding() {
       <div 
         className="min-h-screen w-full relative bg-cover bg-center bg-no-repeat flex flex-col"
         style={{
-          backgroundImage: `url('/attached_assets/spend more time enjoying life (395 x 932 px)_1754773395025.png')`,
+          backgroundImage: `url(${heroBackground})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center'
         }}
