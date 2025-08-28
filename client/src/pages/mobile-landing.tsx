@@ -14,7 +14,7 @@ export default function MobileLanding() {
       <div 
         className="min-h-screen w-full relative bg-cover bg-center bg-no-repeat flex flex-col"
         style={{
-          backgroundImage: `url('/attached_assets/hero-background-main.png')`,
+          backgroundImage: `url('/attached_assets/spend more time enjoying life (2)_1756411266938.png')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center'
         }}
