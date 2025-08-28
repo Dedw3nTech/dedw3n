@@ -1,5 +1,5 @@
 import React from 'react';
-import newHeroImage from "@assets/hero-background.png";
+import newHeroImage from "@assets/spend more time enjoying life (Website) (4)_1756244221792.png";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 
 export default function LandingPage() {
