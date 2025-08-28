@@ -377,7 +377,6 @@ export const vendors = pgTable("vendors", {
   // Badge system fields
   badgeLevel: vendorBadgeLevelEnum("badge_level").default("new_vendor"),
   totalSalesAmount: doublePrecision("total_sales_amount").default(0), // Total sales in GBP
-  totalSales: doublePrecision("total_sales").default(0), // Alias for totalSalesAmount
   totalTransactions: integer("total_transactions").default(0), // Total number of transactions
   verificationStatus: text("verification_status").default('pending'), // pending, verified, rejected
   lastBadgeUpdate: timestamp("last_badge_update").defaultNow(),

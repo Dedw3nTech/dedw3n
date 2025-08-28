@@ -44,12 +44,20 @@ async function seedDatabase() {
       console.log('Creating vendor account for admin...');
       adminVendor = await storage.createVendor({
         userId: 1,
+        vendorType: 'business',
         storeName: 'Admin Store',
+        businessName: 'Dedw3n Admin Store',
+        businessType: 'Marketplace',
+        email: 'admin@dedw3n.com',
+        phone: '+44 20 1234 5678',
+        address: '123 Admin Street',
+        city: 'London',
+        state: 'England',
+        zipCode: 'SW1A 1AA',
+        country: 'United Kingdom',
         description: 'The official store of the marketplace',
       });
       
-      // Update the vendor rating separately
-      adminVendor = await storage.updateVendorRating(adminVendor.id, 4.9);
       console.log(`Vendor account created with ID: ${adminVendor.id}`);
     }
 
@@ -62,24 +70,22 @@ async function seedDatabase() {
         {
           name: 'Premium Wireless Headphones',
           description: 'Experience crystal-clear sound with our premium wireless headphones. Features noise cancellation, 30-hour battery life, and comfortable over-ear design.',
+          slug: 'premium-wireless-headphones',
           price: 159.99, // GBP prices
           discountPrice: 129.99,
           category: 'Electronics',
           imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500',
-          inventory: 50,
-          isNew: true,
-          isOnSale: true,
+          marketplace: 'b2c' as const,
           vendorId: adminVendor.id,
         },
         {
           name: 'Smart Fitness Tracker',
           description: 'Track your fitness goals with our advanced fitness tracker. Monitors heart rate, steps, sleep quality, and connects to your smartphone for notifications.',
+          slug: 'smart-fitness-tracker',
           price: 69.99, // GBP prices
           category: 'Electronics',
           imageUrl: 'https://images.unsplash.com/photo-1576243345690-4e4b79b63288?w=500',
-          inventory: 75,
-          isNew: true,
-          isOnSale: false,
+          marketplace: 'b2c' as const,
           vendorId: adminVendor.id,
         },
         {
