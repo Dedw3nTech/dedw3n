@@ -323,7 +323,7 @@ export default function Home() {
       <div className="relative w-full min-h-screen flex items-center justify-center hero-mobile-optimized">
         {/* Responsive background image using local optimized image */}
         <img 
-          src="/attached_assets/spend more time enjoying life (Website) (4)_1756244221792.png"
+          src="/attached_assets/hero-background-main.png"
           alt="Spend more time enjoying life - Dedw3n"
           className="absolute inset-0 w-full h-full object-cover"
           loading="eager"
