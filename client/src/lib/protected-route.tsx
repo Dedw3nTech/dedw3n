@@ -32,3 +32,37 @@ export function ProtectedRoute({ path, component: Component }: ProtectedRoutePro
     </Route>
   );
 }
+
+type AdminOnlyRouteProps = {
+  path: string;
+  component: ComponentType<any>;
+};
+
+export function AdminOnlyRoute({ path, component: Component }: AdminOnlyRouteProps) {
+  const { user, isLoading } = useAuth();
+
+  return (
+    <Route path={path}>
+      {(params) => {
+        if (isLoading) {
+          return (
+            <div className="flex items-center justify-center min-h-screen">
+              <Loader2 className="h-8 w-8 animate-spin text-border" />
+            </div>
+          );
+        }
+
+        if (!user) {
+          return <Redirect to="/" />;
+        }
+
+        if (user.role !== 'admin') {
+          return <Redirect to="/" />;
+        }
+
+        // Render the admin-only component with all original props
+        return <Component {...params} />;
+      }}
+    </Route>
+  );
+}

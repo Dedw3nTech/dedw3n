@@ -51,11 +51,12 @@ export default function OptimizedNavigation() {
   const { showLoginPrompt } = useLoginPrompt();
   
   // User authentication state
-  const { data: userData } = useQuery<{ id: number; username: string; isVendor: boolean }>({
+  const { data: userData } = useQuery<{ id: number; username: string; isVendor: boolean; role: string }>({
     queryKey: ["/api/user"],
   });
   
   const isLoggedIn = !!userData;
+  const isAdmin = userData?.role === 'admin';
 
   // Define translatable texts with stable references for DOM-safe translation
   const headerTexts = useMemo(() => [
@@ -96,26 +97,34 @@ export default function OptimizedNavigation() {
   });
 
   // Main navigation items using translated labels
-  const mainNavItems = useMemo(() => [
-    {
-      title: translatedLabels.marketplace,
-      href: "/marketplace/b2c",
-      icon: Store,
-      isActive: location.startsWith("/products") || location.startsWith("/marketplace") || location === "/",
-    },
-    {
-      title: translatedLabels.community,
-      href: "/community",
-      icon: Users,
-      isActive: location.startsWith("/community") || location.startsWith("/social") || location.startsWith("/communities"),
-    },
-    {
-      title: translatedLabels.dating,
-      href: "/dating",
-      icon: Heart,
-      isActive: location.startsWith("/dating"),
-    },
-  ], [translatedLabels, location]);
+  const mainNavItems = useMemo(() => {
+    const baseItems = [
+      {
+        title: translatedLabels.marketplace,
+        href: "/marketplace/b2c",
+        icon: Store,
+        isActive: location.startsWith("/products") || location.startsWith("/marketplace") || location === "/",
+      },
+      {
+        title: translatedLabels.community,
+        href: "/community",
+        icon: Users,
+        isActive: location.startsWith("/community") || location.startsWith("/social") || location.startsWith("/communities"),
+      },
+    ];
+
+    // Only add dating navigation for admin users
+    if (isAdmin) {
+      baseItems.push({
+        title: translatedLabels.dating,
+        href: "/dating",
+        icon: Heart,
+        isActive: location.startsWith("/dating"),
+      });
+    }
+
+    return baseItems;
+  }, [translatedLabels, location, isAdmin]);
 
   // Quick access items for authenticated users
   const quickAccessItems = isLoggedIn ? [

@@ -31,7 +31,7 @@ import { useEffect, useState } from "react";
 
 // Initialize advertisement preloader on app startup
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
-import { ProtectedRoute } from "@/lib/protected-route";
+import { ProtectedRoute, AdminOnlyRoute } from "@/lib/protected-route";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import SafeComponentWrapper from "@/components/ui/safe-component-wrapper";
 import { ApiErrorBoundary } from "@/components/ui/api-error-boundary";
@@ -362,10 +362,7 @@ function Router() {
         <SearchPage />
       </Route>
       
-      <Route path="/dating">
-        <SEOHead {...seoConfigs.dating} />
-        <DatingPage />
-      </Route>
+      <AdminOnlyRoute path="/dating" component={DatingPage} />
       <Route path="/profile/:username" component={UserProfilePage} />
       <ProtectedRoute path="/commission-payment/:periodId" component={CommissionPayment} />
       
@@ -424,9 +421,9 @@ function Router() {
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/profile/:username" component={ProfilePage} />
       <ProtectedRoute path="/profile-settings" component={ProfileSettingsPage} />
-      <ProtectedRoute path="/dating-profile" component={DatingProfilePage} />
-      <ProtectedRoute path="/dating-profile/:profileId" component={DatingProfileView} />
-      <ProtectedRoute path="/my-matches" component={MyMatches} />
+      <AdminOnlyRoute path="/dating-profile" component={DatingProfilePage} />
+      <AdminOnlyRoute path="/dating-profile/:profileId" component={DatingProfileView} />
+      <AdminOnlyRoute path="/my-matches" component={MyMatches} />
       <ProtectedRoute path="/settings" component={SettingsPage} />
       <ProtectedRoute path="/wall" component={WallPage} />
       <Route path="/community">
@@ -434,7 +431,7 @@ function Router() {
         <CommunityPage />
       </Route>
       <ProtectedRoute path="/community/ai-tools" component={AICommunityTools} />
-      <ProtectedRoute path="/dating/ai-tools" component={AIDatingTools} />
+      <AdminOnlyRoute path="/dating/ai-tools" component={AIDatingTools} />
 
       <ProtectedRoute path="/events" component={EventsPage} />
       <ProtectedRoute path="/event/:id" component={EventDetailPage} />

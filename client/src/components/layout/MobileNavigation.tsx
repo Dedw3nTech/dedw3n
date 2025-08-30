@@ -15,6 +15,7 @@ export default function MobileNavigation() {
   const [searchOpen, setSearchOpen] = useState(false);
   const { t } = useTranslation();
   const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   
   // Define translatable texts with stable references
   const mobileNavTexts = useMemo(() => [
@@ -60,19 +61,21 @@ export default function MobileNavigation() {
               </button>
             </Link>
 
-            <Link href="/dating">
-              <button className="py-3 px-3 text-gray-500 flex flex-col items-center justify-center min-w-0 w-16">
-                <div className="relative mb-1">
-                  <i className="ri-heart-line text-lg"></i>
-                  {messageData && messageData.count > 0 && (
-                    <Badge className="absolute -top-1 -right-1 w-4 h-4 p-0 flex items-center justify-center">
-                      {messageData.count}
-                    </Badge>
-                  )}
-                </div>
-                <span className="text-xs font-medium">{translations && translations["Dating"] || "Dating"}</span>
-              </button>
-            </Link>
+            {isAdmin && (
+              <Link href="/dating">
+                <button className="py-3 px-3 text-gray-500 flex flex-col items-center justify-center min-w-0 w-16">
+                  <div className="relative mb-1">
+                    <i className="ri-heart-line text-lg"></i>
+                    {messageData && messageData.count > 0 && (
+                      <Badge className="absolute -top-1 -right-1 w-4 h-4 p-0 flex items-center justify-center">
+                        {messageData.count}
+                      </Badge>
+                    )}
+                  </div>
+                  <span className="text-xs font-medium">{translations && translations["Dating"] || "Dating"}</span>
+                </button>
+              </Link>
+            )}
 
             <Link href={user ? "/profile" : "/auth"}>
               <button className="py-3 px-3 text-gray-500 flex flex-col items-center justify-center min-w-0 w-16">
