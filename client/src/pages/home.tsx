@@ -27,7 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, ShoppingCart, PlusCircle, Search, Tag, StarIcon, RefreshCw, Share2, MessageCircle, Users, Mail, Store, Building, Landmark, Heart, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { HeroBackground } from "@/components/ui/HeroBackground";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -320,22 +320,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section with Background Image */}
-      <div className="relative w-full min-h-screen flex items-center justify-center hero-mobile-optimized">
-        {/* Responsive background image using OptimizedImage component */}
-        <OptimizedImage 
-          src="/attached_assets/spend more time enjoying life (395 x 932 px) (1)_1756530189048.png"
-          alt="Spend more time enjoying life - Dedw3n Marketplace"
-          className="absolute inset-0 w-full h-full object-cover"
-          priority={true}
-          loading="eager"
-          onError={() => console.error('Failed to load hero image in home page')}
-          onLoad={() => console.log('Home hero image loaded successfully')}
-        />
-        
-        {/* No text overlay needed - image includes text */}
-
-      </div>
+      {/* Hero Section with Unified Background */}
+      <HeroBackground 
+        className="relative w-full min-h-screen flex items-center justify-center hero-mobile-optimized"
+        alt="Spend more time enjoying life - Dedw3n Marketplace"
+        onError={() => console.error('Failed to load hero image in home page')}
+        onLoad={() => console.log('Home hero image loaded successfully')}
+      />
 
       {/* Products Section */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">

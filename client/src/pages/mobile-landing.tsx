@@ -1,5 +1,6 @@
 import React from 'react';
 import { SEOHead } from '@/components/seo/SEOHead';
+import { HeroBackground } from '@/components/ui/HeroBackground';
 
 export default function MobileLanding() {
   return (
@@ -10,17 +11,14 @@ export default function MobileLanding() {
         keywords="Dedw3n mobile, mobile marketplace, social commerce, mobile shopping, mobile platform"
       />
       
-      {/* Full Screen Background Image Layout */}
-      <div 
-        className="min-h-screen w-full relative bg-cover bg-center bg-no-repeat flex flex-col"
-        style={{
-          backgroundImage: `url('/attached_assets/spend more time enjoying life (395 x 932 px) (1)_1756530189048.png')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        }}
+      {/* Unified Hero Background */}
+      <HeroBackground 
+        alt="Spend more time enjoying life - Dedw3n Mobile"
+        onLoad={() => console.log('Mobile hero background image loaded successfully')}
+        onError={() => console.error('Failed to load mobile hero background image')}
       >
         {/* Content positioned over background */}
-        <div className="relative z-10 flex-1 flex flex-col justify-between px-4 py-8">
+        <div className="flex-1 flex flex-col justify-between px-4 py-8">
           {/* Top Section */}
           <div className="flex-shrink-0">
             {/* Space for global header */}
@@ -36,7 +34,7 @@ export default function MobileLanding() {
             {/* No buttons or UI elements - pure background image experience */}
           </div>
         </div>
-      </div>
+      </HeroBackground>
     </>
   );
 }
