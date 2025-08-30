@@ -297,12 +297,12 @@ function Router() {
       </Route>
 
       <Route path="/mobile">
-        <SEOHead title="Dedw3n Mobile - Spend More Time Enjoying Life" description="Mobile-optimized experience for Dedw3n. Shop, connect, and discover with our comprehensive mobile platform designed for smartphones." />
+        <SEOHead title="Dedw3n Mobile - Social Marketplace Platform" description="Mobile-optimized experience for Dedw3n. Shop, connect, and discover with our comprehensive mobile platform designed for smartphones." />
         <MobileLanding />
       </Route>
 
       <Route path="/">
-        <SEOHead title="Welcome to Dedw3n - The Leading Social Platform for Modern Commerce" description="Spend more time enjoying life. We simplify the complexities of conducting business online. Join millions of users worldwide." />
+        <SEOHead title="Welcome to Dedw3n - The Leading Social Platform for Modern Commerce" description="We simplify the complexities of conducting business online. Join millions of users worldwide." />
         <LandingPage />
       </Route>
 

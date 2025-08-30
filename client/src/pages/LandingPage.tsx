@@ -7,8 +7,8 @@ export default function LandingPage() {
   
   // Hero text translations
   const heroTexts = [
-    "Spend more time enjoying life.",
-    "Together for a prosperous and green planet"
+    "",
+    ""
   ];
 
   // Use Master Translation System
@@ -40,10 +40,10 @@ export default function LandingPage() {
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ paddingTop: '20vh' }}>
           <div className="text-center px-4 max-w-6xl">
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-4 drop-shadow-2xl leading-tight">
-              {t("Spend more time enjoying life.") || "Spend more time enjoying life."}
+              {/* Text removed - included in background image */}
             </h1>
             <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-white mb-6 drop-shadow-lg">
-              {t("Together for a prosperous and green planet") || "Together for a prosperous and green planet"}
+              {/* Text removed - included in background image */}
             </h2>
           </div>
         </div>
