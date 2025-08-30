@@ -4,8 +4,8 @@ import { OptimizedImage } from "@/components/ui/OptimizedImage";
 export default function LandingPage() {
   const [imageError, setImageError] = useState(false);
   
-  // Use the direct path to avoid import issues with special characters
-  const heroImagePath = "/attached_assets/spend more time enjoying life (Website) (5)_1756528982629.png";
+  // Use the new desktop hero image
+  const heroImagePath = "/attached_assets/simplify spend more time enjoying life (Website)_1756530923138.png";
   
   const handleImageError = () => {
     console.error('Failed to load hero image:', heroImagePath);
