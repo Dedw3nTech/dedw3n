@@ -323,24 +323,14 @@ export default function Home() {
       <div className="relative w-full min-h-screen flex items-center justify-center hero-mobile-optimized">
         {/* Responsive background image using local optimized image */}
         <img 
-          src="/attached_assets/hero-background-main.png"
+          src="/attached_assets/spend more time enjoying life (Website) (5)_1756528059778.png"
           alt="Spend more time enjoying life - Dedw3n"
           className="absolute inset-0 w-full h-full object-cover"
           loading="eager"
           decoding="async"
         />
         
-        {/* Translatable text overlay */}
-        <div className="absolute inset-0 flex items-center justify-center" style={{ paddingTop: '20vh' }}>
-          <div className="text-center px-4 max-w-6xl">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-4 drop-shadow-2xl leading-tight">
-              {t("Spend more time enjoying life.") || "Spend more time enjoying life."}
-            </h1>
-            <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-white mb-6 drop-shadow-lg">
-              {t("Together for a prosperous and green planet") || "Together for a prosperous and green planet"}
-            </h2>
-          </div>
-        </div>
+        {/* No text overlay needed - image includes text */}
 
       </div>
 
