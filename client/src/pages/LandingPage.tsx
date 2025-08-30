@@ -1,8 +1,20 @@
-import React from 'react';
-import newHeroImage from "@assets/spend more time enjoying life (Website) (5)_1756528982629.png";
+import React, { useState } from 'react';
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 export default function LandingPage() {
-  const heroImagePath = newHeroImage;
+  const [imageError, setImageError] = useState(false);
+  
+  // Use the direct path to avoid import issues with special characters
+  const heroImagePath = "/attached_assets/spend more time enjoying life (Website) (5)_1756528982629.png";
+  
+  const handleImageError = () => {
+    console.error('Failed to load hero image:', heroImagePath);
+    setImageError(true);
+  };
+
+  const handleImageLoad = () => {
+    console.log('Hero image loaded successfully');
+  };
   
   return (
     <div className="w-full min-h-[calc(150vh-300px)] overflow-hidden">
@@ -10,14 +22,31 @@ export default function LandingPage() {
       <section className="relative w-full h-full min-h-[calc(150vh-300px)]">
         {/* Full image container that fills available space with no white spaces */}
         <div className="absolute inset-0 w-full h-full">
-          <img 
-            src={heroImagePath} 
-            alt="Dedw3n - Professional Business Platform"
-            className="w-full h-full object-cover"
-            style={{
-              objectPosition: 'center center'
-            }}
-          />
+          {!imageError ? (
+            <OptimizedImage 
+              src={heroImagePath} 
+              alt="Dedw3n - Spend More Time Enjoying Life - Professional Business Platform"
+              className="w-full h-full object-cover"
+              priority={true}
+              loading="eager"
+              onLoad={handleImageLoad}
+              onError={handleImageError}
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
+              <div className="text-center max-w-2xl mx-auto px-6">
+                <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4">
+                  Dedw3n
+                </h1>
+                <p className="text-xl md:text-2xl text-gray-700 mb-6">
+                  Professional Business Platform
+                </p>
+                <p className="text-lg text-gray-600">
+                  Spend more time enjoying life
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </div>

@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, ShoppingCart, PlusCircle, Search, Tag, StarIcon, RefreshCw, Share2, MessageCircle, Users, Mail, Store, Building, Landmark, Heart, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -321,13 +322,15 @@ export default function Home() {
     <div className="min-h-screen">
       {/* Hero Section with Background Image */}
       <div className="relative w-full min-h-screen flex items-center justify-center hero-mobile-optimized">
-        {/* Responsive background image using local optimized image */}
-        <img 
+        {/* Responsive background image using OptimizedImage component */}
+        <OptimizedImage 
           src="/attached_assets/spend more time enjoying life (395 x 932 px) (1)_1756530189048.png"
-          alt="Spend more time enjoying life - Dedw3n"
+          alt="Spend more time enjoying life - Dedw3n Marketplace"
           className="absolute inset-0 w-full h-full object-cover"
+          priority={true}
           loading="eager"
-          decoding="async"
+          onError={() => console.error('Failed to load hero image in home page')}
+          onLoad={() => console.log('Home hero image loaded successfully')}
         />
         
         {/* No text overlay needed - image includes text */}
