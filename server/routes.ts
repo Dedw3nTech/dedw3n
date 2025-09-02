@@ -1604,6 +1604,9 @@ const pageContents: Record<string, PageContent> = {
           <li>Agrees to these Business Terms each time they purchase an Item from a Business Seller.</li>
         </ul>
         
+        <h3><strong>Vendor agreement</strong></h3>
+        <p>Dedw3n "vendor agreement" is not a single document, but rather a legally binding agreement for business sellers on the platform, found within the Dedw3n Business Terms of Use. These terms outline the seller's obligations, including compliance with all applicable laws, the Dedw3n Catalogue Rules and the specific rules in the Business Seller's Guide. Professional vendors are identified by a 'Business' tag and are responsible for the items they sell and all related liabilities, acting as independent traders with consumers</p>
+        
         <h3>About These Business Terms</h3>
         <p><strong>These Business Terms.</strong> The Dedw3n Business Terms and Conditions (Business Terms) constitute a legal agreement between you and us, governing your use of our Site and Services. The title of each section indicates whether it pertains specifically to a Business Seller, a Buyer, or applies to all users.</p>
         
