@@ -1918,7 +1918,7 @@ const pageContents: Record<string, PageContent> = {
         </ul>
       </div>
     `,
-    lastUpdated: new Date("2025-07-12")
+    lastUpdated: new Date("2025-09-02")
   },
 };
 
