@@ -1801,6 +1801,121 @@ const pageContents: Record<string, PageContent> = {
         </ul>
         <p><strong>No Partnership:</strong> These Business Terms do not create a partnership or agency relationship between you and us. Neither party has the authority to enter into agreements on behalf of the other or legally bind the other in any capacity.</p>
         <p><strong>Severability:</strong> Should a court or relevant authority determine that any section of these Business Terms is illegal, the remaining sections shall remain in full effect.</p>
+        
+        <h3>UK's Consumer Contracts (Information, Cancellation and Additional Charges) Regulations 2013 For UK users</h3>
+        <h4>Key Aspects of the UK Consumer Contracts Regulations 2013:</h4>
+        <p>Traders must provide detailed, clear, and easily accessible information to consumers before a contract is formed. This information includes:</p>
+        <ul>
+          <li><strong>Main characteristics:</strong> of the goods, services, or digital content.</li>
+          <li><strong>Total price,</strong> including all taxes, and any delivery charges.</li>
+          <li><strong>Delivery costs:</strong> and delivery restrictions.</li>
+          <li><strong>Contract duration:</strong> and conditions for cancellation.</li>
+          <li><strong>Minimum contract duration:</strong> and conditions for termination.</li>
+          <li><strong>How:</strong> a consumer can access the information.</li>
+        </ul>
+        
+        <h4>Cancellation Rights:</h4>
+        <p>Consumers have a statutory 14-day right to cancel most distance or off-premises contracts. How to cancel: Customers must make a clear statement of their intent to cancel. Exceptions: This right does not apply to certain contracts, such as those for gambling, financial services, or residential leases.</p>
+        
+        <h4>No Hidden Charges:</h4>
+        <ul>
+          <li><strong>Pre-ticked boxes and add-ons:</strong> Traders are prohibited from using pre-ticked boxes or automatically adding extras.</li>
+          <li><strong>Active opt-in:</strong> Consumers must actively opt in to any additional features or services.</li>
+        </ul>
+        
+        <h4>Digital Content</h4>
+        <p>System requirements: Information must be provided on what systems or hardware digital content will work with.</p>
+        <p>Waiver for downloads: For digital content that can be downloaded, businesses must obtain a waiver from the consumer before the download to allow for the 14-day cancellation right.</p>
+        
+        <h4>Payment Obligation</h4>
+        <p>Explicit acknowledgment: When placing an order online, consumers must explicitly acknowledge that the order means they have an obligation to pay.</p>
+        
+        <h3>Key Aspects of the Consumer Rights Act 2015 for UK Users:</h3>
+        <h4>Goods:</h4>
+        <ul>
+          <li><strong>Quality, Fitness, and Description:</strong> Goods must be of satisfactory quality, fit for purpose, and as described by the retailer.</li>
+          <li><strong>Right to Reject:</strong> Consumers can reject faulty goods within 30 days of purchase to receive a full refund.</li>
+          <li><strong>Repair or Replacement:</strong> After 30 days, if the goods are faulty, consumers have a right to a repair or replacement. If a repair isn't possible or successful, a price reduction or refund may be available.</li>
+        </ul>
+        
+        <h4>Services:</h4>
+        <p>Services must be provided with reasonable care and skill. If a service does not meet these standards, the consumer may be entitled to a refund or other remedies.</p>
+        
+        <h4>Digital Content:</h4>
+        <p>The Act gives consumers the right to repair or replacement for faulty digital content, such as games or e-books.</p>
+        
+        <h3>INFORM Consumers Act For USA users</h3>
+        <h4>Our obligations:</h4>
+        <ul>
+          <li><strong>Seller Verification:</strong> Dedw3n must gather and verify contact information, tax ID numbers, and bank details for "high-volume" third-party sellers.</li>
+          <li><strong>Seller Disclosure:</strong> Sellers with a significant revenue threshold (e.g., $20,000 or more) must have their name, physical address, and contact information displayed on their product listings.</li>
+          <li><strong>Information Verification:</strong> This information must be confirmed annually to ensure its accuracy.</li>
+          <li><strong>Reporting Mechanism:</strong> Each product / post or service has a red flag , please click on the red flag to report anything to us. With our clear and accessible mechanism for our users to report suspicious activity.</li>
+          <li><strong>Data Security:</strong> Dedw3n has implemented strong security measures to protect your collected seller information.</li>
+          <li><strong>Suspension of Non-compliant Sellers:</strong> Sellers who fail to provide the required information within a specified timeframe (e.g., 10 days) must be suspended</li>
+        </ul>
+        
+        <h3>The FTC Act for USA users</h3>
+        <p>The FTC Act prohibits unfair or deceptive practices, requiring accurate product descriptions and fair terms for consumers.</p>
+        <p>Traders must provide detailed, clear, and easily accessible information to consumers before a contract is formed. This information includes:</p>
+        <ul>
+          <li><strong>Main characteristics:</strong> of the goods, services, or digital content.</li>
+          <li><strong>Total price,</strong> including all taxes, and any delivery charges.</li>
+          <li><strong>Delivery costs:</strong> and delivery restrictions.</li>
+          <li><strong>Contract duration:</strong> and conditions for cancellation.</li>
+          <li><strong>Minimum contract duration:</strong> and conditions for termination.</li>
+          <li><strong>How:</strong> a consumer can access the information.</li>
+        </ul>
+        
+        <h3>The Digital Services Act (DSA) for EU users</h3>
+        <h4>Our obligations:</h4>
+        <h5>Content Moderation and Illegal Content:</h5>
+        <ul>
+          <li><strong>Removal of Illegal Content:</strong> Each product / post or service has a red flag icon , please click on the red flag to report anything to us. With our clear and accessible mechanism , it is easy for our users to report suspicious activity illegal content, including hate speech, terrorist content, and child sexual abuse material, once notified.</li>
+          <li><strong>Reporting Obligations:</strong> Dew3n will yearly report on the number of removal orders from authorities and notices of illegal content.</li>
+        </ul>
+        
+        <h5>Transparency and Accountability:</h5>
+        <ul>
+          <li><strong>Algorithmic Transparency:</strong> Dedw3n will be transparent about how we use automated content moderation tools and disclose their error rates.</li>
+          <li><strong>Recommender Systems:</strong> We will provide Transparency regarding recommender systems and the ability for users to select options not based on profiling.</li>
+          <li><strong>Advertising Transparency:</strong> Dedw3n will disclose how advertising is presented to users and that content is advertising.</li>
+        </ul>
+        
+        <h5>User Rights and Protection:</h5>
+        <ul>
+          <li><strong>Protection of Minors:</strong> The DSA prohibits targeted advertising based on minors' personal data.</li>
+          <li><strong>Challenging Decisions:</strong> Users can challenge decisions on content moderation, such as content removal or account suspension.</li>
+          <li><strong>Ban on Dark Patterns:</strong> Misleading interfaces designed to trick users into making unwanted choices are banned.</li>
+        </ul>
+        
+        <h5>Combatting Illegal Goods:</h5>
+        <p>Specific obligations are imposed on Dedw3n online marketplaces to combat the sale of illegal products and services. All products need to adhere to our Catalogue Rules.</p>
+        
+        <h5>Know Your Business Customer (KYBC):</h5>
+        <p>"Know Your Business Customer" requirements are imposed on Dedw3n to verify Business information and to ensure, that we know the businesses that are selling on our platform.</p>
+        
+        <h3>Product Safety Regulation (GPSR) For Vendors selling in the EU</h3>
+        <h4>Product Safety & Risk Management</h4>
+        <ul>
+          <li><strong>Safety Assessment:</strong> Businesses must conduct risk assessments to ensure products are safe for consumers under normal or reasonably foreseeable use.</li>
+          <li><strong>Testing for Harmful Substances:</strong> Products must be tested to ensure they are free from harmful levels of substances like nickel, lead, and cadmium.</li>
+          <li><strong>Ongoing Compliance:</strong> Businesses must monitor and maintain product safety over time, especially when suppliers, materials, or designs change.</li>
+        </ul>
+        
+        <h4>Labeling & Information</h4>
+        <h5>Mandatory Labeling:</h5>
+        <p>Products must display clear labeling, including the manufacturer's name, address, contact details, and a traceability reference (e.g., serial or batch number).</p>
+        
+        <h5>Safety Warnings:</h5>
+        <p>Safety warnings and instructions for use must be provided on the product, packaging, or documentation in the official language(s) of the market where it is sold.</p>
+        
+        <h4>Responsibility & Documentation</h4>
+        <ul>
+          <li><strong>Authorised Representative:</strong> Non-EU businesses must appoint an EU-based company to act as a responsible person or authorized representative.</li>
+          <li><strong>Technical Documentation:</strong> Manufacturers are required to maintain technical documentation and a Declaration of Conformity.</li>
+          <li><strong>Traceability:</strong> Products must have identification marks (like a batch or serial number) to allow traceability throughout the supply chain.</li>
+        </ul>
       </div>
     `,
     lastUpdated: new Date("2025-07-12")

@@ -1,0 +1,80 @@
+ UK's Consumer Contracts (Information, Cancellation and Additional Charges) Regulations 2013 For UK users 
+Key Aspects of the UK Consumer Contracts Regulations 2013:
+Traders must provide detailed, clear, and easily accessible information to consumers before a contract is formed. This information includes: 
+•	Main characteristics: of the goods, services, or digital content.
+•	Total price, including all taxes, and any delivery charges.
+•	Delivery costs: and delivery restrictions.
+•	Contract duration: and conditions for cancellation.
+•	Minimum contract duration: and conditions for termination.
+•	How: a consumer can access the information.
+
+Cancellation Rights: Consumers have a statutory 14-day right to cancel most distance or off-premises contracts. How to cancel: Customers must make a clear statement of their intent to cancel. Exceptions: This right does not apply to certain contracts, such as those for gambling, financial services, or residential leases.
+
+
+No Hidden Charges: 
+•	Pre-ticked boxes and add-ons: Traders are prohibited from using pre-ticked boxes or automatically adding extras. 
+•	Active opt-in: Consumers must actively opt in to any additional features or services.
+Digital Content System requirements: Information must be provided on what systems or hardware digital content will work with. 
+Waiver for downloads: For digital content that can be downloaded, businesses must obtain a waiver from the consumer before the download to allow for the 14-day cancellation right.
+ Payment Obligation 
+Explicit acknowledgment: When placing an order online, consumers must explicitly acknowledge that the order means they have an obligation to pay.
+Key Aspects of the Consumer Rights Act 2015  for UK Users:
+Goods: 
+•	Quality,
+•	 Fitness, and Description: Goods must be of satisfactory quality,
+•	 fit for purpose, and as described by the retailer.
+•	 Right to Reject: Consumers can reject faulty goods within 30 days of purchase to receive a full refund. 
+•	Repair or Replacement: After 30 days, if the goods are faulty, consumers have a right to a repair or replacement. If a repair isn't possible or successful, a price reduction or refund may be available. 
+
+Services: Services must be provided with reasonable care and skill. If a service does not meet these standards, the consumer may be entitled to a refund or other remedies. 
+Digital Content: The Act gives consumers the right to repair or replacement for faulty digital content, such as games or e-books.
+
+INFORM Consumers Act  For  USA users 
+Our obligations: 
+Seller Verification: Dedw3n must gather and verify contact information, tax ID numbers, and bank details for "high-volume" third-party sellers. 
+Seller Disclosure: Sellers with a significant revenue threshold (e.g., $20,000 or more) must have their name, physical address, and contact information displayed on their product listings.
+Information Verification: This information must be confirmed annually to ensure its accuracy.
+Reporting Mechanism:  Each product / post or service has a red flag , please click on the red flag to report anything to us. With our clear and accessible mechanism for our users to report suspicious activity. 
+Data Security: Dedw3n has  implemented strong security measures to protect your  collected seller information. 
+Suspension of Non-compliant Sellers: Sellers who fail to provide the required information within a specified timeframe (e.g., 10 days) must be suspended
+
+The FTC Act for USA users
+The FTC Act prohibits unfair or deceptive practices, requiring accurate product descriptions and fair terms for consumers. 
+Traders must provide detailed, clear, and easily accessible information to consumers before a contract is formed. This information includes: 
+•	Main characteristics: of the goods, services, or digital content.
+•	Total price, including all taxes, and any delivery charges.
+•	Delivery costs: and delivery restrictions.
+•	Contract duration: and conditions for cancellation.
+•	Minimum contract duration: and conditions for termination.
+•	How: a consumer can access the information.
+
+The Digital Services Act (DSA) for  EU users
+Our obligations:
+Content Moderation and Illegal Content: 
+Removal of Illegal Content: Each product / post or service has a red flag icon , please click on the red flag to report anything to us. With our clear and accessible mechanism , it is easy for our users to report suspicious activity illegal content, including hate speech, terrorist content, and child sexual abuse material, once notified. 
+Reporting Obligations: Dew3n will yearly  report on the number of removal orders from authorities and notices of illegal content. 
+Transparency and Accountability: Algorithmic Transparency: Dedw3n will  be transparent about how we use automated content moderation tools and disclose their error rates.
+ Recommender Systems: We will provide  Transparency regarding recommender systems and the ability for users to select options not based on profiling. 
+Advertising Transparency: Dedw3n  will  disclose how advertising is presented to users and that content is advertising. 
+User Rights and Protection: Protection of Minors: The DSA prohibits targeted advertising based on minors' personal data. 
+Challenging Decisions: Users can challenge decisions on content moderation, such as content removal or account suspension. Ban on Dark Patterns: Misleading interfaces designed to trick users into making unwanted choices are banned.
+Combatting Illegal Goods: Specific obligations are imposed on Dedw3n online marketplaces to combat the sale of illegal products and services. All products need to adhere to our Catalogue Rules.
+ Know Your Business Customer (KYBC): "Know Your Business Customer" requirements are imposed on Dedw3n to verify Business information and  to ensure, that we  know the businesses  that are selling on our platform.
+
+Product Safety Regulation (GPSR) For Vendors selling in the EU 
+Product Safety & Risk Management 
+Safety Assessment: Businesses must conduct risk assessments to ensure products are safe for consumers under normal or reasonably foreseeable use.
+Testing for Harmful Substances: Products must be tested to ensure they are free from harmful levels of substances like nickel, lead, and cadmium.
+Ongoing Compliance: Businesses must monitor and maintain product safety over time, especially when suppliers, materials, or designs change.
+Labeling & Information
+Mandatory Labeling:
+Products must display clear labeling, including the manufacturer's name, address, contact details, and a traceability reference (e.g., serial or batch number). 
+Safety Warnings:
+Safety warnings and instructions for use must be provided on the product, packaging, or documentation in the official language(s) of the market where it is sold. 
+Responsibility & Documentation
+Authorised Representative:
+Non-EU businesses must appoint an EU-based company to act as a responsible person or authorized representative. 
+Technical Documentation:
+Manufacturers are required to maintain technical documentation and a Declaration of Conformity. 
+Traceability:
+Products must have identification marks (like a batch or serial number) to allow traceability throughout the supply chain. 
