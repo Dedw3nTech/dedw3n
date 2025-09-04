@@ -99,12 +99,12 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
       <div className="container mx-auto px-4">
         {/* Desktop layout - horizontal navigation */}
         <div className="hidden md:flex flex-wrap justify-center items-center gap-4 md:gap-6 lg:gap-8">
-          {/* Market type navigation buttons */}
+          {/* Market type navigation buttons - aligned consistently */}
           <div 
-            className="cursor-pointer group transition-all duration-300"
+            className="cursor-pointer group transition-all duration-300 h-[40px] flex items-center"
             onClick={() => handleMarketNavigation("c2c")}
           >
-            <div className="mb-2 flex items-center gap-2">
+            <div className="relative">
               <span className={`text-xs font-medium transition-colors duration-300 ${
                 marketType === 'c2c' 
                   ? 'text-black' 
@@ -112,19 +112,19 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               }`} style={{ fontSize: '12px' }}>
                 {translatedLabels.c2cText}
               </span>
+              <div className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
+                marketType === 'c2c' 
+                  ? 'bg-black w-full' 
+                  : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
+              }`} />
             </div>
-            <div className={`h-0.5 transition-all duration-300 ${
-              marketType === 'c2c' 
-                ? 'bg-black w-full' 
-                : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
-            }`} />
           </div>
           
           <div 
-            className="cursor-pointer group transition-all duration-300"
+            className="cursor-pointer group transition-all duration-300 h-[40px] flex items-center"
             onClick={() => handleMarketNavigation("b2c")}
           >
-            <div className="mb-2 flex items-center gap-2">
+            <div className="relative">
               <span className={`text-xs font-medium transition-colors duration-300 ${
                 marketType === 'b2c' 
                   ? 'text-black' 
@@ -132,19 +132,19 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               }`} style={{ fontSize: '12px' }}>
                 {translatedLabels.b2cText}
               </span>
+              <div className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
+                marketType === 'b2c' 
+                  ? 'bg-black w-full' 
+                  : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
+              }`} />
             </div>
-            <div className={`h-0.5 transition-all duration-300 ${
-              marketType === 'b2c' 
-                ? 'bg-black w-full' 
-                : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
-            }`} />
           </div>
           
           <div 
-            className="cursor-pointer group transition-all duration-300"
+            className="cursor-pointer group transition-all duration-300 h-[40px] flex items-center"
             onClick={() => handleMarketNavigation("b2b")}
           >
-            <div className="mb-2 flex items-center gap-2">
+            <div className="relative">
               <span className={`text-xs font-medium transition-colors duration-300 ${
                 marketType === 'b2b' 
                   ? 'text-black' 
@@ -152,19 +152,19 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               }`} style={{ fontSize: '12px' }}>
                 {translatedLabels.b2bText}
               </span>
+              <div className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
+                marketType === 'b2b' 
+                  ? 'bg-black w-full' 
+                  : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
+              }`} />
             </div>
-            <div className={`h-0.5 transition-all duration-300 ${
-              marketType === 'b2b' 
-                ? 'bg-black w-full' 
-                : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
-            }`} />
           </div>
           
           <div 
-            className="cursor-pointer group transition-all duration-300"
+            className="cursor-pointer group transition-all duration-300 h-[40px] flex items-center"
             onClick={() => handleMarketNavigation("rqst")}
           >
-            <div className="mb-2 flex items-center gap-2">
+            <div className="relative">
               <span className={`text-xs font-medium transition-colors duration-300 ${
                 marketType === 'rqst' 
                   ? 'text-black' 
@@ -172,18 +172,18 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               }`} style={{ fontSize: '12px' }}>
                 {translatedLabels.rqstText}
               </span>
+              <div className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
+                marketType === 'rqst' 
+                  ? 'bg-black w-full' 
+                  : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
+              }`} />
             </div>
-            <div className={`h-0.5 transition-all duration-300 ${
-              marketType === 'rqst' 
-                ? 'bg-black w-full' 
-                : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
-            }`} />
           </div>
 
-          {/* Action buttons - styled consistently */}
+          {/* Action buttons - styled consistently with same height */}
           <Button
             variant="ghost"
-            className="px-4 py-2 hover:bg-gray-50 relative"
+            className="px-4 py-2 hover:bg-gray-50 relative h-[40px]"
             onClick={() => handlePageNavigation("/liked")}
           >
             <div className="flex items-center gap-2">
@@ -198,7 +198,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
 
           <Button
             variant="ghost"
-            className="px-4 py-2 hover:bg-gray-50 relative"
+            className="px-4 py-2 hover:bg-gray-50 relative h-[40px]"
             onClick={() => handlePageNavigation("/cart")}
           >
             <div className="flex items-center gap-2">
@@ -213,7 +213,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
           
           <Button
             variant="ghost"
-            className="px-4 py-2 hover:bg-gray-50 relative"
+            className="px-4 py-2 hover:bg-gray-50 relative h-[40px]"
             onClick={() => handlePageNavigation("/orders-returns")}
           >
             <div className="flex items-center gap-2">
