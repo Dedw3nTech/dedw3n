@@ -4,8 +4,8 @@ import { OptimizedImage } from "@/components/ui/OptimizedImage";
 export default function LandingPage() {
   const [imageError, setImageError] = useState(false);
   
-  // Use the new desktop hero image
-  const heroImagePath = "/attached_assets/simplify spend more time enjoying life (Website)_1756530923138.png";
+  // Use the coming soon desktop hero image
+  const heroImagePath = "/attached_assets/coming soon_1756963751096.png";
   
   const handleImageError = () => {
     console.error('Failed to load hero image:', heroImagePath);
@@ -25,7 +25,7 @@ export default function LandingPage() {
           {!imageError ? (
             <OptimizedImage 
               src={heroImagePath} 
-              alt="Dedw3n - Spend More Time Enjoying Life - Professional Business Platform"
+              alt="Dedw3n - Coming Soon - Professional Business Platform"
               className="w-full h-full object-cover"
               priority={true}
               loading="eager"

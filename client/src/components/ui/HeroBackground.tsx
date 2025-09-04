@@ -12,7 +12,7 @@ interface HeroBackgroundProps {
 export function HeroBackground({
   children,
   className = "min-h-screen w-full relative flex flex-col",
-  alt = "Spend more time enjoying life - Dedw3n",
+  alt = "Coming Soon - Dedw3n",
   onLoad,
   onError
 }: HeroBackgroundProps) {
@@ -30,7 +30,7 @@ export function HeroBackground({
     <div className={className}>
       {/* Unified Background using OptimizedImage */}
       <OptimizedImage 
-        src="/attached_assets/spend more time enjoying life (395 x 932 px) (1)_1756533935746.png"
+        src="/attached_assets/coming soon_1756963751096.png"
         alt={alt}
         className="absolute inset-0 w-full h-full object-cover"
         priority={true}
