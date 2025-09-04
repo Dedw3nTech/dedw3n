@@ -13,7 +13,8 @@ export default function MobileLanding() {
       
       {/* Unified Hero Background */}
       <HeroBackground 
-        alt="Spend more time enjoying life - Dedw3n Mobile"
+        src="/attached_assets/coming soon web app mobile_1756964116626.png"
+        alt="Coming Soon - Dedw3n Mobile App"
         onLoad={() => console.log('Mobile hero background image loaded successfully')}
         onError={() => console.error('Failed to load mobile hero background image')}
       >

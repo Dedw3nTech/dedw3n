@@ -5,6 +5,7 @@ interface HeroBackgroundProps {
   children?: React.ReactNode;
   className?: string;
   alt?: string;
+  src?: string;
   onLoad?: () => void;
   onError?: () => void;
 }
@@ -13,6 +14,7 @@ export function HeroBackground({
   children,
   className = "min-h-screen w-full relative flex flex-col",
   alt = "Coming Soon - Dedw3n",
+  src = "/attached_assets/coming soon_1756963751096.png",
   onLoad,
   onError
 }: HeroBackgroundProps) {
@@ -30,7 +32,7 @@ export function HeroBackground({
     <div className={className}>
       {/* Unified Background using OptimizedImage */}
       <OptimizedImage 
-        src="/attached_assets/coming soon_1756963751096.png"
+        src={src}
         alt={alt}
         className="absolute inset-0 w-full h-full object-cover"
         priority={true}

@@ -42,6 +42,19 @@ export default function Home() {
   const { selectedCurrency, formatPrice } = useCurrency();
   const [, setLocation] = useLocation();
   
+  // Mobile detection for responsive image
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
   // Set page title
   usePageTitle({ title: 'Home' });
 
@@ -322,8 +335,9 @@ export default function Home() {
     <div className="min-h-screen">
       {/* Hero Section with Unified Background */}
       <HeroBackground 
+        src={isMobile ? "/attached_assets/coming soon web app mobile_1756964116626.png" : "/attached_assets/coming soon_1756963751096.png"}
         className="relative w-full min-h-screen flex items-center justify-center hero-mobile-optimized"
-        alt="Spend more time enjoying life - Dedw3n Marketplace"
+        alt={isMobile ? "Coming Soon - Dedw3n Mobile App" : "Coming Soon - Dedw3n"}
         onError={() => console.error('Failed to load hero image in home page')}
         onLoad={() => console.log('Home hero image loaded successfully')}
       />
