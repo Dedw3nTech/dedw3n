@@ -32,8 +32,6 @@ const Logo: FC<LogoProps> = ({ size = 'md', withText = true, className = '' }) =
             <span className="font-bold text-black text-xl">
               Dedw3n
             </span>
-
-            <span className="ml-2 text-sm font-medium text-[#cf0000]">Under Maintenance</span>
           </div>
         )}
       </div>
