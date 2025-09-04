@@ -482,7 +482,16 @@ app.use((req, res, next) => {
       '/add-product', '/upload-product', '/vendor-dashboard', '/become-vendor', '/become-business-vendor',
       '/my-matches', '/dating-profile', '/events', '/premium-videos', '/orders-returns', '/payment-gateway', '/commission-payment', '/test-cookies', '/video-demo',
       '/marketplace', '/marketplace/b2b', '/marketplace/b2c', '/marketplace/c2c', '/marketplace/rqst',
-      '/vendors', '/government', '/community', '/auth', '/verify-email', '/sitemap'
+      '/vendors', '/government', '/community', '/auth', '/verify-email', '/sitemap',
+      // Social and community routes
+      '/social', '/social-console', '/social-insights', '/ai-insights',
+      // User content and interaction routes
+      '/liked', '/saved-posts', '/members', '/wallet', '/spending-analytics', '/vendor-analytics', '/analytics',
+      '/profile-settings', '/vendor-register', '/affiliate-partnership', '/api-test',
+      // Payment callback routes
+      '/pawapay/deposit/callback', '/pawapay/payout/callback', '/pawapay/refund/callback',
+      // Admin email route
+      '/admin/email', '/remove-ads'
     ];
     
     // Check for dynamic routes patterns that are valid
@@ -495,6 +504,16 @@ app.use((req, res, next) => {
       /^\/wall\/[^/]+$/, // /wall/category
       /^\/dating\/[^/]+$/, // /dating/category
       /^\/vendor\/[^/]+$/, // /vendor/123 or /vendor/adminstore
+      // Social and content routes with parameters
+      /^\/social\/[^/]+$/, // /social/tab
+      /^\/posts\/[^/]+$/, // /posts/123
+      /^\/event\/[^/]+$/, // /event/123
+      /^\/messages(\/[^/]+)?$/, // /messages or /messages/username
+      /^\/premium-videos(\/[^/]+)?$/, // /premium-videos or /premium-videos/123
+      /^\/admin\/[^/]+$/, // /admin/tab
+      /^\/dating-profile(\/[^/]+)?$/, // /dating-profile or /dating-profile/123
+      /^\/commission-payment\/[^/]+$/, // /commission-payment/periodId
+      /^\/product\/[^/]+$/, // /product/identifier
     ];
     
     // Special handling for product routes - validate they exist
