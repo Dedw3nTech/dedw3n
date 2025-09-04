@@ -25,6 +25,12 @@ Disallow: /api/
 Disallow: /uploads/
 Disallow: /attached_assets/
 
+# Block test files and temporary resources
+Disallow: /test-*
+Disallow: *.html
+Allow: /
+Disallow: /simple-upload.html
+
 # Block search with parameters to avoid duplicate content
 Disallow: /*?sort=
 Disallow: /*?filter=
