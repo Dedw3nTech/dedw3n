@@ -153,7 +153,7 @@ export default function OptimizedNavigation() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
-            <Logo variant="transparent" />
+            <Logo variant="navigation" />
           </div>
 
           {/* Right side - Navigation and User menu */}

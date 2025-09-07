@@ -5,6 +5,7 @@ import { Link } from 'wouter';
 const logoImages = {
   transparent: "/dedw3n-logo-transparent.png",
   black: "/dedw3n-logo-black.png",
+  navigation: "/dedw3n-navigation-logo.png",
   default: "/dedw3n-main-logo.png"
 };
 
@@ -12,7 +13,7 @@ interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
   withText?: boolean;
   className?: string;
-  variant?: 'transparent' | 'black' | 'default';
+  variant?: 'transparent' | 'black' | 'navigation' | 'default';
 }
 
 const Logo: FC<LogoProps> = ({ size = 'md', withText = true, className = '', variant = 'default' }) => {
@@ -32,6 +33,8 @@ const Logo: FC<LogoProps> = ({ size = 'md', withText = true, className = '', var
         return logoImages.transparent;
       case 'black':
         return logoImages.black;
+      case 'navigation':
+        return logoImages.navigation;
       case 'default':
       default:
         return logoImages.default;
