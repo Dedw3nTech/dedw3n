@@ -4,7 +4,7 @@ import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 import { motion } from "framer-motion"
-const logoImage = "/dedw3n-main-logo.png"
+const logoImage = "/dedw3n-logo-black.png"
 
 import { cn } from "@/lib/utils"
 
