@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useLocation, Link } from "wouter";
-const dedw3nLogo = "/attached_assets/Dedw3n Logo.png";
+const dedw3nLogo = "/dedw3n-main-logo.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

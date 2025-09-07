@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'wouter';
-import logoImage from '@assets/Copy of Eternal snake  (3)_1757232015602.png';
+import logoImage from '@assets/IMG_5583_1757246004523.jpeg';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
