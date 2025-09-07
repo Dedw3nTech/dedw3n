@@ -32,11 +32,11 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
 
   // Define translatable texts with stable references
   const navigationTexts = useMemo(() => [
-    "Friend2Friend",
+    "Friend to Friend",
     "Online Store", 
     "Wholesale",
-    "Raw",
-    "Requests (RQST)",
+    "Raw Material",
+    "Request",
     "Search products...",
     "Vendor Dashboard",
     "Vendor Page"
