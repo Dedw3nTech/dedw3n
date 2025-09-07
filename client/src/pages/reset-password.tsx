@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, ArrowLeft, CheckCircle } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
-import logoImage from "@assets/Dedw3n Logo.png";
+const logoImage = "/dedw3n-logo-black.png";
 // import { useTranslation } from "react-i18next";
 
 export default function ResetPassword() {

@@ -12,7 +12,7 @@ import { Link } from "wouter";
 // import { useTranslation } from "react-i18next";
 import { usePasswordStrength } from "@/hooks/use-password-strength";
 import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidator";
-import logoImage from "@assets/Dedw3n Logo.png";
+const logoImage = "/dedw3n-logo-black.png";
 
 export default function ResetPasswordConfirm() {
   const [password, setPassword] = useState("");

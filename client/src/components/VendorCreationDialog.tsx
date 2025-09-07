@@ -67,7 +67,7 @@ export function VendorCreationDialog({
           {/* Dedw3n Logo */}
           <div className="flex justify-center">
             <img 
-              src="/attached_assets/D3 black logo (1).png" 
+              src="/dedw3n-logo-black.png" 
               alt="Dedw3n Logo" 
               className="h-12 w-auto"
             />

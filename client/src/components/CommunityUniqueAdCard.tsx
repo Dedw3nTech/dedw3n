@@ -42,7 +42,7 @@ export function CommunityUniqueAdCard() {
           alt={getTranslation("Be Different, Be You - Premium Dedw3n Experience")}
           className="w-full h-auto object-cover cursor-pointer hover:opacity-90 transition-opacity"
           onError={(e) => {
-            e.currentTarget.src = "/dedw3n-main-logo.png";
+            e.currentTarget.src = "/dedw3n-logo-black.png";
           }}
         />
       </a>
