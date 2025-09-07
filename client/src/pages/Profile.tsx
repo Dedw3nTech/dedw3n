@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { useQuery } from '@tanstack/react-query';
@@ -29,6 +29,7 @@ const ProfilePage = () => {
   const isAuthenticated = !!user;
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>('personal-info');
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -98,7 +99,7 @@ const ProfilePage = () => {
       icon: Heart,
       count: likedCount,
       color: 'text-red-500',
-      onClick: () => setLocation('/liked')
+      onClick: () => setActiveSection('liked')
     },
     {
       id: 'cart',
@@ -106,7 +107,7 @@ const ProfilePage = () => {
       icon: ShoppingCart,
       count: cartCount,
       color: 'text-blue-500',
-      onClick: () => setLocation('/cart')
+      onClick: () => setActiveSection('cart')
     },
     {
       id: 'orders',
@@ -114,7 +115,7 @@ const ProfilePage = () => {
       icon: Package,
       count: ordersCount,
       color: 'text-green-500',
-      onClick: () => setLocation('/orders-returns')
+      onClick: () => setActiveSection('orders')
     },
     {
       id: 'vendor',
@@ -161,8 +162,10 @@ const ProfilePage = () => {
                 {sidebarItems.map((item) => (
                   <Button
                     key={item.id}
-                    variant="ghost"
-                    className="w-full justify-between h-12 px-4"
+                    variant={activeSection === item.id ? "default" : "ghost"}
+                    className={`w-full justify-between h-12 px-4 ${
+                      activeSection === item.id ? 'bg-black text-white hover:bg-gray-800' : ''
+                    }`}
                     onClick={item.onClick}
                   >
                     <div className="flex items-center gap-3">
@@ -179,6 +182,21 @@ const ProfilePage = () => {
                     </div>
                   </Button>
                 ))}
+
+                {/* Personal Information Button */}
+                <Button
+                  variant={activeSection === 'personal-info' ? "default" : "ghost"}
+                  className={`w-full justify-between h-12 px-4 ${
+                    activeSection === 'personal-info' ? 'bg-black text-white hover:bg-gray-800' : ''
+                  }`}
+                  onClick={() => setActiveSection('personal-info')}
+                >
+                  <div className="flex items-center gap-3">
+                    <User className="h-5 w-5 text-blue-500" />
+                    <span>{t(6)}</span>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-gray-400" />
+                </Button>
 
                 <Separator className="my-4" />
 
