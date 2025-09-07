@@ -345,7 +345,7 @@ export function Breadcrumbs() {
   }
 
   return (
-    <nav className="flex justify-center items-center text-sm text-gray-600 py-2 px-4 bg-gray-50 border-b" aria-label="Breadcrumb">
+    <nav className="flex items-center space-x-1 text-sm text-gray-600 py-2 px-4 bg-gray-50 border-b" aria-label="Breadcrumb">
       <ol className="flex items-center space-x-1">
         {breadcrumbs.map((item, index) => (
           <li key={index} className="flex items-center">
