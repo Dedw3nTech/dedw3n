@@ -240,6 +240,7 @@ import VideoDemo from "@/pages/video-demo";
 import TestCookiesPage from "@/pages/test-cookies";
 import VendorProfile from "@/pages/vendor-profile";
 import MarketplaceRQST from "@/pages/marketplace-rqst";
+import MarketplaceRaw from "@/pages/marketplace-raw";
 // import ValidationDemo from "@/pages/validation-demo";
 
 
@@ -332,6 +333,10 @@ function Router() {
         <Products />
       </Route>
       
+      <Route path="/marketplace/raw">
+        <SEOHead title="Raw Marketplace - Dedw3n" description="Raw materials marketplace where you can find bulk raw materials, commodities, and unfinished goods for your business." />
+        <MarketplaceRaw />
+      </Route>
       <Route path="/marketplace/rqst">
         <SEOHead title="RQST Marketplace - Dedw3n" description="Request marketplace where you can post product requests and connect with vendors who can fulfill them." />
         <MarketplaceRQST />

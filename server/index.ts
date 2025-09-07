@@ -481,7 +481,7 @@ app.use((req, res, next) => {
       '/subscriptions', '/verify', '/reset-password', '/reset-password-confirm', '/help', '/logout-success',
       '/add-product', '/upload-product', '/vendor-dashboard', '/become-vendor', '/become-business-vendor',
       '/my-matches', '/dating-profile', '/events', '/premium-videos', '/orders-returns', '/payment-gateway', '/commission-payment', '/test-cookies', '/video-demo',
-      '/marketplace', '/marketplace/b2b', '/marketplace/b2c', '/marketplace/c2c', '/marketplace/rqst',
+      '/marketplace', '/marketplace/b2b', '/marketplace/b2c', '/marketplace/c2c', '/marketplace/raw', '/marketplace/rqst',
       '/vendors', '/government', '/community', '/auth', '/verify-email', '/sitemap',
       // Social and community routes
       '/social', '/social-console', '/social-insights', '/ai-insights',
