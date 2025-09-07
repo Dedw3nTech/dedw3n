@@ -102,9 +102,9 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
           <div className="flex-shrink-0">
             {isAuthenticated && (
               <div className="relative">
-                {/* Notification badge positioned above frame */}
+                {/* Notification badge positioned at top-right corner */}
                 {totalNotifications > 0 && (
-                  <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold z-10">
+                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold z-10 border-2 border-white">
                     {totalNotifications > 99 ? '99+' : totalNotifications}
                   </div>
                 )}
