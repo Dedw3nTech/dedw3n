@@ -12,10 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { updateUserData } from '@/lib/userStorage';
-import { Loader2, Store, Heart, Globe, Calendar } from 'lucide-react';
+import { Loader2, Store, Heart, Globe, Calendar, User, CreditCard, Truck, Settings as SettingsIcon, Package, ShoppingCart, BarChart3, DollarSign } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
 import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
+import VendorSettings from '@/components/vendor/VendorSettings';
+import VendorCommissionDashboard from '@/components/vendor/VendorCommissionDashboard';
+import VendorProductManagement from '@/components/vendor/VendorProductManagement';
+import VendorOrderManagement from '@/components/vendor/VendorOrderManagement';
 
 // Calculate age from date of birth
 const calculateAge = (dateOfBirth: string): number => {
@@ -39,6 +43,7 @@ export default function ProfileSettingsPage() {
   const [, setLocation] = useLocation();
   const [isUpdating, setIsUpdating] = useState(false);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
+  const [activeSection, setActiveSection] = useState('profile');
 
   // Define translatable texts for the profile settings page
   const profileTexts = useMemo(() => [
@@ -483,16 +488,308 @@ export default function ProfileSettingsPage() {
     }
   };
 
+  // Sidebar navigation items
+  const sidebarItems = [
+    { id: 'profile', label: 'Profile', icon: User },
+    { id: 'shipping', label: 'Shipping', icon: Truck },
+    { id: 'billing', label: 'Billing', icon: CreditCard },
+    ...(user.isVendor ? [
+      { id: 'vendor-settings', label: 'Vendor Settings', icon: SettingsIcon },
+      { id: 'vendor-products', label: 'Products', icon: Package },
+      { id: 'vendor-orders', label: 'Orders', icon: ShoppingCart },
+      { id: 'vendor-analytics', label: 'Analytics', icon: BarChart3 },
+      { id: 'vendor-commissions', label: 'Commissions', icon: DollarSign }
+    ] : [
+      { id: 'vendor-account', label: 'Vendor Account', icon: Store }
+    ])
+  ];
+
+  // Render content based on active section
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'vendor-settings':
+        return user.isVendor ? <VendorSettings /> : null;
+      case 'vendor-products':
+        return user.isVendor ? <VendorProductManagement /> : null;
+      case 'vendor-orders':
+        return user.isVendor ? <VendorOrderManagement /> : null;
+      case 'vendor-analytics':
+        return user.isVendor ? <div className="p-6"><h2 className="text-2xl font-bold mb-4">Vendor Analytics</h2><p>Analytics content coming soon...</p></div> : null;
+      case 'vendor-commissions':
+        return user.isVendor ? <VendorCommissionDashboard /> : null;
+      case 'vendor-account':
+        return (
+          <div className="p-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-black flex items-center">
+                  <Store className="mr-2 h-5 w-5" />
+                  {translatedLabels.vendorAccount}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center text-sm">
+                  <div className="w-2 h-2 rounded-full bg-red-500 mr-2"></div>
+                  <span className="text-red-600 font-medium">Not Active</span>
+                </div>
+                <p className="text-sm text-black">
+                  Don't have a vendor account yet? <span 
+                    className="text-blue-500 hover:text-blue-700 cursor-pointer underline" 
+                    onClick={() => setLocation('/become-vendor')}
+                  >
+                    Click here to activate your account
+                  </span>
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      case 'shipping':
+        return (
+          <div className="p-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-black flex items-center">
+                  <Truck className="mr-2 h-5 w-5" />
+                  {translatedLabels.shippingInformation}
+                </CardTitle>
+                <CardDescription className="text-black">
+                  {translatedLabels.updateShippingDetails}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="shippingFirstName" className="text-black">{translatedLabels.firstName}</Label>
+                    <Input
+                      id="shippingFirstName"
+                      name="shippingFirstName"
+                      value={formData.shippingFirstName}
+                      onChange={handleInputChange}
+                      placeholder="Enter first name"
+                      className="bg-white text-black"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="shippingLastName" className="text-black">{translatedLabels.lastName}</Label>
+                    <Input
+                      id="shippingLastName"
+                      name="shippingLastName"
+                      value={formData.shippingLastName}
+                      onChange={handleInputChange}
+                      placeholder="Enter last name"
+                      className="bg-white text-black"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="shippingPhone" className="text-black">{translatedLabels.phoneNumber}</Label>
+                  <Input
+                    id="shippingPhone"
+                    name="shippingPhone"
+                    type="tel"
+                    value={formData.shippingPhone}
+                    onChange={handleInputChange}
+                    placeholder="Enter phone number"
+                    className="bg-white text-black"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="shippingAddress" className="text-black">{translatedLabels.address}</Label>
+                  <Input
+                    id="shippingAddress"
+                    name="shippingAddress"
+                    value={formData.shippingAddress}
+                    onChange={handleInputChange}
+                    placeholder="Enter street address"
+                    className="bg-white text-black"
+                  />
+                </div>
+
+                <Button 
+                  onClick={handleProfileUpdate}
+                  disabled={isUpdating}
+                  className="w-full bg-black text-white hover:bg-gray-800"
+                >
+                  {isUpdating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    "Save Shipping Information"
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      case 'billing':
+        return (
+          <div className="p-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-black flex items-center">
+                  <CreditCard className="mr-2 h-5 w-5" />
+                  {translatedLabels.billingInformation}
+                </CardTitle>
+                <CardDescription className="text-black">
+                  {translatedLabels.updateBillingDetails}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="useShippingAsBilling"
+                    checked={formData.useShippingAsBilling}
+                    onChange={(e) => setFormData(prev => ({ ...prev, useShippingAsBilling: e.target.checked }))}
+                    className="rounded"
+                  />
+                  <Label htmlFor="useShippingAsBilling" className="text-black">
+                    {translatedLabels.useShippingAsBilling}
+                  </Label>
+                </div>
+
+                <Button 
+                  onClick={handleProfileUpdate}
+                  disabled={isUpdating}
+                  className="w-full bg-black text-white hover:bg-gray-800"
+                >
+                  {isUpdating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    "Save Billing Information"
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      case 'profile':
+      default:
+        return (
+          <div className="p-6">
+            <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-black">{translatedLabels.profilePicture}</CardTitle>
+                  <CardDescription className="text-black">
+                    {translatedLabels.updateProfilePhoto}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex justify-center">
+                  <ProfilePictureUploader
+                    userId={user.id}
+                    username={user.username}
+                    currentAvatar={formData.avatar || user.avatar || ''}
+                    onUploadSuccess={handleAvatarUpdate}
+                  />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-black">{translatedLabels.personalInformation}</CardTitle>
+                  <CardDescription className="text-black">
+                    {translatedLabels.updatePersonalDetails}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="name" className="text-black">{translatedLabels.fullName}</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      placeholder="Enter full name"
+                      className="bg-white text-black"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="bio" className="text-black">{translatedLabels.bio}</Label>
+                    <Textarea
+                      id="bio"
+                      name="bio"
+                      value={formData.bio}
+                      onChange={handleInputChange}
+                      placeholder={translatedLabels.addBio}
+                      rows={3}
+                      className="bg-white text-black"
+                    />
+                  </div>
+
+                  <Button 
+                    onClick={handleProfileUpdate}
+                    disabled={isUpdating}
+                    className="w-full bg-black text-white hover:bg-gray-800"
+                  >
+                    {isUpdating ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {translatedLabels.saving}
+                      </>
+                    ) : (
+                      translatedLabels.saveChanges
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        );
+    }
+  };
+
   return (
-    <div className="container max-w-3xl pt-6 pb-16 text-black">
+    <div className="container max-w-7xl pt-6 pb-16 text-black">
       <h1 className="text-3xl font-bold mb-6 text-black">{translatedLabels.userSettings}</h1>
       
-      <Tabs defaultValue="profile">
-        <TabsList className="w-full mb-6">
-          <TabsTrigger value="profile" className="flex-1 text-black">{translatedLabels.profile}</TabsTrigger>
-          <TabsTrigger value="shipping" className="flex-1 text-black">{translatedLabels.shipping}</TabsTrigger>
-          <TabsTrigger value="billing" className="flex-1 text-black">{translatedLabels.billing}</TabsTrigger>
-        </TabsList>
+      <div className="flex gap-6">
+        {/* Sidebar */}
+        <div className="w-64 shrink-0">
+          <Card>
+            <CardContent className="p-4">
+              <nav className="space-y-2">
+                {sidebarItems.map((item) => {
+                  const IconComponent = item.icon;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveSection(item.id)}
+                      className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                        activeSection === item.id
+                          ? 'bg-black text-white'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <IconComponent className="mr-3 h-4 w-4" />
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </nav>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1">
+          <Card>
+            {renderContent()}
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
         
         <TabsContent value="profile">
           <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
