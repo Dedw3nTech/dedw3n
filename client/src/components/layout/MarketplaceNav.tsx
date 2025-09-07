@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Search, ShoppingBag, Store, Heart, PoundSterling, ChevronDown, Bell, Package, Users, Building2, Warehouse, Menu, X } from 'lucide-react';
+import { Search, ShoppingBag, Store, Heart, PoundSterling, ChevronDown, Bell, Package, Users, Building2, Warehouse, Menu, X, User } from 'lucide-react';
 
 interface MarketplaceNavProps {
   searchTerm?: string;
@@ -91,8 +91,26 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
     staleTime: 60000,
   });
 
+  // Fetch notification counts for profile badge
+  const { data: messagesNotifications } = useQuery<{ count: number }>({
+    queryKey: ['/api/messages/unread/count'],
+    staleTime: 10000,
+    enabled: isAuthenticated,
+  });
+
+  const { data: generalNotifications } = useQuery<{ count: number }>({
+    queryKey: ['/api/notifications/unread/count'],
+    staleTime: 10000,
+    enabled: isAuthenticated,
+  });
+
   const likedProductsCount = isAuthenticated && Array.isArray(likedProducts) ? likedProducts.length : 0;
   const ordersNotificationsCount = isAuthenticated ? (ordersNotificationsData?.count || 0) : 0;
+  const totalNotifications = (messagesNotifications?.count || 0) + (generalNotifications?.count || 0);
+
+  const handleProfileClick = useCallback(() => {
+    setLocation("/profile");
+  }, [setLocation]);
 
   return (
     <div className="bg-white border-b border-gray-200 py-6">
@@ -238,6 +256,33 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
               />
             </div>
           )}
+
+          {/* Profile Picture with Notification Badge - Desktop */}
+          {isAuthenticated && (
+            <div className="relative">
+              <button
+                onClick={handleProfileClick}
+                className="relative h-10 w-10 rounded-full overflow-hidden border-2 border-gray-200 hover:border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                {user?.avatar ? (
+                  <img 
+                    src={user.avatar} 
+                    alt={user.name || user.username}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-gray-200 flex items-center justify-center">
+                    <User className="h-5 w-5 text-gray-500" />
+                  </div>
+                )}
+                {totalNotifications > 0 && (
+                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold">
+                    {totalNotifications > 99 ? '99+' : totalNotifications}
+                  </div>
+                )}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Mobile layout - hamburger menu */}
@@ -263,6 +308,33 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 h-8 text-sm"
                 />
+              </div>
+            )}
+
+            {/* Profile Picture for Mobile */}
+            {isAuthenticated && (
+              <div className="relative mr-2">
+                <button
+                  onClick={handleProfileClick}
+                  className="relative h-8 w-8 rounded-full overflow-hidden border-2 border-gray-200 hover:border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                >
+                  {user?.avatar ? (
+                    <img 
+                      src={user.avatar} 
+                      alt={user.name || user.username}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-gray-200 flex items-center justify-center">
+                      <User className="h-4 w-4 text-gray-500" />
+                    </div>
+                  )}
+                  {totalNotifications > 0 && (
+                    <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center min-w-[16px] text-[9px] font-bold">
+                      {totalNotifications > 99 ? '99+' : totalNotifications}
+                    </div>
+                  )}
+                </button>
               </div>
             )}
 
