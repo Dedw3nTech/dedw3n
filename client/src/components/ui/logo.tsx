@@ -4,7 +4,7 @@ import { Link } from 'wouter';
 import logoImage from '@assets/Copy of Eternal snake  (3)_1757232015602.png';
 
 interface LogoProps {
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   withText?: boolean;
   className?: string;
 }
@@ -15,7 +15,8 @@ const Logo: FC<LogoProps> = ({ size = 'md', withText = true, className = '' }) =
   const sizeClass = {
     sm: 'h-10',    // small
     md: 'h-14',    // medium
-    lg: 'h-20'     // large
+    lg: 'h-20',    // large
+    xl: 'h-21'     // extra large (1.5x medium)
   };
 
   return (

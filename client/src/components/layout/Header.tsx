@@ -185,8 +185,8 @@ export default function Header() {
     <header className="bg-background shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
-          <div className="flex items-center space-x-3">
-            <Logo size="md" />
+          <div className="flex items-center space-x-3 justify-start flex-1">
+            <Logo size="lg" />
             <span className="text-xs font-bold text-red-600 ml-1">BETA VERSION</span>
           </div>
 

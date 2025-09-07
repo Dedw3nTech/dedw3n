@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Search, ShoppingBag, Store, Heart, PoundSterling, ChevronDown, Bell, Package, Users, Building2, Warehouse, Menu, X, User } from 'lucide-react';
+import { Search, Store, ChevronDown, Bell, Users, Building2, Warehouse, Menu, X, User } from 'lucide-react';
 
 interface MarketplaceNavProps {
   searchTerm?: string;
@@ -37,9 +37,6 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
     "Wholesale",
     "Requests (RQST)",
     "Search products...",
-    "Liked",
-    "Shopping Cart",
-    "Orders & Returns",
     "Vendor Dashboard",
     "Vendor Page"
   ], []);
@@ -54,11 +51,8 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
     b2bText: translatedTexts[2] || navigationTexts[2],
     rqstText: translatedTexts[3] || navigationTexts[3],
     searchPlaceholder: translatedTexts[4] || navigationTexts[4],
-    likedText: translatedTexts[5] || navigationTexts[5],
-    cartText: translatedTexts[6] || navigationTexts[6],
-    ordersText: translatedTexts[7] || navigationTexts[7],
-    vendorText: translatedTexts[8] || navigationTexts[8],
-    vendorPageText: translatedTexts[9] || navigationTexts[9]
+    vendorText: translatedTexts[5] || navigationTexts[5],
+    vendorPageText: translatedTexts[6] || navigationTexts[6]
   }), [translatedTexts, navigationTexts]);
 
   // Memoize navigation handlers to prevent infinite re-renders
@@ -71,18 +65,6 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
     setLocation(path);
   }, [setLocation]);
 
-  // Fetch real notification counts only when authenticated
-  const { data: likedProducts = [] } = useQuery<any[]>({
-    queryKey: ['/api/liked-products'],
-    staleTime: 30000,
-    enabled: isAuthenticated,
-  });
-  
-  const { data: ordersNotificationsData } = useQuery<{ count: number }>({
-    queryKey: ['/api/orders/notifications/count'],
-    staleTime: 10000,
-    enabled: isAuthenticated,
-  });
 
   // Fetch current user's vendor information to generate correct slug
   const { data: userVendor } = useQuery<Vendor>({
@@ -104,8 +86,6 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
     enabled: isAuthenticated,
   });
 
-  const likedProductsCount = isAuthenticated && Array.isArray(likedProducts) ? likedProducts.length : 0;
-  const ordersNotificationsCount = isAuthenticated ? (ordersNotificationsData?.count || 0) : 0;
   const totalNotifications = (messagesNotifications?.count || 0) + (generalNotifications?.count || 0);
 
   const handleProfileClick = useCallback(() => {
@@ -198,51 +178,6 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
             </div>
           </div>
 
-          {/* Action buttons - styled consistently with same height */}
-          <Button
-            variant="ghost"
-            className="px-4 py-2 hover:bg-gray-50 relative h-[40px]"
-            onClick={() => handlePageNavigation("/liked")}
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.likedText}</span>
-              {likedProductsCount > 0 && (
-                <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold">
-                  {likedProductsCount > 99 ? '99+' : likedProductsCount}
-                </span>
-              )}
-            </div>
-          </Button>
-
-          <Button
-            variant="ghost"
-            className="px-4 py-2 hover:bg-gray-50 relative h-[40px]"
-            onClick={() => handlePageNavigation("/cart")}
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.cartText}</span>
-              {cartItemCount > 0 && (
-                <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold">
-                  {cartItemCount > 99 ? '99+' : cartItemCount}
-                </span>
-              )}
-            </div>
-          </Button>
-          
-          <Button
-            variant="ghost"
-            className="px-4 py-2 hover:bg-gray-50 relative h-[40px]"
-            onClick={() => handlePageNavigation("/orders-returns")}
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium" style={{ fontSize: '12px' }}>{translatedLabels.ordersText}</span>
-              {ordersNotificationsCount > 0 && (
-                <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold">
-                  {ordersNotificationsCount > 99 ? '99+' : ordersNotificationsCount}
-                </span>
-              )}
-            </div>
-          </Button>
 
           {/* Search bar - moved to end for better mobile layout */}
           {setSearchTerm && (
@@ -402,52 +337,6 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
 
                 <DropdownMenuSeparator />
 
-                {/* Action Buttons */}
-                <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Actions
-                </div>
-                <DropdownMenuItem
-                  onClick={() => {
-                    handlePageNavigation("/liked");
-                    setIsMobileMenuOpen(false);
-                  }}
-                >
-                  <Heart className="mr-2 h-4 w-4" />
-                  {translatedLabels.likedText}
-                  {likedProductsCount > 0 && (
-                    <Badge variant="destructive" className="ml-auto h-5 w-5 rounded-full p-0 text-xs">
-                      {likedProductsCount > 99 ? '99+' : likedProductsCount}
-                    </Badge>
-                  )}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    handlePageNavigation("/cart");
-                    setIsMobileMenuOpen(false);
-                  }}
-                >
-                  <ShoppingBag className="mr-2 h-4 w-4" />
-                  {translatedLabels.cartText}
-                  {cartItemCount > 0 && (
-                    <Badge variant="destructive" className="ml-auto h-5 w-5 rounded-full p-0 text-xs">
-                      {cartItemCount > 99 ? '99+' : cartItemCount}
-                    </Badge>
-                  )}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    handlePageNavigation("/orders-returns");
-                    setIsMobileMenuOpen(false);
-                  }}
-                >
-                  <Package className="mr-2 h-4 w-4" />
-                  {translatedLabels.ordersText}
-                  {ordersNotificationsCount > 0 && (
-                    <Badge variant="destructive" className="ml-auto h-5 w-5 rounded-full p-0 text-xs">
-                      {ordersNotificationsCount > 99 ? '99+' : ordersNotificationsCount}
-                    </Badge>
-                  )}
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
