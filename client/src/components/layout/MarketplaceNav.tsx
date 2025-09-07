@@ -94,38 +94,40 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
   return (
     <div className="bg-white border-b border-gray-200 py-6">
       <div className="container mx-auto px-4">
-        {/* Desktop layout - horizontal navigation */}
-        <div className="hidden md:flex flex-wrap justify-between items-center gap-4 md:gap-6 lg:gap-8">
-          {/* Profile Picture - moved to LEFT side */}
-          {isAuthenticated && (
-            <div className="relative">
-              {/* Notification badge positioned above frame */}
-              {totalNotifications > 0 && (
-                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold z-10">
-                  {totalNotifications > 99 ? '99+' : totalNotifications}
-                </div>
-              )}
-              <button
-                onClick={handleProfileClick}
-                className="relative h-10 w-10 rounded-full overflow-hidden border-2 border-gray-200 hover:border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
-                {user?.avatar ? (
-                  <img 
-                    src={user.avatar} 
-                    alt={user.name || user.username}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="h-full w-full bg-gray-200 flex items-center justify-center">
-                    <User className="h-5 w-5 text-gray-500" />
+        {/* Desktop layout - horizontal navigation with absolute centered navigation */}
+        <div className="hidden md:flex relative items-center justify-between w-full">
+          {/* Profile Picture - LEFT side */}
+          <div className="flex-shrink-0">
+            {isAuthenticated && (
+              <div className="relative">
+                {/* Notification badge positioned above frame */}
+                {totalNotifications > 0 && (
+                  <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold z-10">
+                    {totalNotifications > 99 ? '99+' : totalNotifications}
                   </div>
                 )}
-              </button>
-            </div>
-          )}
+                <button
+                  onClick={handleProfileClick}
+                  className="relative h-10 w-10 rounded-full overflow-hidden border-2 border-gray-200 hover:border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  {user?.avatar ? (
+                    <img 
+                      src={user.avatar} 
+                      alt={user.name || user.username}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-gray-200 flex items-center justify-center">
+                      <User className="h-5 w-5 text-gray-500" />
+                    </div>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
 
-          {/* Market type navigation buttons - now centered */}
-          <div className="flex items-center gap-4 md:gap-6 lg:gap-8">
+          {/* Market type navigation buttons - ABSOLUTELY CENTERED */}
+          <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-6 lg:gap-8">
             <div 
               className="cursor-pointer group transition-all duration-300 h-[40px] flex items-center"
               onClick={() => handleMarketNavigation("c2c")}
@@ -207,18 +209,20 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
             </div>
           </div>
 
-          {/* Search bar - positioned on the right */}
-          {setSearchTerm && (
-            <div className="relative flex-1 min-w-[200px] max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder={translatedLabels.searchPlaceholder}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-10"
-              />
-            </div>
-          )}
+          {/* Search bar - positioned on the RIGHT side */}
+          <div className="flex-shrink-0">
+            {setSearchTerm && (
+              <div className="relative min-w-[200px] max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder={translatedLabels.searchPlaceholder}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 h-10"
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Mobile layout - hamburger menu */}
