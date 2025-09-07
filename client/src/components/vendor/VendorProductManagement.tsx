@@ -49,7 +49,7 @@ interface Product {
   weight?: number;
   dimensions?: string;
   status: 'draft' | 'active' | 'inactive' | 'out_of_stock';
-  marketplace: 'c2c' | 'b2c' | 'b2b' | 'rqst';
+  marketplace: 'c2c' | 'b2c' | 'b2b' | 'raw' | 'rqst';
   inventory: {
     quantity: number;
     lowStockThreshold: number;

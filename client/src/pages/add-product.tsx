@@ -95,7 +95,7 @@ const productSchema = z.object({
   videoUrl: z.string().optional(),
   vatIncluded: z.boolean().default(false),
   vatRate: z.coerce.number().min(0).max(100).optional(),
-  marketplace: z.enum(['c2c', 'b2c', 'b2b', 'rqst']),
+  marketplace: z.enum(['c2c', 'b2c', 'b2b', 'raw', 'rqst']),
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
   productCode: z.string().optional(),
@@ -560,7 +560,7 @@ export default function AddProduct() {
   // Set default marketplace when available marketplaces change
   useEffect(() => {
     if (availableMarketplaces.length > 0 && !form.getValues('marketplace')) {
-      form.setValue('marketplace', availableMarketplaces[0].value as 'c2c' | 'b2c' | 'b2b' | 'rqst');
+      form.setValue('marketplace', availableMarketplaces[0].value as 'c2c' | 'b2c' | 'b2b' | 'raw' | 'rqst');
     }
   }, [availableMarketplaces, form]);
 
