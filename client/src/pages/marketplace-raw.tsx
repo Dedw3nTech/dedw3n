@@ -522,7 +522,7 @@ export default function MarketplaceRaw() {
                     {translatedTexts[40] || rawTexts[40]}
                   </Button>
                   <Button size="sm" className="flex-1">
-                    {translatedTexts[39] || rawTexts[39]}
+                    {translatedTexts[40] || rawTexts[40]}
                   </Button>
                 </CardFooter>
               </Card>
