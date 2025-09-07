@@ -1,7 +1,8 @@
 import { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'wouter';
-import logoImage from '@assets/IMG_5583_1757246004523.jpeg';
+// Using consistent logo path across all components
+const logoImage = "/dedw3n-main-logo.png";
 // import transparentLogo from '@assets/transparent-logo.png';
 // import blackLogo from '@assets/dedw3n-logo-black.png';
 
