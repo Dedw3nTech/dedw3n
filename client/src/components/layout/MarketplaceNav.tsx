@@ -65,7 +65,6 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
     setLocation(path);
   }, [setLocation]);
 
-
   // Fetch current user's vendor information to generate correct slug
   const { data: userVendor } = useQuery<Vendor>({
     queryKey: ['/api/vendors/me'],
@@ -96,105 +95,16 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
     <div className="bg-white border-b border-gray-200 py-6">
       <div className="container mx-auto px-4">
         {/* Desktop layout - horizontal navigation */}
-        <div className="hidden md:flex flex-wrap justify-center items-center gap-4 md:gap-6 lg:gap-8">
-          {/* Market type navigation buttons - aligned consistently */}
-          <div 
-            className="cursor-pointer group transition-all duration-300 h-[40px] flex items-center"
-            onClick={() => handleMarketNavigation("c2c")}
-          >
-            <div className="relative">
-              <span className={`text-xs font-medium transition-colors duration-300 ${
-                marketType === 'c2c' 
-                  ? 'text-black' 
-                  : 'text-black group-hover:text-black'
-              }`} style={{ fontSize: '12px' }}>
-                {translatedLabels.c2cText}
-              </span>
-              <div className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
-                marketType === 'c2c' 
-                  ? 'bg-black w-full' 
-                  : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
-              }`} />
-            </div>
-          </div>
-          
-          <div 
-            className="cursor-pointer group transition-all duration-300 h-[40px] flex items-center"
-            onClick={() => handleMarketNavigation("b2c")}
-          >
-            <div className="relative">
-              <span className={`text-xs font-medium transition-colors duration-300 ${
-                marketType === 'b2c' 
-                  ? 'text-black' 
-                  : 'text-black group-hover:text-black'
-              }`} style={{ fontSize: '12px' }}>
-                {translatedLabels.b2cText}
-              </span>
-              <div className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
-                marketType === 'b2c' 
-                  ? 'bg-black w-full' 
-                  : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
-              }`} />
-            </div>
-          </div>
-          
-          <div 
-            className="cursor-pointer group transition-all duration-300 h-[40px] flex items-center"
-            onClick={() => handleMarketNavigation("b2b")}
-          >
-            <div className="relative">
-              <span className={`text-xs font-medium transition-colors duration-300 ${
-                marketType === 'b2b' 
-                  ? 'text-black' 
-                  : 'text-black group-hover:text-black'
-              }`} style={{ fontSize: '12px' }}>
-                {translatedLabels.b2bText}
-              </span>
-              <div className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
-                marketType === 'b2b' 
-                  ? 'bg-black w-full' 
-                  : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
-              }`} />
-            </div>
-          </div>
-          
-          <div 
-            className="cursor-pointer group transition-all duration-300 h-[40px] flex items-center"
-            onClick={() => handleMarketNavigation("rqst")}
-          >
-            <div className="relative">
-              <span className={`text-xs font-medium transition-colors duration-300 ${
-                marketType === 'rqst' 
-                  ? 'text-black' 
-                  : 'text-black group-hover:text-black'
-              }`} style={{ fontSize: '12px' }}>
-                {translatedLabels.rqstText}
-              </span>
-              <div className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
-                marketType === 'rqst' 
-                  ? 'bg-black w-full' 
-                  : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
-              }`} />
-            </div>
-          </div>
-
-
-          {/* Search bar - moved to end for better mobile layout */}
-          {setSearchTerm && (
-            <div className="relative flex-1 min-w-[200px] max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder={translatedLabels.searchPlaceholder}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-10"
-              />
-            </div>
-          )}
-
-          {/* Profile Picture with Notification Badge - Desktop */}
+        <div className="hidden md:flex flex-wrap justify-between items-center gap-4 md:gap-6 lg:gap-8">
+          {/* Profile Picture - moved to LEFT side */}
           {isAuthenticated && (
             <div className="relative">
+              {/* Notification badge positioned above frame */}
+              {totalNotifications > 0 && (
+                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold z-10">
+                  {totalNotifications > 99 ? '99+' : totalNotifications}
+                </div>
+              )}
               <button
                 onClick={handleProfileClick}
                 className="relative h-10 w-10 rounded-full overflow-hidden border-2 border-gray-200 hover:border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
@@ -210,12 +120,103 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                     <User className="h-5 w-5 text-gray-500" />
                   </div>
                 )}
-                {totalNotifications > 0 && (
-                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] text-[10px] font-bold">
-                    {totalNotifications > 99 ? '99+' : totalNotifications}
-                  </div>
-                )}
               </button>
+            </div>
+          )}
+
+          {/* Market type navigation buttons - now centered */}
+          <div className="flex items-center gap-4 md:gap-6 lg:gap-8">
+            <div 
+              className="cursor-pointer group transition-all duration-300 h-[40px] flex items-center"
+              onClick={() => handleMarketNavigation("c2c")}
+            >
+              <div className="relative">
+                <span className={`text-xs font-medium transition-colors duration-300 ${
+                  marketType === 'c2c' 
+                    ? 'text-black' 
+                    : 'text-black group-hover:text-black'
+                }`} style={{ fontSize: '12px' }}>
+                  {translatedLabels.c2cText}
+                </span>
+                <div className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
+                  marketType === 'c2c' 
+                    ? 'bg-black w-full' 
+                    : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
+                }`} />
+              </div>
+            </div>
+            
+            <div 
+              className="cursor-pointer group transition-all duration-300 h-[40px] flex items-center"
+              onClick={() => handleMarketNavigation("b2c")}
+            >
+              <div className="relative">
+                <span className={`text-xs font-medium transition-colors duration-300 ${
+                  marketType === 'b2c' 
+                    ? 'text-black' 
+                    : 'text-black group-hover:text-black'
+                }`} style={{ fontSize: '12px' }}>
+                  {translatedLabels.b2cText}
+                </span>
+                <div className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
+                  marketType === 'b2c' 
+                    ? 'bg-black w-full' 
+                    : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
+                }`} />
+              </div>
+            </div>
+            
+            <div 
+              className="cursor-pointer group transition-all duration-300 h-[40px] flex items-center"
+              onClick={() => handleMarketNavigation("b2b")}
+            >
+              <div className="relative">
+                <span className={`text-xs font-medium transition-colors duration-300 ${
+                  marketType === 'b2b' 
+                    ? 'text-black' 
+                    : 'text-black group-hover:text-black'
+                }`} style={{ fontSize: '12px' }}>
+                  {translatedLabels.b2bText}
+                </span>
+                <div className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
+                  marketType === 'b2b' 
+                    ? 'bg-black w-full' 
+                    : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
+                }`} />
+              </div>
+            </div>
+            
+            <div 
+              className="cursor-pointer group transition-all duration-300 h-[40px] flex items-center"
+              onClick={() => handleMarketNavigation("rqst")}
+            >
+              <div className="relative">
+                <span className={`text-xs font-medium transition-colors duration-300 ${
+                  marketType === 'rqst' 
+                    ? 'text-black' 
+                    : 'text-black group-hover:text-black'
+                }`} style={{ fontSize: '12px' }}>
+                  {translatedLabels.rqstText}
+                </span>
+                <div className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
+                  marketType === 'rqst' 
+                    ? 'bg-black w-full' 
+                    : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
+                }`} />
+              </div>
+            </div>
+          </div>
+
+          {/* Search bar - positioned on the right */}
+          {setSearchTerm && (
+            <div className="relative flex-1 min-w-[200px] max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder={translatedLabels.searchPlaceholder}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-10"
+              />
             </div>
           )}
         </div>
@@ -223,6 +224,34 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
         {/* Mobile layout - hamburger menu */}
         <div className="md:hidden">
           <div className="flex items-center justify-between">
+            {/* Profile Picture for Mobile - moved to left side */}
+            {isAuthenticated && (
+              <div className="relative">
+                {/* Notification badge positioned above frame for mobile */}
+                {totalNotifications > 0 && (
+                  <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center min-w-[16px] text-[9px] font-bold z-10">
+                    {totalNotifications > 99 ? '99+' : totalNotifications}
+                  </div>
+                )}
+                <button
+                  onClick={handleProfileClick}
+                  className="relative h-8 w-8 rounded-full overflow-hidden border-2 border-gray-200 hover:border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                >
+                  {user?.avatar ? (
+                    <img 
+                      src={user.avatar} 
+                      alt={user.name || user.username}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-gray-200 flex items-center justify-center">
+                      <User className="h-4 w-4 text-gray-500" />
+                    </div>
+                  )}
+                </button>
+              </div>
+            )}
+
             {/* Active market type indicator */}
             <div className="flex items-center">
               <span className="text-sm font-medium text-gray-700">
@@ -243,33 +272,6 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 h-8 text-sm"
                 />
-              </div>
-            )}
-
-            {/* Profile Picture for Mobile */}
-            {isAuthenticated && (
-              <div className="relative mr-2">
-                <button
-                  onClick={handleProfileClick}
-                  className="relative h-8 w-8 rounded-full overflow-hidden border-2 border-gray-200 hover:border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
-                >
-                  {user?.avatar ? (
-                    <img 
-                      src={user.avatar} 
-                      alt={user.name || user.username}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-full w-full bg-gray-200 flex items-center justify-center">
-                      <User className="h-4 w-4 text-gray-500" />
-                    </div>
-                  )}
-                  {totalNotifications > 0 && (
-                    <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center min-w-[16px] text-[9px] font-bold">
-                      {totalNotifications > 99 ? '99+' : totalNotifications}
-                    </div>
-                  )}
-                </button>
               </div>
             )}
 
@@ -342,9 +344,6 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
           </div>
         </div>
       </div>
-
-
-
     </div>
   );
 }
