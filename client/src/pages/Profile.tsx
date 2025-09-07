@@ -22,8 +22,7 @@ import {
   Settings, 
   ChevronDown, 
   ChevronRight,
-  Edit3,
-  Camera
+  Edit3
 } from 'lucide-react';
 
 const ProfilePage = () => {
@@ -31,7 +30,6 @@ const ProfilePage = () => {
   const { user } = useAuth();
   const isAuthenticated = !!user;
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('personal-info');
 
   // Redirect if not authenticated
@@ -152,10 +150,10 @@ const ProfilePage = () => {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => setIsEditing(!isEditing)}
+                  onClick={() => setLocation('/profile-settings')}
                 >
                   <Edit3 className="h-4 w-4 mr-2" />
-                  {isEditing ? t(12) : t(10)}
+                  {t(10)}
                 </Button>
               </div>
             </CardHeader>
@@ -169,14 +167,6 @@ const ProfilePage = () => {
                       <User className="h-12 w-12" />
                     </AvatarFallback>
                   </Avatar>
-                  {isEditing && (
-                    <Button 
-                      size="sm" 
-                      className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
-                    >
-                      <Camera className="h-4 w-4" />
-                    </Button>
-                  )}
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold">{user.name || user.username}</h3>
@@ -198,8 +188,8 @@ const ProfilePage = () => {
                   <Input 
                     id="name"
                     value={user.name || ''}
-                    disabled={!isEditing}
-                    className={!isEditing ? 'bg-gray-50' : ''}
+                    disabled={true}
+                    className="bg-gray-50"
                   />
                 </div>
 
@@ -208,8 +198,8 @@ const ProfilePage = () => {
                   <Input 
                     id="username"
                     value={user.username || ''}
-                    disabled={!isEditing}
-                    className={!isEditing ? 'bg-gray-50' : ''}
+                    disabled={true}
+                    className="bg-gray-50"
                   />
                 </div>
 
@@ -219,8 +209,8 @@ const ProfilePage = () => {
                     id="email"
                     type="email"
                     value={user.email || ''}
-                    disabled={!isEditing}
-                    className={!isEditing ? 'bg-gray-50' : ''}
+                    disabled={true}
+                    className="bg-gray-50"
                   />
                 </div>
 
@@ -229,8 +219,8 @@ const ProfilePage = () => {
                   <Input 
                     id="phone"
                     value={(user as any)?.phone || ''}
-                    disabled={!isEditing}
-                    className={!isEditing ? 'bg-gray-50' : ''}
+                    disabled={true}
+                    className="bg-gray-50"
                   />
                 </div>
 
@@ -239,22 +229,12 @@ const ProfilePage = () => {
                   <Input 
                     id="location"
                     value={(user as any)?.location || ''}
-                    disabled={!isEditing}
-                    className={!isEditing ? 'bg-gray-50' : ''}
+                    disabled={true}
+                    className="bg-gray-50"
                   />
                 </div>
               </div>
 
-              {isEditing && (
-                <div className="flex gap-4 pt-4">
-                  <Button>
-                    {t(11)}
-                  </Button>
-                  <Button variant="outline" onClick={() => setIsEditing(false)}>
-                    {t(12)}
-                  </Button>
-                </div>
-              )}
 
               {/* Account Statistics */}
               <Separator />
