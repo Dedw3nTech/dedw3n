@@ -790,6 +790,3 @@ export default function ProfileSettingsPage() {
     </div>
   );
 }
-            <div className="md:col-span-1">
-              <Card>
-                <CardHeader>
