@@ -1,4 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
+import LikedProductsContent from '@/components/profile/LikedProductsContent';
+import ShoppingCartContent from '@/components/profile/ShoppingCartContent';
+import OrdersReturnsContent from '@/components/profile/OrdersReturnsContent';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { useQuery } from '@tanstack/react-query';
@@ -130,6 +133,156 @@ const ProfilePage = () => {
     setExpandedSection(expandedSection === sectionId ? null : sectionId);
   };
 
+  // Function to render content based on active section
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'liked':
+        return <LikedProductsContent />;
+      case 'cart':
+        return <ShoppingCartContent />;
+      case 'orders':
+        return <OrdersReturnsContent />;
+      case 'personal-info':
+      default:
+        return (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>{t(6)}</CardTitle>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setIsEditing(!isEditing)}
+                >
+                  <Edit3 className="h-4 w-4 mr-2" />
+                  {isEditing ? t(12) : t(10)}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Profile Picture Section */}
+              <div className="flex items-center gap-6">
+                <div className="relative">
+                  <Avatar className="h-24 w-24">
+                    <AvatarImage src={user.avatar || ''} alt={user.name || user.username} />
+                    <AvatarFallback className="text-2xl">
+                      <User className="h-12 w-12" />
+                    </AvatarFallback>
+                  </Avatar>
+                  {isEditing && (
+                    <Button 
+                      size="sm" 
+                      className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
+                    >
+                      <Camera className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold">{user.name || user.username}</h3>
+                  <p className="text-gray-600">{user.email}</p>
+                  {vendorData && (
+                    <Badge variant="outline" className="mt-1">
+                      Verified Vendor
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Profile Form */}
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input 
+                    id="name"
+                    value={user.name || ''}
+                    disabled={!isEditing}
+                    className={!isEditing ? 'bg-gray-50' : ''}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input 
+                    id="username"
+                    value={user.username || ''}
+                    disabled={!isEditing}
+                    className={!isEditing ? 'bg-gray-50' : ''}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">{t(7)}</Label>
+                  <Input 
+                    id="email"
+                    type="email"
+                    value={user.email || ''}
+                    disabled={!isEditing}
+                    className={!isEditing ? 'bg-gray-50' : ''}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">{t(8)}</Label>
+                  <Input 
+                    id="phone"
+                    value={(user as any)?.phone || ''}
+                    disabled={!isEditing}
+                    className={!isEditing ? 'bg-gray-50' : ''}
+                  />
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="location">{t(9)}</Label>
+                  <Input 
+                    id="location"
+                    value={(user as any)?.location || ''}
+                    disabled={!isEditing}
+                    className={!isEditing ? 'bg-gray-50' : ''}
+                  />
+                </div>
+              </div>
+
+              {isEditing && (
+                <div className="flex gap-4 pt-4">
+                  <Button>
+                    {t(11)}
+                  </Button>
+                  <Button variant="outline" onClick={() => setIsEditing(false)}>
+                    {t(12)}
+                  </Button>
+                </div>
+              )}
+
+              {/* Account Statistics */}
+              <Separator />
+              
+              <div className="grid gap-4 md:grid-cols-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-red-500">{likedCount}</div>
+                  <div className="text-sm text-gray-600">{t(1)}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-500">{cartCount}</div>
+                  <div className="text-sm text-gray-600">Cart Items</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-500">{ordersCount}</div>
+                  <div className="text-sm text-gray-600">Pending Orders</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-500">{vendorData ? '1' : '0'}</div>
+                  <div className="text-sm text-gray-600">Vendor Status</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
@@ -236,140 +389,16 @@ const ProfilePage = () => {
 
           {/* Main Content Area */}
           <div className="flex-1">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>{t(6)}</CardTitle>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setIsEditing(!isEditing)}
-                  >
-                    <Edit3 className="h-4 w-4 mr-2" />
-                    {isEditing ? t(12) : t(10)}
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Profile Picture Section */}
-                <div className="flex items-center gap-6">
-                  <div className="relative">
-                    <Avatar className="h-24 w-24">
-                      <AvatarImage src={user.avatar || ''} alt={user.name || user.username} />
-                      <AvatarFallback className="text-2xl">
-                        <User className="h-12 w-12" />
-                      </AvatarFallback>
-                    </Avatar>
-                    {isEditing && (
-                      <Button 
-                        size="sm" 
-                        className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
-                      >
-                        <Camera className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold">{user.name || user.username}</h3>
-                    <p className="text-gray-600">{user.email}</p>
-                    {vendorData && (
-                      <Badge variant="outline" className="mt-1">
-                        Verified Vendor
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Profile Form */}
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input 
-                      id="name"
-                      value={user.name || ''}
-                      disabled={!isEditing}
-                      className={!isEditing ? 'bg-gray-50' : ''}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="username">Username</Label>
-                    <Input 
-                      id="username"
-                      value={user.username || ''}
-                      disabled={!isEditing}
-                      className={!isEditing ? 'bg-gray-50' : ''}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email">{t(7)}</Label>
-                    <Input 
-                      id="email"
-                      type="email"
-                      value={user.email || ''}
-                      disabled={!isEditing}
-                      className={!isEditing ? 'bg-gray-50' : ''}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">{t(8)}</Label>
-                    <Input 
-                      id="phone"
-                      value={(user as any)?.phone || ''}
-                      disabled={!isEditing}
-                      className={!isEditing ? 'bg-gray-50' : ''}
-                    />
-                  </div>
-
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="location">{t(9)}</Label>
-                    <Input 
-                      id="location"
-                      value={(user as any)?.location || ''}
-                      disabled={!isEditing}
-                      className={!isEditing ? 'bg-gray-50' : ''}
-                    />
-                  </div>
-                </div>
-
-                {isEditing && (
-                  <div className="flex gap-4 pt-4">
-                    <Button>
-                      {t(11)}
-                    </Button>
-                    <Button variant="outline" onClick={() => setIsEditing(false)}>
-                      {t(12)}
-                    </Button>
-                  </div>
-                )}
-
-                {/* Account Statistics */}
-                <Separator />
-                
-                <div className="grid gap-4 md:grid-cols-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-red-500">{likedCount}</div>
-                    <div className="text-sm text-gray-600">{t(1)}</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-500">{cartCount}</div>
-                    <div className="text-sm text-gray-600">Cart Items</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-500">{ordersCount}</div>
-                    <div className="text-sm text-gray-600">Pending Orders</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-500">{vendorData ? '1' : '0'}</div>
-                    <div className="text-sm text-gray-600">Vendor Status</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <Suspense fallback={
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <div className="animate-spin h-8 w-8 border-2 border-gray-300 border-t-black rounded-full mx-auto mb-4"></div>
+                  <p>Loading...</p>
+                </CardContent>
+              </Card>
+            }>
+              {renderContent()}
+            </Suspense>
           </div>
         </div>
       </div>
