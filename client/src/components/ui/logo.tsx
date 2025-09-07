@@ -28,7 +28,7 @@ const Logo: FC<LogoProps> = ({ size = 'md', withText = true, className = '' }) =
         />
         {withText && (
           <div className="ml-2 flex items-center">
-            <span className="font-bold text-black text-xl">
+            <span className="font-bold text-white text-xl">
               Dedw3n
             </span>
           </div>

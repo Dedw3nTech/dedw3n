@@ -165,8 +165,8 @@ export default function OptimizedNavigation() {
                   key={item.title}
                   href={item.href}
                   className={cn(
-                    "flex h-10 items-center px-4 py-2 text-xs font-medium transition-colors hover:bg-gray-100 rounded-md",
-                    item.isActive && "bg-gray-100 text-gray-700"
+                    "flex h-10 items-center px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-gray-700 rounded-md",
+                    item.isActive && "bg-gray-700 text-white"
                   )}
                 >
                   {item.title}
@@ -178,14 +178,14 @@ export default function OptimizedNavigation() {
               <div className="flex items-center space-x-2">
                 {/* Currency Selector */}
                 <div className="hidden md:flex items-center gap-1">
-                  <span className="text-gray-600" style={{ fontSize: '10px' }}>{translatedLabels.currency}</span>
+                  <span className="text-white" style={{ fontSize: '10px' }}>{translatedLabels.currency}</span>
                   <CurrencySelector />
                 </div>
                 {/* Separator */}
                 <div className="hidden md:block h-4 w-px bg-gray-300"></div>
                 {/* Language Selector between currency selector and profile */}
                 <div className="hidden md:flex items-center gap-1 mr-4">
-                  <span className="text-gray-600" style={{ fontSize: '10px' }}>{translatedLabels.language}</span>
+                  <span className="text-white" style={{ fontSize: '10px' }}>{translatedLabels.language}</span>
                   <LanguageSwitcher variant="compact" />
                 </div>
                 <UserMenu />
@@ -194,20 +194,20 @@ export default function OptimizedNavigation() {
               <div className="flex items-center space-x-2">
                 {/* Currency Selector for non-logged in users */}
                 <div className="hidden md:flex items-center gap-1">
-                  <span className="text-gray-600" style={{ fontSize: '10px' }}>{translatedLabels.currency}</span>
+                  <span className="text-white" style={{ fontSize: '10px' }}>{translatedLabels.currency}</span>
                   <CurrencySelector />
                 </div>
                 {/* Separator */}
                 <div className="hidden md:block h-4 w-px bg-gray-300"></div>
                 {/* Language Selector for non-logged in users */}
                 <div className="hidden md:flex items-center gap-1 mr-4">
-                  <span className="text-gray-600" style={{ fontSize: '10px' }}>{translatedLabels.language}</span>
+                  <span className="text-white" style={{ fontSize: '10px' }}>{translatedLabels.language}</span>
                   <LanguageSwitcher variant="compact" />
                 </div>
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  className="text-blue-600 hover:text-blue-700"
+                  className="text-white hover:text-gray-200"
                   onClick={() => showLoginPrompt("login")}
                 >
                   {translatedLabels.login}
@@ -226,9 +226,9 @@ export default function OptimizedNavigation() {
               <DropdownMenuTrigger asChild className="md:hidden">
                 <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
                   <div className="flex flex-col space-y-1">
-                    <div className="h-0.5 w-4 bg-gray-600"></div>
-                    <div className="h-0.5 w-4 bg-gray-600"></div>
-                    <div className="h-0.5 w-4 bg-gray-600"></div>
+                    <div className="h-0.5 w-4 bg-white"></div>
+                    <div className="h-0.5 w-4 bg-white"></div>
+                    <div className="h-0.5 w-4 bg-white"></div>
                   </div>
                 </Button>
               </DropdownMenuTrigger>
@@ -266,7 +266,7 @@ export default function OptimizedNavigation() {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
                       onClick={() => performUnifiedLogout()}
-                      className="flex items-center text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      className="flex items-center text-white hover:text-gray-200 hover:bg-gray-700"
                     >
                       <LogOut className="mr-2 h-4 w-4" />
                       {translatedLabels.logout}
