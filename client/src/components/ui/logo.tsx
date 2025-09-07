@@ -1,10 +1,12 @@
 import { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'wouter';
-// Using consistent logo path across all components
-const logoImage = "/dedw3n-main-logo.png";
-// import transparentLogo from '@assets/transparent-logo.png';
-// import blackLogo from '@assets/dedw3n-logo-black.png';
+// Logo paths for different variants
+const logoImages = {
+  transparent: "/dedw3n-logo-transparent.png",
+  black: "/dedw3n-logo-black.png",
+  default: "/dedw3n-main-logo.png"
+};
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -27,14 +29,12 @@ const Logo: FC<LogoProps> = ({ size = 'md', withText = true, className = '', var
   const getLogoSource = () => {
     switch (variant) {
       case 'transparent':
-        // TODO: Use actual transparent logo once import issues are resolved
-        return logoImage; // Using existing logo for now
+        return logoImages.transparent;
       case 'black':
-        // TODO: Use actual black logo once import issues are resolved  
-        return logoImage; // Using existing logo for now
+        return logoImages.black;
       case 'default':
       default:
-        return logoImage; // Keep using the current logo for all existing places
+        return logoImages.default;
     }
   };
 

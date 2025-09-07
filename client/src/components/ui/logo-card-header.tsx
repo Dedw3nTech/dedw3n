@@ -1,6 +1,6 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
-const logoImage = "/dedw3n-main-logo.png"
+const logoImage = "/dedw3n-logo-black.png"
 
 interface LogoCardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
   showLogo?: boolean;
