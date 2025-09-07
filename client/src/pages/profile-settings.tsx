@@ -534,15 +534,67 @@ export default function ProfileSettingsPage() {
   const renderContent = () => {
     switch (activeSection) {
       case 'vendor-settings':
-        return user.isVendor && vendorId ? <VendorSettings vendorId={vendorId} /> : null;
+        return user.isVendor && vendorId ? (
+          <VendorSettings vendorId={vendorId} />
+        ) : user.isVendor ? (
+          <div className="p-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-black">Loading Vendor Settings...</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Please wait while we load your vendor information.</p>
+              </CardContent>
+            </Card>
+          </div>
+        ) : null;
       case 'vendor-products':
-        return user.isVendor && vendorId ? <VendorProductManagement vendorId={vendorId} /> : null;
+        return user.isVendor && vendorId ? (
+          <VendorProductManagement vendorId={vendorId} />
+        ) : user.isVendor ? (
+          <div className="p-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-black">Loading Products...</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Please wait while we load your product information.</p>
+              </CardContent>
+            </Card>
+          </div>
+        ) : null;
       case 'vendor-orders':
-        return user.isVendor && vendorId ? <VendorOrderManagement vendorId={vendorId} /> : null;
+        return user.isVendor && vendorId ? (
+          <VendorOrderManagement vendorId={vendorId} />
+        ) : user.isVendor ? (
+          <div className="p-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-black">Loading Orders...</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Please wait while we load your order information.</p>
+              </CardContent>
+            </Card>
+          </div>
+        ) : null;
       case 'vendor-analytics':
         return user.isVendor ? <div className="p-6"><h2 className="text-2xl font-bold mb-4">Vendor Analytics</h2><p>Analytics content coming soon...</p></div> : null;
       case 'vendor-commissions':
-        return user.isVendor && vendorId ? <VendorCommissionDashboard vendorId={vendorId} /> : null;
+        return user.isVendor && vendorId ? (
+          <VendorCommissionDashboard vendorId={vendorId} />
+        ) : user.isVendor ? (
+          <div className="p-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-black">Loading Commission Data...</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Please wait while we load your commission information.</p>
+              </CardContent>
+            </Card>
+          </div>
+        ) : null;
       case 'vendor-account':
         return (
           <div className="p-6">

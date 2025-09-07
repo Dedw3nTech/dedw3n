@@ -159,7 +159,7 @@ export default function VendorSettings({ vendorId }: VendorSettingsProps) {
       return await apiRequest('PUT', `/api/vendors/${vendorId}`, updateData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['/api/vendors/details']);
+      queryClient.invalidateQueries({ queryKey: ['/api/vendors/details'] });
       toast({
         title: "Success",
         description: "Vendor settings updated successfully"
