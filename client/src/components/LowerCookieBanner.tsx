@@ -118,7 +118,6 @@ export function LowerCookieBanner() {
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
               Manage Cookie Preferences
             </DialogTitle>
             <DialogDescription>
@@ -135,8 +134,8 @@ export function LowerCookieBanner() {
                     <CardTitle className="text-sm">Necessary Cookies</CardTitle>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-green-600 font-medium">Always Active</span>
-                    <Check className="h-4 w-4 text-green-600" />
+                    <span className="text-xs text-blue-600 font-medium">Always Active</span>
+                    <Check className="h-4 w-4 text-blue-600" />
                   </div>
                 </div>
                 <CardDescription className="text-xs">
