@@ -27,7 +27,7 @@ const Logo: FC<LogoProps> = ({ size = 'md', withText = true, className = '' }) =
           className={`${sizeClass[size]} w-auto object-contain`}
         />
         {withText && (
-          <div className="ml-2 flex items-center">
+          <div className="ml-2 flex items-center -mt-1">
             <span className="font-bold text-white text-xl">
               Dedw3n
             </span>
