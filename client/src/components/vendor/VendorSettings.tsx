@@ -117,7 +117,10 @@ export default function VendorSettings({ vendorId }: VendorSettingsProps) {
   // Fetch vendor data
   const { data: vendor, isLoading } = useQuery({
     queryKey: ['/api/vendors/details', vendorId],
-    queryFn: () => apiRequest(`/api/vendors/details/${vendorId}`),
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/vendors/details/${vendorId}`);
+      return response.json();
+    },
     enabled: !!vendorId
   });
 
@@ -153,13 +156,10 @@ export default function VendorSettings({ vendorId }: VendorSettingsProps) {
   // Update vendor profile mutation
   const updateVendorMutation = useMutation({
     mutationFn: async (updateData: Partial<VendorData>) => {
-      return await apiRequest(`/api/vendors/${vendorId}`, {
-        method: 'PUT',
-        body: JSON.stringify(updateData)
-      });
+      return await apiRequest('PUT', `/api/vendors/${vendorId}`, updateData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/vendors/details'] });
+      queryClient.invalidateQueries(['/api/vendors/details']);
       toast({
         title: "Success",
         description: "Vendor settings updated successfully"
@@ -177,10 +177,7 @@ export default function VendorSettings({ vendorId }: VendorSettingsProps) {
   // Bank account update mutation
   const updateBankAccountMutation = useMutation({
     mutationFn: async (bankData: BankAccountData) => {
-      return await apiRequest(`/api/vendors/${vendorId}/bank-account`, {
-        method: 'PUT',
-        body: JSON.stringify(bankData)
-      });
+      return await apiRequest('PUT', `/api/vendors/${vendorId}/bank-account`, bankData);
     },
     onSuccess: () => {
       toast({
@@ -200,10 +197,7 @@ export default function VendorSettings({ vendorId }: VendorSettingsProps) {
   // Notification settings mutation
   const updateNotificationsMutation = useMutation({
     mutationFn: async (notificationData: NotificationSettings) => {
-      return await apiRequest(`/api/vendors/${vendorId}/notifications`, {
-        method: 'PUT',
-        body: JSON.stringify(notificationData)
-      });
+      return await apiRequest('PUT', `/api/vendors/${vendorId}/notifications`, notificationData);
     },
     onSuccess: () => {
       toast({

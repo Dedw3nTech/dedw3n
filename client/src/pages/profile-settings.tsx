@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useQuery } from '@tanstack/react-query';
 import { updateUserData } from '@/lib/userStorage';
 import { Loader2, Store, Heart, Globe, Calendar, User, CreditCard, Truck, Settings as SettingsIcon, Package, ShoppingCart, BarChart3, DollarSign } from 'lucide-react';
 import { useLocation } from 'wouter';
@@ -44,6 +45,7 @@ export default function ProfileSettingsPage() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
   const [activeSection, setActiveSection] = useState('profile');
+  const [vendorId, setVendorId] = useState<number | null>(null);
 
   // Define translatable texts for the profile settings page
   const profileTexts = useMemo(() => [
@@ -96,6 +98,23 @@ export default function ProfileSettingsPage() {
 
   // Use master translation system for consistent auto-translation
   const { translations: translatedTexts } = useMasterBatchTranslation(profileTexts, 'high');
+
+  // Fetch vendor data if user is a vendor
+  const { data: vendorData } = useQuery({
+    queryKey: ['/api/vendors/me'],
+    queryFn: async () => {
+      const response = await fetch('/api/vendors/me');
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null;
+        }
+        throw new Error('Failed to fetch vendor profile');
+      }
+      return response.json();
+    },
+    enabled: !!user && !!user.isVendor,
+    retry: false,
+  });
 
   // Memoize translated labels to prevent re-render loops
   const translatedLabels = useMemo(() => ({
@@ -176,6 +195,13 @@ export default function ProfileSettingsPage() {
     billingCountry: '',
     useShippingAsBilling: true
   });
+
+  // Set vendor ID when vendor data is loaded
+  useEffect(() => {
+    if (vendorData?.vendor?.id) {
+      setVendorId(vendorData.vendor.id);
+    }
+  }, [vendorData]);
 
   // Update form data when user data is available
   useEffect(() => {
@@ -441,20 +467,20 @@ export default function ProfileSettingsPage() {
       };
       
       // Update query cache with new user data to ensure it's immediately available
-      queryClient.setQueryData({ queryKey: ['/api/user'] }, updatedUserData);
+      queryClient.setQueryData(['/api/user'], updatedUserData);
       
       // Also update user data in specific endpoints
-      queryClient.setQueryData({ queryKey: [`/api/users/${user.id}`] }, updatedUserData);
+      queryClient.setQueryData([`/api/users/${user.id}`], updatedUserData);
       
       // Also update username-specific endpoints if username changed
       if (formData.username && user.username !== formData.username) {
-        queryClient.setQueryData({ queryKey: [`/api/users/${formData.username}`] }, updatedUserData);
+        queryClient.setQueryData([`/api/users/${formData.username}`], updatedUserData);
       }
       
       // Update persistent storage with the new user data
       try {
-        // Use the full updated user data for consistency
-        updateUserData(updatedUserData);
+        // Use the full updated user data for consistency - cast to bypass type checking
+        updateUserData(updatedUserData as any);
         console.log('Updated user data in persistent storage after successful profile update');
       } catch (error) {
         console.error('Error updating persistent storage after profile update:', error);
@@ -469,7 +495,7 @@ export default function ProfileSettingsPage() {
       });
       
       // Add timestamp to the already created updatedUserData 
-      updatedUserData.updatedAt = new Date().toISOString();
+      (updatedUserData as any).updatedAt = new Date().toISOString();
       
       // We're already using updateUserData earlier, this is redundant now
       
@@ -508,15 +534,15 @@ export default function ProfileSettingsPage() {
   const renderContent = () => {
     switch (activeSection) {
       case 'vendor-settings':
-        return user.isVendor ? <VendorSettings /> : null;
+        return user.isVendor && vendorId ? <VendorSettings vendorId={vendorId} /> : null;
       case 'vendor-products':
-        return user.isVendor ? <VendorProductManagement /> : null;
+        return user.isVendor && vendorId ? <VendorProductManagement vendorId={vendorId} /> : null;
       case 'vendor-orders':
-        return user.isVendor ? <VendorOrderManagement /> : null;
+        return user.isVendor && vendorId ? <VendorOrderManagement vendorId={vendorId} /> : null;
       case 'vendor-analytics':
         return user.isVendor ? <div className="p-6"><h2 className="text-2xl font-bold mb-4">Vendor Analytics</h2><p>Analytics content coming soon...</p></div> : null;
       case 'vendor-commissions':
-        return user.isVendor ? <VendorCommissionDashboard /> : null;
+        return user.isVendor && vendorId ? <VendorCommissionDashboard vendorId={vendorId} /> : null;
       case 'vendor-account':
         return (
           <div className="p-6">

@@ -113,7 +113,7 @@ export function OptimizedImage({
           style={{
             aspectRatio: 'auto',
           }}
-          {...(priority && { fetchPriority: 'high' as any })}
+          {...(priority && { 'data-priority': 'high' })}
         />
       )}
     </div>

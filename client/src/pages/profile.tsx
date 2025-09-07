@@ -233,7 +233,7 @@ const mockProfiles = [
 ];
 
 export default function ProfilePage() {
-  usePageTitle("profile");
+  usePageTitle({ title: "Profile" });
   const { username } = useParams<{ username: string }>();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
