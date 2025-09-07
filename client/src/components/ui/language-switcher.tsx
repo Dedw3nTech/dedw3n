@@ -134,7 +134,7 @@ export function LanguageSwitcher({
             ) : (
               <>
                 <span className="text-blue-600">{selectedLanguage.code}</span>
-                <ChevronDown className="h-3 w-3" />
+                <ChevronDown className="h-3 w-3 text-white" />
               </>
             )}
           </span>
