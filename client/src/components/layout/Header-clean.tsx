@@ -163,7 +163,7 @@ export default function Header() {
         {/* Single header row with everything aligned */}
         <div className="flex justify-between items-center py-4">
           <div className="flex items-center space-x-3">
-            <Logo size="md" />
+            <Logo size="md" variant="transparent" />
             <span className="text-xs font-bold text-blue-600 ml-1">{betaVersionText}</span>
           </div>
 
