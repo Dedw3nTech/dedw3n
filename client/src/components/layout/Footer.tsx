@@ -85,12 +85,12 @@ function FooterContent() {
                 onClick={toggleOfflineMode} 
                 className={`text-xs transition-colors duration-200 ${
                   isOffline 
-                    ? 'text-green-600 hover:text-green-700 font-medium' 
+                    ? 'text-blue-600 hover:text-blue-700 font-medium' 
                     : 'text-gray-600 hover:text-primary'
                 }`}
                 title={isOffline ? 'Offline Mode Active - Click to disable' : 'Click to enable offline mode'}
               >
-                {isOffline ? '🔒 ' : ''}{offlineModeText} {isOffline ? '(Active)' : ''}
+                {offlineModeText} {isOffline ? '(Active)' : ''}
               </button>
             </div>
           </div>
