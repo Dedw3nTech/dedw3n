@@ -99,6 +99,7 @@ function MarketplaceNavWrapper({ searchTerm, setSearchTerm }: { searchTerm?: str
     '/liked',
     '/orders-returns',
     '/shipping-calculator',
+    '/profile',
 
   ];
   
@@ -213,7 +214,7 @@ import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 
 
 // Import social networking and user components
-import ProfilePage from "@/pages/profile-simple";
+import ProfilePage from "@/pages/Profile";
 import SettingsPage from "@/pages/settings";
 import ProfileSettingsPage from "@/pages/profile-settings";
 import WallPage from "@/pages/wall";
