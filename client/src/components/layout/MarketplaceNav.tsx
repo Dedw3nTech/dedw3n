@@ -35,6 +35,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
     "Friend2Friend",
     "Online Store", 
     "Wholesale",
+    "Raw",
     "Requests (RQST)",
     "Search products...",
     "Vendor Dashboard",
@@ -49,10 +50,11 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
     c2cText: translatedTexts[0] || navigationTexts[0],
     b2cText: translatedTexts[1] || navigationTexts[1], 
     b2bText: translatedTexts[2] || navigationTexts[2],
-    rqstText: translatedTexts[3] || navigationTexts[3],
-    searchPlaceholder: translatedTexts[4] || navigationTexts[4],
-    vendorText: translatedTexts[5] || navigationTexts[5],
-    vendorPageText: translatedTexts[6] || navigationTexts[6]
+    rawText: translatedTexts[3] || navigationTexts[3],
+    rqstText: translatedTexts[4] || navigationTexts[4],
+    searchPlaceholder: translatedTexts[5] || navigationTexts[5],
+    vendorText: translatedTexts[6] || navigationTexts[6],
+    vendorPageText: translatedTexts[7] || navigationTexts[7]
   }), [translatedTexts, navigationTexts]);
 
   // Memoize navigation handlers to prevent infinite re-renders
@@ -190,6 +192,26 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
             
             <div 
               className="cursor-pointer group transition-all duration-300 h-[40px] flex items-center"
+              onClick={() => handleMarketNavigation("raw")}
+            >
+              <div className="relative">
+                <span className={`text-xs font-medium transition-colors duration-300 ${
+                  marketType === 'raw' 
+                    ? 'text-black' 
+                    : 'text-black group-hover:text-black'
+                }`} style={{ fontSize: '12px' }}>
+                  {translatedLabels.rawText}
+                </span>
+                <div className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
+                  marketType === 'raw' 
+                    ? 'bg-black w-full' 
+                    : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
+                }`} />
+              </div>
+            </div>
+            
+            <div 
+              className="cursor-pointer group transition-all duration-300 h-[40px] flex items-center"
               onClick={() => handleMarketNavigation("rqst")}
             >
               <div className="relative">
@@ -262,6 +284,7 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                 {marketType === 'c2c' && translatedLabels.c2cText}
                 {marketType === 'b2c' && translatedLabels.b2cText}
                 {marketType === 'b2b' && translatedLabels.b2bText}
+                {marketType === 'raw' && translatedLabels.rawText}
                 {marketType === 'rqst' && translatedLabels.rqstText}
               </span>
             </div>
@@ -329,6 +352,16 @@ export function MarketplaceNav({ searchTerm = '', setSearchTerm }: MarketplaceNa
                 >
                   <Warehouse className="mr-2 h-4 w-4" />
                   {translatedLabels.b2bText}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    handleMarketNavigation("raw");
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`${marketType === 'raw' ? 'bg-gray-100' : ''}`}
+                >
+                  <Building2 className="mr-2 h-4 w-4" />
+                  {translatedLabels.rawText}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {
