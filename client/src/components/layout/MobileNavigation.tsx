@@ -79,17 +79,18 @@ export default function MobileNavigation() {
 
             <Link href={user ? "/profile" : "/auth"}>
               <button className="py-3 px-3 text-gray-500 flex flex-col items-center justify-center min-w-0 w-16">
-                {user?.avatar ? (
-                  <img 
-                    src={user.avatar} 
-                    alt="Profile" 
-                    className="w-7 h-7 rounded-full object-cover border-2 border-gray-300"
-                  />
-                ) : (
-                  <div className="w-7 h-7 rounded-full bg-gray-300 flex items-center justify-center">
-                    <i className="ri-user-line text-sm text-gray-600"></i>
-                  </div>
-                )}
+                <div className="mb-1">
+                  {user?.avatar ? (
+                    <img 
+                      src={user.avatar} 
+                      alt="Profile" 
+                      className="w-5 h-5 rounded-full object-cover border-2 border-gray-300"
+                    />
+                  ) : (
+                    <i className="ri-user-line text-lg"></i>
+                  )}
+                </div>
+                <span className="text-xs font-medium">Profile</span>
               </button>
             </Link>
           </div>
