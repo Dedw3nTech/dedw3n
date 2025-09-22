@@ -607,9 +607,14 @@ app.use((req, res, next) => {
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
+  const nodeEnv = process.env.NODE_ENV || app.get("env");
+  console.log(`[DEBUG] Environment check - NODE_ENV: ${process.env.NODE_ENV}, app.env: ${app.get("env")}, final: ${nodeEnv}`);
+  
+  if (nodeEnv === "development") {
+    console.log('[DEBUG] Starting Vite development server...');
     await setupVite(app, server);
   } else {
+    console.log('[DEBUG] Starting production static server...');
     serveStatic(app);
   }
 

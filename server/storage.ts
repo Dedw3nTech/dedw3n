@@ -306,12 +306,15 @@ export class DatabaseStorage implements IStorage {
     const MemoryStore = createMemoryStore(session);
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000, // Prune expired entries every 24h
-      max: 500000, // Maximum number of sessions to store
+      max: 10000, // Reduced max sessions to prevent memory issues
       ttl: 86400000, // Session TTL
-      stale: false
+      stale: false,
+      dispose: function(key: string, val: any) {
+        console.log(`[SESSION] Disposing session: ${key}`);
+      }
     });
     // Fix memory leak warning by increasing max listeners
-    this.sessionStore.setMaxListeners(100);
+    this.sessionStore.setMaxListeners(0); // Unlimited listeners to prevent warnings
   }
   
   // Message methods - using our message helpers module
