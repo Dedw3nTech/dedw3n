@@ -228,7 +228,7 @@ import DatingProfilePage from "@/pages/dating-profile";
 import DatingProfileView from "@/pages/dating-profile-view";
 import { MyMatches } from "@/pages/MyMatches";
 import PaymentGateway from "@/pages/payment-gateway";
-import UserProfilePage from "@/pages/profile";
+import UserProfilePage from "@/pages/Profile";
 
 import CommissionPayment from "@/pages/commission-payment";
 import PawapayDepositCallback from "@/pages/pawapay-deposit-callback";
