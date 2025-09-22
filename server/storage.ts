@@ -2,7 +2,7 @@ import session from "express-session";
 import createMemoryStore from "memorystore";
 import { hashPassword } from "./auth";
 import connectPg from "connect-pg-simple";
-import { pool, db } from "./db";
+import { db } from "./db";
 import { eq, like, and, or, desc, asc, sql, count, inArray, lte, ne } from "drizzle-orm";
 import { generateProductCode } from "./product-code-generator";
 
