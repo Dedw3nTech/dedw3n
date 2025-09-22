@@ -151,8 +151,16 @@ export default function OptimizedNavigation() {
     <header className="sticky top-0 z-50 w-full backdrop-blur" style={{ backgroundColor: '#f2f2f2' }}>
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          {/* Left side - Empty space (Logo removed) */}
+          {/* Left side - Search icon */}
           <div className="flex items-center space-x-4">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="text-gray-900 hover:text-gray-700 flex items-center gap-2"
+              data-testid="button-search"
+            >
+              <Search className="h-6 w-6" />
+            </Button>
           </div>
 
           {/* Right side - Navigation and settings */}
@@ -199,7 +207,7 @@ export default function OptimizedNavigation() {
                     onClick={() => showLoginPrompt("login")}
                     data-testid="button-account"
                   >
-                    <User className="h-4 w-4" />
+                    <User className="h-6 w-6" />
                     <span className="hidden sm:inline">{translatedLabels.login}</span>
                   </Button>
                 )}
@@ -212,7 +220,7 @@ export default function OptimizedNavigation() {
                   asChild
                 >
                   <Link href="/cart">
-                    <ShoppingBag className="h-4 w-4" />
+                    <ShoppingBag className="h-6 w-6" />
                     <span className="hidden sm:inline">{translatedLabels.cart}</span>
                   </Link>
                 </Button>
