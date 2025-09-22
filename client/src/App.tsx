@@ -209,7 +209,6 @@ import AuthPage from "@/pages/auth";
 import ResetPassword from "@/pages/reset-password";
 import ResetPasswordConfirm from "@/pages/reset-password-confirm";
 import { SiteMap } from "@/components/layout/SiteMap";
-import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 
 
 
@@ -529,9 +528,6 @@ function App() {
                           <ConditionalNavigation />
                           <GPCBanner />
                           <MarketplaceNavWrapper />
-                          <SafeComponentWrapper componentName="Breadcrumbs">
-                            <Breadcrumbs />
-                          </SafeComponentWrapper>
                           
                           {/* Community Navigation - Only show on community page */}
                           <CommunityNavWrapper />

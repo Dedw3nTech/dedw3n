@@ -523,18 +523,6 @@ export default function ProductDetail() {
 
   return (
     <div className="container max-w-6xl mx-auto py-12 px-4">
-      {/* Breadcrumbs */}
-      <div className="mb-6 text-sm text-gray-500">
-        <Link href="/" className="hover:text-primary">
-          {translateText('Home')}
-        </Link>
-        <span className="mx-2">/</span>
-        <Link href={`/category/${encodeURIComponent(product.category)}`} className="hover:text-primary">
-          {translateText(product.category)}
-        </Link>
-        <span className="mx-2">/</span>
-        <span className="text-gray-700">{product.name}</span>
-      </div>
       {/* Product overview */}
       <div className="flex flex-col md:flex-row gap-8 mb-12">
         {/* Product image */}
