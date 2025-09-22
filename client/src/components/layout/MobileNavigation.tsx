@@ -51,6 +51,15 @@ export default function MobileNavigation() {
                 <span className="text-xs font-medium">{translations[0] || "Marketplace"}</span>
               </button>
             </Link>
+
+            <Link href={user ? "/profile" : "/auth"}>
+              <button className={`py-3 px-3 flex flex-col items-center justify-center min-w-0 w-16 ${location === "/profile" || location === "/auth" ? "text-gray-700" : "text-gray-500"}`}>
+                <div className="mb-1">
+                  <i className={`ri-user-line text-xl ${location === "/profile" || location === "/auth" ? "text-gray-700" : "text-gray-500"}`}></i>
+                </div>
+                <span className="text-xs font-medium">Profile</span>
+              </button>
+            </Link>
             
             <Link href="/community">
               <button
@@ -76,22 +85,6 @@ export default function MobileNavigation() {
                 </button>
               </Link>
             )}
-
-            <Link href={user ? "/profile" : "/auth"}>
-              <button className="py-3 px-3 text-gray-500 flex flex-col items-center justify-center min-w-0 w-16">
-                {user?.avatar ? (
-                  <img 
-                    src={user.avatar} 
-                    alt="Profile" 
-                    className="w-7 h-7 rounded-full object-cover border-2 border-gray-300"
-                  />
-                ) : (
-                  <div className="w-7 h-7 rounded-full bg-gray-300 flex items-center justify-center">
-                    <i className="ri-user-line text-sm text-gray-600"></i>
-                  </div>
-                )}
-              </button>
-            </Link>
           </div>
         </div>
       </div>
