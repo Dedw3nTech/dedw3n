@@ -163,11 +163,6 @@ export default function OptimizedNavigation() {
             </Button>
           </div>
 
-          {/* Center - Logo */}
-          <div className="flex items-center justify-center">
-            <Logo variant="transparent" size="xl" withText={false} className="h-12 w-auto" />
-          </div>
-
           {/* Right side - Navigation and settings */}
           <div className="flex items-center space-x-1">
             {/* Main Navigation */}
