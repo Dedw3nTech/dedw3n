@@ -34,7 +34,7 @@ export default function UserMenu() {
     "Affiliate Partnership",
     "Admin Centre",
     "Log Out",
-    "Log in",
+    "Account",
     "Logging out..."
   ], []);
 
@@ -52,7 +52,7 @@ export default function UserMenu() {
     affiliatePartnership: translatedTexts[6] || "Affiliate Partnership",
     adminCentre: translatedTexts[7] || "Admin Centre",
     logout: translatedTexts[8] || "Log Out",
-    login: translatedTexts[9] || "Log in",
+    login: translatedTexts[9] || "Account",
     loggingOut: translatedTexts[10] || "Logging out..."
   }), [translatedTexts]);
 
