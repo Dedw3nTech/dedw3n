@@ -165,7 +165,7 @@ export default function OptimizedNavigation() {
 
           {/* Center - Logo */}
           <div className="flex items-center justify-center">
-            <Logo variant="black" size="xl" withText={false} className="h-12 w-auto" />
+            <Logo variant="transparent" size="xl" withText={false} className="h-12 w-auto" />
           </div>
 
           {/* Right side - Navigation and settings */}
