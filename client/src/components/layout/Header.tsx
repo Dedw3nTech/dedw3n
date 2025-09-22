@@ -185,13 +185,32 @@ export default function Header() {
     <header className="bg-background shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
-          <div className="flex items-center space-x-3 justify-start flex-1">
+          <div className="flex items-center space-x-6 justify-start flex-1">
             <Logo size="lg" variant="navigation" />
             <span className="text-xs font-bold text-red-600 ml-1">BETA VERSION</span>
+            
+            {/* Account and Cart in left corner */}
+            <div className="flex items-center space-x-4 ml-6">
+              <UserMenu />
+              <Link href="/cart">
+                <a 
+                  className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-gray-900 transition-colors"
+                  data-testid="link-cart"
+                >
+                  <ShoppingBag className="h-4 w-4" />
+                  <span className="text-sm font-medium">{t('Cart')}</span>
+                  {cartData && cartData.count > 0 && (
+                    <Badge className="bg-red-600 text-white text-xs min-w-[20px] h-5 flex items-center justify-center ml-1">
+                      {cartData.count > 99 ? "99+" : cartData.count}
+                    </Badge>
+                  )}
+                </a>
+              </Link>
+            </div>
           </div>
 
           <div className="flex items-center space-x-4">
-            <UserMenu />
+            {/* Empty right side for future use */}
           </div>
         </div>
 
