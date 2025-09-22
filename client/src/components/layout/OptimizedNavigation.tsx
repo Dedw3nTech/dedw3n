@@ -150,22 +150,22 @@ export default function OptimizedNavigation() {
   return (
     <header className="sticky top-0 z-50 w-full backdrop-blur" style={{ backgroundColor: '#f2f2f2' }}>
       <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-20 items-center justify-between">
           {/* Left side - Search icon */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 flex-1">
             <Button 
               variant="ghost" 
               size="sm"
               className="text-gray-900 hover:text-gray-700 flex items-center gap-2"
               data-testid="button-search"
             >
-              <Search className="h-6 w-6" />
+              <Search className="h-4 w-4" />
             </Button>
           </div>
 
           {/* Center - Logo */}
-          <div className="flex items-center">
-            <Logo variant="navigation" size="sm" withText={false} />
+          <div className="flex items-center justify-center">
+            <Logo variant="black" size="xl" withText={false} className="h-12 w-auto" />
           </div>
 
           {/* Right side - Navigation and settings */}
@@ -212,7 +212,7 @@ export default function OptimizedNavigation() {
                     onClick={() => showLoginPrompt("login")}
                     data-testid="button-account"
                   >
-                    <User className="h-6 w-6" />
+                    <User className="h-4 w-4" />
                     <span className="hidden sm:inline">{translatedLabels.login}</span>
                   </Button>
                 )}
@@ -225,7 +225,7 @@ export default function OptimizedNavigation() {
                   asChild
                 >
                   <Link href="/cart">
-                    <ShoppingBag className="h-6 w-6" />
+                    <ShoppingBag className="h-4 w-4" />
                     <span className="hidden sm:inline">{translatedLabels.cart}</span>
                   </Link>
                 </Button>
