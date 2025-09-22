@@ -66,7 +66,6 @@ export default function OptimizedNavigation() {
     "Currency",
     "Language",
     "Log in",
-    "Sign Up",
     "Log Out"
   ], []);
 
@@ -81,8 +80,7 @@ export default function OptimizedNavigation() {
     currency: translatedHeaderTexts[3] || "Currency",
     language: translatedHeaderTexts[4] || "Language",
     login: translatedHeaderTexts[5] || "Log in",
-    signup: translatedHeaderTexts[6] || "Sign Up",
-    logout: translatedHeaderTexts[7] || "Log Out"
+    logout: translatedHeaderTexts[6] || "Log Out"
   }), [translatedHeaderTexts]);
   
   // Unread counts
@@ -211,12 +209,6 @@ export default function OptimizedNavigation() {
                   onClick={() => showLoginPrompt("login")}
                 >
                   {translatedLabels.login}
-                </Button>
-                <Button 
-                  size="sm"
-                  onClick={() => showLoginPrompt("register")}
-                >
-                  {translatedLabels.signup}
                 </Button>
               </div>
             )}
