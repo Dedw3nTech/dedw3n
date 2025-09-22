@@ -151,9 +151,8 @@ export default function OptimizedNavigation() {
     <header className="sticky top-0 z-50 w-full border-b border-gray-600 backdrop-blur" style={{ backgroundColor: '#f2f2f2' }}>
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          {/* Left side - Logo */}
+          {/* Left side - Empty space (Logo removed) */}
           <div className="flex items-center space-x-4">
-            <Logo variant="navigation" />
           </div>
 
           {/* Right side - Navigation and settings */}
@@ -201,7 +200,7 @@ export default function OptimizedNavigation() {
                     data-testid="button-account"
                   >
                     <User className="h-4 w-4" />
-                    {translatedLabels.login}
+                    <span className="hidden sm:inline">{translatedLabels.login}</span>
                   </Button>
                 )}
                 
@@ -214,7 +213,7 @@ export default function OptimizedNavigation() {
                 >
                   <Link href="/cart">
                     <ShoppingBag className="h-4 w-4" />
-                    {translatedLabels.cart}
+                    <span className="hidden sm:inline">{translatedLabels.cart}</span>
                   </Link>
                 </Button>
               </div>
