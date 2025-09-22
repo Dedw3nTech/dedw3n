@@ -64,8 +64,9 @@ export default function OptimizedNavigation() {
     "Community", 
     "Dating",
     "Currency",
-    "Language",
-    "Log in",
+    "Language", 
+    "Account",
+    "Cart",
     "Log Out"
   ], []);
 
@@ -79,8 +80,9 @@ export default function OptimizedNavigation() {
     dating: translatedHeaderTexts[2] || "Dating",
     currency: translatedHeaderTexts[3] || "Currency",
     language: translatedHeaderTexts[4] || "Language",
-    login: translatedHeaderTexts[5] || "Log in",
-    logout: translatedHeaderTexts[6] || "Log Out"
+    login: translatedHeaderTexts[5] || "Account",
+    cart: translatedHeaderTexts[6] || "Cart",
+    logout: translatedHeaderTexts[7] || "Log Out"
   }), [translatedHeaderTexts]);
   
   // Unread counts
@@ -149,12 +151,43 @@ export default function OptimizedNavigation() {
     <header className="sticky top-0 z-50 w-full border-b border-gray-600 bg-black/80 backdrop-blur supports-[backdrop-filter]:bg-black/70">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center">
+          {/* Left side - Account, Cart, and Logo */}
+          <div className="flex items-center space-x-4">
+            {/* Account and Cart */}
+            <div className="flex items-center space-x-2">
+              {isLoggedIn ? (
+                <UserMenu />
+              ) : (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="text-white hover:text-gray-200 flex items-center gap-2"
+                  onClick={() => showLoginPrompt("login")}
+                  data-testid="button-account"
+                >
+                  <User className="h-4 w-4" />
+                  {translatedLabels.login}
+                </Button>
+              )}
+              
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="text-white hover:text-gray-200 flex items-center gap-2"
+                data-testid="link-cart"
+                asChild
+              >
+                <Link href="/cart">
+                  <ShoppingBag className="h-4 w-4" />
+                  {translatedLabels.cart}
+                </Link>
+              </Button>
+            </div>
+            
             <Logo variant="navigation" />
           </div>
 
-          {/* Right side - Navigation and User menu */}
+          {/* Right side - Navigation and settings */}
           <div className="flex items-center space-x-1">
             {/* Main Navigation */}
             <nav className="hidden md:flex items-center space-x-1 mr-2">
@@ -171,47 +204,21 @@ export default function OptimizedNavigation() {
                 </Link>
               ))}
             </nav>
-            {/* User menu or login */}
-            {isLoggedIn ? (
-              <div className="flex items-center space-x-2">
-                {/* Currency Selector */}
-                <div className="hidden md:flex items-center gap-1">
-                  <span className="text-white" style={{ fontSize: '10px' }}>{translatedLabels.currency}</span>
-                  <CurrencySelector />
-                </div>
-                {/* Separator */}
-                <div className="hidden md:block h-4 w-px bg-gray-300"></div>
-                {/* Language Selector between currency selector and profile */}
-                <div className="hidden md:flex items-center gap-1 mr-4">
-                  <span className="text-white" style={{ fontSize: '10px' }}>{translatedLabels.language}</span>
-                  <LanguageSwitcher variant="compact" />
-                </div>
-                <UserMenu />
+            {/* Currency and Language selectors */}
+            <div className="flex items-center space-x-2">
+              {/* Currency Selector */}
+              <div className="hidden md:flex items-center gap-1">
+                <span className="text-white" style={{ fontSize: '10px' }}>{translatedLabels.currency}</span>
+                <CurrencySelector />
               </div>
-            ) : (
-              <div className="flex items-center space-x-2">
-                {/* Currency Selector for non-logged in users */}
-                <div className="hidden md:flex items-center gap-1">
-                  <span className="text-white" style={{ fontSize: '10px' }}>{translatedLabels.currency}</span>
-                  <CurrencySelector />
-                </div>
-                {/* Separator */}
-                <div className="hidden md:block h-4 w-px bg-gray-300"></div>
-                {/* Language Selector for non-logged in users */}
-                <div className="hidden md:flex items-center gap-1 mr-4">
-                  <span className="text-white" style={{ fontSize: '10px' }}>{translatedLabels.language}</span>
-                  <LanguageSwitcher variant="compact" />
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="text-white hover:text-gray-200"
-                  onClick={() => showLoginPrompt("login")}
-                >
-                  {translatedLabels.login}
-                </Button>
+              {/* Separator */}
+              <div className="hidden md:block h-4 w-px bg-gray-300"></div>
+              {/* Language Selector */}
+              <div className="hidden md:flex items-center gap-1 mr-4">
+                <span className="text-white" style={{ fontSize: '10px' }}>{translatedLabels.language}</span>
+                <LanguageSwitcher variant="compact" />
               </div>
-            )}
+            </div>
 
             {/* Mobile menu */}
             <DropdownMenu>
