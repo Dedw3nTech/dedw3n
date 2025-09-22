@@ -148,7 +148,7 @@ export default function OptimizedNavigation() {
   ] : [];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gray-600 backdrop-blur" style={{ backgroundColor: '#f2f2f2' }}>
+    <header className="sticky top-0 z-50 w-full backdrop-blur" style={{ backgroundColor: '#f2f2f2' }}>
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Left side - Empty space (Logo removed) */}
