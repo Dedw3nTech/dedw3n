@@ -8,6 +8,7 @@ import { Cookie, Shield, Settings, CheckCircle, XCircle, Info } from 'lucide-rea
 import { useCookieConsent } from './CookieConsentProvider';
 import { useGPC } from './GPCProvider';
 import { CookieConsent } from '@/lib/cookie-consent';
+import Logo from '@/components/ui/logo';
 
 export function CookieConsentBanner() {
   const { showBanner, acceptAll, acceptNecessary, saveCustomPreferences, hideBanner } = useCookieConsent();
@@ -48,6 +49,9 @@ export function CookieConsentBanner() {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <Card className="max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border-2 border-gray-200 bg-white">
         <CardHeader className="pb-4">
+          <div className="flex flex-col items-center mb-4">
+            <Logo variant="default" size="md" withText={false} />
+          </div>
           <div className="flex items-center gap-3">
             <Cookie className="h-6 w-6 text-black" />
             <div className="flex-1">

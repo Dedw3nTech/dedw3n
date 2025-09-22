@@ -163,6 +163,11 @@ export default function OptimizedNavigation() {
             </Button>
           </div>
 
+          {/* Center - Logo */}
+          <div className="flex items-center">
+            <Logo variant="navigation" size="sm" withText={false} />
+          </div>
+
           {/* Right side - Navigation and settings */}
           <div className="flex items-center space-x-1">
             {/* Main Navigation */}
