@@ -151,39 +151,8 @@ export default function OptimizedNavigation() {
     <header className="sticky top-0 z-50 w-full border-b border-gray-600 bg-black/80 backdrop-blur supports-[backdrop-filter]:bg-black/70">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          {/* Left side - Account, Cart, and Logo */}
+          {/* Left side - Logo */}
           <div className="flex items-center space-x-4">
-            {/* Account and Cart */}
-            <div className="flex items-center space-x-2">
-              {isLoggedIn ? (
-                <UserMenu />
-              ) : (
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="text-white hover:text-gray-200 flex items-center gap-2"
-                  onClick={() => showLoginPrompt("login")}
-                  data-testid="button-account"
-                >
-                  <User className="h-4 w-4" />
-                  {translatedLabels.login}
-                </Button>
-              )}
-              
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="text-white hover:text-gray-200 flex items-center gap-2"
-                data-testid="link-cart"
-                asChild
-              >
-                <Link href="/cart">
-                  <ShoppingBag className="h-4 w-4" />
-                  {translatedLabels.cart}
-                </Link>
-              </Button>
-            </div>
-            
             <Logo variant="navigation" />
           </div>
 
@@ -214,9 +183,40 @@ export default function OptimizedNavigation() {
               {/* Separator */}
               <div className="hidden md:block h-4 w-px bg-gray-300"></div>
               {/* Language Selector */}
-              <div className="hidden md:flex items-center gap-1 mr-4">
+              <div className="hidden md:flex items-center gap-1">
                 <span className="text-white" style={{ fontSize: '10px' }}>{translatedLabels.language}</span>
                 <LanguageSwitcher variant="compact" />
+              </div>
+              
+              {/* Account and Cart */}
+              <div className="flex items-center space-x-2 ml-4">
+                {isLoggedIn ? (
+                  <UserMenu />
+                ) : (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="text-white hover:text-gray-200 flex items-center gap-2"
+                    onClick={() => showLoginPrompt("login")}
+                    data-testid="button-account"
+                  >
+                    <User className="h-4 w-4" />
+                    {translatedLabels.login}
+                  </Button>
+                )}
+                
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="text-white hover:text-gray-200 flex items-center gap-2"
+                  data-testid="link-cart"
+                  asChild
+                >
+                  <Link href="/cart">
+                    <ShoppingBag className="h-4 w-4" />
+                    {translatedLabels.cart}
+                  </Link>
+                </Button>
               </div>
             </div>
 
