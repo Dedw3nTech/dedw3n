@@ -80,7 +80,7 @@ const ProfilePage = () => {
     enabled: isAuthenticated,
   });
 
-  const { data: vendorData } = useQuery({
+  const { data: vendorData } = useQuery<any>({
     queryKey: ['/api/vendors/me'],
     enabled: isAuthenticated,
   });
