@@ -126,7 +126,7 @@ export default function VendorDashboard() {
     retry: false,
   });
 
-  const vendor = vendorData?.vendor;
+  const vendor = vendorData;
 
   // Fetch summary data
   const { data: summary, isLoading: isLoadingSummary } = useQuery({

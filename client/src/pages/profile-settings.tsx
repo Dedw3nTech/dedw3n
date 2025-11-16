@@ -3189,8 +3189,8 @@ export default function ProfileSettingsPage() {
 
   // Set vendor ID when vendor data is loaded
   useEffect(() => {
-    if (vendorData?.vendor?.id) {
-      setVendorId(vendorData.vendor.id);
+    if (vendorData?.id) {
+      setVendorId(vendorData.id);
     }
   }, [vendorData]);
 

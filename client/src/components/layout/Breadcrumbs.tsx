@@ -34,7 +34,7 @@ export function Breadcrumbs() {
   }, [location]);
   
   // Fetch vendor data to determine correct vendor type for breadcrumb
-  const { data: vendorData } = useQuery<{ vendor: Vendor }>({
+  const { data: vendorData } = useQuery<Vendor>({
     queryKey: ['/api/vendors/me'],
     enabled: location === '/vendor-dashboard',
     staleTime: 5 * 60 * 1000,
@@ -160,7 +160,7 @@ export function Breadcrumbs() {
     // Special handling for vendor dashboard to show marketplace hierarchy
     if (path === '/vendor-dashboard') {
       breadcrumbs.push({ label: translatedLabels.marketplace, path: '/marketplace' });
-      const vendorType = vendorData?.vendor?.vendorType;
+      const vendorType = vendorData?.vendorType;
       const dashboardLabel = vendorType === 'business' ? 
         translatedLabels.businessVendorDashboard : 
         translatedLabels.privateVendorDashboard;
