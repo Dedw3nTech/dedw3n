@@ -2,7 +2,8 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Book, Scale, IdCard } from 'lucide-react';
+import { FileText, Book, Scale, IdCard, ChevronLeft } from 'lucide-react';
+import { useLocation } from 'wouter';
 
 import certificateImage from "@assets/stock_images/passport_identificat_84d90351.jpg";
 import passportImage from "@assets/stock_images/professional_busines_7f598002.jpg";
@@ -11,6 +12,7 @@ import licenseImage from "@assets/stock_images/democratic_republic__5eea171f.jpg
 
 export default function DrCongo() {
   usePageTitle({ title: 'Dr Congo Services' });
+  const [, setLocation] = useLocation();
   
   const drCongoTexts = [
     "Certificates",
@@ -21,7 +23,9 @@ export default function DrCongo() {
     "Official document certification services",
     "Passport application and renewal services",
     "Legal judgment supplementary services",
-    "Drivers license application and renewal services"
+    "Drivers license application and renewal services",
+    "Government Services",
+    "Dr Congo Services"
   ];
 
   const { translations: t } = useMasterBatchTranslation(drCongoTexts);
@@ -35,7 +39,9 @@ export default function DrCongo() {
     certificatesDescText,
     passportDescText,
     supplementaryDescText,
-    driversLicenseDescText
+    driversLicenseDescText,
+    governmentServicesText,
+    drCongoServicesText
   ] = t || drCongoTexts;
 
   const services = [
@@ -72,6 +78,22 @@ export default function DrCongo() {
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Navigation Header */}
+        <div className="mb-8">
+          <Button
+            variant="ghost"
+            onClick={() => setLocation('/government')}
+            className="mb-4 text-black hover:text-gray-700 hover:bg-gray-100 p-0"
+            data-testid="button-back-to-government"
+          >
+            <ChevronLeft className="w-5 h-5 mr-1" />
+            {governmentServicesText}
+          </Button>
+          <h1 className="text-3xl font-bold text-black">
+            {drCongoServicesText}
+          </h1>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {services.map((service) => {
             const Icon = service.icon;
