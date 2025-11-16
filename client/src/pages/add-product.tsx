@@ -734,10 +734,17 @@ export default function AddProduct() {
   const getAvailableMarketplaces = () => {
     // Safety check for null/undefined data
     if (!vendorAccountsData || !vendorAccountsData.vendorAccounts || !Array.isArray(vendorAccountsData.vendorAccounts)) {
-      return [
+      const baseMarketplaces = [
         { value: 'c2c', label: 'Friend to Friend', description: 'For individual sellers' },
         { value: 'rqst', label: 'Request', description: 'Post product requests' }
       ];
+      
+      // Add government services if applicable
+      if (isGovernmentService) {
+        baseMarketplaces.push({ value: 'government-dr-congo', label: 'Dr Congo', description: 'Government services for Dr Congo' });
+      }
+      
+      return baseMarketplaces;
     }
     
     const vendorAccounts = vendorAccountsData.vendorAccounts;
@@ -758,6 +765,11 @@ export default function AddProduct() {
         { value: 'b2c', label: 'Online Store', description: 'For businesses selling to consumers' },
         { value: 'b2b', label: 'Whole Sale', description: 'For businesses selling to other businesses' }
       );
+    }
+    
+    // Add government services if applicable
+    if (isGovernmentService) {
+      marketplaces.push({ value: 'government-dr-congo', label: 'Dr Congo', description: 'Government services for Dr Congo' });
     }
     
     return marketplaces;
@@ -1305,12 +1317,7 @@ export default function AddProduct() {
     {
       id: 'dr-congo',
       label: t("Dr Congo"),
-      onClick: () => {
-        setLocation('/add-product?type=government-service&section=government&country=dr-congo');
-        setActiveSection('government');
-        form.setValue('offeringType', 'service');
-        form.setValue('category', '');
-      }
+      marketplaceValue: 'government-dr-congo' as const,
     }
   ];
 
