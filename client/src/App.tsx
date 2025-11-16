@@ -247,7 +247,6 @@ import { SEOHead } from '@/components/seo/SEOHead';
 import OptimizedNavigation from '@/components/layout/OptimizedNavigation';
 import MobileNavigation from '@/components/layout/MobileNavigation';
 import { MarketplaceNav } from '@/components/layout/MarketplaceNav';
-import { GovernmentNav } from '@/components/layout/GovernmentNav';
 import Footer from '@/components/layout/Footer';
 import { CommunityNav } from '@/components/layout/CommunityNav';
 import { DatingNav } from '@/components/layout/DatingNav';
@@ -366,9 +365,6 @@ function ConditionalFooter() {
 
 function MarketplaceNavWrapper() {
   const [location] = useLocation();
-  
-  const isGovernmentRoute = location === '/government' || location.startsWith('/government/');
-  
   const showOnPaths = [
     '/marketplace', '/products', '/product', '/vendors', '/vendor',
     '/government', '/checkout', '/payment-success', '/add-product',
@@ -385,7 +381,7 @@ function MarketplaceNavWrapper() {
   
   return (
     <div className="sticky top-0 z-30 bg-white shadow-sm">
-      {isGovernmentRoute ? <GovernmentNav /> : <MarketplaceNav />}
+      <MarketplaceNav />
     </div>
   );
 }
