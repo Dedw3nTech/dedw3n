@@ -713,7 +713,10 @@ export default function AddProduct() {
   const getAvailableMarketplaces = () => {
     // Safety check for null/undefined data
     if (!vendorAccountsData || !vendorAccountsData.vendorAccounts || !Array.isArray(vendorAccountsData.vendorAccounts)) {
-      return [{ value: 'c2c', label: 'C2C (Consumer to Consumer)', description: 'For individual sellers' }];
+      return [
+        { value: 'c2c', label: 'Friend to Friend', description: 'For individual sellers' },
+        { value: 'rqst', label: 'Request', description: 'Post product requests' }
+      ];
     }
     
     const vendorAccounts = vendorAccountsData.vendorAccounts;
@@ -723,13 +726,16 @@ export default function AddProduct() {
     const marketplaces = [];
     
     if (hasPrivateVendor) {
-      marketplaces.push({ value: 'c2c', label: 'C2C (Consumer to Consumer)', description: 'For individual sellers' });
+      marketplaces.push({ value: 'c2c', label: 'Friend to Friend', description: 'For individual sellers' });
     }
+    
+    // Request is available to all vendors
+    marketplaces.push({ value: 'rqst', label: 'Request', description: 'Post product requests' });
     
     if (hasBusinessVendor) {
       marketplaces.push(
-        { value: 'b2c', label: 'B2C (Business to Consumer)', description: 'For businesses selling to consumers' },
-        { value: 'b2b', label: 'B2B (Business to Business)', description: 'For businesses selling to other businesses' }
+        { value: 'b2c', label: 'Online Store', description: 'For businesses selling to consumers' },
+        { value: 'b2b', label: 'Whole Sale', description: 'For businesses selling to other businesses' }
       );
     }
     
@@ -1201,6 +1207,14 @@ export default function AddProduct() {
     return `${basePath}?${currentParams.toString()}`;
   };
 
+  // Map sidebar item IDs to marketplace values
+  const marketplaceIdMap: Record<string, 'c2c' | 'b2c' | 'b2b' | 'rqst'> = {
+    'friend-to-friend': 'c2c',
+    'request': 'rqst',
+    'online-store': 'b2c',
+    'wholesale': 'b2b',
+  };
+
   // Filter marketplace sub-items based on vendor type
   const getFilteredMarketplaceSubItems = () => {
     const vendorAccounts = vendorAccountsData?.vendorAccounts;
@@ -1219,7 +1233,7 @@ export default function AddProduct() {
       subItems.push({
         id: 'friend-to-friend',
         label: t("Friend to Friend"),
-        href: getSectionHref('marketplace'),
+        marketplaceValue: 'c2c' as const,
       });
     }
     
@@ -1227,7 +1241,7 @@ export default function AddProduct() {
     subItems.push({
       id: 'request',
       label: t("Request"),
-      href: getSectionHref('marketplace'),
+      marketplaceValue: 'rqst' as const,
     });
     
     // Online Store and Whole Sale - Only for business vendors
@@ -1236,12 +1250,12 @@ export default function AddProduct() {
         {
           id: 'online-store',
           label: t("Online Store"),
-          href: getSectionHref('marketplace'),
+          marketplaceValue: 'b2c' as const,
         },
         {
           id: 'wholesale',
           label: t("Whole Sale"),
-          href: getSectionHref('marketplace'),
+          marketplaceValue: 'b2b' as const,
         }
       );
     }
@@ -1331,16 +1345,27 @@ export default function AddProduct() {
                         </button>
                         {isMarketplaceExpanded && section.subItems && (
                           <div className="ml-4 mt-1 space-y-1">
-                            {section.subItems.map((subItem) => (
-                              <Link
-                                key={subItem.id}
-                                href={subItem.href}
-                                data-testid={`section-${subItem.id}`}
-                                className="w-full block px-4 py-3 rounded-lg text-sm font-medium tracking-wide transition-all text-left text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                              >
-                                {subItem.label}
-                              </Link>
-                            ))}
+                            {section.subItems.map((subItem) => {
+                              const isSelected = form.watch('marketplace') === subItem.marketplaceValue;
+                              return (
+                                <button
+                                  key={subItem.id}
+                                  type="button"
+                                  onClick={() => {
+                                    form.setValue('marketplace', subItem.marketplaceValue);
+                                  }}
+                                  data-testid={`marketplace-${subItem.id}`}
+                                  className={cn(
+                                    "w-full block px-4 py-3 rounded-lg text-sm font-medium tracking-wide transition-all text-left",
+                                    isSelected
+                                      ? "bg-black text-white shadow-sm"
+                                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                  )}
+                                >
+                                  {subItem.label}
+                                </button>
+                              );
+                            })}
                           </div>
                         )}
                       </>
@@ -1649,31 +1674,23 @@ export default function AddProduct() {
                     )}
                   />
                   
+                  {/* Marketplace selection is now handled via sidebar navigation */}
                   <FormField
                     control={form.control}
                     name="marketplace"
                     render={({ field }) => (
                       <FormItem className="mt-4">
-                        <FormLabel>{t("Marketplace")}</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={t("Select marketplace")} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {availableMarketplaces.map((marketplace) => (
-                              <SelectItem key={marketplace.value} value={marketplace.value}>
-                                <div className="flex flex-col">
-                                  <span className="font-medium">{t(marketplace.label)}</span>
-                                  <span className="text-sm text-muted-foreground">{t(marketplace.description)}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormLabel>{t("Selected Marketplace")}</FormLabel>
+                        <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {availableMarketplaces.find(m => m.value === field.value)?.label || t("Select from sidebar")}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            {availableMarketplaces.find(m => m.value === field.value)?.description || t("Use the sidebar to select a marketplace")}
+                          </p>
+                        </div>
                         <FormDescription>
-                          {t("Choose which marketplace to list your product on")}
+                          {t("Select marketplace from the sidebar navigation")}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
