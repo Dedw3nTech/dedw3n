@@ -498,6 +498,24 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
           </div>
           )}
 
+          {/* Government navigation - ABSOLUTELY CENTERED - Shown on government page */}
+          {isGovernmentPage && (
+            <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center flex-nowrap gap-4">
+              <div 
+                className="cursor-pointer group transition-all duration-300 h-[40px] flex items-center flex-shrink-0"
+                onClick={() => setLocation("/dr-congo")}
+                data-testid="button-dr-congo-nav"
+              >
+                <div className="relative">
+                  <span className="text-[9px] md:text-[10px] lg:text-xs xl:text-sm font-medium transition-colors duration-300 whitespace-nowrap text-black group-hover:text-black">
+                    {translatedLabels.drCongoText}
+                  </span>
+                  <div className="absolute -bottom-1 left-0 h-0.5 bg-transparent w-0 group-hover:w-full group-hover:bg-black transition-all duration-300" />
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Search bar and hamburger menu - positioned on the RIGHT side */}
           <div className="flex-shrink-0 flex items-center gap-3">
             <div ref={searchRef} className="relative min-w-[200px] max-w-md">
@@ -753,6 +771,19 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
                   {marketType === 'creators' && translatedLabels.creatorsText}
                   {marketType === 'real-estate' && translatedLabels.realEstateText}
                   {marketType === 'rqst' && translatedLabels.rqstText}
+                </span>
+              </div>
+            )}
+
+            {/* Dr Congo button for government page - Mobile */}
+            {isGovernmentPage && (
+              <div 
+                className="flex items-center cursor-pointer"
+                onClick={() => setLocation("/dr-congo")}
+                data-testid="button-dr-congo-nav-mobile"
+              >
+                <span className="text-sm font-medium text-black underline hover:no-underline">
+                  {translatedLabels.drCongoText}
                 </span>
               </div>
             )}
