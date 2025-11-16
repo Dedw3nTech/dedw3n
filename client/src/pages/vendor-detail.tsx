@@ -131,6 +131,8 @@ export default function VendorDetailPage() {
   const [selectedReportProduct, setSelectedReportProduct] = useState<any>(null);
   const [reportReason, setReportReason] = useState('');
   const [reportMessage, setReportMessage] = useState('');
+  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+  const [vendorMessage, setVendorMessage] = useState('');
 
   // Translation texts
   const productTexts = [
@@ -157,7 +159,9 @@ export default function VendorDetailPage() {
     "Provide more information about why you're reporting this product...",
     "Your Region", "Your Country", "Share with Member", "Share via Text Message",
     "Share via E-mail", "Share via Email", "Currency", "Copy Link",
-    "Min qty"
+    "Min qty",
+    "Contact Vendor", "Send Message to Vendor", "Type your message here...",
+    "Send Message", "Message sent successfully"
   ];
 
   const { translations: t } = useMasterBatchTranslation(productTexts);
@@ -185,7 +189,9 @@ export default function VendorDetailPage() {
     provideMoreInfoText,
     yourRegionText, yourCountryText, shareWithMemberText, shareViaTextMessageText,
     shareViaEmailAlt, shareViaEmailText, currencyText, copyLinkText,
-    minQtyText
+    minQtyText,
+    contactVendorText, sendMessageToVendorText, typeMessagePlaceholderText,
+    sendMessageButtonText, messageSentSuccessText
   ] = t || productTexts;
 
   // Fetch vendor data
@@ -325,6 +331,26 @@ export default function VendorDetailPage() {
       setReportReason('');
       setReportMessage('');
       setSelectedReportProduct(null);
+    },
+  });
+
+  // Send message to vendor mutation
+  const sendVendorMessageMutation = useMutation({
+    mutationFn: async ({ recipientId, content }: { recipientId: number; content: string }) => {
+      const response = await apiRequest('POST', '/api/messages/send', {
+        recipientId,
+        content,
+        category: 'marketplace'
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: messageSentSuccessText,
+        description: "Your message has been sent to the vendor",
+      });
+      setMessageDialogOpen(false);
+      setVendorMessage('');
     },
   });
 
@@ -978,10 +1004,10 @@ export default function VendorDetailPage() {
                       <User className="h-4 w-4" />
                     </Link>
                     <button 
-                      onClick={() => setLocation(`/messages?user=${vendor.userId}`)}
+                      onClick={() => setMessageDialogOpen(true)}
                       className="text-muted-foreground hover:text-primary transition-colors"
                       data-testid="button-contact-vendor"
-                      title={translateText("Contact Vendor")}
+                      title={contactVendorText}
                     >
                       <Mail className="h-4 w-4" />
                     </button>
@@ -1396,6 +1422,62 @@ export default function VendorDetailPage() {
                 </>
               ) : (
                 reportProductText
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Send Message to Vendor Dialog */}
+      <Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{sendMessageToVendorText}</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="vendor-message" className="text-sm font-medium">{messageOptionalText}</Label>
+              <Textarea
+                id="vendor-message"
+                placeholder={typeMessagePlaceholderText}
+                value={vendorMessage}
+                onChange={(e) => setVendorMessage(e.target.value)}
+                className="mt-2"
+                rows={5}
+                data-testid="textarea-vendor-message"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setMessageDialogOpen(false)}
+              disabled={sendVendorMessageMutation.isPending}
+            >
+              {cancelText}
+            </Button>
+            <Button
+              onClick={() => {
+                if (vendor && vendorMessage.trim()) {
+                  sendVendorMessageMutation.mutate({
+                    recipientId: vendor.userId,
+                    content: vendorMessage
+                  });
+                }
+              }}
+              disabled={sendVendorMessageMutation.isPending || !vendorMessage.trim()}
+              className="bg-black text-white hover:bg-gray-800"
+              data-testid="button-send-message"
+            >
+              {sendVendorMessageMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {sendingText}
+                </>
+              ) : (
+                sendMessageButtonText
               )}
             </Button>
           </DialogFooter>
