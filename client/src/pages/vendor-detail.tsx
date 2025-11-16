@@ -965,7 +965,7 @@ export default function VendorDetailPage() {
         <Card className="mb-8">
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row gap-6">
-              <div className="flex items-center gap-4 flex-shrink-0">
+              <div className="flex items-center gap-4 flex-shrink-0 md:ml-auto">
                 <Link href={`/members/${vendor.userId}`}>
                   <Avatar className="h-16 w-16 cursor-pointer hover:ring-2 hover:ring-primary hover:ring-offset-2 transition-all">
                     <AvatarImage src={vendor.logo || undefined} alt={vendor.storeName} />
