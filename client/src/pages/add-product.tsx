@@ -311,15 +311,17 @@ export default function AddProduct() {
   
   const urlParams = new URLSearchParams(getQueryParams(location));
   const prefillData = urlParams.get('prefill');
-  const sectionFromUrl = urlParams.get('section') || 'marketplace'; // Default to marketplace
   const serviceType = urlParams.get('type'); // Check for government-service or other types
   const isGovernmentService = serviceType === 'government-service';
+  const sectionFromUrl = urlParams.get('section') || (isGovernmentService ? 'government' : 'marketplace');
   const [activeSection, setActiveSection] = useState(sectionFromUrl);
   
   // Sync activeSection with URL parameter whenever location changes
   useEffect(() => {
     const currentParams = new URLSearchParams(getQueryParams(location));
-    const urlSection = currentParams.get('section') || 'marketplace';
+    const currentServiceType = currentParams.get('type');
+    const isGovService = currentServiceType === 'government-service';
+    const urlSection = currentParams.get('section') || (isGovService ? 'government' : 'marketplace');
     // Only update if the value has changed to avoid unnecessary renders
     if (urlSection !== activeSection) {
       setActiveSection(urlSection);
@@ -1312,7 +1314,7 @@ export default function AddProduct() {
         id: 'government',
         label: t("Government"),
         href: getSectionHref('government'),
-        isActive: activeSection === 'government',
+        isActive: activeSection === 'government' || isGovernmentService,
         isReactiveButton: true,
       },
       {
@@ -1408,7 +1410,8 @@ export default function AddProduct() {
                       <button
                         type="button"
                         onClick={() => {
-                          setLocation('/add-product?type=government-service');
+                          setLocation('/add-product?type=government-service&section=government');
+                          setActiveSection('government');
                           form.setValue('offeringType', 'service');
                           form.setValue('category', '');
                         }}
