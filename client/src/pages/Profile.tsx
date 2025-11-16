@@ -6,12 +6,11 @@ import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { useQuery } from '@tanstack/react-query';
 import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
-import { sanitizeImageUrl } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { UserAvatar } from '@/components/ui/user-avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { 
@@ -19,8 +18,6 @@ import {
   ShoppingCart, 
   Package, 
   Store, 
-  User, 
-  Settings, 
   ChevronDown, 
   ChevronRight,
   Edit3,
@@ -33,7 +30,6 @@ const ProfilePage = () => {
   const isAuthenticated = !!user;
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string>('personal-info');
-  const [avatarImageError, setAvatarImageError] = useState(false);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -41,30 +37,6 @@ const ProfilePage = () => {
       setLocation('/auth');
     }
   }, [isAuthenticated, setLocation]);
-
-  // Reset avatar error when user avatar changes
-  useEffect(() => {
-    setAvatarImageError(false);
-  }, [user?.avatar]);
-
-  // Helper function to get user initials
-  const getUserInitials = () => {
-    if (user?.name) {
-      const nameParts = user.name.trim().split(' ');
-      if (nameParts.length >= 2) {
-        return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
-      }
-      return user.name.charAt(0).toUpperCase();
-    } else if (user?.username) {
-      return user.username.charAt(0).toUpperCase();
-    }
-    return 'U';
-  };
-
-  // Handle avatar image load error
-  const handleAvatarError = () => {
-    setAvatarImageError(true);
-  };
 
   // Texts for translation
   const profileTexts = [
@@ -212,16 +184,11 @@ const ProfilePage = () => {
               {/* Profile Picture Section */}
               <div className="flex items-center gap-6">
                 <div className="relative">
-                  <Avatar className="h-24 w-24">
-                    <AvatarImage 
-                      src={!avatarImageError && user.avatar ? sanitizeImageUrl(user.avatar, '/assets/default-avatar.png') : undefined} 
-                      alt={user.name || user.username}
-                      onError={handleAvatarError}
-                    />
-                    <AvatarFallback className="text-2xl bg-gradient-to-br from-purple-500 to-pink-600 text-white">
-                      {getUserInitials()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <UserAvatar 
+                    userId={user.id} 
+                    username={user.username} 
+                    size="xl"
+                  />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold">{user.name || user.username}</h3>
@@ -353,16 +320,11 @@ const ProfilePage = () => {
               <CardContent className="space-y-2">
                 {/* Profile Summary */}
                 <div className="flex items-center gap-3 p-4 bg-white rounded-lg mb-4">
-                  <Avatar className="h-12 w-12">
-                    <AvatarImage 
-                      src={!avatarImageError && user.avatar ? sanitizeImageUrl(user.avatar, '/assets/default-avatar.png') : undefined} 
-                      alt={user.name || user.username}
-                      onError={handleAvatarError}
-                    />
-                    <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-600 text-white">
-                      {getUserInitials()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <UserAvatar 
+                    userId={user.id} 
+                    username={user.username} 
+                    size="md"
+                  />
                   <div className="flex-1">
                     <h3 className="font-semibold">{user.name || user.username}</h3>
                     <p className="text-sm text-gray-600">{user.email}</p>
