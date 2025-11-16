@@ -138,7 +138,7 @@ async function apiRequestFull(
   // Auto-login completely removed for security
 
   // Special handling for login/register routes to ensure we can login even when logged out flag is set
-  if (url === '/api/login' || url === '/api/register' || url === '/api/auth/login' || url === '/api/auth/register' || url === '/api/auth/login-with-recaptcha') {
+  if (url === '/api/login' || url === '/api/register' || url === '/api/auth/login' || url === '/api/auth/register') {
     // Clear the logged out flag for login/register attempts
     try {
       localStorage.removeItem('unified_logout_state');

@@ -16,7 +16,6 @@ import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidato
 
 import { useEmailValidation } from "@/hooks/use-email-validation";
 import { useNameValidation } from "@/hooks/use-name-validation";
-import { useUnifiedRecaptcha } from '@/components/UnifiedRecaptchaProvider';
 import { useAffiliateVerification } from "@/hooks/use-affiliate-verification";
 import { usePasswordStrength } from "@/hooks/use-password-strength";
 
@@ -49,7 +48,6 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const { loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
-  const { executeRecaptcha } = useUnifiedRecaptcha();
 
   const { 
     validateEmail, 
@@ -274,22 +272,10 @@ export default function AuthPage() {
     }
 
     try {
-      // Get reCAPTCHA token invisibly (no UI displayed)
-      let recaptchaToken = null;
-      if (executeRecaptcha) {
-        try {
-          recaptchaToken = await executeRecaptcha(isLogin ? 'login' : 'register');
-          console.log(`[RECAPTCHA] Generated invisible token for ${isLogin ? 'login' : 'register'}`);
-        } catch (recaptchaError) {
-          console.warn('[RECAPTCHA] Token generation failed, proceeding without token:', recaptchaError);
-        }
-      }
-
       if (isLogin) {
         await loginMutation.mutateAsync({
           username: formData.username,
-          password: formData.password,
-          recaptchaToken: recaptchaToken || undefined
+          password: formData.password
         });
         
         // Handle remember password functionality
@@ -322,8 +308,7 @@ export default function AuthPage() {
           country: formData.country,
           city: formData.city,
           preferredLanguage: formData.language,
-          affiliatePartner: formData.affiliatePartnerCode,
-          recaptchaToken: recaptchaToken || undefined
+          affiliatePartner: formData.affiliatePartnerCode
         });
         toast({
           title: t["Account created!"] || "Account created!",

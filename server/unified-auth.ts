@@ -59,9 +59,7 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
   }
 
   // Check for logout headers after session checks to avoid blocking valid sessions
-  const isAuthEndpoint = req.path === '/api/auth/login-with-recaptcha' || 
-                         req.path === '/api/auth/register-with-recaptcha' ||
-                         req.path.includes('/api/auth/login') || 
+  const isAuthEndpoint = req.path.includes('/api/auth/login') || 
                          req.path.includes('/api/auth/register') ||
                          req.path.includes('/api/login') ||
                          req.path.includes('/api/register');

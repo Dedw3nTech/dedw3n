@@ -22,7 +22,6 @@ import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidato
 
 import { useEmailValidation } from "@/hooks/use-email-validation";
 import { useNameValidation } from "@/hooks/use-name-validation";
-import { useUnifiedRecaptcha } from '@/components/UnifiedRecaptchaProvider';
 import { useAffiliateVerification } from "@/hooks/use-affiliate-verification";
 import { useUsernameVerification } from "@/hooks/use-username-verification";
 import { usePasswordStrength } from "@/hooks/use-password-strength";
@@ -54,7 +53,6 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
   const [showPassword, setShowPassword] = useState(false);
   const { loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
-  const { executeRecaptcha } = useUnifiedRecaptcha();
 
   const { 
     validateEmail, 
@@ -302,22 +300,10 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     }
 
     try {
-      // Get reCAPTCHA token invisibly (no UI displayed)
-      let recaptchaToken = null;
-      if (executeRecaptcha) {
-        try {
-          recaptchaToken = await executeRecaptcha(isLogin ? 'login' : 'register');
-          console.log(`[RECAPTCHA] Generated invisible token for ${isLogin ? 'login' : 'register'}`);
-        } catch (recaptchaError) {
-          console.warn('[RECAPTCHA] Token generation failed, proceeding without token:', recaptchaError);
-        }
-      }
-
       if (isLogin) {
         await loginMutation.mutateAsync({
           username: formData.username,
-          password: formData.password,
-          recaptchaToken: recaptchaToken || undefined
+          password: formData.password
         });
         
         // Handle remember password functionality
@@ -350,8 +336,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           region: formData.region as "Africa" | "South Asia" | "East Asia" | "Oceania" | "North America" | "Central America" | "South America" | "Middle East" | "Europe" | "Central Asia" | null,
           country: formData.country,
           city: formData.city,
-          preferredLanguage: formData.language,
-          recaptchaToken: recaptchaToken || undefined
+          preferredLanguage: formData.language
         });
         toast({
           title: t["Account created!"] || "Account created!",
