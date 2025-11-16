@@ -360,14 +360,14 @@ export default function UserMenu() {
           <Separator />
 
           {/* Offline Mode Toggle */}
-          <div className="px-3 py-3">
+          <div>
             <button
               type="button"
               role="switch"
               aria-checked={!isOnline}
               onClick={() => setOnlineStatus(!isOnline)}
               disabled={isWarmingCache}
-              className="w-full flex items-center justify-between text-sm font-medium text-black hover:bg-gray-50 rounded-md px-2 py-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-between text-sm font-medium text-black hover:bg-gray-50 rounded-md px-3 py-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               data-testid="button-offline-toggle"
             >
               <div className="flex items-center gap-2">
