@@ -247,18 +247,20 @@ export default function OptimizedNavigation() {
               <Button 
                 variant="ghost" 
                 size="sm"
-                className="text-black flex items-center gap-2 relative"
+                className="text-black flex items-center gap-2"
                 data-testid="link-messages"
                 asChild
               >
-                <Link href="/messages">
-                  <MessageCircle className="h-4 w-4" />
+                <Link href="/messages" className="flex items-center gap-2">
+                  <div className="relative inline-flex">
+                    <MessageCircle className="h-4 w-4" />
+                    {isLoggedIn && unreadMessages && unreadMessages.count > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-black text-[9px] font-medium text-white">
+                        {unreadMessages.count > 9 ? "9+" : unreadMessages.count}
+                      </span>
+                    )}
+                  </div>
                   <span className="hidden sm:inline">{translatedLabels.messages}</span>
-                  {isLoggedIn && unreadMessages && unreadMessages.count > 0 && (
-                    <Badge variant="destructive" className="ml-1 h-5 min-w-[20px] rounded-full px-1 text-xs">
-                      {unreadMessages.count > 99 ? "99+" : unreadMessages.count}
-                    </Badge>
-                  )}
                 </Link>
               </Button>
               
