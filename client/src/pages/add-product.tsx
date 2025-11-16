@@ -2051,7 +2051,7 @@ export default function AddProduct() {
                       name="barcode"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{t("Barcode (ISBN, UPC, GTIN, etc.)")}</FormLabel>
+                          <FormLabel>{t("Barcode (ISBN, UPC, etc.)")}</FormLabel>
                           <FormControl>
                             <Input placeholder={t("1234567890123")} {...field} />
                           </FormControl>
