@@ -72,6 +72,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
+const createVendorSlug = (storeName: string): string => {
+  return storeName.toLowerCase().replace(/[^a-z0-9]/g, '');
+};
+
 export default function ProductDetail() {
   const [, setLocation] = useLocation();
   const [, params] = useRoute('/product/:identifier');
@@ -843,7 +847,7 @@ export default function ProductDetail() {
             <div className="mb-4">
               <p className="text-sm text-gray-500">
                 {translateText('Sold by')}{' '}
-                <Link href={`/vendor/${vendor.id}`} className="text-black hover:underline">
+                <Link href={`/vendor/${createVendorSlug(vendor.storeName)}`} className="text-black hover:underline">
                   {vendor.storeName}
                 </Link>
               </p>
@@ -1244,7 +1248,7 @@ export default function ProductDetail() {
             <h2 className="text-2xl font-semibold text-gray-900">
               {translateText('More from this vendor')}
             </h2>
-            <Link href={`/vendor/${vendor.id}`}>
+            <Link href={`/vendor/${createVendorSlug(vendor.storeName)}`}>
               <Button variant="ghost" className="text-black hover:bg-gray-100 border-0">
                 {translateText('Visit vendor store for more')}
               </Button>
