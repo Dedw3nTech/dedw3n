@@ -54,6 +54,7 @@ import { Loader2, Plus, Upload, X, Video as VideoIcon, CheckCircle, Landmark, Bu
 import CurrencyInput from '@/components/ui/currency-input';
 import { VendorCreationDialog } from '@/components/VendorCreationDialog';
 import { cn } from '@/lib/utils';
+import { useDistanceUnit } from '@/hooks/use-distance-unit';
 
 // Comprehensive Category System - All Products, Services, and Digital Products Known to Humanity
 const PRODUCT_CATEGORIES = [
@@ -129,7 +130,7 @@ const FIELD_CONFIGS: Record<string, {label: string; type: string; placeholder?: 
   make: { label: 'Make', type: 'text', placeholder: 'e.g., Toyota' },
   model: { label: 'Model', type: 'text', placeholder: 'e.g., Camry' },
   year: { label: 'Year', type: 'number', placeholder: 'e.g., 2020' },
-  mileage: { label: 'Mileage (km)', type: 'number', placeholder: 'e.g., 50000' },
+  mileage: { label: 'Mileage', type: 'number', placeholder: 'e.g., 50000' },
   fuel_type: { label: 'Fuel Type', type: 'select', options: ['Petrol', 'Diesel', 'Electric', 'Hybrid'] },
   transmission: { label: 'Transmission', type: 'select', options: ['Automatic', 'Manual', 'CVT'] },
   engine_size: { label: 'Engine (cc)', type: 'number', placeholder: 'e.g., 1500' },
@@ -276,6 +277,7 @@ export default function AddProduct() {
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { distanceUnit } = useDistanceUnit();
   const [isVendor, setIsVendor] = useState(false);
   const [vendorId, setVendorId] = useState<number | null>(null);
   const [customFields, setCustomFields] = useState<Array<{id: string, name: string, value: string}>>([]);
@@ -1499,6 +1501,38 @@ export default function AddProduct() {
                     if (!fieldConfig) return null;
 
                     const fieldName = `categoryFields.${fieldKey}` as any;
+
+                    if (fieldKey === 'mileage') {
+                      return (
+                        <FormField
+                          key={fieldKey}
+                          control={form.control}
+                          name={fieldName}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t(fieldConfig.label)}</FormLabel>
+                              <div className="flex gap-2">
+                                <FormControl>
+                                  <Input
+                                    type={fieldConfig.type}
+                                    placeholder={fieldConfig.placeholder ? t(fieldConfig.placeholder) : ''}
+                                    {...field}
+                                    className="flex-1"
+                                    data-testid="input-mileage"
+                                  />
+                                </FormControl>
+                                <div className="flex items-center px-3 bg-gray-100 dark:bg-gray-800 rounded-md border border-gray-300 dark:border-gray-600 min-w-[60px] justify-center">
+                                  <span className="text-sm text-gray-700 dark:text-gray-300" data-testid="text-mileage-unit">
+                                    {distanceUnit}
+                                  </span>
+                                </div>
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      );
+                    }
 
                     if (fieldConfig.type === 'select') {
                       return (
