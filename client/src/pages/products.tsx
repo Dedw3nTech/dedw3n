@@ -188,7 +188,14 @@ export default function Products() {
     "Add to Favorites", "Remove from Favorites",
     
     // Vendor Information (1 text)
-    "Sold by"
+    "Sold by",
+    
+    // Report Feature (14 texts)
+    "Report Product", "Help us maintain a safe marketplace by reporting products that violate our policies",
+    "Reason for reporting", "Select a reason", "Counterfeit Product", "Fraudulent Listing",
+    "Prohibited Item", "Misleading Information", "Harassment or Abuse", "Spam",
+    "Copyright Violation", "Other", "Additional details (optional)", 
+    "Provide more information about why you're reporting this product..."
   ];
 
   const { translations: t } = useMasterBatchTranslation(productTexts);
@@ -228,7 +235,12 @@ export default function Products() {
     friendOptionsText, friendsOnlyText, localPickupText, storeOptionsText, verifiedStoresText,
     freeShippingText, nextDayDeliveryText, businessOptionsText,
     
-    addToFavoritesText, removeFromFavoritesText, soldByText
+    addToFavoritesText, removeFromFavoritesText, soldByText,
+    
+    reportProductText, reportProductDescriptionText, reasonForReportingText, selectReasonText,
+    counterfeitProductText, fraudulentListingText, prohibitedItemText, misleadingInfoText,
+    harassmentAbuseText, spamText, copyrightViolationText, otherReasonText,
+    additionalDetailsText, reportPlaceholderText
   ] = t || [];
   
   // Fix for missing variables
@@ -2166,9 +2178,9 @@ export default function Products() {
       <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-bold">Report Product</DialogTitle>
+            <DialogTitle className="font-bold">{reportProductText}</DialogTitle>
             <DialogDescription>
-              Help us maintain a safe marketplace by reporting products that violate our policies
+              {reportProductDescriptionText}
             </DialogDescription>
           </DialogHeader>
           
@@ -2196,40 +2208,41 @@ export default function Products() {
 
           <div className="space-y-4">
             <div>
-              <Label htmlFor="report-reason" className="text-sm font-medium">Reason for reporting</Label>
+              <Label htmlFor="report-reason" className="text-sm font-medium">{reasonForReportingText}</Label>
               <Select value={reportReason} onValueChange={setReportReason}>
-                <SelectTrigger className="mt-2">
-                  <SelectValue placeholder="Select a reason" />
+                <SelectTrigger className="mt-2" data-testid="select-report-reason">
+                  <SelectValue placeholder={selectReasonText} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="counterfeit">Counterfeit Product</SelectItem>
-                  <SelectItem value="fraud">Fraudulent Listing</SelectItem>
-                  <SelectItem value="prohibited">Prohibited Item</SelectItem>
-                  <SelectItem value="misinformation">Misleading Information</SelectItem>
-                  <SelectItem value="harassment">Harassment or Abuse</SelectItem>
-                  <SelectItem value="spam">Spam</SelectItem>
-                  <SelectItem value="copyright">Copyright Violation</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="counterfeit">{counterfeitProductText}</SelectItem>
+                  <SelectItem value="fraud">{fraudulentListingText}</SelectItem>
+                  <SelectItem value="prohibited">{prohibitedItemText}</SelectItem>
+                  <SelectItem value="misinformation">{misleadingInfoText}</SelectItem>
+                  <SelectItem value="harassment">{harassmentAbuseText}</SelectItem>
+                  <SelectItem value="spam">{spamText}</SelectItem>
+                  <SelectItem value="copyright">{copyrightViolationText}</SelectItem>
+                  <SelectItem value="other">{otherReasonText}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             <div>
-              <Label htmlFor="report-message" className="text-sm font-medium">Additional details (optional)</Label>
+              <Label htmlFor="report-message" className="text-sm font-medium">{additionalDetailsText}</Label>
               <Textarea
                 id="report-message"
-                placeholder="Provide more information about why you're reporting this product..."
+                placeholder={reportPlaceholderText}
                 value={reportMessage}
                 onChange={(e) => setReportMessage(e.target.value)}
                 className="mt-2"
                 rows={4}
+                data-testid="textarea-report-message"
               />
             </div>
           </div>
 
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setReportDialogOpen(false)}>
-              Cancel
+            <Button variant="outline" onClick={() => setReportDialogOpen(false)} data-testid="button-cancel-report">
+              {cancelText}
             </Button>
             <Button
               onClick={() => {
@@ -2243,14 +2256,15 @@ export default function Products() {
               }}
               disabled={reportProductMutation.isPending || !reportReason}
               className="bg-black text-white hover:bg-gray-800"
+              data-testid="button-submit-report"
             >
               {reportProductMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
+                  {sendingText}
                 </>
               ) : (
-                'Submit Report'
+                reportProductText
               )}
             </Button>
           </DialogFooter>
