@@ -141,7 +141,16 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
   }, [setLocation]);
 
   const handleAddProduct = useCallback(() => {
-    // Check if user has an active vendor account
+    // For government pages, only authorized users can add services
+    if (isGovernmentPage) {
+      if (canAddService) {
+        // Navigate to add product page with government service context
+        setLocation('/add-product?type=government-service');
+      }
+      return;
+    }
+    
+    // For regular marketplace, check if user has an active vendor account
     if (userVendor) {
       // User has vendor account, proceed to add product
       setLocation('/add-product');
@@ -149,7 +158,7 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
       // User doesn't have vendor account, redirect to become a vendor
       setLocation('/vendor-dashboard');
     }
-  }, [userVendor, setLocation]);
+  }, [isGovernmentPage, canAddService, userVendor, setLocation]);
 
   // Track navbar visibility and close dropdown when navbar scrolls out of view
   useEffect(() => {

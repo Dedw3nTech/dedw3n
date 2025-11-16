@@ -115,6 +115,15 @@ const SERVICE_CATEGORIES = [
   { value: 'services-catering', label: 'Catering', fields: ['cuisine_type', 'capacity', 'per_person_rate'] },
 ];
 
+const GOVERNMENT_SERVICE_CATEGORIES = [
+  { value: 'gov-certificates', label: 'Certificates', fields: ['service_type', 'processing_time', 'requirements'] },
+  { value: 'gov-passport', label: 'Passport Services', fields: ['service_type', 'processing_time', 'validity_period'] },
+  { value: 'gov-supplementary-judgment', label: 'Supplementary Judgment', fields: ['service_type', 'processing_time', 'requirements'] },
+  { value: 'gov-drivers-license', label: 'Drivers License', fields: ['license_type', 'processing_time', 'validity_period'] },
+  { value: 'gov-visa', label: 'Visa Services', fields: ['visa_type', 'processing_time', 'validity_period'] },
+  { value: 'gov-permits', label: 'Permits & Licenses', fields: ['permit_type', 'processing_time', 'validity_period'] },
+];
+
 const DIGITAL_CATEGORIES = [
   { value: 'digital-software', label: 'Software & Apps', fields: ['platform', 'version', 'license_type', 'file_size'] },
   { value: 'digital-ebooks', label: 'E-books', fields: ['author', 'pages', 'format', 'language'] },
@@ -211,6 +220,12 @@ const FIELD_CONFIGS: Record<string, {label: string; type: string; placeholder?: 
   cuisine_type: { label: 'Cuisine Type', type: 'text', placeholder: 'e.g., Italian' },
   capacity: { label: 'Capacity', type: 'number', placeholder: 'e.g., 50' },
   per_person_rate: { label: 'Rate per Person', type: 'number', placeholder: 'e.g., 25' },
+  processing_time: { label: 'Processing Time', type: 'text', placeholder: 'e.g., 5-7 business days' },
+  requirements: { label: 'Requirements', type: 'text', placeholder: 'Documents/requirements needed' },
+  validity_period: { label: 'Validity Period', type: 'text', placeholder: 'e.g., 10 years' },
+  license_type: { label: 'License Type', type: 'select', options: ['Standard', 'Commercial', 'International'] },
+  visa_type: { label: 'Visa Type', type: 'select', options: ['Tourist', 'Business', 'Student', 'Work'] },
+  permit_type: { label: 'Permit Type', type: 'text', placeholder: 'Type of permit' },
 };
 
 // Product form schema
@@ -297,6 +312,8 @@ export default function AddProduct() {
   const urlParams = new URLSearchParams(getQueryParams(location));
   const prefillData = urlParams.get('prefill');
   const sectionFromUrl = urlParams.get('section') || 'marketplace'; // Default to marketplace
+  const serviceType = urlParams.get('type'); // Check for government-service or other types
+  const isGovernmentService = serviceType === 'government-service';
   const [activeSection, setActiveSection] = useState(sectionFromUrl);
   
   // Sync activeSection with URL parameter whenever location changes
@@ -1486,7 +1503,9 @@ export default function AddProduct() {
               name="category"
               render={({ field }) => {
                 const offeringType = form.watch('offeringType');
-                const availableCategories = offeringType === 'service' 
+                const availableCategories = isGovernmentService
+                  ? GOVERNMENT_SERVICE_CATEGORIES
+                  : offeringType === 'service' 
                   ? SERVICE_CATEGORIES 
                   : offeringType === 'digital_product'
                   ? DIGITAL_CATEGORIES
@@ -1520,7 +1539,9 @@ export default function AddProduct() {
           {form.watch('category') && (() => {
             const offeringType = form.watch('offeringType');
             const selectedCategory = form.watch('category');
-            const categories = offeringType === 'service' 
+            const categories = isGovernmentService
+              ? GOVERNMENT_SERVICE_CATEGORIES
+              : offeringType === 'service' 
               ? SERVICE_CATEGORIES 
               : offeringType === 'digital_product'
               ? DIGITAL_CATEGORIES
