@@ -3,17 +3,19 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, FileText, Users, Heart } from "lucide-react";
+import { Search, Plus, FileText, Users, Heart, Globe } from "lucide-react";
 import { useMasterTranslation } from "@/hooks/use-master-translation";
 import { useAuth } from "@/hooks/use-auth";
 import { SEOHead } from "@/components/seo/SEOHead";
+import { useLocation } from "wouter";
 
 import documentsImage from "@assets/stock_images/passport_identificat_84d90351.jpg";
 import publicServicesImage from "@assets/stock_images/professional_busines_7f598002.jpg";
 import youthCentresImage from "@assets/stock_images/diverse_young_people_e35c35b1.jpg";
 import heroImage from "@assets/stock_images/government_official__39d60ff1.jpg";
+import drCongoImage from "@assets/stock_images/democratic_republic__5eea171f.jpg";
 
-type ServiceCategory = "documents" | "public_services" | "youth_centres";
+type ServiceCategory = "documents" | "public_services" | "youth_centres" | "dr_congo";
 
 const services = [
   {
@@ -37,11 +39,19 @@ const services = [
     icon: Heart,
     description: "Explore youth programs and community centers",
   },
+  {
+    id: "dr_congo",
+    title: "Dr Congo",
+    image: drCongoImage,
+    icon: Globe,
+    description: "Access Dr Congo government services: Certificates, Passports, and Supplementary Judgments",
+  },
 ];
 
 export default function GovernmentPage() {
   const { translateText } = useMasterTranslation();
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<ServiceCategory | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -126,6 +136,17 @@ export default function GovernmentPage() {
             >
               {translateText("Youth Centres")}
             </button>
+            <button
+              onClick={() => setActiveTab("dr_congo")}
+              className={`pb-3 px-2 font-medium transition-colors ${
+                activeTab === "dr_congo"
+                  ? "border-b-2 border-black text-black"
+                  : "text-gray-500 hover:text-black"
+              }`}
+              data-testid="tab-dr-congo"
+            >
+              {translateText("Dr Congo")}
+            </button>
           </div>
 
           {/* Hero Section */}
@@ -177,10 +198,18 @@ export default function GovernmentPage() {
                         {translateText(service.description)}
                       </p>
                       <Button
+                        onClick={() => {
+                          if (service.id === "dr_congo") {
+                            setLocation("/dr-congo");
+                          }
+                        }}
                         className="w-full mt-4 bg-black hover:bg-gray-800 text-white"
                         data-testid={`button-request-${service.id}`}
                       >
-                        {translateText("Request Service")}
+                        {service.id === "dr_congo" 
+                          ? translateText("Access Services")
+                          : translateText("Request Service")
+                        }
                       </Button>
                     </div>
                   </CardContent>

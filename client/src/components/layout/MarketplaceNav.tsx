@@ -895,18 +895,6 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
               )}
 
               <Button
-                variant="ghost"
-                className="w-full justify-start h-12"
-                onClick={() => {
-                  setLocation("/dr-congo");
-                  setIsSidebarOpen(false);
-                }}
-                data-testid="sidebar-button-dr-congo"
-              >
-                <span className="text-xs">{translatedLabels.drCongoText}</span>
-              </Button>
-
-              <Button
                 variant={marketType === 'rqst' ? 'secondary' : 'ghost'}
                 className="w-full justify-start h-12"
                 onClick={() => {
