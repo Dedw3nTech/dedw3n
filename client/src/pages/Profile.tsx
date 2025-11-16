@@ -33,6 +33,7 @@ const ProfilePage = () => {
   const isAuthenticated = !!user;
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string>('personal-info');
+  const [avatarImageError, setAvatarImageError] = useState(false);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -40,6 +41,30 @@ const ProfilePage = () => {
       setLocation('/auth');
     }
   }, [isAuthenticated, setLocation]);
+
+  // Reset avatar error when user avatar changes
+  useEffect(() => {
+    setAvatarImageError(false);
+  }, [user?.avatar]);
+
+  // Helper function to get user initials
+  const getUserInitials = () => {
+    if (user?.name) {
+      const nameParts = user.name.trim().split(' ');
+      if (nameParts.length >= 2) {
+        return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
+      }
+      return user.name.charAt(0).toUpperCase();
+    } else if (user?.username) {
+      return user.username.charAt(0).toUpperCase();
+    }
+    return 'U';
+  };
+
+  // Handle avatar image load error
+  const handleAvatarError = () => {
+    setAvatarImageError(true);
+  };
 
   // Texts for translation
   const profileTexts = [
@@ -188,9 +213,13 @@ const ProfilePage = () => {
               <div className="flex items-center gap-6">
                 <div className="relative">
                   <Avatar className="h-24 w-24">
-                    <AvatarImage src={sanitizeImageUrl(user.avatar || '', '/assets/default-avatar.png')} alt={user.name || user.username} />
-                    <AvatarFallback className="text-2xl">
-                      <User className="h-12 w-12" />
+                    <AvatarImage 
+                      src={!avatarImageError && user.avatar ? sanitizeImageUrl(user.avatar, '/assets/default-avatar.png') : undefined} 
+                      alt={user.name || user.username}
+                      onError={handleAvatarError}
+                    />
+                    <AvatarFallback className="text-2xl bg-gradient-to-br from-purple-500 to-pink-600 text-white">
+                      {getUserInitials()}
                     </AvatarFallback>
                   </Avatar>
                 </div>
@@ -325,9 +354,13 @@ const ProfilePage = () => {
                 {/* Profile Summary */}
                 <div className="flex items-center gap-3 p-4 bg-white rounded-lg mb-4">
                   <Avatar className="h-12 w-12">
-                    <AvatarImage src={sanitizeImageUrl(user.avatar || '', '/assets/default-avatar.png')} alt={user.name || user.username} />
-                    <AvatarFallback>
-                      <User className="h-6 w-6" />
+                    <AvatarImage 
+                      src={!avatarImageError && user.avatar ? sanitizeImageUrl(user.avatar, '/assets/default-avatar.png') : undefined} 
+                      alt={user.name || user.username}
+                      onError={handleAvatarError}
+                    />
+                    <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-600 text-white">
+                      {getUserInitials()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
