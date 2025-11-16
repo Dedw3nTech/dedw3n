@@ -2485,9 +2485,6 @@ export default function AddProduct() {
                           className="bg-gray-50"
                         />
                       </FormControl>
-                      <FormDescription>
-                        Save changes to automatically generate a unique product code. Format: {"{productCount}"}{"{userId}"}{"{day}"}{"{month}"}{"{year}"}
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
