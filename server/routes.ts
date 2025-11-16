@@ -2308,6 +2308,36 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
   
+  // Avatar Health Check endpoint (admin-only)
+  app.get('/api/diagnostic/avatar-health', requireRole('admin'), async (req: Request, res: Response) => {
+    try {
+      const { avatarHealthMonitor } = await import('./avatar-health-monitor');
+      
+      // Check if auto-repair is requested
+      const autoRepair = req.query.autoRepair === 'true';
+      
+      console.log(`[AVATAR-HEALTH-API] Health check requested ${autoRepair ? 'with auto-repair' : 'without auto-repair'}`);
+      
+      // Run comprehensive health check
+      const metrics = await avatarHealthMonitor.runHealthCheck({ autoRepair });
+      
+      return res.json({
+        success: true,
+        metrics,
+        message: autoRepair 
+          ? `Health check complete. Repaired ${metrics.repairedAvatars} broken avatars.`
+          : `Health check complete. Found ${metrics.brokenAvatars} broken avatars. Use ?autoRepair=true to fix them.`
+      });
+    } catch (error) {
+      console.error('[AVATAR-HEALTH-API] Error during health check:', error);
+      return res.status(500).json({ 
+        success: false,
+        error: 'Avatar health check failed',
+        details: (error as Error).message
+      });
+    }
+  });
+  
   // Notification API endpoints
   // Get all notifications for the authenticated user
   app.get('/api/notifications', unifiedIsAuthenticated, async (req: Request, res: Response) => {

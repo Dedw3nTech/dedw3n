@@ -1005,6 +1005,41 @@ if (fs.existsSync(attachedAssetsPath)) {
     }, 'startup');
   }
   
+  async function avatarHealthMonitoringTask(): Promise<void> {
+    // AVATAR HEALTH MONITORING: Detect and repair broken avatar references
+    // This prevents user data loss by identifying avatars whose files are missing from R2
+    
+    const publicPaths = process.env.PUBLIC_OBJECT_SEARCH_PATHS;
+    const privateDir = process.env.PRIVATE_OBJECT_DIR;
+    
+    if (!publicPaths || !privateDir) {
+      logger.warn('Avatar Health Monitoring disabled - storage not configured', {
+        feature: 'avatar health monitoring',
+        action: 'Set PUBLIC_OBJECT_SEARCH_PATHS and PRIVATE_OBJECT_DIR'
+      }, 'startup');
+      return;
+    }
+    
+    // Run silent health check (no auto-repair on startup - only detect)
+    const { avatarHealthMonitor } = await import('./avatar-health-monitor');
+    const metrics = await avatarHealthMonitor.runHealthCheck({ autoRepair: false });
+    
+    if (metrics.brokenAvatars > 0) {
+      logger.warn('Avatar Health Check: Found broken avatars', {
+        brokenAvatars: metrics.brokenAvatars,
+        totalUsers: metrics.totalUsers,
+        usersWithAvatars: metrics.usersWithAvatars,
+        repairEndpoint: 'GET /api/diagnostic/avatar-health?autoRepair=true (admin only)'
+      }, 'startup');
+    } else {
+      logger.lifecycle('Avatar Health Check: All avatars valid', {
+        totalUsers: metrics.totalUsers,
+        validAvatars: metrics.validAvatars,
+        monitoringActive: true
+      }, 'startup');
+    }
+  }
+  
   // ============================================================================
   // SCHEDULE BACKGROUND TASKS (Routes already registered above)
   // ============================================================================
@@ -1025,10 +1060,11 @@ if (fs.existsSync(attachedAssetsPath)) {
     // Development: Run only essential, fast tasks
     scheduleBackgroundTask(seedDatabaseTask, 'database-seeding', 3000);
     scheduleBackgroundTask(storageValidationTask, 'storage-validation', 500);
+    scheduleBackgroundTask(avatarHealthMonitoringTask, 'avatar-health-monitoring', 5000);
     
     logger.info('Development mode - minimal background tasks scheduled', {
-      count: 2,
-      tasks: ['database-seeding', 'storage-validation']
+      count: 3,
+      tasks: ['database-seeding', 'storage-validation', 'avatar-health-monitoring']
     }, 'startup');
   }
 })();
