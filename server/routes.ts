@@ -12884,6 +12884,9 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
           marketplace: products.marketplace,
           inventory: products.inventory,
           createdAt: products.createdAt,
+          isOnSale: products.isOnSale,
+          isNew: products.isNew,
+          productType: products.productType,
           // Vendor fields
           vendorStoreName: vendors.storeName,
           vendorBusinessName: vendors.businessName
