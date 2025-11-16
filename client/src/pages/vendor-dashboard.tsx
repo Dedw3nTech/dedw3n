@@ -542,20 +542,20 @@ export default function VendorDashboard() {
 
         {/* Main Content Area */}
         <div className="lg:col-span-4">
-          {activeTab === 'products' && (
-            <VendorProductManagement vendorId={vendorId!} />
+          {activeTab === 'products' && vendorId && (
+            <VendorProductManagement vendorId={vendorId} />
           )}
 
-          {activeTab === 'orders' && (
-            <VendorOrderManagement vendorId={vendorId!} />
+          {activeTab === 'orders' && vendorId && (
+            <VendorOrderManagement vendorId={vendorId} />
           )}
 
-          {activeTab === 'commission' && (
-            <VendorCommissionDashboard vendorId={vendorId!} />
+          {activeTab === 'commission' && vendorId && (
+            <VendorCommissionDashboard vendorId={vendorId} />
           )}
 
-          {activeTab === 'analytics' && (
-            <VendorAnalytics vendorId={vendorId!} />
+          {activeTab === 'analytics' && vendorId && (
+            <VendorAnalytics vendorId={vendorId} />
           )}
         </div>
       </div>
