@@ -2416,6 +2416,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
             curl: `curl -H "Authorization: Bearer ${token}" https://${req.headers.host}/api/your-endpoint`
           }
         });
+      } catch (error) {
+        console.error('[AUTH TEST] Error in get-test-token endpoint:', error);
+        return res.status(500).json({ message: 'Server error generating test token' });
+      }
+    });
         
     // Add test endpoints for debugging
     app.get('/api/auth/test-auth', unifiedIsAuthenticated, (req: Request, res: Response) => {
@@ -2731,13 +2736,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           message: 'Chunk upload failed',
           error: (error as any)?.message || 'Unknown error'
         });
-      }
-    });
-        
-        res.json({ token, expiresAt, userId: user.id, username: user.username });
-      } catch (error) {
-        console.error('[ERROR] Error generating test token:', error);
-        res.status(500).json({ message: 'Error generating test token' });
       }
     });
   }
