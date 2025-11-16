@@ -3,7 +3,6 @@ import { Link, useLocation } from "wouter";
 import { useView } from "@/hooks/use-view";
 import { useMarketType } from "@/hooks/use-market-type";
 import UserMenu from "../ui/user-menu";
-import CurrencyConverter from "../ui/currency-converter";
 import { MasterLanguageSelector } from "../ui/MasterLanguageSelector";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Badge } from "../ui/badge";
