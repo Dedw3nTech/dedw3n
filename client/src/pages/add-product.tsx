@@ -1107,7 +1107,7 @@ export default function AddProduct() {
               <CardTitle className="text-lg">{t("Select Section")}</CardTitle>
             </CardHeader>
             <CardContent className="p-3 flex-1 overflow-y-auto">
-              <nav className="space-y-1" role="navigation" aria-label="Section navigation">
+              <nav className="space-y-2" role="navigation" aria-label="Section navigation">
                 {navigationSections.map((section) => (
                   <Link
                     key={section.id}
@@ -1115,7 +1115,7 @@ export default function AddProduct() {
                     data-testid={`section-${section.id}`}
                     aria-current={section.isActive ? 'page' : undefined}
                     className={cn(
-                      "w-full block px-4 py-3 rounded-lg text-sm font-medium transition-all text-left",
+                      "w-full block px-5 py-4 rounded-lg text-base font-semibold tracking-wide transition-all text-left",
                       section.isActive
                         ? "bg-black text-white shadow-md"
                         : "text-gray-700 hover:bg-gray-100"
