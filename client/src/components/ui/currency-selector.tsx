@@ -1,50 +1,88 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ChevronDown, Check } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
+import { Check } from "lucide-react";
 import { useCurrency, currencies, Currency } from "@/contexts/CurrencyContext";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 
-export function CurrencySelector() {
+interface CurrencySelectorProps {
+  className?: string;
+}
+
+export function CurrencySelector({ className = '' }: CurrencySelectorProps = {}) {
   const { selectedCurrency, setSelectedCurrency } = useCurrency();
   const [isOpen, setIsOpen] = useState(false);
+
+  const translationTexts = [
+    "Currency",
+    "Traditional Currencies",
+    "Cryptocurrencies",
+    "Stablecoins"
+  ];
+
+  const { translations } = useMasterBatchTranslation(translationTexts, 'instant');
+  
+  const [
+    currencyTitle,
+    traditionalLabel,
+    cryptoLabel,
+    stablecoinLabel
+  ] = translations;
 
   const handleCurrencyChange = (currency: Currency) => {
     setSelectedCurrency(currency);
     setIsOpen(false);
   };
 
-  return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuTrigger asChild>
-        <span className="text-xs font-medium cursor-pointer flex items-center gap-1" style={{ fontSize: '12px' }}>
-          <span className="font-medium"><span className="text-blue-600">{selectedCurrency.symbol}</span> <span className="text-blue-600">{selectedCurrency.code}</span></span>
-          <ChevronDown className="h-3 w-3 text-white" />
-        </span>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64 max-h-64 overflow-y-auto">
-        {currencies.map((currency: Currency) => (
-          <DropdownMenuItem
-            key={currency.code}
+  const traditionalCurrencies = currencies.filter(c => !['BTC', 'ETH', 'BNB', 'ADA', 'SOL', 'DOT', 'AVAX', 'LINK', 'MATIC', 'LTC', 'USDT', 'USDC', 'BUSD', 'DAI', 'TUSD'].includes(c.code));
+  const cryptocurrencies = currencies.filter(c => ['BTC', 'ETH', 'BNB', 'ADA', 'SOL', 'DOT', 'AVAX', 'LINK', 'MATIC', 'LTC'].includes(c.code));
+  const stablecoins = currencies.filter(c => ['USDT', 'USDC', 'BUSD', 'DAI', 'TUSD'].includes(c.code));
+
+  const renderCurrencyGroup = (groupCurrencies: Currency[], groupName: string) => (
+    <div className="space-y-1">
+      <div className="text-xs font-semibold text-gray-500 px-3 py-2">
+        {groupName}
+      </div>
+      {groupCurrencies.map((currency: Currency) => (
+        <SheetClose key={currency.code} asChild>
+          <button
             onClick={() => handleCurrencyChange(currency)}
-            className="flex items-center justify-between cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-3 rounded-md text-sm hover:bg-gray-50 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <div>
-                <div className="font-medium">{currency.symbol} {currency.code}</div>
-                <div className="text-xs text-muted-foreground">{currency.name}</div>
-              </div>
+              <span className="font-medium text-sm">
+                {currency.symbol} {currency.code} <span className="text-gray-500 font-normal">{currency.name}</span>
+              </span>
             </div>
             {selectedCurrency.code === currency.code && (
-              <Check className="h-4 w-4" />
+              <Check className="h-4 w-4 text-black" />
             )}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+          </button>
+        </SheetClose>
+      ))}
+    </div>
+  );
+
+  return (
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetTrigger asChild>
+        <span className={`text-xs font-medium cursor-pointer flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-100 transition-colors ${className}`} style={{ fontSize: '12px' }} data-testid="button-currency-selector">
+          <span className="font-medium"><span className={className ? '' : 'text-black'}>{selectedCurrency.symbol}</span> <span className={className ? '' : 'text-black'}>{selectedCurrency.code}</span></span>
+        </span>
+      </SheetTrigger>
+      <SheetContent side="right" className="w-[300px] sm:w-[350px] overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>{currencyTitle}</SheetTitle>
+        </SheetHeader>
+
+        <div className="mt-6 flex flex-col space-y-4">
+          {renderCurrencyGroup(traditionalCurrencies, traditionalLabel)}
+          <Separator />
+          {renderCurrencyGroup(cryptocurrencies, cryptoLabel)}
+          <Separator />
+          {renderCurrencyGroup(stablecoins, stablecoinLabel)}
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

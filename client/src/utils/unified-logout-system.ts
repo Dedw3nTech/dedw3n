@@ -4,6 +4,7 @@
  */
 
 import { queryClient } from '@/lib/queryClient';
+import { performInstantLogout } from './instant-logout';
 
 interface LogoutConfig {
   redirectToSuccessPage?: boolean;
@@ -49,39 +50,14 @@ class UnifiedLogoutSystem {
   }
 
   public async performLogout(config: LogoutConfig = {}): Promise<void> {
-    console.log('[UNIFIED-LOGOUT] Starting fast logout process');
+    console.log('[UNIFIED-LOGOUT] Using instant logout');
 
-    const {
-      redirectToSuccessPage = true,
-      clearRememberedCredentials = false,
-      broadcastToTabs = true
-    } = config;
-
-    // Immediate client-side cleanup (steps 2-6) - no awaiting
-    queryClient.clear();
-    this.clearUserData();
-    
-    if (clearRememberedCredentials) {
-      localStorage.removeItem('dedwen_remembered_credentials');
-    }
-    
-    this.setLogoutFlags();
-    
-    if (broadcastToTabs) {
-      this.broadcastLogout();
-    }
-
-    // Start server logout in background (non-blocking)
-    this.callServerLogout().catch(() => {
-      // Silent fail - client cleanup already done
+    // Delegate to instant logout for near-zero latency
+    performInstantLogout({
+      redirect: config.redirectToSuccessPage !== false,
+      clearRemembered: config.clearRememberedCredentials || false,
+      broadcast: config.broadcastToTabs !== false
     });
-
-    // Immediate redirect (step 7)
-    if (redirectToSuccessPage) {
-      window.location.href = '/logout-success';
-    }
-
-    console.log('[UNIFIED-LOGOUT] Fast logout completed');
   }
 
   private async callServerLogout(): Promise<void> {
@@ -194,9 +170,28 @@ class UnifiedLogoutSystem {
 
   public clearLogoutState(): void {
     try {
+      // Clear localStorage logout flags
       localStorage.removeItem('unified_logout_state');
       localStorage.removeItem('unified_logout_timestamp');
-      document.cookie = 'unified_logout=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      
+      // Clear ALL logout-related cookies that server middleware checks
+      const cookiesToClear = [
+        'unified_logout',
+        'dedwen_logout',
+        'user_logged_out',
+        'cross_domain_logout'
+      ];
+      
+      cookiesToClear.forEach(cookieName => {
+        // Clear with basic options
+        document.cookie = `${cookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+        // Clear with SameSite=Lax
+        document.cookie = `${cookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+        // Clear with SameSite=Strict
+        document.cookie = `${cookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict`;
+      });
+      
+      console.log('[LOGOUT-STATE] All logout state and cookies cleared');
     } catch (e) {
       console.warn('Error clearing logout state:', e);
     }

@@ -287,9 +287,6 @@ export class VendorAnalyticsService {
           productName: products.name,
           totalSales: sum(orderItems.quantity),
           grossRevenue: sum(orderItems.totalPrice),
-          productCost: sql<number>`SUM(${orderItems.quantity} * ${products.cost})`,
-          grossProfit: sql<number>`SUM(${orderItems.totalPrice}) - SUM(${orderItems.quantity} * ${products.cost})`,
-          profitMargin: sql<number>`CASE WHEN SUM(${orderItems.totalPrice}) > 0 THEN ((SUM(${orderItems.totalPrice}) - SUM(${orderItems.quantity} * ${products.cost})) / SUM(${orderItems.totalPrice})) * 100 ELSE 0 END`,
         })
         .from(orderItems)
         .innerJoin(products, eq(orderItems.productId, products.id))
@@ -405,7 +402,7 @@ export class VendorAnalyticsService {
           productName: products.name,
           quantitySold: sum(orderItems.quantity),
           revenue: sum(orderItems.totalPrice),
-          currentStock: products.stock,
+          currentStock: products.inventory,
         })
         .from(orderItems)
         .innerJoin(products, eq(orderItems.productId, products.id))
@@ -418,7 +415,7 @@ export class VendorAnalyticsService {
           sql`DATE(${orders.createdAt})`,
           orderItems.productId,
           products.name,
-          products.stock
+          products.inventory
         )
         .orderBy(sql`DATE(${orders.createdAt})`, products.name);
 
@@ -441,8 +438,8 @@ export class VendorAnalyticsService {
           vendorId,
           category: 'Electronics',
           period: 'monthly',
-          startDate: new Date('2024-11-01'),
-          endDate: new Date('2024-11-30'),
+          startDate: '2024-11-01',
+          endDate: '2024-11-30',
           trendDirection: 'up',
           growthRate: 15.5,
           marketDemand: 85.2,

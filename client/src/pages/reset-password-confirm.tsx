@@ -9,21 +9,18 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Eye, EyeOff, CheckCircle, XCircle } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
-// import { useTranslation } from "react-i18next";
+import { useMasterTranslation } from "@/hooks/use-master-translation";
 import { usePasswordStrength } from "@/hooks/use-password-strength";
 import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidator";
-const logoImage = "/dedw3n-logo-black.png";
 
 export default function ResetPasswordConfirm() {
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [token, setToken] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  // const { t } = useTranslation();
+  const { translateText } = useMasterTranslation();
   const passwordStrength = usePasswordStrength(password);
 
   // Extract token from URL params
@@ -50,14 +47,14 @@ export default function ResetPasswordConfirm() {
     onSuccess: () => {
       setIsSuccess(true);
       toast({
-        title: "Password reset successful",
-        description: "Your password has been reset successfully",
+        title: translateText("Password reset successful"),
+        description: translateText("Your password has been reset successfully"),
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
-        description: error.message,
+        title: translateText("Error"),
+        description: error.message || translateText("Failed to reset password"),
         variant: "destructive",
       });
     },
@@ -68,8 +65,8 @@ export default function ResetPasswordConfirm() {
     
     if (!password.trim()) {
       toast({
-        title: "Error",
-        description: "Please enter a new password",
+        title: translateText("Error"),
+        description: translateText("Please enter a new password"),
         variant: "destructive",
       });
       return;
@@ -77,17 +74,8 @@ export default function ResetPasswordConfirm() {
 
     if (passwordStrength?.result?.isWeak) {
       toast({
-        title: "Error",
-        description: "Password is too weak. Please choose a stronger password",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match",
+        title: translateText("Error"),
+        description: translateText("Password is too weak. Please choose a stronger password"),
         variant: "destructive",
       });
       return;
@@ -98,7 +86,7 @@ export default function ResetPasswordConfirm() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex items-center justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <Card>
             <CardHeader className="text-center">
@@ -106,17 +94,17 @@ export default function ResetPasswordConfirm() {
                 <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
               <CardTitle className="text-2xl">
-                Password reset complete
+                {translateText("Password reset complete")}
               </CardTitle>
               <CardDescription>
-                Your password has been reset successfully. You can now sign in with your new password.
+                {translateText("Your password has been reset successfully. You can now sign in with your new password.")}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-center">
                 <Link href="/auth">
                   <Button className="w-full">
-                    Sign in now
+                    {translateText("Sign in now")}
                   </Button>
                 </Link>
               </div>
@@ -129,7 +117,7 @@ export default function ResetPasswordConfirm() {
 
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex items-center justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <Card>
             <CardHeader className="text-center">
@@ -137,17 +125,17 @@ export default function ResetPasswordConfirm() {
                 <XCircle className="h-8 w-8 text-red-600" />
               </div>
               <CardTitle className="text-2xl">
-                Invalid reset link
+                {translateText("Invalid reset link")}
               </CardTitle>
               <CardDescription>
-                This password reset link is invalid or has expired.
+                {translateText("This password reset link is invalid or has expired.")}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-center">
                 <Link href="/reset-password">
                   <Button className="w-full">
-                    Request new reset link
+                    {translateText("Request new reset link")}
                   </Button>
                 </Link>
               </div>
@@ -159,42 +147,37 @@ export default function ResetPasswordConfirm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <Card>
           <CardHeader>
-            <div className="mx-auto flex items-center justify-center h-16 w-16 mb-4">
-              <img 
-                src={logoImage} 
-                alt="Dedw3n Logo" 
-                className="h-12 w-12 object-contain"
-              />
-            </div>
-            <CardTitle className="text-2xl text-center">
-              Set new password
+            <CardTitle className="text-2xl text-center text-black">
+              {translateText("Set new password")}
             </CardTitle>
             <CardDescription className="text-center">
-              Enter your new password below
+              {translateText("Enter your new password below")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="password">New password</Label>
+                <Label htmlFor="password">{translateText("New password")}</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter new password"
+                    placeholder={translateText("Enter new password")}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     className="pr-10 h-12"
+                    data-testid="input-password"
                   />
                   <button
                     type="button"
                     className="absolute right-3 top-1/2 transform -translate-y-1/2"
                     onClick={() => setShowPassword(!showPassword)}
+                    data-testid="button-toggle-password"
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4 text-gray-400" />
@@ -210,63 +193,31 @@ export default function ResetPasswordConfirm() {
                   />
                 )}
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm new password</Label>
-                <div className="relative">
-                  <Input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm new password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    className="pr-10 h-12"
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-gray-400" />
-                    )}
-                  </button>
-                </div>
-                {confirmPassword && password !== confirmPassword && (
-                  <p className="text-sm text-red-500">
-                    Passwords do not match
-                  </p>
-                )}
-              </div>
               
               <Button
                 type="submit"
                 className="w-full"
                 disabled={
                   resetMutation.isPending || 
-                  !password.trim() || 
-                  !confirmPassword.trim() ||
-                  password !== confirmPassword ||
-                  passwordStrength?.result?.isWeak
+                  !password.trim() ||
+                  (passwordStrength?.result?.isWeak === true)
                 }
+                data-testid="button-reset-password"
               >
                 {resetMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Resetting password...
+                    {translateText("Resetting password")}
                   </>
                 ) : (
-                  "Reset password"
+                  translateText("Reset password")
                 )}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
-              <Link href="/auth" className="text-sm text-blue-600 hover:text-blue-500">
-                Back to sign in
+              <Link href="/auth" className="text-sm text-black hover:text-gray-700">
+                {translateText("Back to sign in")}
               </Link>
             </div>
           </CardContent>

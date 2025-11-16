@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import { Request, Response } from 'express';
+import { logger } from './logger';
 
 // Make sure upload directories exist
 const ensureUploadDirs = () => {
@@ -32,7 +33,7 @@ const generateFilename = (prefix: string = 'media', extension: string = '.jpg'):
  * Handle media upload (images and videos) from base64 data
  */
 export const handleMediaUpload = (req: Request, res: Response) => {
-  console.log('[MEDIA] Media upload requested');
+  logger.debug('Media upload requested', { type: req.body.type }, 'api');
   
   // Ensure upload directories exist
   ensureUploadDirs();
@@ -44,7 +45,7 @@ export const handleMediaUpload = (req: Request, res: Response) => {
   const { file, type } = req.body;
   
   if (!file) {
-    console.log('[MEDIA] No file data provided');
+    logger.debug('No file data provided in media upload', undefined, 'api');
     return res.status(400).json({
       success: false,
       message: 'No file data provided'
@@ -52,7 +53,7 @@ export const handleMediaUpload = (req: Request, res: Response) => {
   }
   
   if (!type || !['image', 'video'].includes(type)) {
-    console.log('[MEDIA] Invalid media type');
+    logger.debug('Invalid media type provided', { type }, 'api');
     return res.status(400).json({
       success: false,
       message: 'Invalid media type. Must be "image" or "video".'
@@ -64,7 +65,7 @@ export const handleMediaUpload = (req: Request, res: Response) => {
     if (typeof file !== 'string' || 
         (type === 'image' && !file.startsWith('data:image/')) || 
         (type === 'video' && !file.startsWith('data:video/'))) {
-      console.log('[MEDIA] Invalid file data format');
+      logger.debug('Invalid file data format in media upload', { type }, 'api');
       return res.status(400).json({
         success: false,
         message: 'Invalid file data format. Must be a data URI matching the specified type.'
@@ -75,7 +76,7 @@ export const handleMediaUpload = (req: Request, res: Response) => {
     const matches = file.match(/^data:(image|video)\/([a-zA-Z0-9]+);base64,(.+)$/);
     
     if (!matches || matches.length !== 4) {
-      console.log('[MEDIA] Invalid file data format - could not extract MIME type');
+      logger.debug('Could not extract MIME type from media upload', undefined, 'api');
       return res.status(400).json({
         success: false,
         message: 'Invalid file data format. Could not extract MIME type.'
@@ -92,7 +93,7 @@ export const handleMediaUpload = (req: Request, res: Response) => {
     
     if ((mediaType === 'image' && !allowedImageTypes.includes(fileExtension)) ||
         (mediaType === 'video' && !allowedVideoTypes.includes(fileExtension))) {
-      console.log(`[MEDIA] Unsupported ${mediaType} format:`, fileExtension);
+      logger.debug('Unsupported media format', { mediaType, fileExtension }, 'api');
       return res.status(400).json({
         success: false,
         message: `Unsupported ${mediaType} format. Allowed formats: ${mediaType === 'image' ? allowedImageTypes.join(', ') : allowedVideoTypes.join(', ')}.`
@@ -108,7 +109,7 @@ export const handleMediaUpload = (req: Request, res: Response) => {
     // Write the file
     fs.writeFileSync(filePath, base64Data, 'base64');
     
-    console.log(`[MEDIA] Successfully saved ${mediaType} to ${filePath}`);
+    logger.debug('Media upload successful', { mediaType, filename: finalFilename }, 'api');
     
     // Return success response with file path
     return res.status(200).json({
@@ -122,7 +123,7 @@ export const handleMediaUpload = (req: Request, res: Response) => {
       fullUrl: `${req.protocol}://${req.get('host')}/uploads/${uploadDir}/${finalFilename}`
     });
   } catch (error) {
-    console.error('[MEDIA] Error processing media upload:', error);
+    logger.error('Failed to process media upload', { type: req.body.type }, error as Error, 'api');
     return res.status(500).json({
       success: false,
       message: 'Error processing media upload',
@@ -133,7 +134,7 @@ export const handleMediaUpload = (req: Request, res: Response) => {
 
 // Register the media upload routes
 export function registerMediaRoutes(app: any) {
-  console.log('[MEDIA] Registering media upload routes');
+  logger.debug('Registering media upload routes', undefined, 'server');
   
   // Create upload directories on startup
   ensureUploadDirs();

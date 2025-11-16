@@ -1,9 +1,7 @@
 import React from 'react';
 import { useQueryErrorResetBoundary } from '@tanstack/react-query';
-import { AlertCircle, RefreshCcw } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
 import { ErrorBoundary } from './error-boundary';
+import { ErrorDisplay } from './error-display';
 
 interface QueryErrorBoundaryProps {
   children: React.ReactNode;
@@ -12,10 +10,36 @@ interface QueryErrorBoundaryProps {
   fallback?: React.ReactNode;
 }
 
-/**
- * An error boundary specifically for handling React Query errors.
- * Uses the QueryErrorResetBoundary to provide a clean reset mechanism.
- */
+interface QueryErrorFallbackProps {
+  resetErrorBoundary: () => void;
+  error?: Error;
+  queryKey?: string;
+  className?: string;
+}
+
+const QueryErrorFallback = ({
+  resetErrorBoundary,
+  error,
+  queryKey,
+  className = ''
+}: QueryErrorFallbackProps) => {
+  return (
+    <div className={`p-6 ${className}`} data-testid="query-error-container">
+      <ErrorDisplay
+        error={error || 'Query error occurred'}
+        title="Data Loading Error"
+        showRefresh={true}
+        onRefresh={resetErrorBoundary}
+      />
+      {queryKey && (
+        <p className="text-xs text-center text-gray-500 mt-2">
+          Query: {queryKey}
+        </p>
+      )}
+    </div>
+  );
+};
+
 export function QueryErrorBoundary({
   children,
   queryKey,
@@ -24,33 +48,23 @@ export function QueryErrorBoundary({
 }: QueryErrorBoundaryProps) {
   const { reset } = useQueryErrorResetBoundary();
 
-  // Custom fallback UI specifically for query errors
-  const defaultFallback = ({ resetErrorBoundary }: { resetErrorBoundary: () => void }) => (
-    <div className={`p-6 space-y-4 ${className || ''}`}>
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4 mr-2" />
-        <AlertTitle>Data Fetch Error</AlertTitle>
-        <AlertDescription className="mt-2">
-          We encountered an error while fetching data{queryKey ? ` for ${queryKey}` : ''}.
-          Please try again or reload the page.
-        </AlertDescription>
-      </Alert>
-      <div className="flex justify-center">
-        <Button 
-          onClick={() => resetErrorBoundary()}
-          className="flex items-center gap-2"
-        >
-          <RefreshCcw className="h-4 w-4" />
-          Retry
-        </Button>
-      </div>
-    </div>
-  );
+  if (fallback) {
+    return (
+      <ErrorBoundary fallback={fallback}>
+        {children}
+      </ErrorBoundary>
+    );
+  }
 
   return (
     <ErrorBoundary
-      fallback={fallback || defaultFallback({ resetErrorBoundary: reset })}
-      key={`query-error-boundary-${queryKey || 'default'}`}
+      fallback={(
+        <QueryErrorFallback
+          resetErrorBoundary={reset}
+          queryKey={queryKey}
+          className={className}
+        />
+      )}
     >
       {children}
     </ErrorBoundary>

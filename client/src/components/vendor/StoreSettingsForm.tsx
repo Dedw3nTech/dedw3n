@@ -17,7 +17,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ResolvedUserAvatar } from "@/components/ui/resolved-user-avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -468,12 +469,12 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                         <FormLabel className="mb-2">{translatedTexts["Store Logo"] || "Store Logo"}</FormLabel>
                         <FormControl>
                           <div className="space-y-4 flex flex-col items-center">
-                            <Avatar className="h-24 w-24">
-                              <AvatarImage src={field.value || ""} alt="Store logo" />
-                              <AvatarFallback className="text-lg">
-                                {getInitials(form.watch("storeName"))}
-                              </AvatarFallback>
-                            </Avatar>
+                            <ResolvedUserAvatar
+                              avatarUrl={field.value}
+                              name={form.watch("storeName")}
+                              size="xl"
+                              className="h-24 w-24"
+                            />
                             
                             <div className="relative">
                               <Input
@@ -837,12 +838,11 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                                 onClick={() => setSelectedUser(user)}
                               >
                                 <div className="flex items-center space-x-3">
-                                  <Avatar className="h-8 w-8">
-                                    <AvatarImage src={user.avatar} />
-                                    <AvatarFallback>
-                                      <User className="h-4 w-4" />
-                                    </AvatarFallback>
-                                  </Avatar>
+                                  <ResolvedUserAvatar
+                                    user={user}
+                                    size="sm"
+                                    className="h-8 w-8"
+                                  />
                                   <div>
                                     <p className="text-sm font-medium">{user.name}</p>
                                     <p className="text-xs text-gray-500">@{user.username}</p>
@@ -931,12 +931,11 @@ export default function StoreSettingsForm({ vendor }: StoreSettingsFormProps) {
                       <Card key={storeUser.id} className="p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
-                            <Avatar className="h-10 w-10">
-                              <AvatarImage src={storeUser.user?.avatar} />
-                              <AvatarFallback>
-                                <User className="h-5 w-5" />
-                              </AvatarFallback>
-                            </Avatar>
+                            <ResolvedUserAvatar
+                              user={storeUser.user}
+                              size="md"
+                              className="h-10 w-10"
+                            />
                             <div>
                               <div className="flex items-center space-x-2">
                                 <p className="font-medium">{storeUser.user?.name}</p>

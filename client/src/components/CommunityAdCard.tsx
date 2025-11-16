@@ -11,9 +11,9 @@ const advertisementImages = [
     fallback: "/attached_assets/Copy of Copy of Pre Launch Campaign  SELL (1).png"
   },
   {
-    src: "/attached_assets/Copy of Dedw3n Business B2C Header (1)_1749417523213.png",
+    src: "/attached_assets/b2c-header-new.png",
     alt: "Dedw3n Business B2C - Connect & Trade",
-    fallback: "/attached_assets/Dedw3n Business B2C Header (1).png"
+    fallback: "/attached_assets/b2c-header-new.png"
   },
   {
     src: "/attached_assets/Copy of Dedw3n Marketplace.png",
@@ -95,7 +95,9 @@ export function CommunityAdCard() {
         <img 
           src={currentImage.src}
           alt={currentAlt}
-          className="w-full h-auto object-cover cursor-pointer hover:opacity-90 transition-opacity"
+          className={`w-full h-auto object-cover cursor-pointer hover:opacity-90 transition-all duration-300 ${
+            currentImage.src.includes('b2c-header-new') ? 'scale-150 transform-gpu' : ''
+          }`}
           onError={(e) => {
             e.currentTarget.src = currentImage.fallback;
           }}

@@ -104,7 +104,7 @@ export default function NetworkPartnershipResources() {
               
               <div className="mt-6 space-y-2">
                 <p><strong>Partnership Support:</strong> <a href="mailto:partnerships@dedw3n.com" className="text-blue-600 hover:underline">partnerships@dedw3n.com</a></p>
-                <p><strong>Technical Support:</strong> <a href="mailto:support@dedw3n.com" className="text-blue-600 hover:underline">support@dedw3n.com</a></p>
+                <p><strong>Technical Support:</strong> <a href="mailto:love@dedw3n.com" className="text-blue-600 hover:underline">love@dedw3n.com</a></p>
                 <p><strong>General Inquiries:</strong> <a href="mailto:info@dedw3n.com" className="text-blue-600 hover:underline">info@dedw3n.com</a></p>
               </div>
             </section>

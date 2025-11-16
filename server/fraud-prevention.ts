@@ -578,20 +578,14 @@ export async function assessFraudRisk(req: Request): Promise<RiskAssessment> {
 }
 
 /**
- * Lightweight middleware to reduce mobile performance impact
+ * @deprecated This middleware has been removed from all routes as part of middleware elimination.
+ * Fraud assessment is now handled inline where needed via assessFraudRisk() function.
+ * This export remains for backward compatibility only - it's a no-op that just calls next().
+ * 
+ * Removed: November 2025 (Middleware-Free Architecture initiative)
  */
 export function fraudRiskMiddleware(req: Request, res: Response, next: NextFunction) {
-  // Skip fraud assessment completely to prevent server overload and recursion
   return next();
-  
-  // Simplified risk assessment for desktop only
-  const riskScore = 25; // Default low risk
-  (req as any).fraudRiskAssessment = { riskScore, overallRisk: 'low' };
-  res.setHeader('X-Risk-Score', riskScore.toString());
-  res.setHeader('X-Risk-Level', 'low');
-  res.setHeader('X-Request-ID', 'simplified');
-  
-  next();
 }
 
 /**
@@ -628,7 +622,7 @@ export function highRiskActionMiddleware(req: Request, res: Response, next: Next
 /**
  * Register fraud prevention routes for the API
  */
-export function registerFraudPreventionRoutes(app: Express) {
+export function registerFraudPreventionRoutes(app: any) {
   // Get risk assessment for current request
   app.get("/api/fraud/assess", async (req: Request, res: Response) => {
     try {
@@ -677,7 +671,7 @@ export function registerFraudPreventionRoutes(app: Express) {
   });
   
   // Admin endpoint to get recent risk assessments
-  app.get("/api/admin/fraud/assessments/recent", async (req, res) => {
+  app.get("/api/admin/fraud/assessments/recent", async (req: Request, res: Response) => {
     try {
       // Ensure user is admin
       if (req.user?.role !== 'admin') {
@@ -709,7 +703,7 @@ export function registerFraudPreventionRoutes(app: Express) {
   });
   
   // Admin endpoint to get assessments by user ID
-  app.get("/api/admin/fraud/assessments/user/:userId", async (req, res) => {
+  app.get("/api/admin/fraud/assessments/user/:userId", async (req: Request, res: Response) => {
     try {
       // Ensure user is admin
       if (req.user?.role !== 'admin') {

@@ -7,9 +7,9 @@ import { useInstantImageLoading, preloadCriticalImages } from '@/hooks/use-insta
 // Advertisement image paths for production compatibility
 const luxuryMarketplaceAd = '/attached_assets/Dedw3n Marketplace (1).png';
 const businessB2BAd = '/attached_assets/Dedw3n Business B2B.png';
-const businessB2CAd = '/attached_assets/Copy of Dedw3n Business B2C Header.png';
+const businessB2CAd = '/attached_assets/b2c-header-new.png';
 const communityAd = '/attached_assets/Dedw3n comm Footer.png';
-const marketplaceHeaderAd = '/attached_assets/Copy of Dedw3n Marketplace II.png';
+const marketplaceHeaderAd = '/attached_assets/marketplace-header-new.png';
 
 interface InstantImageAdProps {
   adType?: 'marketplace' | 'business' | 'community' | 'header';
@@ -108,17 +108,19 @@ export function InstantImageAd({
   // Dynamic styling based on position and state
   const getAdStyles = () => {
     const baseStyles = "transition-all duration-300 ease-in-out";
+    const isB2C = adType === 'business' && marketType === 'b2c';
+    const sizeMultiplier = isB2C ? 'scale-150' : '';
     
     switch (position) {
       case 'banner':
-        return `${baseStyles} w-full max-h-32 overflow-hidden`;
+        return `${baseStyles} w-full max-h-48 overflow-hidden ${sizeMultiplier}`;
       case 'floating':
-        return `${baseStyles} fixed bottom-4 right-4 z-50 max-w-sm shadow-lg`;
+        return `${baseStyles} fixed bottom-4 right-4 z-50 max-w-sm shadow-lg ${sizeMultiplier}`;
       case 'inline':
-        return `${baseStyles} w-full max-w-md mx-auto my-4`;
+        return `${baseStyles} w-full max-w-lg mx-auto my-4 ${sizeMultiplier}`;
       case 'sidebar':
       default:
-        return `${baseStyles} w-full max-w-xs`;
+        return `${baseStyles} w-full max-w-sm ${sizeMultiplier}`;
     }
   };
 

@@ -5,6 +5,8 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,12 +16,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import PageHeader from "@/components/layout/PageHeader";
 import { getInitials } from "@/lib/utils";
-import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
-import { useTranslation } from "react-i18next";
 import {
   Settings as SettingsIcon,
   User as UserIcon,
@@ -39,250 +40,214 @@ import {
   FileText,
   Save,
   Loader2,
-  Bell
+  Bell,
+  Cookie,
+  Download,
+  Upload,
+  Briefcase,
+  ChevronRight,
+  ChevronDown
 } from "lucide-react";
 
-// The list of available language options
-const LANGUAGE_OPTIONS = [
-  { value: "en", label: "English" },
-  { value: "fr", label: "Français" },
-  { value: "pt", label: "Português" },
-];
-
-// The list of available country options
+// The list of available regions in alphabetical order
 const COUNTRY_OPTIONS = [
-  { value: "AF", label: "Afghanistan" },
-  { value: "AL", label: "Albania" },
-  { value: "DZ", label: "Algeria" },
-  { value: "AD", label: "Andorra" },
-  { value: "AO", label: "Angola" },
-  { value: "AG", label: "Antigua and Barbuda" },
-  { value: "AR", label: "Argentina" },
-  { value: "AM", label: "Armenia" },
-  { value: "AU", label: "Australia" },
-  { value: "AT", label: "Austria" },
-  { value: "AZ", label: "Azerbaijan" },
-  { value: "BS", label: "Bahamas" },
-  { value: "BH", label: "Bahrain" },
-  { value: "BD", label: "Bangladesh" },
-  { value: "BB", label: "Barbados" },
-  { value: "BY", label: "Belarus" },
-  { value: "BE", label: "Belgium" },
-  { value: "BZ", label: "Belize" },
-  { value: "BJ", label: "Benin" },
-  { value: "BT", label: "Bhutan" },
-  { value: "BO", label: "Bolivia" },
-  { value: "BA", label: "Bosnia and Herzegovina" },
-  { value: "BW", label: "Botswana" },
-  { value: "BR", label: "Brazil" },
-  { value: "BN", label: "Brunei" },
-  { value: "BG", label: "Bulgaria" },
-  { value: "BF", label: "Burkina Faso" },
-  { value: "BI", label: "Burundi" },
-  { value: "CV", label: "Cabo Verde" },
-  { value: "KH", label: "Cambodia" },
-  { value: "CM", label: "Cameroon" },
-  { value: "CA", label: "Canada" },
-  { value: "CF", label: "Central African Republic" },
-  { value: "TD", label: "Chad" },
-  { value: "CL", label: "Chile" },
-  { value: "CN", label: "China" },
-  { value: "CO", label: "Colombia" },
-  { value: "KM", label: "Comoros" },
-  { value: "CG", label: "Congo" },
-  { value: "CD", label: "Congo (Democratic Republic)" },
-  { value: "CR", label: "Costa Rica" },
-  { value: "CI", label: "Côte d'Ivoire" },
-  { value: "HR", label: "Croatia" },
-  { value: "CU", label: "Cuba" },
-  { value: "CY", label: "Cyprus" },
-  { value: "CZ", label: "Czech Republic" },
-  { value: "DK", label: "Denmark" },
-  { value: "DJ", label: "Djibouti" },
-  { value: "DM", label: "Dominica" },
-  { value: "DO", label: "Dominican Republic" },
-  { value: "EC", label: "Ecuador" },
-  { value: "EG", label: "Egypt" },
-  { value: "SV", label: "El Salvador" },
-  { value: "GQ", label: "Equatorial Guinea" },
-  { value: "ER", label: "Eritrea" },
-  { value: "EE", label: "Estonia" },
-  { value: "SZ", label: "Eswatini" },
-  { value: "ET", label: "Ethiopia" },
-  { value: "FJ", label: "Fiji" },
-  { value: "FI", label: "Finland" },
-  { value: "FR", label: "France" },
-  { value: "GA", label: "Gabon" },
-  { value: "GM", label: "Gambia" },
-  { value: "GE", label: "Georgia" },
-  { value: "DE", label: "Germany" },
-  { value: "GH", label: "Ghana" },
-  { value: "GR", label: "Greece" },
-  { value: "GD", label: "Grenada" },
-  { value: "GT", label: "Guatemala" },
-  { value: "GN", label: "Guinea" },
-  { value: "GW", label: "Guinea-Bissau" },
-  { value: "GY", label: "Guyana" },
-  { value: "HT", label: "Haiti" },
-  { value: "HN", label: "Honduras" },
-  { value: "HU", label: "Hungary" },
-  { value: "IS", label: "Iceland" },
-  { value: "IN", label: "India" },
-  { value: "ID", label: "Indonesia" },
-  { value: "IR", label: "Iran" },
-  { value: "IQ", label: "Iraq" },
-  { value: "IE", label: "Ireland" },
-  { value: "IL", label: "Israel" },
-  { value: "IT", label: "Italy" },
-  { value: "JM", label: "Jamaica" },
-  { value: "JP", label: "Japan" },
-  { value: "JO", label: "Jordan" },
-  { value: "KZ", label: "Kazakhstan" },
-  { value: "KE", label: "Kenya" },
-  { value: "KI", label: "Kiribati" },
-  { value: "KP", label: "Korea (North)" },
-  { value: "KR", label: "Korea (South)" },
-  { value: "KW", label: "Kuwait" },
-  { value: "KG", label: "Kyrgyzstan" },
-  { value: "LA", label: "Laos" },
-  { value: "LV", label: "Latvia" },
-  { value: "LB", label: "Lebanon" },
-  { value: "LS", label: "Lesotho" },
-  { value: "LR", label: "Liberia" },
-  { value: "LY", label: "Libya" },
-  { value: "LI", label: "Liechtenstein" },
-  { value: "LT", label: "Lithuania" },
-  { value: "LU", label: "Luxembourg" },
-  { value: "MG", label: "Madagascar" },
-  { value: "MW", label: "Malawi" },
-  { value: "MY", label: "Malaysia" },
-  { value: "MV", label: "Maldives" },
-  { value: "ML", label: "Mali" },
-  { value: "MT", label: "Malta" },
-  { value: "MH", label: "Marshall Islands" },
-  { value: "MR", label: "Mauritania" },
-  { value: "MU", label: "Mauritius" },
-  { value: "MX", label: "Mexico" },
-  { value: "FM", label: "Micronesia" },
-  { value: "MD", label: "Moldova" },
-  { value: "MC", label: "Monaco" },
-  { value: "MN", label: "Mongolia" },
-  { value: "ME", label: "Montenegro" },
-  { value: "MA", label: "Morocco" },
-  { value: "MZ", label: "Mozambique" },
-  { value: "MM", label: "Myanmar" },
-  { value: "NA", label: "Namibia" },
-  { value: "NR", label: "Nauru" },
-  { value: "NP", label: "Nepal" },
-  { value: "NL", label: "Netherlands" },
-  { value: "NZ", label: "New Zealand" },
-  { value: "NI", label: "Nicaragua" },
-  { value: "NE", label: "Niger" },
-  { value: "NG", label: "Nigeria" },
-  { value: "MK", label: "North Macedonia" },
-  { value: "NO", label: "Norway" },
-  { value: "OM", label: "Oman" },
-  { value: "PK", label: "Pakistan" },
-  { value: "PW", label: "Palau" },
-  { value: "PS", label: "Palestine" },
-  { value: "PA", label: "Panama" },
-  { value: "PG", label: "Papua New Guinea" },
-  { value: "PY", label: "Paraguay" },
-  { value: "PE", label: "Peru" },
-  { value: "PH", label: "Philippines" },
-  { value: "PL", label: "Poland" },
-  { value: "PT", label: "Portugal" },
-  { value: "QA", label: "Qatar" },
-  { value: "RO", label: "Romania" },
-  { value: "RU", label: "Russia" },
-  { value: "RW", label: "Rwanda" },
-  { value: "KN", label: "Saint Kitts and Nevis" },
-  { value: "LC", label: "Saint Lucia" },
-  { value: "VC", label: "Saint Vincent and the Grenadines" },
-  { value: "WS", label: "Samoa" },
-  { value: "SM", label: "San Marino" },
-  { value: "ST", label: "Sao Tome and Principe" },
-  { value: "SA", label: "Saudi Arabia" },
-  { value: "SN", label: "Senegal" },
-  { value: "RS", label: "Serbia" },
-  { value: "SC", label: "Seychelles" },
-  { value: "SL", label: "Sierra Leone" },
-  { value: "SG", label: "Singapore" },
-  { value: "SK", label: "Slovakia" },
-  { value: "SI", label: "Slovenia" },
-  { value: "SB", label: "Solomon Islands" },
-  { value: "SO", label: "Somalia" },
-  { value: "ZA", label: "South Africa" },
-  { value: "SS", label: "South Sudan" },
-  { value: "ES", label: "Spain" },
-  { value: "LK", label: "Sri Lanka" },
-  { value: "SD", label: "Sudan" },
-  { value: "SR", label: "Suriname" },
-  { value: "SE", label: "Sweden" },
-  { value: "CH", label: "Switzerland" },
-  { value: "SY", label: "Syria" },
-  { value: "TW", label: "Taiwan" },
-  { value: "TJ", label: "Tajikistan" },
-  { value: "TZ", label: "Tanzania" },
-  { value: "TH", label: "Thailand" },
-  { value: "TL", label: "Timor-Leste" },
-  { value: "TG", label: "Togo" },
-  { value: "TO", label: "Tonga" },
-  { value: "TT", label: "Trinidad and Tobago" },
-  { value: "TN", label: "Tunisia" },
-  { value: "TR", label: "Turkey" },
-  { value: "TM", label: "Turkmenistan" },
-  { value: "TV", label: "Tuvalu" },
-  { value: "UG", label: "Uganda" },
-  { value: "UA", label: "Ukraine" },
-  { value: "AE", label: "United Arab Emirates" },
-  { value: "GB", label: "United Kingdom" },
-  { value: "US", label: "United States" },
-  { value: "UY", label: "Uruguay" },
-  { value: "UZ", label: "Uzbekistan" },
-  { value: "VU", label: "Vanuatu" },
-  { value: "VA", label: "Vatican City" },
-  { value: "VE", label: "Venezuela" },
-  { value: "VN", label: "Vietnam" },
-  { value: "YE", label: "Yemen" },
-  { value: "ZM", label: "Zambia" },
-  { value: "ZW", label: "Zimbabwe" }
+  { value: "africa", label: "Africa" },
+  { value: "central-america", label: "Central America" },
+  { value: "central-asia", label: "Central Asia" },
+  { value: "east-asia", label: "East Asia" },
+  { value: "europe", label: "Europe" },
+  { value: "middle-east", label: "Middle East" },
+  { value: "north-america", label: "North America" },
+  { value: "oceania", label: "Oceania" },
+  { value: "south-america", label: "South America" },
+  { value: "south-asia", label: "South Asia" }
 ];
 
 export default function SettingsPage() {
-  usePageTitle("settings");
+  usePageTitle({ title: "settings" });
   const { user, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
+  const [, navigate] = useLocation();
   const { t, i18n } = useTranslation();
+
+  // Translation strings for the settings page
+  const settingsTexts = useMemo(() => [
+    "Account Settings",
+    "Password",
+    "Region",
+    "Notifications",
+    "Security",
+    "Privacy",
+    "Change Password",
+    "Current Password",
+    "New Password",
+    "Confirm Password",
+    "Updating...",
+    "Save",
+    "Saving...",
+    "Back",
+    "Select Country",
+    "Notification Preferences",
+    "New Notification",
+    "Get notified about important updates",
+    "Receive email when you get a new notification",
+    "New Message",
+    "Receive alerts for new messages",
+    "Receive email when you get a new message",
+    "New Order",
+    "Get notified when you receive an order",
+    "Receive email when you receive a new order",
+    "Email Notifications",
+    "Sign-In & Security",
+    "Sign-In Security Settings",
+    "Two-Factor Authentication",
+    "Add an extra layer of security to your account",
+    "Always enabled for security",
+    "Privacy",
+    "Manage Cookies",
+    "Control your cookie preferences",
+    "Control cookie preferences and tracking settings",
+    "Get a Copy of Your Data",
+    "Get Copy of Data",
+    "Download all your personal data",
+    "Request a copy of your personal information",
+    "AI Training",
+    "Data for Enhancing Generative AI",
+    "Control how your data is used for AI",
+    "Choose whether to allow AI training with your data",
+    "Suspend Profile",
+    "Temporarily deactivate your account",
+    "Account Closure",
+    "Permanently delete your account",
+    "Cookie Description",
+    "We use cookies to enhance your browsing experience and analyze our traffic. By clicking 'Accept All', you consent to our use of cookies.",
+    "Essential Cookies",
+    "Required for the site to function",
+    "These cookies are necessary for the website to function and cannot be disabled.",
+    "Performance Cookies",
+    "Help us improve site performance",
+    "These cookies help us analyze how visitors use our website.",
+    "Functional Cookies",
+    "Enable additional functionality",
+    "These cookies enable enhanced functionality and personalization.",
+    "Targeting Cookies",
+    "Personalize your advertising experience",
+    "These cookies may be set by our advertising partners to build a profile of your interests.",
+    "We'll send a copy of your data to your registered email address.",
+    "Sending...",
+    "Request Data",
+    "Your content may be used to help train and improve our generative AI models. You can opt out at any time.",
+    "Allow my content to be used for AI training",
+    "Do not use my content for AI training",
+    "Success",
+    "Cookie preferences saved successfully",
+    "Profile Updated",
+    "Update Failed",
+    "Password Updated",
+    "Preferences Updated",
+    "Security Updated",
+    "Account Deleted",
+    "Delete Failed",
+    "Invalid Image",
+    "Fill All Fields",
+    "Passwords Don't Match",
+    "Cookie Preferences",
+    "Cookie Management Interface",
+    "Data Export Sent",
+    "Data Export Failed",
+    "AI Training Updated",
+    "AI Training Failed",
+    "Compliance Updated",
+    "Career Updated"
+  ], []);
+
+  const { translations } = useMasterBatchTranslation(settingsTexts, 'high');
   
-  const [activeTab, setActiveTab] = useState("account");
+  // Create translation mapping
+  const ts: Record<string, string> = {};
+  settingsTexts.forEach((text, index) => {
+    ts[text] = translations[index] || text;
+  });
+  
+  const [activeTab, setActiveTab] = useState("password");
+  const [profileSection, setProfileSection] = useState("profile-picture");
+  const [showMobileList, setShowMobileList] = useState(true);
+  
+  // Language & Region subsection state
+  const [languageSubsection, setLanguageSubsection] = useState<'menu' | 'region'>('menu');
+  
+  // Privacy subsection state
+  const [privacySubsection, setPrivacySubsection] = useState<'menu' | 'cookies' | 'data-export' | 'ai-training'>('menu');
+  
+  // Notification subsection state
+  const [notificationSubsection, setNotificationSubsection] = useState<'menu' | 'new-notification' | 'new-message' | 'new-order'>('menu');
   
   // Form states
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [language, setLanguage] = useState("en");
   const [currency, setCurrency] = useState("GBP");
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [marketingEmails, setMarketingEmails] = useState(true);
+  const [emailOnNewNotification, setEmailOnNewNotification] = useState(true);
+  const [emailOnNewMessage, setEmailOnNewMessage] = useState(true);
+  const [emailOnNewOrder, setEmailOnNewOrder] = useState(true);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
+  const [aiTrainingConsent, setAiTrainingConsent] = useState(false);
+  
+  // Cookie preferences
+  const [essentialCookies] = useState(true); // Always enabled
+  const [performanceCookies, setPerformanceCookies] = useState(true);
+  const [functionalCookies, setFunctionalCookies] = useState(true);
+  const [targetingCookies, setTargetingCookies] = useState(false);
+  
+  // Compliance Information states
+  const [legalName, setLegalName] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [address, setAddress] = useState("");
+  
+  // Career Information states
+  const [jobTitle, setJobTitle] = useState("");
+  const [company, setCompany] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [yearsOfExperience, setYearsOfExperience] = useState("");
   
   // Initialize form with user data
   useEffect(() => {
     if (user) {
       setEmail(user.email || "");
+      setName(user.name || "");
+      setUsername(user.username || "");
       setAvatarPreview(user.avatar || "");
       
       // These would typically come from user preferences in a real app
-      setLanguage(localStorage.getItem("i18nextLng") || "en");
       setCurrency(localStorage.getItem("currency") || "GBP");
-      setEmailNotifications(localStorage.getItem("emailNotifications") !== "false");
-      setMarketingEmails(localStorage.getItem("marketingEmails") !== "false");
-      setTwoFactorEnabled(localStorage.getItem("twoFactorEnabled") === "true");
+      setEmailOnNewNotification((user as any).emailOnNewNotification ?? true);
+      setEmailOnNewMessage((user as any).emailOnNewMessage ?? true);
+      setEmailOnNewOrder((user as any).emailOnNewOrder ?? true);
+      setTwoFactorEnabled(user.twoFactorEnabled || false);
+      setAiTrainingConsent((user as any).aiTrainingConsent || false);
+      
+      // Load cookie preferences from localStorage
+      setPerformanceCookies(localStorage.getItem("performanceCookies") !== "false");
+      setFunctionalCookies(localStorage.getItem("functionalCookies") !== "false");
+      setTargetingCookies(localStorage.getItem("targetingCookies") === "true");
+      
+      // Load compliance information from localStorage
+      setLegalName(localStorage.getItem("legalName") || "");
+      setDateOfBirth(localStorage.getItem("dateOfBirth") || "");
+      setPhoneNumber(localStorage.getItem("phoneNumber") || "");
+      setAddress(localStorage.getItem("address") || "");
+      
+      // Load career information from localStorage
+      setJobTitle(localStorage.getItem("jobTitle") || "");
+      setCompany(localStorage.getItem("company") || "");
+      setIndustry(localStorage.getItem("industry") || "");
+      setYearsOfExperience(localStorage.getItem("yearsOfExperience") || "");
     }
   }, [user]);
   
@@ -293,7 +258,7 @@ export default function SettingsPage() {
         "PATCH",
         "/api/users/profile",
         formData,
-        true
+        { isFormData: true }
       );
       
       if (!response.ok) {
@@ -353,26 +318,32 @@ export default function SettingsPage() {
     },
   });
   
-  // Preferences update mutation (simulated for now)
+  // Preferences update mutation
   const updatePreferencesMutation = useMutation({
     mutationFn: async (preferences: {
-      language: string;
       currency: string;
-      emailNotifications: boolean;
-      marketingEmails: boolean;
+      emailOnNewNotification: boolean;
+      emailOnNewMessage: boolean;
+      emailOnNewOrder: boolean;
     }) => {
-      // Save to localStorage for demo purposes
-      localStorage.setItem("i18nextLng", preferences.language);
+      // Save to localStorage
       localStorage.setItem("currency", preferences.currency);
-      localStorage.setItem("emailNotifications", preferences.emailNotifications.toString());
-      localStorage.setItem("marketingEmails", preferences.marketingEmails.toString());
       
-      // In a real app, this would be an API call
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Save email notification preferences to database
+      const response = await apiRequest(
+        "PATCH",
+        "/api/users/notification-preferences",
+        {
+          emailOnNewNotification: preferences.emailOnNewNotification,
+          emailOnNewMessage: preferences.emailOnNewMessage,
+          emailOnNewOrder: preferences.emailOnNewOrder,
+        }
+      );
       
-      // Change language
-      i18n.changeLanguage(preferences.language);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update notification preferences");
+      }
       
       return preferences;
     },
@@ -381,6 +352,7 @@ export default function SettingsPage() {
         title: t("misc.success"),
         description: t("settings.preferencesUpdated"),
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
     },
     onError: (error: Error) => {
       toast({
@@ -391,27 +363,33 @@ export default function SettingsPage() {
     },
   });
   
-  // Security settings update mutation (simulated)
+  // Security settings update mutation
   const updateSecurityMutation = useMutation({
     mutationFn: async (settings: { twoFactorEnabled: boolean }) => {
-      // Save to localStorage for demo
-      localStorage.setItem("twoFactorEnabled", settings.twoFactorEnabled.toString());
+      const response = await apiRequest(
+        "PATCH",
+        "/api/users/security-settings",
+        settings
+      );
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update security settings");
+      }
       
-      return settings;
+      return response.json();
     },
     onSuccess: () => {
       toast({
         title: t("misc.success"),
         description: t("settings.securityUpdated"),
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: t("misc.error"),
-        description: t("settings.updateFailed"),
+        description: error.message || t("settings.updateFailed"),
         variant: "destructive",
       });
     },
@@ -437,7 +415,7 @@ export default function SettingsPage() {
       });
       // Force logout
       queryClient.setQueryData(["/api/auth/me"], null);
-      setLocation("/");
+      navigate("/");
     },
     onError: () => {
       toast({
@@ -510,10 +488,10 @@ export default function SettingsPage() {
   // Handle preferences update
   const handlePreferencesUpdate = () => {
     updatePreferencesMutation.mutate({
-      language,
       currency, // Use the same variable but it now represents country
-      emailNotifications,
-      marketingEmails,
+      emailOnNewNotification,
+      emailOnNewMessage,
+      emailOnNewOrder,
     });
   };
   
@@ -529,12 +507,113 @@ export default function SettingsPage() {
     deleteAccountMutation.mutate();
   };
   
+  // Handle manage cookies
+  const handleManageCookies = () => {
+    toast({
+      title: t("settings.cookiePreferences"),
+      description: t("settings.cookieManagementInterface"),
+    });
+  };
+  
+  // Data export mutation
+  const dataExportMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/users/export-data", {});
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to request data export");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: t("misc.success"),
+        description: t("settings.dataExportSent"),
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: t("misc.error"),
+        description: error.message || t("settings.dataExportFailed"),
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Handle data export request
+  const handleDataExport = () => {
+    dataExportMutation.mutate();
+  };
+  
+  // AI training consent mutation
+  const aiConsentMutation = useMutation({
+    mutationFn: async (consent: boolean) => {
+      const response = await apiRequest("PATCH", "/api/users/ai-training-consent", {
+        aiTrainingConsent: consent
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update AI training consent");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      localStorage.setItem("aiTrainingConsent", aiTrainingConsent.toString());
+      toast({
+        title: t("misc.success"),
+        description: t("settings.aiTrainingUpdated"),
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: t("misc.error"),
+        description: error.message || t("settings.aiTrainingFailed"),
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Handle AI training consent update
+  const handleAiConsentUpdate = () => {
+    aiConsentMutation.mutate(aiTrainingConsent);
+  };
+  
+  // Handle compliance information update
+  const handleComplianceUpdate = () => {
+    localStorage.setItem("legalName", legalName);
+    localStorage.setItem("dateOfBirth", dateOfBirth);
+    localStorage.setItem("phoneNumber", phoneNumber);
+    localStorage.setItem("address", address);
+    
+    toast({
+      title: t("misc.success"),
+      description: t("settings.complianceUpdated"),
+    });
+  };
+  
+  // Handle career information update
+  const handleCareerUpdate = () => {
+    localStorage.setItem("jobTitle", jobTitle);
+    localStorage.setItem("company", company);
+    localStorage.setItem("industry", industry);
+    localStorage.setItem("yearsOfExperience", yearsOfExperience);
+    
+    toast({
+      title: t("misc.success"),
+      description: t("settings.careerUpdated"),
+    });
+  };
+  
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!isAuthLoading && !user) {
-      setLocation("/auth");
+      navigate("/auth");
     }
-  }, [isAuthLoading, user, setLocation]);
+  }, [isAuthLoading, user, navigate]);
   
   if (isAuthLoading || !user) {
     return (
@@ -545,277 +624,575 @@ export default function SettingsPage() {
   }
   
   return (
-    <div className="bg-background min-h-screen">
-      <PageHeader
-        title="Account Settings"
-        description="Manage Your Account"
-        icon={<SettingsIcon className="h-6 w-6" />}
-      />
+    <div className="bg-white md:bg-background min-h-screen">
+      {/* Desktop Header */}
+      <div className="hidden md:block">
+        <PageHeader
+          title={ts["Account Settings"] || "Account Settings"}
+          icon={<SettingsIcon className="h-6 w-6" />}
+        />
+      </div>
       
-      <div className="container max-w-screen-xl py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-1 max-w-3xl mb-8">
-            <TabsTrigger value="account">
-              <User className="h-4 w-4 mr-2" />
-              Account Settings
-            </TabsTrigger>
-          </TabsList>
-          
-          {/* Unified Account Tab with all settings */}
-          <TabsContent value="account" className="space-y-6">
-            {/* Profile Information Card */}
-            <Card>
+      {/* Mobile Header - Show list when showMobileList is true */}
+      {showMobileList && (
+        <div className="md:hidden bg-white">
+          <div className="p-6">
+            <Card className="border-0">
               <CardHeader>
-                <CardTitle>Profile Information</CardTitle>
-                <CardDescription>Update Profile Information</CardDescription>
+                <CardTitle className="text-black">{ts["Account Settings"] || "Account Settings"}</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Avatar */}
-                <div className="flex flex-col sm:flex-row items-center gap-4">
-                  <div className="relative">
-                    <Avatar className="h-20 w-20">
-                      {avatarPreview ? (
-                        <AvatarImage src={avatarPreview} alt={name} />
-                      ) : null}
-                      <AvatarFallback className="text-lg">
-                        {getInitials(name || user.username)}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                  <div>
-                    <h3 className="font-medium">{user.name || user.username}</h3>
-                    <p className="text-sm text-blue-500 font-medium">@{user.username.toLowerCase()}</p>
-                  </div>
-                </div>
-                
-                {/* Email (editable) */}
-                <div className="space-y-2">
-                  <Label htmlFor="email">Your Email</Label>
-                  <p className="text-sm text-muted-foreground">Change Your Email</p>
-                  <Input
-                    id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="bg-white"
-                  />
+              <CardContent className="p-0">
+                <div className="divide-y">
+                  <button
+                    onClick={() => {
+                      setActiveTab("password");
+                      setShowMobileList(false);
+                    }}
+                    className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 transition-colors"
+                    data-testid="mobile-menu-password"
+                  >
+                    <span className="text-sm font-medium text-gray-900">{ts["Password"] || "Password"}</span>
+                    <ChevronRight className="h-5 w-5 text-gray-400" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveTab("language");
+                      setLanguageSubsection('menu');
+                      setShowMobileList(false);
+                    }}
+                    className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 transition-colors"
+                    data-testid="mobile-menu-region"
+                  >
+                    <span className="text-sm font-medium text-gray-900">{ts["Region"] || "Region"}</span>
+                    <ChevronRight className="h-5 w-5 text-gray-400" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveTab("notifications");
+                      setNotificationSubsection('menu');
+                      setShowMobileList(false);
+                    }}
+                    className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 transition-colors"
+                    data-testid="mobile-menu-notifications"
+                  >
+                    <span className="text-sm font-medium text-gray-900">{ts["Notifications"] || "Notifications"}</span>
+                    <ChevronRight className="h-5 w-5 text-gray-400" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveTab("security");
+                      setShowMobileList(false);
+                    }}
+                    className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 transition-colors"
+                    data-testid="mobile-menu-security"
+                  >
+                    <span className="text-sm font-medium text-gray-900">{ts["Security"] || "Security"}</span>
+                    <ChevronRight className="h-5 w-5 text-gray-400" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveTab("privacy");
+                      setPrivacySubsection('menu');
+                      setShowMobileList(false);
+                    }}
+                    className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 transition-colors"
+                    data-testid="mobile-menu-privacy"
+                  >
+                    <span className="text-sm font-medium text-gray-900">{ts["Privacy"] || "Privacy"}</span>
+                    <ChevronRight className="h-5 w-5 text-gray-400" />
+                  </button>
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-end">
-                <Button
-                  onClick={handleProfileUpdate}
-                  disabled={updateProfileMutation.isPending}
-                  className="bg-black text-white hover:bg-gray-800"
-                >
-                  {updateProfileMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t("settings.saving")}
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      Save Changes
-                    </>
-                  )}
-                </Button>
-              </CardFooter>
             </Card>
-            
-            {/* Password Change Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Change Password</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Current Password */}
-                <div className="space-y-2">
-                  <Label htmlFor="current-password">Current Password</Label>
-                  <Input
-                    id="current-password"
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    placeholder="••••••••"
-                  />
-                </div>
-                
-                {/* New Password */}
-                <div className="space-y-2">
-                  <Label htmlFor="new-password">New  Password</Label>
-                  <Input
-                    id="new-password"
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="••••••••"
-                  />
-                </div>
-                
-                {/* Confirm New Password */}
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confrim New Password</Label>
-                  <Input
-                    id="confirm-password"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                  />
+          </div>
+        </div>
+      )}
+      
+      <div className="container max-w-screen-xl py-0 md:py-6">
+        <div className="flex flex-col md:flex-row gap-0 md:gap-6">
+          {/* Left Sidebar Navigation - Hidden on Mobile */}
+          <div className="hidden md:block w-64 flex-shrink-0">
+            <Card className="border-0">
+              <CardContent className="p-0">
+                <div className="divide-y">
+                  <button
+                    onClick={() => {
+                      setActiveTab("password");
+                    }}
+                    className={`w-full flex items-center justify-between px-6 py-4 text-left transition-colors ${
+                      activeTab === "password" ? "bg-gray-50" : "hover:bg-gray-50"
+                    }`}
+                    data-testid="menu-password"
+                  >
+                    <span className="text-sm font-medium text-gray-900">{ts["Password"] || "Password"}</span>
+                    <ChevronRight className="h-5 w-5 text-gray-400" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveTab("language");
+                      setLanguageSubsection('menu');
+                    }}
+                    className={`w-full flex items-center justify-between px-6 py-4 text-left transition-colors ${
+                      activeTab === "language" ? "bg-gray-50" : "hover:bg-gray-50"
+                    }`}
+                    data-testid="menu-region"
+                  >
+                    <span className="text-sm font-medium text-gray-900">{ts["Region"] || "Region"}</span>
+                    <ChevronRight className="h-5 w-5 text-gray-400" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveTab("notifications");
+                      setNotificationSubsection('menu');
+                    }}
+                    className={`w-full flex items-center justify-between px-6 py-4 text-left transition-colors ${
+                      activeTab === "notifications" ? "bg-gray-50" : "hover:bg-gray-50"
+                    }`}
+                    data-testid="menu-notifications"
+                  >
+                    <span className="text-sm font-medium text-gray-900">{ts["Notifications"] || "Notifications"}</span>
+                    <ChevronRight className="h-5 w-5 text-gray-400" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveTab("security");
+                    }}
+                    className={`w-full flex items-center justify-between px-6 py-4 text-left transition-colors ${
+                      activeTab === "security" ? "bg-gray-50" : "hover:bg-gray-50"
+                    }`}
+                    data-testid="menu-security"
+                  >
+                    <span className="text-sm font-medium text-gray-900">{ts["Security"] || "Security"}</span>
+                    <ChevronRight className="h-5 w-5 text-gray-400" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveTab("privacy");
+                      setPrivacySubsection('menu');
+                    }}
+                    className={`w-full flex items-center justify-between px-6 py-4 text-left transition-colors ${
+                      activeTab === "privacy" ? "bg-gray-50" : "hover:bg-gray-50"
+                    }`}
+                    data-testid="menu-privacy"
+                  >
+                    <span className="text-sm font-medium text-gray-900">{ts["Privacy"] || "Privacy"}</span>
+                    <ChevronRight className="h-5 w-5 text-gray-400" />
+                  </button>
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-end">
-                <Button
-                  onClick={handlePasswordUpdate}
-                  disabled={updatePasswordMutation.isPending}
-                  className="bg-black text-white hover:bg-gray-800"
-                >
-                  {updatePasswordMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t("settings.updating")}
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="mr-2 h-4 w-4" />
-                      Update Password
-                    </>
-                  )}
-                </Button>
-              </CardFooter>
             </Card>
+          </div>
 
-            {/* Preferences Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Language and Region</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Language */}
-                <div className="space-y-2">
-                  <Label htmlFor="language">Language</Label>
-                  <Select value={language} onValueChange={setLanguage}>
-                    <SelectTrigger id="language">
-                      Portuguese
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LANGUAGE_OPTIONS.map(option => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+          {/* Right Content Area - Always show on desktop, conditionally on mobile */}
+          <div className={`flex-1 w-full md:w-auto ${showMobileList ? 'hidden md:block' : 'block'}`}>
+            {/* Password Section */}
+            {activeTab === "password" && (
+              <div>
+                {/* Mobile Section Header with Back Button */}
+                <div className="md:hidden bg-white sticky top-0 z-10 border-b border-gray-200">
+                  <div className="px-4 py-4">
+                    <button
+                      onClick={() => setShowMobileList(true)}
+                      className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-3"
+                      data-testid="button-back-to-settings"
+                    >
+                      <ChevronRight className="h-4 w-4 rotate-180" />
+                      {ts["Account Settings"] || "Account Settings"}
+                    </button>
+                    <h2 className="text-lg font-bold text-gray-900">{ts["Change Password"] || "Change Password"}</h2>
+                  </div>
+                </div>
+                <div className="md:hidden px-4 py-6">
+                  
+                  <div className="space-y-6 bg-white">
+                    {/* Current Password */}
+                    <div className="space-y-2">
+                      <Label htmlFor="current-password">{ts["Current Password"] || "Current Password"}</Label>
+                      <Input
+                        id="current-password"
+                        type="password"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                      />
+                    </div>
+                    
+                    {/* New Password */}
+                    <div className="space-y-2">
+                      <Label htmlFor="new-password">{ts["New Password"] || "New Password"}</Label>
+                      <Input
+                        id="new-password"
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                      />
+                    </div>
+                    
+                    {/* Confirm New Password */}
+                    <div className="space-y-2">
+                      <Label htmlFor="confirm-password">{ts["Confirm Password"] || "Confirm Password"}</Label>
+                      <Input
+                        id="confirm-password"
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                      />
+                    </div>
+                    
+                    <Button
+                      onClick={handlePasswordUpdate}
+                      disabled={updatePasswordMutation.isPending}
+                      className="w-full bg-black text-white hover:bg-gray-800"
+                    >
+                      {updatePasswordMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          {ts["Updating..."] || "Updating..."}
+                        </>
+                      ) : (
+                        ts["Save"] || "Save"
+                      )}
+                    </Button>
+                  </div>
                 </div>
                 
-                {/* Currency */}
-                <div className="space-y-2">
-                  <Label htmlFor="currency">Region</Label>
-                  <Select value={currency} onValueChange={setCurrency}>
-                    <SelectTrigger id="currency">
-                      <SelectValue placeholder="Select country" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {COUNTRY_OPTIONS.map((option: { value: string; label: string }) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-end">
-                <Button
-                  onClick={handlePreferencesUpdate}
-                  disabled={updatePreferencesMutation.isPending}
-                  className="bg-black text-white hover:bg-gray-800"
-                >
-                  {updatePreferencesMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t("settings.saving")}
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      Save Preferences
-                    </>
-                  )}
-                </Button>
-              </CardFooter>
-            </Card>
+                {/* Desktop Card */}
+                <Card className="hidden md:block">
+                  <CardHeader>
+                    <CardTitle>{ts["Change Password"] || "Change Password"}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Current Password */}
+                    <div className="space-y-2">
+                      <Label htmlFor="current-password-desktop">{ts["Current Password"] || "Current Password"}</Label>
+                      <Input
+                        id="current-password-desktop"
+                        type="password"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                      />
+                    </div>
+                    
+                    {/* New Password */}
+                    <div className="space-y-2">
+                      <Label htmlFor="new-password-desktop">{ts["New Password"] || "New Password"}</Label>
+                      <Input
+                        id="new-password-desktop"
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                      />
+                    </div>
+                    
+                    {/* Confirm New Password */}
+                    <div className="space-y-2">
+                      <Label htmlFor="confirm-password-desktop">{ts["Confirm Password"] || "Confirm Password"}</Label>
+                      <Input
+                        id="confirm-password-desktop"
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                      />
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-end">
+                    <Button
+                      onClick={handlePasswordUpdate}
+                      disabled={updatePasswordMutation.isPending}
+                      className="bg-black text-white hover:bg-gray-800"
+                    >
+                      {updatePasswordMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          {ts["Updating..."] || "Updating..."}
+                        </>
+                      ) : (
+                        ts["Save"] || "Save"
+                      )}
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </div>
+            )}
+
+            {/* Region Section */}
+            {activeTab === "language" && (
+              <div>
+                {languageSubsection === 'menu' ? (
+                  <div>
+                    {/* Mobile Section Header with Back Button */}
+                    <div className="md:hidden bg-white sticky top-0 z-10 border-b border-gray-200">
+                      <div className="px-4 py-4">
+                        <button
+                          onClick={() => setShowMobileList(true)}
+                          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-3"
+                          data-testid="button-back-to-settings"
+                        >
+                          <ChevronRight className="h-4 w-4 rotate-180" />
+                          {ts["Account Settings"] || "Account Settings"}
+                        </button>
+                        <h2 className="text-lg font-bold text-gray-900">{ts["Region"] || "Region"}</h2>
+                      </div>
+                    </div>
+                    <h2 className="hidden md:block text-2xl font-semibold mb-6">{ts["Region"] || "Region"}</h2>
+                    <Card className="border-0">
+                      <CardContent className="p-0">
+                        <div className="divide-y">
+                          <button
+                            onClick={() => setLanguageSubsection('region')}
+                            className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 transition-colors"
+                            data-testid="menu-region"
+                          >
+                            <span className="text-sm font-medium text-gray-900">{ts["Region"] || "Region"}</span>
+                            <ChevronRight className="h-5 w-5 text-gray-400" />
+                          </button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : (
+                  <Card>
+                    <CardHeader>
+                      <button
+                        onClick={() => setLanguageSubsection('menu')}
+                        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-2"
+                        data-testid="button-back"
+                      >
+                        <ChevronRight className="h-4 w-4 rotate-180" />
+                        {ts["Back"] || "Back"}
+                      </button>
+                      <CardTitle>
+                        {ts["Region"] || "Region"}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="currency">{ts["Region"] || "Region"}</Label>
+                        <Select value={currency} onValueChange={setCurrency}>
+                          <SelectTrigger id="currency">
+                            <SelectValue placeholder={ts["Select Country"] || "Select Country"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {COUNTRY_OPTIONS.map((option: { value: string; label: string }) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="flex justify-end">
+                      <Button
+                        onClick={handlePreferencesUpdate}
+                        disabled={updatePreferencesMutation.isPending}
+                        className="bg-black text-white hover:bg-gray-800"
+                      >
+                        {updatePreferencesMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            {ts["Saving..."] || "Saving..."}
+                          </>
+                        ) : (
+                          ts["Save"] || "Save"
+                        )}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                )}
+              </div>
+            )}
             
             {/* Notifications Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Notification Preferences</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  {/* Email Notifications */}
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Email Notifications</Label>
+            {activeTab === "notifications" && (
+              <div>
+                {notificationSubsection === 'menu' ? (
+                  <div>
+                    {/* Mobile Section Header with Back Button */}
+                    <div className="md:hidden bg-white sticky top-0 z-10 border-b border-gray-200">
+                      <div className="px-4 py-4">
+                        <button
+                          onClick={() => setShowMobileList(true)}
+                          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-3"
+                          data-testid="button-back-to-settings"
+                        >
+                          <ChevronRight className="h-4 w-4 rotate-180" />
+                          {ts["Account Settings"] || "Account Settings"}
+                        </button>
+                        <h2 className="text-lg font-bold text-gray-900">{ts["Notification Preferences"] || "Notification Preferences"}</h2>
+                      </div>
                     </div>
-                    <Switch
-                      checked={emailNotifications}
-                      onCheckedChange={setEmailNotifications}
-                      aria-label={t("settings.emailNotifications")}
-                    />
+                    <h2 className="hidden md:block text-2xl font-semibold mb-6">{ts["Notification Preferences"] || "Notification Preferences"}</h2>
+                    <Card className="border-0">
+                      <CardContent className="p-0">
+                        <div className="divide-y">
+                          <button
+                            onClick={() => setNotificationSubsection('new-notification')}
+                            className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 transition-colors"
+                            data-testid="menu-new-notification"
+                          >
+                            <div className="space-y-0.5">
+                              <div className="text-sm font-medium text-gray-900">{ts["New Notification"] || "New Notification"}</div>
+                              <p className="text-xs text-muted-foreground">
+                                {ts["Receive email when you get a new notification"] || "Receive email when you get a new notification"}
+                              </p>
+                            </div>
+                            <ChevronRight className="h-5 w-5 text-gray-400" />
+                          </button>
+                          <button
+                            onClick={() => setNotificationSubsection('new-message')}
+                            className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 transition-colors"
+                            data-testid="menu-new-message"
+                          >
+                            <div className="space-y-0.5">
+                              <div className="text-sm font-medium text-gray-900">{ts["New Message"] || "New Message"}</div>
+                              <p className="text-xs text-muted-foreground">
+                                {ts["Receive email when you get a new message"] || "Receive email when you get a new message"}
+                              </p>
+                            </div>
+                            <ChevronRight className="h-5 w-5 text-gray-400" />
+                          </button>
+                          <button
+                            onClick={() => setNotificationSubsection('new-order')}
+                            className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 transition-colors"
+                            data-testid="menu-new-order"
+                          >
+                            <div className="space-y-0.5">
+                              <div className="text-sm font-medium text-gray-900">{ts["New Order"] || "New Order"}</div>
+                              <p className="text-xs text-muted-foreground">
+                                {ts["Receive email when you receive a new order"] || "Receive email when you receive a new order"}
+                              </p>
+                            </div>
+                            <ChevronRight className="h-5 w-5 text-gray-400" />
+                          </button>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
-                  
-                  <Separator />
-                  
-                  {/* Marketing Emails */}
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Marketing Emails</Label>
-                    </div>
-                    <Switch
-                      checked={marketingEmails}
-                      onCheckedChange={setMarketingEmails}
-                      aria-label={t("settings.marketingEmails")}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-end">
-                <Button
-                  onClick={handlePreferencesUpdate}
-                  disabled={updatePreferencesMutation.isPending}
-                  className="bg-black text-white hover:bg-gray-800"
-                >
-                  {updatePreferencesMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t("settings.saving")}
-                    </>
-                  ) : (
-                    <>
-                      <Bell className="mr-2 h-4 w-4" />
-                      Update Notifications
-                    </>
-                  )}
-                </Button>
-              </CardFooter>
-            </Card>
+                ) : (
+                  <Card>
+                    <CardHeader>
+                      <button
+                        onClick={() => setNotificationSubsection('menu')}
+                        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-2"
+                        data-testid="button-back"
+                      >
+                        <ChevronRight className="h-4 w-4 rotate-180" />
+                        {ts["Back"] || "Back"}
+                      </button>
+                      <CardTitle>
+                        {notificationSubsection === 'new-notification' && (ts["New Notification"] || "New Notification")}
+                        {notificationSubsection === 'new-message' && (ts["New Message"] || "New Message")}
+                        {notificationSubsection === 'new-order' && (ts["New Order"] || "New Order")}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      {notificationSubsection === 'new-notification' && (
+                        <div className="space-y-4">
+                          <p className="text-sm text-muted-foreground">
+                            {ts["Receive email when you get a new notification"] || "Receive email when you get a new notification"}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <Label>{ts["Email Notifications"] || "Email Notifications"}</Label>
+                            <Switch
+                              checked={emailOnNewNotification}
+                              onCheckedChange={setEmailOnNewNotification}
+                              aria-label={ts["New Notification"] || "New Notification"}
+                              data-testid="switch-email-notification"
+                            />
+                          </div>
+                        </div>
+                      )}
+                      
+                      {notificationSubsection === 'new-message' && (
+                        <div className="space-y-4">
+                          <p className="text-sm text-muted-foreground">
+                            {ts["Receive email when you get a new message"] || "Receive email when you get a new message"}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <Label>{ts["Email Notifications"] || "Email Notifications"}</Label>
+                            <Switch
+                              checked={emailOnNewMessage}
+                              onCheckedChange={setEmailOnNewMessage}
+                              aria-label={ts["New Message"] || "New Message"}
+                              data-testid="switch-email-message"
+                            />
+                          </div>
+                        </div>
+                      )}
+                      
+                      {notificationSubsection === 'new-order' && (
+                        <div className="space-y-4">
+                          <p className="text-sm text-muted-foreground">
+                            {ts["Receive email when you receive a new order"] || "Receive email when you receive a new order"}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <Label>{ts["Email Notifications"] || "Email Notifications"}</Label>
+                            <Switch
+                              checked={emailOnNewOrder}
+                              onCheckedChange={setEmailOnNewOrder}
+                              aria-label={ts["New Order"] || "New Order"}
+                              data-testid="switch-email-order"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                    <CardFooter className="flex justify-end">
+                      <Button
+                        onClick={handlePreferencesUpdate}
+                        disabled={updatePreferencesMutation.isPending}
+                        className="bg-black text-white hover:bg-gray-800"
+                      >
+                        {updatePreferencesMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            {ts["Saving..."] || "Saving..."}
+                          </>
+                        ) : (
+                          ts["Save"] || "Save"
+                        )}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                )}
+              </div>
+            )}
             
             {/* Security Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Sign - In Security Settings</CardTitle>
-
-              </CardHeader>
+            {activeTab === "security" && (
+              <div>
+                {/* Mobile Section Header with Back Button */}
+                <div className="md:hidden bg-white sticky top-0 z-10 border-b border-gray-200">
+                  <div className="px-4 py-4">
+                    <button
+                      onClick={() => setShowMobileList(true)}
+                      className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-3"
+                      data-testid="button-back-to-settings"
+                    >
+                      <ChevronRight className="h-4 w-4 rotate-180" />
+                      {ts["Account Settings"] || "Account Settings"}
+                    </button>
+                    <h2 className="text-lg font-bold text-gray-900">{ts["Security"] || "Security"}</h2>
+                  </div>
+                </div>
+                <Card>
+                <CardHeader className="hidden md:block">
+                  <CardTitle>{ts["Sign-In Security Settings"] || "Sign-In Security Settings"}</CardTitle>
+                </CardHeader>
               <CardContent className="space-y-6">
                 {/* Two-Factor Authentication */}
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>Two-Factor Authentication</Label>
+                    <Label>{ts["Two-Factor Authentication"] || "Two-Factor Authentication"}</Label>
+                    <p className="text-sm text-muted-foreground">
+                      {ts["Add an extra layer of security to your account"] || "Add an extra layer of security to your account"} ({ts["Always enabled for security"] || "Always enabled for security"})
+                    </p>
                   </div>
                   <Switch
-                    checked={twoFactorEnabled}
-                    onCheckedChange={setTwoFactorEnabled}
-                    aria-label={t("settings.twoFactorAuth")}
+                    checked={true}
+                    disabled={true}
+                    aria-label={ts["Two-Factor Authentication"] || "Two-Factor Authentication"}
+                    data-testid="switch-2fa"
                   />
                 </div>
               </CardContent>
@@ -828,59 +1205,298 @@ export default function SettingsPage() {
                   {updateSecurityMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t("settings.saving")}
+                      {ts["Saving..."] || "Saving..."}
                     </>
                   ) : (
-                    <>
-                      <Shield className="mr-2 h-4 w-4" />
-                      Update Security
-                    </>
+                    ts["Save"] || "Save"
                   )}
                 </Button>
               </CardFooter>
-            </Card>
+              </Card>
+              </div>
+            )}
             
-            {/* Danger Zone */}
-            <Card className="border-destructive">
-              <CardHeader className="text-destructive">
-                <CardTitle>Delete account</CardTitle>
-                <CardDescription className="text-destructive/80">Once an account is permanently deleted by our services, it cannot be retrieved.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive">
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete Account
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone. Your account and all associated data will be permanently deleted.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={handleDeleteAccount}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            {/* Privacy Section */}
+            {activeTab === "privacy" && (
+              <div>
+                {privacySubsection === 'menu' ? (
+                  <div>
+                    {/* Mobile Section Header with Back Button */}
+                    <div className="md:hidden bg-white sticky top-0 z-10 border-b border-gray-200">
+                      <div className="px-4 py-4">
+                        <button
+                          onClick={() => setShowMobileList(true)}
+                          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-3"
+                          data-testid="button-back-to-settings"
+                        >
+                          <ChevronRight className="h-4 w-4 rotate-180" />
+                          {ts["Account Settings"] || "Account Settings"}
+                        </button>
+                        <h2 className="text-lg font-bold text-gray-900">{ts["Privacy"] || "Privacy"}</h2>
+                      </div>
+                    </div>
+                    <h2 className="hidden md:block text-2xl font-semibold mb-6">{ts["Privacy"] || "Privacy"}</h2>
+                    <Card className="border-0">
+                      <CardContent className="p-0">
+                        <div className="divide-y">
+                          <button
+                            onClick={() => setPrivacySubsection('cookies')}
+                            className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 transition-colors"
+                            data-testid="menu-cookies"
+                          >
+                            <div className="space-y-0.5">
+                              <div className="text-sm font-medium text-gray-900">{ts["Manage Cookies"] || "Manage Cookies"}</div>
+                              <p className="text-xs text-muted-foreground">
+                                {ts["Control cookie preferences and tracking settings"] || "Control cookie preferences and tracking settings"}
+                              </p>
+                            </div>
+                            <ChevronRight className="h-5 w-5 text-gray-400" />
+                          </button>
+                          <button
+                            onClick={() => setPrivacySubsection('data-export')}
+                            className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 transition-colors"
+                            data-testid="menu-data-export"
+                          >
+                            <div className="space-y-0.5">
+                              <div className="text-sm font-medium text-gray-900">{ts["Get Copy of Data"] || "Get Copy of Data"}</div>
+                              <p className="text-xs text-muted-foreground">
+                                {ts["Request a copy of your personal information"] || "Request a copy of your personal information"}
+                              </p>
+                            </div>
+                            <ChevronRight className="h-5 w-5 text-gray-400" />
+                          </button>
+                          <button
+                            onClick={() => setPrivacySubsection('ai-training')}
+                            className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 transition-colors"
+                            data-testid="menu-ai-training"
+                          >
+                            <div className="space-y-0.5">
+                              <div className="text-sm font-medium text-gray-900">{ts["Data for Enhancing Generative AI"] || "Data for Enhancing Generative AI"}</div>
+                              <p className="text-xs text-muted-foreground">
+                                {ts["Choose whether to allow AI training with your data"] || "Choose whether to allow AI training with your data"}
+                              </p>
+                            </div>
+                            <ChevronRight className="h-5 w-5 text-gray-400" />
+                          </button>
+                          <button
+                            onClick={() => navigate("/suspend-account")}
+                            className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 transition-colors"
+                            data-testid="menu-suspend-profile"
+                          >
+                            <div className="space-y-0.5">
+                              <div className="text-sm font-medium text-gray-900">{ts["Suspend Profile"] || "Suspend Profile"}</div>
+                              <p className="text-xs text-muted-foreground">
+                                {ts["Temporarily deactivate your account"] || "Temporarily deactivate your account"}
+                              </p>
+                            </div>
+                            <ChevronRight className="h-5 w-5 text-gray-400" />
+                          </button>
+                          <button
+                            onClick={() => navigate("/close-account")}
+                            className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 transition-colors"
+                            data-testid="menu-close-account"
+                          >
+                            <div className="space-y-0.5">
+                              <div className="text-sm font-medium text-gray-900">{ts["Account Closure"] || "Account Closure"}</div>
+                              <p className="text-xs text-muted-foreground">
+                                {ts["Permanently delete your account"] || "Permanently delete your account"}
+                              </p>
+                            </div>
+                            <ChevronRight className="h-5 w-5 text-gray-400" />
+                          </button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : (
+                  <Card>
+                    <CardHeader>
+                      <button
+                        onClick={() => setPrivacySubsection('menu')}
+                        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-2"
+                        data-testid="button-back"
                       >
-                        {deleteAccountMutation.isPending ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="mr-2 h-4 w-4" />
-                        )}
-                        Permanently Delete My Account
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                        <ChevronRight className="h-4 w-4 rotate-180" />
+                        {ts["Back"] || "Back"}
+                      </button>
+                      <CardTitle>
+                        {privacySubsection === 'cookies' && (ts["Manage Cookies"] || "Manage Cookies")}
+                        {privacySubsection === 'data-export' && (ts["Get Copy of Data"] || "Get Copy of Data")}
+                        {privacySubsection === 'ai-training' && (ts["Data for Enhancing Generative AI"] || "Data for Enhancing Generative AI")}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      {privacySubsection === 'cookies' && (
+                        <div className="space-y-6">
+                          <p className="text-sm text-muted-foreground">
+                            {ts["We use cookies to enhance your browsing experience and analyze our traffic. By clicking 'Accept All', you consent to our use of cookies."] || "We use cookies to enhance your browsing experience and analyze our traffic."}
+                          </p>
+                          
+                          {/* Essential Cookies */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-0.5">
+                                <Label>{ts["Essential Cookies"] || "Essential Cookies"}</Label>
+                                <p className="text-xs text-muted-foreground">
+                                  {ts["These cookies are necessary for the website to function and cannot be disabled."] || "These cookies are necessary for the website to function and cannot be disabled."}
+                                </p>
+                              </div>
+                              <Switch
+                                checked={essentialCookies}
+                                disabled={true}
+                                aria-label={ts["Essential Cookies"] || "Essential Cookies"}
+                                data-testid="switch-essential-cookies"
+                              />
+                            </div>
+                          </div>
+                          
+                          <Separator />
+                          
+                          {/* Performance Cookies */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-0.5">
+                                <Label>{ts["Performance Cookies"] || "Performance Cookies"}</Label>
+                                <p className="text-xs text-muted-foreground">
+                                  {ts["These cookies help us analyze how visitors use our website."] || "These cookies help us analyze how visitors use our website."}
+                                </p>
+                              </div>
+                              <Switch
+                                checked={performanceCookies}
+                                onCheckedChange={setPerformanceCookies}
+                                aria-label={ts["Performance Cookies"] || "Performance Cookies"}
+                                data-testid="switch-performance-cookies"
+                              />
+                            </div>
+                          </div>
+                          
+                          <Separator />
+                          
+                          {/* Functional Cookies */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-0.5">
+                                <Label>{ts["Functional Cookies"] || "Functional Cookies"}</Label>
+                                <p className="text-xs text-muted-foreground">
+                                  {ts["These cookies enable enhanced functionality and personalization."] || "These cookies enable enhanced functionality and personalization."}
+                                </p>
+                              </div>
+                              <Switch
+                                checked={functionalCookies}
+                                onCheckedChange={setFunctionalCookies}
+                                aria-label={ts["Functional Cookies"] || "Functional Cookies"}
+                                data-testid="switch-functional-cookies"
+                              />
+                            </div>
+                          </div>
+                          
+                          <Separator />
+                          
+                          {/* Targeting Cookies */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-0.5">
+                                <Label>{ts["Targeting Cookies"] || "Targeting Cookies"}</Label>
+                                <p className="text-xs text-muted-foreground">
+                                  {ts["These cookies may be set by our advertising partners to build a profile of your interests."] || "These cookies may be set by our advertising partners to build a profile of your interests."}
+                                </p>
+                              </div>
+                              <Switch
+                                checked={targetingCookies}
+                                onCheckedChange={setTargetingCookies}
+                                aria-label={ts["Targeting Cookies"] || "Targeting Cookies"}
+                                data-testid="switch-targeting-cookies"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {privacySubsection === 'data-export' && (
+                        <div className="space-y-4">
+                          <p className="text-sm text-muted-foreground">
+                            {ts["We'll send a copy of your data to your registered email address."] || "We'll send a copy of your data to your registered email address."}
+                          </p>
+                          <Button
+                            onClick={handleDataExport}
+                            disabled={dataExportMutation.isPending}
+                            data-testid="button-data-export"
+                            className="w-full bg-black text-white hover:bg-gray-800"
+                          >
+                            {dataExportMutation.isPending ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                {ts["Sending..."] || "Sending..."}
+                              </>
+                            ) : (
+                              ts["Request Data"] || "Request Data"
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                      
+                      {privacySubsection === 'ai-training' && (
+                        <div className="space-y-4">
+                          <p className="text-sm text-muted-foreground">
+                            {ts["Your content may be used to help train and improve our generative AI models. You can opt out at any time."] || "Your content may be used to help train and improve our generative AI models. You can opt out at any time."}
+                          </p>
+                          <RadioGroup
+                            value={aiTrainingConsent ? "on" : "off"}
+                            onValueChange={(value) => setAiTrainingConsent(value === "on")}
+                            className="flex flex-col space-y-3"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <RadioGroupItem 
+                                value="on" 
+                                id="ai-training-on" 
+                                data-testid="radio-ai-consent-on"
+                                className="border-black text-black"
+                              />
+                              <Label htmlFor="ai-training-on" className="cursor-pointer font-normal">
+                                {ts["Allow my content to be used for AI training"] || "Allow my content to be used for AI training"}
+                              </Label>
+                            </div>
+                            <div className="flex items-center space-x-3">
+                              <RadioGroupItem 
+                                value="off" 
+                                id="ai-training-off" 
+                                data-testid="radio-ai-consent-off"
+                                className="border-black text-black"
+                              />
+                              <Label htmlFor="ai-training-off" className="cursor-pointer font-normal">
+                                {ts["Do not use my content for AI training"] || "Do not use my content for AI training"}
+                              </Label>
+                            </div>
+                          </RadioGroup>
+                        </div>
+                      )}
+                    </CardContent>
+                    
+                    {(privacySubsection === 'cookies' || privacySubsection === 'ai-training') && (
+                      <CardFooter className="flex justify-end">
+                        <Button
+                          onClick={privacySubsection === 'cookies' ? () => {
+                            localStorage.setItem('performanceCookies', performanceCookies.toString());
+                            localStorage.setItem('functionalCookies', functionalCookies.toString());
+                            localStorage.setItem('targetingCookies', targetingCookies.toString());
+                            toast({
+                              title: ts["Success"] || "Success",
+                              description: ts["Cookie preferences saved successfully"] || "Cookie preferences saved successfully",
+                            });
+                          } : handleAiConsentUpdate}
+                          className="bg-black text-white hover:bg-gray-800"
+                          data-testid="button-save-privacy"
+                        >
+                          {ts["Save"] || "Save"}
+                        </Button>
+                      </CardFooter>
+                    )}
+                  </Card>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

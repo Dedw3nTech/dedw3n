@@ -83,6 +83,7 @@
     "password": "पासवर्ड",
     "confirm_password": "पासवर्ड की पुष्टि करें",
     "forgot_password": "पासवर्ड भूल गए?",
+    "forgot_password_link": "पासवर्ड भूल गए? रीसेट करने के लिए यहाँ क्लिक करें",
     "already_have_account": "पहले से खाता है?",
     "dont_have_account": "खाता नहीं है?",
     "create_account": "खाता बनाएं",
@@ -181,5 +182,105 @@
     "payment_success": "भुगतान सफल!",
     "payment_failed": "भुगतान विफल",
     "order_confirmed": "ऑर्डर की पुष्टि हुई"
+  },
+  "giftcards": {
+    "title": "गिफ्ट कार्ड",
+    "page_title": "डेडवेन गिफ्ट कार्ड",
+    "description": "डेडवेन गिफ्ट कार्ड के साथ सही उपहार दें। डिजिटल या फिजिकल कार्ड में से चुनें।",
+    "purchase": "गिफ्ट कार्ड खरीदें",
+    "redeem": "गिफ्ट कार्ड रिडीम करें",
+    "check_balance": "बैलेंस चेक करें",
+    "my_gift_cards": "मेरे गिफ्ट कार्ड",
+    "give_gift": "पसंद का उपहार दें",
+    "perfect_gift": "किसी भी अवसर के लिए परफेक्ट",
+    "instant_delivery": "तुरंत डिजिटल डिलीवरी उपलब्ध",
+    "no_expiry": "कोई एक्सपायरी डेट नहीं",
+    "amounts": {
+      "select_amount": "राशि चुनें",
+      "custom_amount": "कस्टम राशि",
+      "minimum": "न्यूनतम ₹750",
+      "maximum": "अधिकतम ₹75000",
+      "currency": "INR"
+    },
+    "types": {
+      "digital": "डिजिटल गिफ्ट कार्ड",
+      "physical": "फिजिकल गिफ्ट कार्ड",
+      "email": "ईमेल डिलीवरी",
+      "mail": "मेल डिलीवरी"
+    },
+    "purchase_form": {
+      "recipient_name": "प्राप्तकर्ता का नाम",
+      "recipient_email": "प्राप्तकर्ता का ईमेल",
+      "sender_name": "आपका नाम",
+      "personal_message": "व्यक्तिगत संदेश",
+      "message_placeholder": "एक व्यक्तिगत संदेश लिखें...",
+      "delivery_date": "डिलीवरी की तारीख",
+      "delivery_method": "डिलीवरी विधि",
+      "preview": "गिफ्ट कार्ड प्रीव्यू",
+      "add_to_cart": "कार्ट में जोड़ें",
+      "buy_now": "अभी खरीदें"
+    },
+    "redeem_form": {
+      "gift_card_code": "गिफ्ट कार्ड कोड",
+      "code_placeholder": "अपना गिफ्ट कार्ड कोड डालें",
+      "redeem_button": "गिफ्ट कार्ड रिडीम करें",
+      "apply_to_order": "वर्तमान ऑर्डर पर लागू करें",
+      "check_balance_button": "केवल बैलेंस चेक करें"
+    },
+    "balance": {
+      "current_balance": "वर्तमान बैलेंस",
+      "remaining_balance": "शेष बैलेंस",
+      "used_amount": "इस्तेमाल की गई राशि",
+      "transaction_history": "लेनदेन का इतिहास",
+      "date_purchased": "खरीदारी की तारीख",
+      "date_expires": "समाप्ति",
+      "never_expires": "कभी नहीं"
+    },
+    "status": {
+      "active": "सक्रिय",
+      "redeemed": "पूर्ण रूप से रिडीम",
+      "expired": "समाप्त",
+      "pending": "लंबित",
+      "cancelled": "रद्द"
+    },
+    "messages": {
+      "purchase_success": "गिफ्ट कार्ड सफलतापूर्वक खरीदा गया!",
+      "redeem_success": "गिफ्ट कार्ड सफलतापूर्वक रिडीम किया गया!",
+      "balance_applied": "गिफ्ट कार्ड बैलेंस आपके ऑर्डर पर लागू किया गया",
+      "invalid_code": "अमान्य गिफ्ट कार्ड कोड",
+      "expired_card": "यह गिफ्ट कार्ड समाप्त हो गया है",
+      "already_redeemed": "यह गिफ्ट कार्ड पहले से पूर्ण रूप से रिडीम हो गया है",
+      "insufficient_balance": "गिफ्ट कार्ड में अपर्याप्त बैलेंस",
+      "email_sent": "गिफ्ट कार्ड ईमेल सफलतापूर्वक भेजा गया",
+      "code_required": "कृपया गिफ्ट कार्ड कोड डालें"
+    },
+    "terms": {
+      "title": "नियम और शर्तें",
+      "no_refund": "गिफ्ट कार्ड वापसी योग्य नहीं हैं",
+      "no_exchange": "गिफ्ट कार्ड को नकद के लिए एक्सचेंज नहीं किया जा सकता",
+      "marketplace_only": "केवल डेडवेन मार्केटप्लेस खरीदारी के लिए वैध",
+      "fraud_protection": "खोए या चोरी हुए कार्ड को बदला नहीं जा सकता",
+      "balance_check": "इस पेज पर कभी भी अपना बैलेंस चेक करें"
+    },
+    "common": {
+      "amount": "राशि",
+      "code": "कोड",
+      "date": "तारीख",
+      "status": "स्थिति",
+      "actions": "क्रियाएं",
+      "view": "देखें",
+      "print": "प्रिंट",
+      "email": "ईमेल",
+      "copy_code": "कोड कॉपी करें",
+      "download": "डाउनलोड",
+      "share": "शेयर"
+    },
+    "help": {
+      "how_to_use": "गिफ्ट कार्ड का उपयोग कैसे करें",
+      "purchase_guide": "कैसे खरीदें",
+      "redeem_guide": "कैसे रिडीम करें",
+      "contact_support": "सपोर्ट से संपर्क करें",
+      "faq": "अक्सर पूछे जाने वाले प्रश्न"
+    }
   }
 }

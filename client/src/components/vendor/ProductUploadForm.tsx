@@ -198,7 +198,7 @@ export default function ProductUploadForm({ vendorId, onSuccess }: ProductUpload
                 <FormItem>
                   <FormLabel>Product Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter product name" {...field} />
+                    <Input id={field.name} placeholder="Enter product name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -213,6 +213,7 @@ export default function ProductUploadForm({ vendorId, onSuccess }: ProductUpload
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Textarea
+                      id={field.name}
                       placeholder="Enter product description"
                       className="min-h-32"
                       {...field}
@@ -235,6 +236,7 @@ export default function ProductUploadForm({ vendorId, onSuccess }: ProductUpload
                     <FormLabel>Price ($)</FormLabel>
                     <FormControl>
                       <Input
+                        id={field.name}
                         type="number"
                         step="0.01"
                         min="0"
@@ -255,6 +257,7 @@ export default function ProductUploadForm({ vendorId, onSuccess }: ProductUpload
                     <FormLabel>Discount Price ($) (Optional)</FormLabel>
                     <FormControl>
                       <Input
+                        id={field.name}
                         type="number"
                         step="0.01"
                         min="0"
@@ -288,7 +291,7 @@ export default function ProductUploadForm({ vendorId, onSuccess }: ProductUpload
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger id={field.name}>
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                       </FormControl>
@@ -313,6 +316,7 @@ export default function ProductUploadForm({ vendorId, onSuccess }: ProductUpload
                     <FormLabel>Inventory</FormLabel>
                     <FormControl>
                       <Input
+                        id={field.name}
                         type="number"
                         min="0"
                         step="1"
@@ -338,6 +342,7 @@ export default function ProductUploadForm({ vendorId, onSuccess }: ProductUpload
                   <div className="space-y-3">
                     <FormControl>
                       <Input
+                        id={field.name}
                         placeholder="https://example.com/image.jpg"
                         {...field}
                       />

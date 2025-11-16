@@ -23,11 +23,11 @@ import {
   getFormattedExchangeRate,
   CurrencyCode 
 } from "@/lib/currencyConverter";
-import { useTranslation } from "react-i18next";
+import { useMasterTranslation } from "@/hooks/use-master-translation";
 import { useCurrency } from "@/hooks/use-currency";
 
 export default function CurrencyConverter() {
-  const { t } = useTranslation();
+  const { translateText } = useMasterTranslation();
   const { currency: defaultCurrency } = useCurrency();
   const [amount, setAmount] = useState<number>(1);
   const [fromCurrency, setFromCurrency] = useState<CurrencyCode>(defaultCurrency);
@@ -107,7 +107,7 @@ export default function CurrencyConverter() {
       </PopoverTrigger>
       <PopoverContent className="w-80 p-4" align="end">
         <div className="space-y-4">
-          <h3 className="font-medium text-sm">{t('wallet.currency_converter')}</h3>
+          <h3 className="font-medium text-sm">{translateText('Converter')}</h3>
           
           <div className="grid grid-cols-6 gap-2 items-center">
             <div className="col-span-2">

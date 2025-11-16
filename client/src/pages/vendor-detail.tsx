@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useMasterTranslation } from "@/hooks/use-master-translation";
 import { useAuth } from "@/hooks/use-auth";
+import { SEOHead } from "@/components/seo/SEOHead";
+import { buildVendorSchema, normalizeDescription, normalizeTitle } from "@/lib/buildSeoStructuredData";
 // Analytics types for vendor detail page
 interface TopBuyer {
   id: number;
@@ -77,7 +79,7 @@ import {
 // Product Card Component
 const ProductCard = ({ product }: { product: Product }) => {
   const [, setLocation] = useLocation();
-  const { t } = useTranslation();
+  const { translateText } = useMasterTranslation();
   
   return (
     <Card className="h-full hover:shadow-md transition-shadow flex flex-col">
@@ -88,13 +90,13 @@ const ProductCard = ({ product }: { product: Product }) => {
           className="absolute inset-0 w-full h-full object-cover"
         />
         {product.isOnSale && (
-          <Badge className="absolute top-2 right-2 bg-red-500 hover:bg-red-600">
-            {t("products.on_sale")}
+          <Badge className="absolute top-2 right-2 bg-black text-white hover:bg-gray-800">
+            {translateText("On Sale")}
           </Badge>
         )}
         {product.isNew && (
-          <Badge className="absolute top-2 left-2 bg-green-500 hover:bg-green-600">
-            {t("products.new")}
+          <Badge className="absolute top-2 left-2 bg-black text-white hover:bg-gray-800">
+            {translateText("New")}
           </Badge>
         )}
       </div>
@@ -124,9 +126,9 @@ const ProductCard = ({ product }: { product: Product }) => {
       <CardFooter>
         <Button 
           className="w-full" 
-          onClick={() => setLocation(`/product/${product.slug || product.id}`)}
+          onClick={() => setLocation(`/product/${product.id}`)}
         >
-          {t("products.view_details")}
+          {translateText("View Details")}
         </Button>
       </CardFooter>
     </Card>
@@ -136,11 +138,12 @@ const ProductCard = ({ product }: { product: Product }) => {
 // Top Product Item Component
 const TopProductItem = ({ product, index }: { product: TopProduct; index: number }) => {
   const [, setLocation] = useLocation();
+  const { translateText } = useMasterTranslation();
   
   return (
     <div 
       className="flex items-center gap-4 p-4 hover:bg-muted/50 rounded-lg cursor-pointer"
-      onClick={() => setLocation(`/product/${product.product.slug || product.product.id}`)}
+      onClick={() => setLocation(`/product/${product.product.id}`)}
     >
       <div className="font-bold text-lg text-muted-foreground w-6 text-center">
         {index + 1}
@@ -156,7 +159,7 @@ const TopProductItem = ({ product, index }: { product: TopProduct; index: number
         <h4 className="font-medium line-clamp-1">{product.product.name}</h4>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Package className="h-3 w-3" />
-          <span>{formatNumber(product.totalSold)} sold</span>
+          <span>{formatNumber(product.totalSold)} {translateText("sold")}</span>
           <DollarSign className="h-3 w-3 ml-2" />
           <span>{formatCurrency(product.revenue)}</span>
         </div>
@@ -167,7 +170,7 @@ const TopProductItem = ({ product, index }: { product: TopProduct; index: number
 
 // Top Buyer Item Component
 const TopBuyerItem = ({ buyer, index }: { buyer: TopBuyer; index: number }) => {
-  const { t } = useTranslation();
+  const { translateText } = useMasterTranslation();
   
   return (
     <div className="flex items-center gap-4 p-4 hover:bg-muted/50 rounded-lg">
@@ -186,12 +189,12 @@ const TopBuyerItem = ({ buyer, index }: { buyer: TopBuyer; index: number }) => {
           <h4 className="font-medium line-clamp-1">{buyer.user.name}</h4>
           <Link href={`/members/${buyer.user.id}`} className="ml-2 text-xs text-muted-foreground hover:text-primary">
             <User className="h-3 w-3 inline mr-1" />
-            {t('members.view_profile')}
+            {translateText("View Profile")}
           </Link>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <ShoppingBag className="h-3 w-3" />
-          <span>{buyer.orderCount} orders</span>
+          <span>{buyer.orderCount} {translateText("orders")}</span>
           <DollarSign className="h-3 w-3 ml-2" />
           <span>{formatCurrency(buyer.totalSpent)}</span>
         </div>
@@ -201,7 +204,7 @@ const TopBuyerItem = ({ buyer, index }: { buyer: TopBuyer; index: number }) => {
 };
 
 export default function VendorDetailPage() {
-  const { t } = useTranslation();
+  const { translateText } = useMasterTranslation();
   const { user } = useAuth();
   const [location, setLocation] = useLocation();
   const vendorSlug = location.split("/").pop() || "";
@@ -235,10 +238,10 @@ export default function VendorDetailPage() {
   if (!vendorSlug) {
     return (
       <div className="container py-12 text-center">
-        <h1 className="text-2xl font-bold mb-4">Invalid Vendor</h1>
+        <h1 className="text-2xl font-bold mb-4">{translateText("Invalid Vendor")}</h1>
         <Button onClick={() => setLocation("/vendors")}>
           <ChevronLeft className="mr-2 h-4 w-4" />
-          Back to Vendors
+          {translateText("Back to Vendors")}
         </Button>
       </div>
     );
@@ -250,7 +253,7 @@ export default function VendorDetailPage() {
         <div className="flex items-center mb-8">
           <Button variant="ghost" onClick={() => setLocation("/vendors")}>
             <ChevronLeft className="mr-2 h-4 w-4" />
-            Back
+            {translateText("Back")}
           </Button>
         </div>
         <div className="flex flex-col md:flex-row gap-6">
@@ -278,26 +281,32 @@ export default function VendorDetailPage() {
   if (!vendor) {
     return (
       <div className="container py-12 text-center">
-        <h1 className="text-2xl font-bold mb-4">Vendor not found</h1>
+        <h1 className="text-2xl font-bold mb-4">{translateText("Vendor not found")}</h1>
         <p className="text-muted-foreground mb-6">
-          The vendor you're looking for doesn't exist or has been removed.
+          {translateText("The vendor you're looking for doesn't exist or has been removed.")}
         </p>
         <Button onClick={() => setLocation("/vendors")}>
           <ChevronLeft className="mr-2 h-4 w-4" />
-          Back to Vendors
+          {translateText("Back to Vendors")}
         </Button>
       </div>
     );
   }
   
   return (
-    <div className="container py-8">
-      <div className="flex items-center mb-8">
-        <Button variant="ghost" onClick={() => setLocation("/vendors")}>
-          <ChevronLeft className="mr-2 h-4 w-4" />
-          {t("navigation.back")}
-        </Button>
-      </div>
+    <>
+      <SEOHead 
+        title={normalizeTitle(vendor?.storeName ? `${vendor.storeName} - Vendor Profile | Dedw3n` : 'Vendor Profile - Dedw3n')}
+        description={normalizeDescription(vendor?.description || `Browse products and services from ${vendor?.storeName || 'this vendor'} on Dedw3n marketplace.`)}
+        structuredData={vendor ? buildVendorSchema(vendor, products) : undefined}
+      />
+      <div className="container py-8">
+        <div className="flex items-center mb-8">
+          <Button variant="ghost" onClick={() => setLocation("/vendors")}>
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            {translateText("Back")}
+          </Button>
+        </div>
       
       {/* Vendor Info Top Bar */}
       <Card className="mb-8">
@@ -318,13 +327,13 @@ export default function VendorDetailPage() {
                   <h1 className="text-2xl font-bold">{vendor.storeName}</h1>
                   <Link href={`/members/${vendor.userId}`} className="text-sm text-muted-foreground hover:text-primary">
                     <User className="h-4 w-4 inline mr-1" />
-                    {t('vendors.view_profile')}
+                    {translateText("View Profile")}
                   </Link>
                 </div>
                 <div className="flex items-center gap-1 mt-1">
                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                   <span className="font-medium">
-                    {vendor.rating?.toFixed(1) || "New"} 
+                    {vendor.rating?.toFixed(1) || translateText("New")} 
                     {vendor.ratingCount ? ` (${vendor.ratingCount})` : ""}
                   </span>
                 </div>
@@ -335,16 +344,16 @@ export default function VendorDetailPage() {
             <div className="flex-1 min-w-0">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div>
-                  <h3 className="font-medium mb-2">{t("vendors.about")}</h3>
+                  <h3 className="font-medium mb-2">{translateText("About")}</h3>
                   <p className="text-sm text-muted-foreground line-clamp-3">
-                    {vendor.description || t("vendors.no_description")}
+                    {vendor.description || translateText("No description available")}
                   </p>
                 </div>
                 <div>
-                  <h3 className="font-medium mb-2">{t("vendors.reviews")}</h3>
+                  <h3 className="font-medium mb-2">{translateText("Reviews")}</h3>
                   <div className="flex items-center text-sm text-muted-foreground">
                     <Star className="h-4 w-4 text-muted-foreground opacity-50 mr-2" />
-                    <span>{t("vendors.no_reviews_message")}</span>
+                    <span>{translateText("No reviews yet")}</span>
                   </div>
                 </div>
               </div>
@@ -354,19 +363,19 @@ export default function VendorDetailPage() {
             <div className="flex flex-col gap-2 flex-shrink-0">
               <Button variant="outline" className="w-full md:w-auto">
                 <Mail className="mr-2 h-4 w-4" />
-                {t("vendors.contact_vendor")}
+                {translateText("Contact Vendor")}
               </Button>
               {isOwner && (
                 <Sheet>
                   <SheetTrigger asChild>
                     <Button variant="ghost" className="w-full md:w-auto">
                       <Award className="mr-2 h-4 w-4" />
-                      {t("vendors.top_products")}
+                      {translateText("Top Products")}
                     </Button>
                   </SheetTrigger>
                   <SheetContent className="w-full sm:max-w-md">
                     <SheetHeader>
-                      <SheetTitle>{t("vendors.top_products")}</SheetTitle>
+                      <SheetTitle>{translateText("Top Products")}</SheetTitle>
                     </SheetHeader>
                     <div className="mt-6 -mx-6">
                       {isLoadingAnalytics ? (
@@ -388,7 +397,7 @@ export default function VendorDetailPage() {
                         ))
                       ) : (
                         <p className="text-center text-sm text-muted-foreground py-4">
-                          {t("vendors.no_products_sold")}
+                          {translateText("No products sold yet")}
                         </p>
                       )}
                     </div>
@@ -404,9 +413,9 @@ export default function VendorDetailPage() {
       <div className="w-full">
         {/* Products Section */}
         <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-2">{t("vendors.products")}</h2>
+          <h2 className="text-2xl font-bold mb-2">{translateText("Products")}</h2>
           <p className="text-muted-foreground">
-            Browse all products from {vendor.storeName}
+            {translateText("Browse all products from")} {vendor.storeName}
           </p>
         </div>
         
@@ -426,14 +435,15 @@ export default function VendorDetailPage() {
           <div className="text-center py-16">
             <ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
             <h3 className="mt-4 text-lg font-medium">
-              {t("vendors.no_products")}
+              {translateText("No products available")}
             </h3>
             <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-              {t("vendors.no_products_message")}
+              {translateText("This vendor hasn't listed any products yet")}
             </p>
           </div>
         )}
       </div>
     </div>
+    </>
   );
 }

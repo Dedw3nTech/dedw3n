@@ -1,0 +1,36 @@
+debug a white screen of death (WSOD) error, enable WP_DEBUG in the wp-config.php file to display or log errors, which are often caused by a PHP fatal error, memory limit issue, or conflicting plugin/theme. If errors don't show on the screen, check the wp-content/debug.log file, and consider deactivating all plugins and changing the theme to isolate the problem. 
+Step 1: Enable WP_DEBUG
+Access your site's files using an FTP client or file manager.
+Locate and open the wp-config.php file in the root directory.
+Add the following lines to enable debugging and logging to a file:
+php
+define( 'WP_DEBUG', true );
+define( 'WP_DEBUG_LOG', true );
+define( 'WP_DEBUG_DISPLAY', false ); // Set to false to avoid displaying errors on the live site
+You can find more information on this step in this YouTube video.
+Save the changes and refresh your site. 
+Step 2: Analyze the error
+If errors are displayed on the screen, they will point you to the specific file and line causing the issue, which could be a syntax error or a problem with a plugin or theme.
+If no errors appear on the screen, go to your wp-content folder and find the debug.log file. This file will contain the logged errors.
+Look for clues in the error message, such as a specific plugin, theme, or function that is failing. 
+This video demonstrates how to enable WP_DEBUG and locate the debug.log file:
+Related video thumbnail
+58s
+
+How to Fix the WordPress White Screen of Death (Step by Step)
+
+YouTube • WPBeginner - WordPress Tutorials
+Step 3: Isolate the cause
+Disable plugins: Rename the wp-content/plugins folder to plugins-deactivated. If the site loads, rename the folder back to plugins and then reactivate each plugin one by one to find the culprit.
+Switch themes: If renaming the plugins folder doesn't work, rename your active theme's folder (e.g., your-theme_old). WordPress will automatically switch to a default theme if one is installed. If your site loads, the theme is the problem. You can also use phpMyAdmin to change the theme in the WP_OPTIONS table.
+Increase memory limit: If the error is related to memory, you may need to increase the PHP memory limit. This can sometimes be done through your hosting control panel, or by adding define('WP_MEMORY_LIMIT', '256M'); to your wp-config.php file. 
+This video shows how to fix the White Screen of Death by disabling plugins:
+Related video thumbnail
+1m
+
+How To Fix The WordPress White Screen Of Death (WSOD)
+
+YouTube • 20i
+Step 4: Address the error and clean up
+Once the problematic plugin or theme is identified, remove, update, or fix it.
+If you changed the wp-config.php file for debugging, revert the changes once the issue is fixed.

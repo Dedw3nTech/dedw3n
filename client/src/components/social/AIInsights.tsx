@@ -74,7 +74,7 @@ export default function AIInsights() {
     onError: (error: any) => {
       toast({
         title: "Generation Failed",
-        description: error.message || "Something went wrong. Please try again.",
+        description: error.message || "Something went wrong.",
         variant: "destructive",
       });
     },

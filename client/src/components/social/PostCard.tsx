@@ -2,7 +2,8 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ResolvedUserAvatar } from "@/components/ui/resolved-user-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -13,8 +14,12 @@ import { useLoginPrompt } from "@/hooks/use-login-prompt";
 import { LoginPromptModal } from "@/components/LoginPromptModal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { getInitials } from "@/lib/utils";
-import { useLocation } from "wouter";
-import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
+import { useLocation, Link } from "wouter";
+import { useMasterBatchTranslation, useMasterTranslation, useSingleTranslation } from "@/hooks/use-master-translation";
+import { processError } from "@/lib/error-handler";
+import ReportPostDialog from "@/components/social/ReportPostDialog";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { currencies } from "@/contexts/CurrencyContext";
 import { 
   HoverCard,
   HoverCardContent,
@@ -37,6 +42,7 @@ import {
 import {
   MessageSquare,
   ThumbsUp,
+  Heart,
   Share2,
   MoreHorizontal,
   Globe,
@@ -64,6 +70,7 @@ import {
   Bookmark,
   Flag,
   Smartphone,
+  CreditCard,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -78,6 +85,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+// Type for translated product data
+interface TranslatedProduct {
+  name: string;
+  soldBy: string;
+  vendorName: string;
+  addToCart: string;
+  makeOffer: string;
+  offLabel: string;
+}
 
 // Type for the post object
 interface Post {
@@ -144,11 +161,13 @@ export default function PostCard({
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
   const { isOpen, action, showLoginPrompt, closePrompt, requireAuth } = useLoginPrompt();
+  const { currentLanguage } = useLanguage();
   const [, setLocation] = useLocation();
   const [isCommenting, setIsCommenting] = useState(false);
   const [commentInput, setCommentInput] = useState("");
   const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
   const [offerAmount, setOfferAmount] = useState("");
+  const [offerCurrency, setOfferCurrency] = useState("GBP");
   const [offerMessage, setOfferMessage] = useState("");
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [shareMessage, setShareMessage] = useState("");
@@ -157,20 +176,26 @@ export default function PostCard({
   const [friendRequestMessage, setFriendRequestMessage] = useState("Hi! I'd like to be friends.");
   const [isRepostModalOpen, setIsRepostModalOpen] = useState(false);
   const [repostText, setRepostText] = useState("");
+  const [isTranslated, setIsTranslated] = useState(false);
+  const [translatedContent, setTranslatedContent] = useState("");
+  const [isProductTranslated, setIsProductTranslated] = useState(false);
+  const [translatedProduct, setTranslatedProduct] = useState<TranslatedProduct | null>(null);
+  const [productButtonLabel, setProductButtonLabel] = useState("");
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
 
   // Mobile device detection
   const isMobileDevice = () => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   };
 
-  // Master Translation System - PostCard Mega-Batch (50 texts)
+  // Master Translation System - PostCard Mega-Batch (60+ texts)
   const postCardTexts = useMemo(() => [
     // Post Actions (13 texts)
-    "Like", "Comment", "Share", "Save", "Report", "More options", "Delete Post", 
+    "Ded", "Comment", "Share", "Save", "Report", "More options", "Delete Post", 
     "Edit Post", "Report Post", "Copy Link", "Hide Post", "Follow", "Unfollow",
     
     // Status Messages (11 texts)
-    "Liked", "Saved", "Shared", "Deleted", "Reported", "Hidden", 
+    "Loved", "Saved", "Shared", "Deleted", "Reported", "Hidden", 
     "Authentication required", "Please log in to continue", "Post saved",
     "This post has been saved to your collection", "Thank you for helping keep our community safe",
     
@@ -188,7 +213,15 @@ export default function PostCard({
     
     // Error Messages (5 texts)
     "Failed to like post", "Failed to save post", "Failed to share post", 
-    "Failed to delete post", "Something went wrong"
+    "Failed to delete post", "Something went wrong",
+    
+    // Translation Controls (8 texts)
+    "Translate", "Show Original", "Sold by", "% OFF", "Message", "E-mail",
+    "Comments", "No comments yet. Be the first to comment!",
+    
+    // Video Labels (6 texts)
+    "SHORT", "STORY", "LIVE", "VIDEO", "Opening Text Messages",
+    "Text messaging app should open with post details"
   ], []);
 
   const { translations, isLoading: translationsLoading } = useMasterBatchTranslation(postCardTexts);
@@ -216,8 +249,19 @@ export default function PostCard({
     shareViaTextMessageText,
     
     // Error Messages
-    failedLikeText, failedSaveText, failedShareText, failedDeleteText, errorText
+    failedLikeText, failedSaveText, failedShareText, failedDeleteText, errorText,
+    
+    // Translation Controls
+    translateBtnText, showOriginalText, soldByText, offLabelText, messageDropdownText, emailText,
+    commentsHeaderText, noCommentsText,
+    
+    // Video Labels
+    shortText, storyText, liveText, videoText, openingTextMessagesText,
+    textMessagingAppText
   ] = translations || postCardTexts;
+
+  // Promise-based translation hook for manual translation
+  const { translateTextAsync } = useMasterTranslation();
 
   // Video player states
   const [isPlaying, setIsPlaying] = useState(false);
@@ -245,6 +289,11 @@ export default function PostCard({
   // Like post mutation
   const likeMutation = useMutation({
     mutationFn: async () => {
+      // Check authentication before making request
+      if (!currentUser) {
+        throw new Error("AUTHENTICATION_REQUIRED");
+      }
+      
       const response = await apiRequest(
         post.isLiked ? "DELETE" : "POST",
         `/api/posts/${post.id}/like`,
@@ -252,6 +301,9 @@ export default function PostCard({
       );
       
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("AUTHENTICATION_REQUIRED");
+        }
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to like/unlike post");
       }
@@ -265,12 +317,20 @@ export default function PostCard({
       queryClient.invalidateQueries({ queryKey: ["/api/feed/recommended"] });
       queryClient.invalidateQueries({ queryKey: [`/api/posts/${post.id}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/users/${post.user.username}/posts`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/feed/community"] });
     },
     onError: (error: Error) => {
+      if (error.message === "AUTHENTICATION_REQUIRED") {
+        showLoginPrompt("like");
+        return;
+      }
+      const errorReport = processError(error);
       toast({
         title: errorText,
-        description: error.message || failedLikeText,
+        description: errorReport.userMessage || failedLikeText,
         variant: "destructive",
+        errorType: `${errorReport.category} Error - ${errorReport.code}`,
+        errorMessage: errorReport.technicalDetails,
       });
     },
   });
@@ -303,10 +363,13 @@ export default function PostCard({
       queryClient.invalidateQueries({ queryKey: ["/api/feed/recommended"] });
     },
     onError: (error: Error) => {
+      const errorReport = processError(error);
       toast({
         title: errorText,
-        description: error.message || failedShareText,
+        description: errorReport.userMessage || failedShareText,
         variant: "destructive",
+        errorType: `${errorReport.category} Error - ${errorReport.code}`,
+        errorMessage: errorReport.technicalDetails,
       });
     },
   });
@@ -314,6 +377,11 @@ export default function PostCard({
   // Comment mutation
   const commentMutation = useMutation({
     mutationFn: async (comment: string) => {
+      // Check authentication before making request
+      if (!currentUser) {
+        throw new Error("AUTHENTICATION_REQUIRED");
+      }
+      
       const response = await apiRequest(
         "POST",
         `/api/posts/${post.id}/comments`,
@@ -321,6 +389,9 @@ export default function PostCard({
       );
       
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("AUTHENTICATION_REQUIRED");
+        }
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to add comment");
       }
@@ -341,12 +412,20 @@ export default function PostCard({
       queryClient.invalidateQueries({ queryKey: ["/api/feed/personal"] });
       queryClient.invalidateQueries({ queryKey: ["/api/feed/communities"] });
       queryClient.invalidateQueries({ queryKey: ["/api/feed/recommended"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/feed/community"] });
     },
     onError: (error: Error) => {
+      if (error.message === "AUTHENTICATION_REQUIRED") {
+        showLoginPrompt("comment");
+        return;
+      }
+      const errorReport = processError(error);
       toast({
         title: "Error",
-        description: error.message || "Failed to add comment",
+        description: errorReport.userMessage || "Failed to add comment",
         variant: "destructive",
+        errorType: `${errorReport.category} Error - ${errorReport.code}`,
+        errorMessage: errorReport.technicalDetails,
       });
     },
   });
@@ -380,19 +459,24 @@ export default function PostCard({
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate cart data and cart count for header badge
+      queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/cart/count"] });
+      
+      // Show success toast
       toast({
-        title: "Added to cart",
+        title: "Added to Cart",
         description: "Product added to your cart successfully",
       });
-      
-      // Invalidate cart data
-      queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
     },
     onError: (error: Error) => {
+      const errorReport = processError(error);
       toast({
         title: "Error",
-        description: error.message || "Failed to add product to cart",
+        description: errorReport.userMessage || "Failed to add product to cart",
         variant: "destructive",
+        errorType: `${errorReport.category} Error - ${errorReport.code}`,
+        errorMessage: errorReport.technicalDetails,
       });
     },
   });
@@ -422,10 +506,38 @@ export default function PostCard({
       });
     },
     onError: (error: Error) => {
+      // Extract the original error message before processError transforms it
+      const originalMessage = error.message || "";
+      
+      // Determine user-friendly message based on the original backend error
+      let userMessage = "Failed to send friend request";
+      let title = "Friend Request Error";
+      
+      if (originalMessage.includes("already sent")) {
+        userMessage = "You've already sent a friend request to this user. Please wait for them to respond.";
+        title = "Request Already Sent";
+      } else if (originalMessage.includes("Already friends")) {
+        userMessage = "You're already friends with this user!";
+        title = "Already Friends";
+      } else if (originalMessage.includes("yourself")) {
+        userMessage = "You cannot send a friend request to yourself.";
+        title = "Invalid Request";
+      } else if (originalMessage.includes("Recipient ID is required")) {
+        userMessage = "Unable to identify the recipient. Please try again.";
+        title = "Invalid Request";
+      } else {
+        userMessage = originalMessage || "Failed to send friend request";
+      }
+      
+      // Still process for error reporting
+      const errorReport = processError(error);
+      
       toast({
-        title: "Error",
-        description: error.message || "Failed to send friend request",
+        title,
+        description: userMessage,
         variant: "destructive",
+        errorType: `${errorReport.category} Error - ${errorReport.code}`,
+        errorMessage: errorReport.technicalDetails,
       });
     },
   });
@@ -456,6 +568,11 @@ export default function PostCard({
   // Save post mutation
   const saveMutation = useMutation({
     mutationFn: async () => {
+      // Check authentication before making request
+      if (!currentUser) {
+        throw new Error("AUTHENTICATION_REQUIRED");
+      }
+      
       const response = await apiRequest(
         post.isSaved ? "DELETE" : "POST",
         `/api/posts/${post.id}/save`,
@@ -463,6 +580,9 @@ export default function PostCard({
       );
       
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("AUTHENTICATION_REQUIRED");
+        }
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to save post");
       }
@@ -479,12 +599,20 @@ export default function PostCard({
       queryClient.invalidateQueries({ queryKey: ["/api/feed/community"] });
       queryClient.invalidateQueries({ queryKey: ["/api/feed/personal"] });
       queryClient.invalidateQueries({ queryKey: ["/api/posts/saved"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/feed/recommended"] });
     },
     onError: (error: Error) => {
+      if (error.message === "AUTHENTICATION_REQUIRED") {
+        showLoginPrompt("save");
+        return;
+      }
+      const errorReport = processError(error);
       toast({
         title: "Error",
-        description: error.message || "Failed to save post",
+        description: errorReport.userMessage || "Failed to save post",
         variant: "destructive",
+        errorType: `${errorReport.category} Error - ${errorReport.code}`,
+        errorMessage: errorReport.technicalDetails,
       });
     },
   });
@@ -524,10 +652,13 @@ export default function PostCard({
       }
     },
     onError: (error: Error) => {
+      const errorReport = processError(error);
       toast({
         title: "Error",
-        description: error.message || "Failed to delete post",
+        description: errorReport.userMessage || "Failed to delete post",
         variant: "destructive",
+        errorType: `${errorReport.category} Error - ${errorReport.code}`,
+        errorMessage: errorReport.technicalDetails,
       });
     },
   });
@@ -567,10 +698,13 @@ export default function PostCard({
     },
     onError: (error: any) => {
       console.error('PostCard send offer error:', error);
+      const errorReport = processError(error);
       toast({
         title: "Error",
-        description: error.message || "Failed to send offer",
+        description: errorReport.userMessage || "Failed to send offer",
         variant: "destructive",
+        errorType: `${errorReport.category} Error - ${errorReport.code}`,
+        errorMessage: errorReport.technicalDetails,
       });
     },
   });
@@ -578,6 +712,11 @@ export default function PostCard({
   // Repost mutation
   const repostMutation = useMutation({
     mutationFn: async ({ message }: { message: string }) => {
+      // Check authentication before making request
+      if (!currentUser) {
+        throw new Error("AUTHENTICATION_REQUIRED");
+      }
+      
       const response = await apiRequest(
         "POST",
         `/api/posts`,
@@ -588,6 +727,9 @@ export default function PostCard({
       );
       
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("AUTHENTICATION_REQUIRED");
+        }
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to repost");
       }
@@ -604,12 +746,20 @@ export default function PostCard({
       
       // Invalidate query cache to refresh posts
       queryClient.invalidateQueries({ queryKey: ["/api/feed/personal"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/feed/community"] });
     },
     onError: (error: Error) => {
+      if (error.message === "AUTHENTICATION_REQUIRED") {
+        showLoginPrompt("repost");
+        return;
+      }
+      const errorReport = processError(error);
       toast({
         title: "Error",
-        description: error.message || "Failed to repost",
+        description: errorReport.userMessage || "Failed to repost",
         variant: "destructive",
+        errorType: `${errorReport.category} Error - ${errorReport.code}`,
+        errorMessage: errorReport.technicalDetails,
       });
     },
   });
@@ -643,10 +793,13 @@ export default function PostCard({
       setSelectedUser("");
     },
     onError: (error: Error) => {
+      const errorReport = processError(error);
       toast({
         title: "Error",
-        description: error.message || "Failed to send message",
+        description: errorReport.userMessage || "Failed to send message",
         variant: "destructive",
+        errorType: `${errorReport.category} Error - ${errorReport.code}`,
+        errorMessage: errorReport.technicalDetails,
       });
     },
   });
@@ -799,9 +952,39 @@ export default function PostCard({
     return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   };
 
+  // Helper function to map language code to locale
+  const getLocaleFromLanguage = (langCode: string): string => {
+    const localeMap: Record<string, string> = {
+      'AR': 'ar-SA',
+      'ZH': 'zh-CN',
+      'CS': 'cs-CZ',
+      'DA': 'da-DK',
+      'NL': 'nl-NL',
+      'EN': 'en-US',
+      'FI': 'fi-FI',
+      'FR': 'fr-FR',
+      'DE': 'de-DE',
+      'HU': 'hu-HU',
+      'IT': 'it-IT',
+      'JA': 'ja-JP',
+      'KO': 'ko-KR',
+      'NO': 'no-NO',
+      'PL': 'pl-PL',
+      'PT': 'pt-PT',
+      'RU': 'ru-RU',
+      'ES': 'es-ES',
+      'SV': 'sv-SE',
+      'TR': 'tr-TR',
+    };
+    return localeMap[langCode] || 'en-US';
+  };
+
+  // Format date with user's language
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleString("en-US", {
+    const locale = getLocaleFromLanguage(currentLanguage);
+    
+    return date.toLocaleString(locale, {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -833,36 +1016,31 @@ export default function PostCard({
       <CardHeader className="pb-0">
         <div className="flex justify-between">
           <div className="flex items-center gap-2">
-            <Avatar 
-              className="h-10 w-10 cursor-pointer"
-              onClick={() => setLocation(`/wall`)}
-            >
-              {post.user && post.user.avatar ? (
-                <AvatarImage 
-                  src={post.user.avatar} 
-                  alt={post.user.name || 'User'} 
-                />
-              ) : null}
-              <AvatarFallback>
-                {post.user ? getInitials(post.user.name || post.user.username || 'User') : 'U'}
-              </AvatarFallback>
-            </Avatar>
+            <Link href={`/profile/${post.user.username}`} data-testid="link-user-avatar">
+              <ResolvedUserAvatar
+                user={post.user}
+                size="md"
+                className="h-10 w-10 cursor-pointer"
+              />
+            </Link>
             <div>
               <div className="flex items-center">
                 <div className="flex items-center gap-2">
                   <div>
-                    <p 
-                      className="font-medium cursor-pointer hover:underline"
-                      onClick={() => setLocation(`/wall`)}
+                    <Link 
+                      href={`/profile/${post.user.username}`}
+                      className="font-medium text-foreground hover:underline cursor-pointer block"
+                      data-testid="link-user-name"
                     >
                       {post.user.name}
-                    </p>
-                    <p 
-                      className="text-xs text-blue-600 cursor-pointer hover:underline"
-                      onClick={() => setLocation(`/wall`)}
+                    </Link>
+                    <Link 
+                      href={`/profile/${post.user.username}`}
+                      className="text-xs text-blue-600 hover:underline cursor-pointer block"
+                      data-testid="link-user-username"
                     >
                       @{post.user.username}
-                    </p>
+                    </Link>
                     {(post.user.city || post.user.country || post.user.region) && (
                       <p className="text-xs text-gray-600 font-normal">
                         {[post.user.city, post.user.country, post.user.region]
@@ -902,11 +1080,11 @@ export default function PostCard({
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    className="text-blue-600 hover:bg-blue-50 flex items-center gap-1 px-2 py-1 ml-auto"
+                    className="text-black hover:bg-gray-100 flex items-center gap-1 px-2 py-1 ml-auto"
                     onClick={() => requireAuth("addFriend", () => setIsFriendRequestModalOpen(true))}
                   >
                     <Plus className="h-3 w-3" />
-                    <span style={{ fontSize: '16px' }}>{addFriendText}</span>
+                    <span style={{ fontSize: '13px' }}>{addFriendText}</span>
                   </Button>
                 )}
               </div>
@@ -929,26 +1107,25 @@ export default function PostCard({
 
             {/* Post author's menu (Edit/Delete) */}
             {currentUser && currentUser.id === post.userId && (
-              <div className="relative group">
-                <Button variant="ghost" size="icon">
-                  <MoreHorizontal className="h-5 w-5" />
-                </Button>
-                <div className="absolute right-0 mt-2 w-36 bg-background shadow-md rounded-md p-1 hidden group-hover:block z-10 border">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="w-full justify-start text-sm"
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" data-testid="button-post-menu">
+                    <MoreHorizontal className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuItem
                     onClick={() => setLocation(`/posts/${post.id}/edit`)}
+                    data-testid="menu-item-edit-post"
                   >
                     <i className="ri-edit-line mr-2"></i>
                     {editPostText}
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="w-full justify-start text-sm text-destructive hover:text-destructive"
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
                     onClick={handleDelete}
                     disabled={deleteMutation.isPending}
+                    data-testid="menu-item-delete-post"
+                    className="text-destructive hover:text-destructive"
                   >
                     {deleteMutation.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -956,9 +1133,9 @@ export default function PostCard({
                       <i className="ri-delete-bin-line mr-2"></i>
                     )}
                     {deletePostText}
-                  </Button>
-                </div>
-              </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
 
             {/* Other users' posts menu (Save/Report) */}
@@ -971,23 +1148,15 @@ export default function PostCard({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
                   <DropdownMenuItem
-                    onClick={() => {
-                      toast({
-                        title: savedToastText,
-                        description: savedToCollectionText,
-                      });
-                    }}
+                    onClick={handleSavePost}
+                    data-testid="menu-item-save-post"
                   >
                     <Bookmark className="mr-2 h-4 w-4 fill-current" />
                     {saveText}
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => {
-                      toast({
-                        title: reportedText,
-                        description: thankYouReportText,
-                      });
-                    }}
+                    onClick={() => requireAuth("report", () => setIsReportDialogOpen(true))}
+                    data-testid="menu-item-report-post"
                   >
                     <Flag className="mr-2 h-4 w-4 fill-current" />
                     {reportText}
@@ -1009,11 +1178,27 @@ export default function PostCard({
         )}
         
         <p 
-          className={`${isDetailed ? "" : "line-clamp-4"} mb-4 ${!isDetailed ? "cursor-pointer hover:text-primary/90 transition-colors" : ""}`}
+          className={`${isDetailed ? "" : "line-clamp-4"} ${!isDetailed ? "cursor-pointer hover:text-primary/90 transition-colors" : ""}`}
           onClick={() => !isDetailed && setLocation(`/posts/${post.id}`)}
         >
-          {post.content}
+          {isTranslated ? translatedContent : post.content}
         </p>
+        
+        <button
+          onClick={async () => {
+            if (!isTranslated) {
+              const translated = await translateTextAsync(post.content, 'instant');
+              setTranslatedContent(translated);
+              setIsTranslated(true);
+            } else {
+              setIsTranslated(false);
+            }
+          }}
+          className="text-gray-500 text-sm hover:text-gray-700 transition-colors mb-4"
+          style={{ marginTop: '7px' }}
+        >
+          {isTranslated ? showOriginalText : translateBtnText}
+        </button>
         
         {post.imageUrl && !post.videoUrl && (
           <div 
@@ -1171,7 +1356,7 @@ export default function PostCard({
                 >
                   <img 
                     src={post.product.imageUrl} 
-                    alt={post.product.name} 
+                    alt={isProductTranslated && translatedProduct ? translatedProduct.name : post.product.name} 
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
                   />
                 </div>
@@ -1180,12 +1365,23 @@ export default function PostCard({
                     className="font-semibold text-lg hover:underline cursor-pointer text-gray-900 mb-1"
                     onClick={() => post.product?.id && setLocation(`/product/${post.product.id}`)}
                   >
-                    {post.product.name}
+                    {isProductTranslated && translatedProduct ? translatedProduct.name : post.product.name}
                   </h4>
                   {post.product.vendorName && (
                     <p className="text-sm text-gray-600 flex items-center mb-2">
                       <Users className="h-3 w-3 mr-1" />
-                      {post.product.vendorName}
+                      <span>{isProductTranslated && translatedProduct ? translatedProduct.soldBy : 'Sold by'} </span>
+                      <span 
+                        className="font-medium hover:underline cursor-pointer ml-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (post.product?.vendorId) {
+                            setLocation(`/vendor/${post.product.vendorId}`);
+                          }
+                        }}
+                      >
+                        {isProductTranslated && translatedProduct ? translatedProduct.vendorName : post.product.vendorName}
+                      </span>
                     </p>
                   )}
                   <div className="flex items-center gap-2">
@@ -1194,15 +1390,15 @@ export default function PostCard({
                         £{post.product.price.toFixed(2)}
                       </span>
                     )}
-                    <span className="font-bold text-xl text-green-600">
+                    <span className="font-bold text-[15px] text-green-600">
                       £{(post.product.discountPrice ?? post.product.price).toFixed(2)}
                     </span>
+                    {post.product.discountPrice && post.product.discountPrice < post.product.price && (
+                      <Badge className="bg-black hover:bg-gray-800 text-white">
+                        {Math.round((1 - post.product.discountPrice / post.product.price) * 100)}{isProductTranslated && translatedProduct ? translatedProduct.offLabel : '% OFF'}
+                      </Badge>
+                    )}
                   </div>
-                  {post.product.discountPrice && post.product.discountPrice < post.product.price && (
-                    <Badge className="bg-red-500 hover:bg-red-600 mt-2 text-white">
-                      {Math.round((1 - post.product.discountPrice / post.product.price) * 100)}% OFF
-                    </Badge>
-                  )}
                 </div>
               </div>
               
@@ -1211,7 +1407,7 @@ export default function PostCard({
                 <Button 
                   variant="default" 
                   size="lg" 
-                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium h-12 text-base rounded-lg"
+                  className="flex-1 bg-black hover:bg-gray-800 text-white font-medium h-12 text-base rounded-lg"
                   onClick={() => {
                     if (!currentUser) {
                       toast({
@@ -1232,9 +1428,9 @@ export default function PostCard({
                   {addToCartMutation.isPending ? (
                     <Loader2 className="h-5 w-5 animate-spin mr-2" />
                   ) : (
-                    <ShoppingCart className="h-5 w-5 mr-2" />
+                    <CreditCard className="h-5 w-5 mr-2 text-white" />
                   )}
-                  Buy Now
+                  {isProductTranslated && translatedProduct ? translatedProduct.addToCart : 'Add to Cart'}
                 </Button>
                 
                 <Button 
@@ -1244,86 +1440,95 @@ export default function PostCard({
                   onClick={handleMakeOffer}
                   disabled={!post.product}
                 >
-                  Make Offer
+                  {isProductTranslated && translatedProduct ? translatedProduct.makeOffer : 'Make an Offer'}
                 </Button>
               </div>
             </div>
+            
+            <button
+              onClick={async () => {
+                if (!isProductTranslated) {
+                  const [translatedName, translatedSoldBy, translatedVendorName, translatedAddToCart, translatedMakeOffer, translatedOffLabel] = await Promise.all([
+                    translateTextAsync(post.product?.name || '', 'instant'),
+                    translateTextAsync('Sold by', 'instant'),
+                    translateTextAsync(post.product?.vendorName || '', 'instant'),
+                    translateTextAsync('Add to Cart', 'instant'),
+                    translateTextAsync('Make an Offer', 'instant'),
+                    translateTextAsync('% OFF', 'instant')
+                  ]);
+                  
+                  setTranslatedProduct({
+                    name: translatedName,
+                    soldBy: translatedSoldBy,
+                    vendorName: translatedVendorName,
+                    addToCart: translatedAddToCart,
+                    makeOffer: translatedMakeOffer,
+                    offLabel: translatedOffLabel
+                  });
+                  setIsProductTranslated(true);
+                } else {
+                  setIsProductTranslated(false);
+                }
+              }}
+              className="text-gray-500 text-sm hover:text-gray-700 transition-colors"
+              style={{ marginTop: '7px' }}
+            >
+              {isProductTranslated ? showOriginalText : translateBtnText}
+            </button>
           </div>
         )}
       </CardContent>
       <CardFooter className="flex flex-col gap-3 border-t pt-4 pb-4">
-        {/* First line - Purchase actions */}
+        {/* Social actions - permanently visible */}
         <div className="flex justify-between w-full">
-          <div className="flex gap-4">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className={`flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white ${
-                !post.product && !post.isShoppable ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-              onClick={() => requireAuth("buy", () => addToCartMutation.mutate())}
-              disabled={addToCartMutation.isPending || (!post.product && !post.isShoppable)}
-            >
-              {addToCartMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <ShoppingCart className="h-4 w-4" />
-              )}
-              <span>{addToCartMutation.isPending ? "Adding..." : buyNowText}</span>
-            </Button>
-
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className={`flex items-center gap-1 bg-white hover:bg-gray-50 text-black border-2 border-blue-500 hover:border-blue-600 ${
-                !post.product && !post.isShoppable ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-              onClick={handleMakeOffer}
-              disabled={!post.product && !post.isShoppable}
-            >
-              <span>{makeOfferText}</span>
-            </Button>
+          {/* Stats display */}
+          <div className="flex items-center gap-3 text-sm text-gray-600">
+            <span>{post.likes} {likeText}</span>
+            <span>•</span>
+            <span>{post.comments} {commentBtnText}</span>
+            <span>•</span>
+            <span>{post.shares} {shareText}</span>
           </div>
-        </div>
-
-        {/* Second line - Social actions */}
-        <div className="flex justify-between w-full">
-          <div></div>
-          <div className="flex gap-4">
+          
+          {/* Action buttons - always visible */}
+          <div className="flex items-center gap-1">
             <Button 
               variant="ghost" 
-              size="default"
-              className={`flex items-center gap-1 text-blue-500 ${post.isLiked ? "text-blue-600" : ""}`}
+              size="sm"
+              className={`flex items-center gap-2 px-3 py-1.5 ${post.isLiked ? "text-black" : "text-gray-700 hover:bg-gray-100"} transition-colors`}
               onClick={() => requireAuth("like", handleLike)}
               disabled={likeMutation.isPending}
+              data-testid="button-like-post"
             >
               {likeMutation.isPending ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <ThumbsUp className={`h-5 w-5 ${post.isLiked ? "fill-current" : ""}`} />
+                <Heart className={`h-4 w-4 ${post.isLiked ? "fill-current" : ""}`} />
               )}
-              <span>{post.likes}</span>
+              <span className="text-sm font-medium">{likeText}</span>
             </Button>
             
             <Button 
               variant="ghost" 
-              size="default"
-              className="flex items-center gap-1 text-blue-500"
+              size="sm"
+              className="flex items-center gap-2 px-3 py-1.5 text-gray-700 hover:bg-gray-100 transition-colors"
               onClick={() => requireAuth("comment", handleComment)}
+              data-testid="button-comment-post"
             >
-              <MessageSquare className="h-5 w-5" />
-              <span>{post.comments}</span>
+              <MessageSquare className="h-4 w-4" />
+              <span className="text-sm font-medium">{commentBtnText}</span>
             </Button>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
                   variant="ghost" 
-                  size="default"
-                  className="flex items-center gap-1 text-blue-500"
+                  size="sm"
+                  className="flex items-center gap-2 px-3 py-1.5 text-gray-700 hover:bg-gray-100 transition-colors"
+                  data-testid="button-share-post"
                 >
-                  <Share2 className="h-5 w-5" />
-                  <span>{post.shares}</span>
+                  <Share2 className="h-4 w-4" />
+                  <span className="text-sm font-medium">{shareText}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -1362,20 +1567,6 @@ export default function PostCard({
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
-            
-            <Button 
-              variant="ghost" 
-              size="default"
-              className={`flex items-center gap-1 text-blue-500 ${post.isSaved ? "text-blue-600" : ""}`}
-              onClick={() => requireAuth("save", handleSavePost)}
-              disabled={saveMutation.isPending}
-            >
-              {saveMutation.isPending ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <Bookmark className={`h-5 w-5 ${post.isSaved ? "fill-current" : ""}`} />
-              )}
-            </Button>
           </div>
         </div>
 
@@ -1384,17 +1575,11 @@ export default function PostCard({
       {isCommenting && (
         <div className="p-4 pt-0 border-t">
           <div className="flex gap-3">
-            <Avatar className="h-8 w-8">
-              {currentUser?.avatar ? (
-                <AvatarImage 
-                  src={currentUser.avatar} 
-                  alt={currentUser.name || "User"} 
-                />
-              ) : null}
-              <AvatarFallback>
-                {getInitials(currentUser?.name || "User")}
-              </AvatarFallback>
-            </Avatar>
+            <ResolvedUserAvatar
+              user={currentUser || undefined}
+              size="sm"
+              className="h-8 w-8"
+            />
             <div className="flex-1 relative">
               <Textarea 
                 placeholder={writeMessageText}
@@ -1442,17 +1627,11 @@ export default function PostCard({
             <div className="space-y-4">
               {comments.map((comment: any) => (
                 <div key={comment.id} className="flex gap-3">
-                  <Avatar className="h-8 w-8">
-                    {comment.user?.avatar ? (
-                      <AvatarImage 
-                        src={comment.user.avatar} 
-                        alt={comment.user.name} 
-                      />
-                    ) : null}
-                    <AvatarFallback>
-                      {getInitials(comment.user?.name || "User")}
-                    </AvatarFallback>
-                  </Avatar>
+                  <ResolvedUserAvatar
+                    user={comment.user}
+                    size="sm"
+                    className="h-8 w-8"
+                  />
                   <div className="flex-1">
                     <div className="bg-accent p-3 rounded-lg">
                       <div className="flex justify-between">
@@ -1494,7 +1673,22 @@ export default function PostCard({
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="offer-amount" className="text-right font-medium">Amount (£)</label>
+              <label htmlFor="offer-currency" className="text-right font-medium">Currency</label>
+              <Select value={offerCurrency} onValueChange={setOfferCurrency}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px] overflow-y-auto">
+                  {currencies.map((currency) => (
+                    <SelectItem key={currency.code} value={currency.code}>
+                      {currency.code} ({currency.symbol}) - {currency.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="offer-amount" className="text-right font-medium">Amount</label>
               <Input
                 id="offer-amount"
                 type="number"
@@ -1527,7 +1721,7 @@ export default function PostCard({
             <Button 
               onClick={handleSendOffer}
               disabled={offerMutation.isPending}
-              className="bg-orange-500 hover:bg-orange-600 text-white"
+              className="bg-black hover:bg-gray-800 text-white"
             >
               {offerMutation.isPending ? (
                 <>
@@ -1644,19 +1838,9 @@ export default function PostCard({
                 friendRequestMutation.mutate(friendRequestMessage || "Hi! I'd like to be friends.");
               }}
               disabled={friendRequestMutation.isPending}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
+              className="bg-black hover:bg-gray-800 text-white"
             >
-              {friendRequestMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending...
-                </>
-              ) : (
-                <>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Send Friend Request
-                </>
-              )}
+              {friendRequestMutation.isPending ? "Sending..." : "Send Friend Request"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1753,6 +1937,13 @@ export default function PostCard({
         isOpen={isOpen} 
         onClose={closePrompt} 
         action={action} 
+      />
+
+      {/* Report Post Dialog */}
+      <ReportPostDialog 
+        postId={post.id}
+        isOpen={isReportDialogOpen}
+        onClose={() => setIsReportDialogOpen(false)}
       />
     </Card>
   );

@@ -35,7 +35,7 @@ export function LanguageSelector() {
       value={currentLanguage}
       onValueChange={handleLanguageChange}
     >
-      <SelectTrigger className="w-auto min-w-[120px] border-none bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800">
+      <SelectTrigger className="w-auto min-w-[120px] border-none bg-transparent hover:bg-gray-100">
         <div className="flex items-center gap-2">
           <Globe className="h-4 w-4" />
           <span className="hidden sm:inline">{currentLang.flag}</span>

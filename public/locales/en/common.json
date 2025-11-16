@@ -231,6 +231,9 @@
     "amount_positive": "Amount must be a positive number",
     "insufficient_funds": "Insufficient Funds"
   },
+  "pages": {
+    "tips_tricks": "Tips & Tricks"
+  },
   "misc": {
     "loading": "Loading...",
     "error": "Error",

@@ -13,6 +13,7 @@ import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import PayPalButton from "@/components/PayPalButton";
+import { SEOHead } from "@/components/seo/SEOHead";
 
 // Load Stripe conditionally
 const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 
@@ -58,7 +59,7 @@ const StripeCheckoutForm = ({ tier, onSuccess }: { tier: string; onSuccess: () =
       }
     } catch (error) {
       toast({
-        title: "Payment Error",
+        title: translateText("Error"),
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
@@ -281,7 +282,7 @@ export default function Checkout() {
       setClientSecret(data.clientSecret);
     } catch (error) {
       toast({
-        title: "Payment Setup Error",
+        title: translateText("Error"),
         description: "Failed to initialize payment. Please try again.",
         variant: "destructive",
       });
@@ -456,8 +457,13 @@ export default function Checkout() {
   const paymentDetails = getPaymentMethodDetails(paymentMethod);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+    <>
+      <SEOHead 
+        title="Secure Checkout - Dedw3n"
+        description="Complete your secure checkout with multiple payment options. Stripe, PayPal, bank transfer, and cryptocurrency accepted."
+      />
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-4xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
           <Button
@@ -555,5 +561,6 @@ export default function Checkout() {
         </div>
       </div>
     </div>
+    </>
   );
 }

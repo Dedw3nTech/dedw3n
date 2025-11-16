@@ -11,12 +11,11 @@ import { useMasterBatchTranslation, useMasterTranslation } from '@/hooks/use-mas
 import { useLanguage } from '@/contexts/LanguageContext';
 
 import { InstantImageAd, preloadAdvertisementImages } from '@/components/ads/InstantImageAd';
-import { VideoDisplayCard } from '@/components/products/VideoDisplayCard';
 import { ReportButton } from '@/components/ui/report-button';
 
 // Use server-served static asset paths for production compatibility
-const luxuryB2CImage = '/attached_assets/Dedw3n Marketplace (1).png';
-const bottomPromoImage = '/attached_assets/Copy of Dedw3n Marketplace III.png';
+const luxuryB2CImage = '/attached_assets/Dedw3n%20Marketplace%20(1).png';
+const bottomPromoImage = '/attached_assets/Copy%20of%20Dedw3n%20Marketplace%20III.png';
 import {
   Card,
   CardContent,
@@ -28,7 +27,8 @@ import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, ShoppingCart, Search, SlidersHorizontal, Share2, Mail, Link as LinkIcon, MessageSquare, Users, MessageCircle, Store, Building, Landmark, Heart, ChevronDown, Plus, Gift, Smartphone } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Loader2, ShoppingCart, Search, SlidersHorizontal, Share2, Mail, Link as LinkIcon, MessageSquare, Users, MessageCircle, Store, Building, Landmark, Heart, ChevronDown, Plus, Gift, Smartphone, Filter, CreditCard, Repeat2, Tag } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -54,6 +54,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 // Component for translating category names using Master Translation
 const CategoryName = ({ categoryName }: { categoryName: string }) => {
@@ -75,6 +82,12 @@ const ProductName = ({ productName }: { productName: string }) => {
   const [translatedText] = translations || [productName];
   return <span className="line-clamp-2">{translatedText}</span>;
 };
+
+// Helper function to convert vendor store name to slug
+const createVendorSlug = (storeName: string): string => {
+  return storeName.toLowerCase().replace(/[^a-z0-9]/g, '');
+};
+
 import { useToast } from '@/hooks/use-toast';
 
 // Mobile device detection utility
@@ -95,7 +108,7 @@ export default function Products() {
   const [showNew, setShowNew] = useState(false);
   const [location, setLocation] = useLocation();
   const { marketType, setMarketType, marketTypeLabel } = useMarketType();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, currencyList, selectedCurrency } = useCurrency();
   
   // Get current marketplace from URL
   const currentMarketplace = location.includes('/marketplace/b2c') ? 'b2c' :
@@ -109,6 +122,14 @@ export default function Products() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { currentLanguage } = useLanguage();
+  
+  // Collapsible section states for filter panel
+  const [productOrServiceOpen, setProductOrServiceOpen] = useState(true);
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const [regionOpen, setRegionOpen] = useState(false);
+  const [productStatusOpen, setProductStatusOpen] = useState(false);
+  const [storeOptionsOpen, setStoreOptionsOpen] = useState(false);
+  const [sortByOpen, setSortByOpen] = useState(false);
   
   // User authentication
   const { data: user } = useQuery({
@@ -143,19 +164,20 @@ export default function Products() {
     "Send Gift", "Send this product as a gift to someone special", "By", "Share with Member",
     "Share via Text", "Share via Text Message", // Updated VAT text to SMS sharing
     
-    // Community & Sharing (11 texts)
-    "Services", "Your Region", "Your Country", "Repost to Community Feed",
+    // Community & Sharing (10 texts)
+    "Services", "Your Region", "Your Country",
     "Would you like to add a message with this product share?", "Add your message (optional)",
     "What do you think about this product?", "Repost", "Repost", "Share via E-mail",
     "Share via Email",
     
-    // Offers & Actions (10 texts)
+    // Offers & Actions (12 texts)
     "Post to Feed", "Send Offer", "Send a price offer to the product owner", "Listed",
     "Your Offer Amount", "Enter your offer amount", "Message (optional)",
     "Add a message with your offer...", "Send via Message", "Send Offer",
+    "Would you like to add a message with this offer ?", "Currency",
     
-    // Search & Filters (11 texts)
-    "Search for Products", "Search within", "Categories", "Region", "Reset Filters",
+    // Search & Filters (9 texts)
+    "Categories", "Region", "Reset Filters",
     "On Sale", "New Arrivals", "Product or Service", "Product", "Service", "Product Status",
     
     // Friend & Store Options (10 texts)
@@ -192,14 +214,15 @@ export default function Products() {
     sendGiftText, buyText, listedByText, sendGiftTitle, sendProductAsGiftText, byText, shareWithMemberText,
     shareViaTextMessageText,
     
-    servicesText, yourRegionText, yourCountryText, repostToCommunityText, addMessageText,
+    servicesText, yourRegionText, yourCountryText, addMessageText,
     addYourMessageText, whatDoYouThinkText, postWithoutTextButton, repostButtonText, shareOnFeedText,
     shareViaEmailText,
     
     postToFeedButton, sendOfferTitle, sendPriceOfferText, listedText, yourOfferAmountText,
-    enterOfferAmountText, messageOptionalText, addMessageWithOfferText, sendViaMessageText, sendOfferText, sendOfferBtnText,
+    enterOfferAmountText, messageOptionalText, addMessageWithOfferText, sendViaMessageText, sendOfferText,
+    sendOfferBtnText, wouldYouLikeAddMessageOfferText, currencyText,
     
-    searchForProductsText, searchWithinText, categoriesText, regionText, resetFiltersText,
+    categoriesText, regionText, resetFiltersText,
     onSaleText, newArrivalsText, productOrServiceText, productFilterText, serviceFilterText, productStatusText,
     
     friendOptionsText, friendsOnlyText, localPickupText, storeOptionsText, verifiedStoresText,
@@ -228,6 +251,7 @@ export default function Products() {
   const [offerDialogOpen, setOfferDialogOpen] = useState(false);
   const [selectedOfferProduct, setSelectedOfferProduct] = useState<any>(null);
   const [offerAmount, setOfferAmount] = useState('');
+  const [offerCurrency, setOfferCurrency] = useState(selectedCurrency.code);
   const [offerMessage, setOfferMessage] = useState('');
 
   // Gift functionality state
@@ -287,11 +311,23 @@ export default function Products() {
       });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to like product. Please try again.",
-        variant: "destructive",
-      });
+      const isAuthError = error?.status === 401 || 
+                         error?.message?.includes("Unauthorized") || 
+                         error?.message?.includes("Authentication required");
+      
+      if (isAuthError) {
+        toast({
+          title: "Login Required",
+          description: "To add products to your favourites, please log in.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to like product. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   });
 
@@ -308,11 +344,23 @@ export default function Products() {
       });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error", 
-        description: error.message || "Failed to unlike product. Please try again.",
-        variant: "destructive",
-      });
+      const isAuthError = error?.status === 401 || 
+                         error?.message?.includes("Unauthorized") || 
+                         error?.message?.includes("Authentication required");
+      
+      if (isAuthError) {
+        toast({
+          title: "Login Required",
+          description: "To add products to your favourites, please log in.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error", 
+          description: error.message || "Failed to unlike product. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   });
 
@@ -333,6 +381,11 @@ export default function Products() {
   // Add to cart mutation
   const addToCartMutation = useMutation({
     mutationFn: async (productId: number) => {
+      // Check if user is authenticated
+      if (!user?.id) {
+        throw new Error('Please log in to add items to your cart.');
+      }
+
       // Get auth token for authentication
       const authToken = localStorage.getItem('dedwen_auth_token');
       
@@ -356,7 +409,8 @@ export default function Products() {
       });
       
       if (!response.ok) {
-        throw new Error(`Failed to add to cart: ${response.status} ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to add to cart: ${response.status} ${response.statusText}`);
       }
       
       return response.json();
@@ -364,15 +418,11 @@ export default function Products() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
       queryClient.invalidateQueries({ queryKey: ['/api/cart/count'] });
-      toast({
-        title: "Added to Cart",
-        description: "Product has been added to your shopping bag!",
-      });
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to add product to cart. Please try again.",
+        description: error.message || "Failed to add product to cart. Please try again.",
         variant: "destructive",
       });
     }
@@ -921,59 +971,149 @@ export default function Products() {
               <ShoppingCart className="h-12 w-12" />
             </div>
           )}
-
-          {/* Hover overlay with Add to Shopping Bag button */}
-          {marketType !== 'c2c' && (
-            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-              <Button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  addToCartMutation.mutate(product.id);
-                }}
-                disabled={addToCartMutation.isPending}
-                className="bg-black text-white hover:bg-gray-800 shadow-lg transform scale-90 group-hover:scale-100 transition-all duration-300"
-                size="sm"
-              >
-                {addToCartMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                )}
-                {addToShoppingBagText}
-              </Button>
-            </div>
-          )}
           
           <div className="absolute top-2 left-2 flex flex-col gap-1">
             {product.isNew && (
-              <Badge className={marketType === 'c2c' ? 'bg-blue-500' : marketType === 'b2c' ? 'bg-green-500' : 'bg-purple-500'}>
+              <Badge className="bg-black text-white">
                 {newBadgeText}
               </Badge>
             )}
             {product.isOnSale && (
-              <Badge className="bg-red-500">{saleBadgeText}</Badge>
+              <Badge className="bg-black text-white">{saleBadgeText}</Badge>
             )}
             
             {/* B2B badge for minimum quantities */}
             {marketType === 'b2b' && (
-              <Badge className="bg-gray-700">{minQtyText}: 10</Badge>
+              <Badge className="bg-black text-white">{minQtyText}: 10</Badge>
             )}
 
             {/* Verified seller badge for B2C */}
             {marketType === 'b2c' && product.vendorId % 2 === 0 && (
-              <Badge className="bg-green-600">{verifiedBadgeText}</Badge>
+              <Badge className="bg-black text-white">{verifiedBadgeText}</Badge>
             )}
 
             {/* Friend indicator for C2C */}
             {marketType === 'c2c' && product.vendorId % 3 === 0 && (
-              <Badge className="bg-blue-600">{friendText}</Badge>
+              <Badge className="bg-black text-white">{friendText}</Badge>
             )}
           </div>
         </div>
         
         <CardContent className="p-4 flex-grow">
-          <div className="font-medium text-sm leading-tight hover:text-primary cursor-pointer min-h-[2.5rem] flex items-center" onClick={() => setLocation(`/product/${product.id}`)}>
-            <ProductName productName={product.name} />
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <div className="font-medium text-sm leading-tight hover:text-primary cursor-pointer flex-1 min-h-[2.5rem] flex items-center" onClick={() => setLocation(`/product/${product.id}`)}>
+              <ProductName productName={product.name} />
+            </div>
+            
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  shareOnFeed(product);
+                }}
+                className="h-8 w-8 text-black hover:bg-gray-100"
+                title={shareOnFeedTooltipText || "Repost"}
+                data-testid={`button-repost-${product.id}`}
+              >
+                <Repeat2 className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost"
+                size="icon" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedOfferProduct(product);
+                  setOfferDialogOpen(true);
+                }}
+                className="h-8 w-8 text-black hover:bg-gray-100"
+                title={makeOfferTooltipText || "Send Offer"}
+                data-testid={`button-offer-${product.id}`}
+              >
+                <Tag className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  addToCartMutation.mutate(product.id);
+                }}
+                disabled={addToCartMutation.isPending}
+                title={addToCartTooltipText || "Add to Cart"}
+                data-testid={`button-cart-${product.id}`}
+              >
+                <CreditCard className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleLikeToggle(product.id);
+                }}
+                disabled={likeMutation.isPending || unlikeMutation.isPending}
+                title={isProductLiked(product.id) ? removeFromFavoritesText : addToFavoritesText}
+                data-testid={`button-favorite-${product.id}`}
+                data-no-login
+              >
+                <Heart 
+                  className={`h-4 w-4 ${isProductLiked(product.id) ? 'fill-red-500 text-red-500' : 'fill-black text-black'}`} 
+                />
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8"
+                    title={shareProductTooltipText}
+                    data-testid={`button-share-${product.id}`}
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>{shareProductText}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => shareByEmail(product)}>
+                    <Mail className="h-4 w-4 mr-2 text-black" />
+                    Share via Email
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => copyLinkToClipboard(product)}>
+                    <LinkIcon className="h-4 w-4 mr-2 text-black" />
+                    {copyLinkText}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => shareOnFeed(product)}>
+                    <svg className="h-4 w-4 mr-2 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M1 4v6h6M23 20v-6h-6"/>
+                      <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                    </svg>
+                    Repost
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => {
+                    setSelectedShareProduct(product);
+                    setShareWithMemberDialogOpen(true);
+                  }}>
+                    <Users className="h-4 w-4 mr-2 text-black" />
+                    {shareWithMemberText}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => shareViaWhatsApp(product)}>
+                    <svg className="h-4 w-4 mr-2 text-black" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.89 3.598z"/>
+                    </svg>
+                    Share via WhatsApp
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => shareViaSMS(product)}>
+                    <Smartphone className="h-4 w-4 mr-2 text-black" />
+                    {shareViaTextMessageText || "Share via Text Message"}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
           
           {/* Price moved below title */}
@@ -981,14 +1121,14 @@ export default function Products() {
             <div>
               {product.discountPrice ? (
                 <div className="flex items-center">
-                  <div className="font-bold text-blue-600 text-sm">
+                  <div className="text-black text-sm">
                     {formatPrice(product.discountPrice)}
                     {marketType === 'b2b' && <span className="text-xs ml-1">{vatText}</span>}
                   </div>
                   <div className="ml-2 text-sm text-gray-500 line-through">{formatPrice(product.price)}</div>
                 </div>
               ) : (
-                <div className="font-bold text-blue-600 text-sm">
+                <div className="text-black text-sm">
                   {formatPrice(product.price)}
                   {marketType === 'b2b' && <span className="text-xs ml-1">{vatText}</span>}
                 </div>
@@ -1002,8 +1142,16 @@ export default function Products() {
           </div>
           
           {/* Vendor/Store information */}
-          <div className="text-[12px] text-blue-600 mt-1">
-            {marketType === 'rqst' ? 'Requested by' : (soldByText || "Sold by")} {product.vendorStoreName || `Vendor ${product.vendorId}`}
+          <div className="text-[12px] text-black mt-1">
+            {marketType === 'rqst' ? 'Requested by' : (soldByText || "Sold by")}{' '}
+            <WouterLink 
+              href={`/vendor/${createVendorSlug(product.vendorStoreName || `Vendor${product.vendorId}`)}`}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              className="hover:underline cursor-pointer"
+              data-testid={`link-vendor-${product.vendorId}`}
+            >
+              {product.vendorStoreName || `Vendor ${product.vendorId}`}
+            </WouterLink>
           </div>
           
           {/* Additional info based on market type */}
@@ -1018,362 +1166,284 @@ export default function Products() {
             </div>
           )}
         </CardContent>
-        
-        <CardFooter className="flex flex-col gap-3">
-          {/* Buy button on its own line */}
-          <div className="w-full">
-            <Button 
-              size="sm" 
-              onClick={(e) => {
-                e.stopPropagation();
-                if (marketType === 'c2c') {
-                  setLocation(`/product/${product.id}`);
-                } else if (marketType === 'rqst') {
-                  // Show confirmation dialog for RQST marketplace
-                  setSelectedSellProduct(product);
-                  setSellConfirmationOpen(true);
-                } else {
-                  addToCartMutation.mutate(product.id);
-                }
-              }}
-              disabled={addToCartMutation.isPending}
-              className={marketType === 'rqst' ? "bg-red-600 text-white hover:bg-red-700 font-bold w-full" : "bg-black text-white hover:bg-gray-800 font-bold w-full"}
-              title={marketType === 'c2c' ? viewProductDetailsText : addToCartTooltipText}
-            >
-              {addToCartMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                marketType === 'rqst' ? 'Sell' : buyText
-              )}
-            </Button>
-          </div>
-          
-          {/* Repost and Send Offer buttons on second line */}
-          <div className="flex justify-between items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => shareOnFeed(product)}
-              className="text-black hover:bg-transparent hover:text-gray-700 font-normal flex-1"
-              title={shareOnFeedTooltipText}
-            >
-              {repostButtonText}
-            </Button>
-            <Button 
-              variant="ghost"
-              size="sm" 
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedOfferProduct(product);
-                setOfferDialogOpen(true);
-              }}
-              className="text-black hover:bg-transparent hover:text-gray-700 font-normal flex-1"
-              title={makeOfferTooltipText}
-            >
-              {sendOfferBtnText}
-            </Button>
-          </div>
-          <div className="flex items-center justify-end gap-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-9 w-9"
-              onClick={() => handleAddToDatingProfile(product.id)}
-              disabled={addToDatingProfileMutation.isPending}
-              title="Add to Dating Profile"
-            >
-              <Plus className="h-5 w-5 font-bold stroke-2" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-9 w-9"
-              onClick={() => handleLikeToggle(product.id)}
-              disabled={likeMutation.isPending || unlikeMutation.isPending}
-              title={isProductLiked(product.id) ? removeFromFavoritesText : addToFavoritesText}
-            >
-              <Heart 
-                className={`h-5 w-5 ${isProductLiked(product.id) ? 'fill-red-500 text-red-500' : 'fill-black text-black'}`} 
-              />
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-9 w-9"
-                  title={shareProductTooltipText}
-                >
-                  <Share2 className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{shareProductText}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => shareByEmail(product)}>
-                <Mail className="h-4 w-4 mr-2 text-blue-600" />
-                Share via Email
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => copyLinkToClipboard(product)}>
-                <LinkIcon className="h-4 w-4 mr-2 text-gray-600" />
-                {copyLinkText}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => shareOnFeed(product)}>
-                <svg className="h-4 w-4 mr-2 text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M1 4v6h6M23 20v-6h-6"/>
-                  <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
-                </svg>
-                Repost
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => {
-                setSelectedShareProduct(product);
-                setShareWithMemberDialogOpen(true);
-              }}>
-                <Users className="h-4 w-4 mr-2 text-blue-600" />
-                {shareWithMemberText}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => shareViaWhatsApp(product)}>
-                <svg className="h-4 w-4 mr-2 text-green-600" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.89 3.598z"/>
-                </svg>
-                Share via WhatsApp
-              </DropdownMenuItem>
-              {isMobileDevice() && (
-                <DropdownMenuItem onClick={() => shareViaSMS(product)}>
-                  <Smartphone className="h-4 w-4 mr-2 text-green-600" />
-                  {shareViaTextMessageText || "Share via Text Message"}
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </CardFooter>
       </Card>
     ));
-  };
-
-  // Video content based on marketplace type
-  const getMarketplaceVideo = () => {
-    switch (marketType) {
-      case 'b2b':
-        return {
-          video: '/attached_assets/Cafe_1749419425062.mp4',
-          title: 'Business Networking & Solutions'
-        };
-      case 'b2c':
-        return {
-          video: '/attached_assets/Be yourself_1749419131578.mp4',
-          title: 'Be Yourself - Shop Your Style'
-        };
-      case 'c2c':
-        return {
-          video: '/attached_assets/car selling online  _1749419270298.mp4',
-          title: 'Sell Your Vehicle Online'
-        };
-      default:
-        return {
-          video: '/attached_assets/Cafe.mp4',
-          title: 'Marketplace Experience'
-        };
-    }
   };
 
   // Content for the filter sidebar
   const FilterContent = () => (
     <div className="space-y-6 text-[14px]">
-      {/* Video Display Component */}
-      <div className="mb-6">
-        <VideoDisplayCard
-          videoSource={getMarketplaceVideo().video}
-          title={getMarketplaceVideo().title}
-          marketType={marketType as 'b2b' | 'b2c' | 'c2c'}
-          autoPlay={true}
-          showControls={true}
-          onClose={() => {}}
-        />
-      </div>
-
       <div>
-        <h3 className="font-medium mb-2 text-[14px]">{searchForProductsText}</h3>
-        <div className="mb-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              type="text"
-              placeholder={`${searchWithinText} ${marketType.toUpperCase()}`}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 text-[12px]"
-            />
-          </div>
+        <div 
+          className="flex items-center justify-between mb-2 cursor-pointer"
+          onClick={() => setProductOrServiceOpen(!productOrServiceOpen)}
+        >
+          <h3 className="font-medium text-[14px]">{productOrServiceText}</h3>
+          <ChevronDown className={`h-4 w-4 transition-transform ${productOrServiceOpen ? 'rotate-180' : ''}`} />
         </div>
-      </div>
-
-      <div>
-        <h3 className="font-medium mb-2 text-[14px]">{productOrServiceText}</h3>
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="show-products"
-              checked={selectedProductTypes.includes('product')}
-              onCheckedChange={() => toggleProductType('product')}
-            />
-            <Label htmlFor="show-products" className="text-[12px] font-normal">{productFilterText}</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="show-services"
-              checked={selectedProductTypes.includes('service')}
-              onCheckedChange={() => toggleProductType('service')}
-            />
-            <Label htmlFor="show-services" className="text-[12px] font-normal">{serviceFilterText}</Label>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <h3 className="font-medium mb-2 text-[14px]">{categoriesText}</h3>
-        <div className="space-y-2">
-          {categoriesLoading ? (
-            <div className="flex justify-center py-2">
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+        {productOrServiceOpen && (
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="show-products"
+                checked={selectedProductTypes.includes('product')}
+                onCheckedChange={() => toggleProductType('product')}
+              />
+              <Label htmlFor="show-products" className="text-[12px] font-normal">{productFilterText}</Label>
             </div>
-          ) : (
-            categories.map((category: any) => (
-              <div key={category.id} className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="show-services"
+                checked={selectedProductTypes.includes('service')}
+                onCheckedChange={() => toggleProductType('service')}
+              />
+              <Label htmlFor="show-services" className="text-[12px] font-normal">{serviceFilterText}</Label>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div>
+        <div 
+          className="flex items-center justify-between mb-2 cursor-pointer"
+          onClick={() => setCategoriesOpen(!categoriesOpen)}
+        >
+          <h3 className="font-medium text-[14px]">{categoriesText}</h3>
+          <ChevronDown className={`h-4 w-4 transition-transform ${categoriesOpen ? 'rotate-180' : ''}`} />
+        </div>
+        {categoriesOpen && (
+          <div className="space-y-2">
+            {categoriesLoading ? (
+              <div className="flex justify-center py-2">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              </div>
+            ) : (
+              categories.map((category: any) => (
+                <div key={category.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`category-${category.id}`}
+                    checked={selectedCategories.includes(category.name)}
+                    onCheckedChange={() => toggleCategory(category.name)}
+                  />
+                  <Label
+                    htmlFor={`category-${category.id}`}
+                    className="flex justify-between w-full text-sm"
+                  >
+                    <CategoryName categoryName={category.name} />
+                    <span className="text-gray-500">({categoryCount[category.name] || 0})</span>
+                  </Label>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+
+      <div>
+        <div 
+          className="flex items-center justify-between mb-2 cursor-pointer"
+          onClick={() => setRegionOpen(!regionOpen)}
+        >
+          <h3 className="font-medium text-[14px]">{regionText}</h3>
+          <ChevronDown className={`h-4 w-4 transition-transform ${regionOpen ? 'rotate-180' : ''}`} />
+        </div>
+        {regionOpen && (
+          <div className="space-y-2">
+            {['Africa', 'South Asia', 'East Asia', 'Oceania', 'North America', 'Central America', 'South America', 'Middle East', 'Europe', 'Central Asia'].map((region) => (
+              <div key={region} className="flex items-center space-x-2">
                 <Checkbox
-                  id={`category-${category.id}`}
-                  checked={selectedCategories.includes(category.name)}
-                  onCheckedChange={() => toggleCategory(category.name)}
+                  id={`region-${region}`}
+                  checked={selectedRegions.includes(region)}
+                  onCheckedChange={() => toggleRegion(region)}
                 />
                 <Label
-                  htmlFor={`category-${category.id}`}
-                  className="flex justify-between w-full text-sm"
+                  htmlFor={`region-${region}`}
+                  className="text-[12px] font-normal"
                 >
-                  <CategoryName categoryName={category.name} />
-                  <span className="text-gray-500">({categoryCount[category.name] || 0})</span>
+                  <RegionName regionName={region} />
                 </Label>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div>
-        <h3 className="font-medium mb-2 text-[14px]">{regionText}</h3>
-        <div className="space-y-2">
-          {['Africa', 'South Asia', 'East Asia', 'Oceania', 'North America', 'Central America', 'South America', 'Middle East', 'Europe', 'Central Asia'].map((region) => (
-            <div key={region} className="flex items-center space-x-2">
+        <div 
+          className="flex items-center justify-between mb-2 cursor-pointer"
+          onClick={() => setProductStatusOpen(!productStatusOpen)}
+        >
+          <h3 className="font-medium text-[14px]">{productStatusText}</h3>
+          <ChevronDown className={`h-4 w-4 transition-transform ${productStatusOpen ? 'rotate-180' : ''}`} />
+        </div>
+        {productStatusOpen && (
+          <div className="space-y-2 font-normal text-[12px]">
+            <div className="flex items-center space-x-2">
               <Checkbox
-                id={`region-${region}`}
-                checked={selectedRegions.includes(region)}
-                onCheckedChange={() => toggleRegion(region)}
+                id="show-sale"
+                checked={showSale}
+                onCheckedChange={(checked) => setShowSale(checked === true)}
               />
-              <Label
-                htmlFor={`region-${region}`}
-                className="text-[12px] font-normal"
-              >
-                <RegionName regionName={region} />
-              </Label>
+              <Label htmlFor="show-sale" className="text-[12px] font-normal">{onSaleText}</Label>
             </div>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <h3 className="font-medium mb-2 text-[14px]">{productStatusText}</h3>
-        <div className="space-y-2 font-normal text-[12px]">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="show-sale"
-              checked={showSale}
-              onCheckedChange={(checked) => setShowSale(checked === true)}
-            />
-            <Label htmlFor="show-sale" className="text-[12px] font-normal">{onSaleText}</Label>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="show-new"
+                checked={showNew}
+                onCheckedChange={(checked) => setShowNew(checked === true)}
+              />
+              <Label htmlFor="show-new" className="text-[12px] font-normal">{newArrivalsText}</Label>
+            </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="show-new"
-              checked={showNew}
-              onCheckedChange={(checked) => setShowNew(checked === true)}
-            />
-            <Label htmlFor="show-new" className="text-[12px] font-normal">{newArrivalsText}</Label>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Market-specific filters */}
       {marketType === 'c2c' && (
         <div>
-          <h3 className="font-medium mb-2 text-[14px]">{friendOptionsText}</h3>
-          <div className="space-y-2 text-[12px] font-normal">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="friends-only"
-              />
-              <Label htmlFor="friends-only" className="text-[12px] font-normal">{friendsOnlyText}</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="local-only"
-              />
-              <Label htmlFor="local-only" className="text-[12px] font-normal">{localPickupText}</Label>
-            </div>
+          <div 
+            className="flex items-center justify-between mb-2 cursor-pointer"
+            onClick={() => setStoreOptionsOpen(!storeOptionsOpen)}
+          >
+            <h3 className="font-medium text-[14px]">{friendOptionsText}</h3>
+            <ChevronDown className={`h-4 w-4 transition-transform ${storeOptionsOpen ? 'rotate-180' : ''}`} />
           </div>
+          {storeOptionsOpen && (
+            <div className="space-y-2 text-[12px] font-normal">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="friends-only"
+                />
+                <Label htmlFor="friends-only" className="text-[12px] font-normal">{friendsOnlyText}</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="local-only"
+                />
+                <Label htmlFor="local-only" className="text-[12px] font-normal">{localPickupText}</Label>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {marketType === 'b2c' && (
         <div>
-          <h3 className="font-medium mb-2 text-[14px]">{storeOptionsText}</h3>
-          <div className="space-y-2 text-[12px] font-normal">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="verified-only"
-              />
-              <Label htmlFor="verified-only" className="text-[12px] font-normal">{verifiedStoresText}</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="free-shipping"
-              />
-              <Label htmlFor="free-shipping" className="text-[12px] font-normal">{freeShippingText}</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="next-day-delivery"
-              />
-              <Label htmlFor="next-day-delivery" className="text-[12px] font-normal">{nextDayDeliveryText}</Label>
-            </div>
+          <div 
+            className="flex items-center justify-between mb-2 cursor-pointer"
+            onClick={() => setStoreOptionsOpen(!storeOptionsOpen)}
+          >
+            <h3 className="font-medium text-[14px]">{storeOptionsText}</h3>
+            <ChevronDown className={`h-4 w-4 transition-transform ${storeOptionsOpen ? 'rotate-180' : ''}`} />
           </div>
+          {storeOptionsOpen && (
+            <div className="space-y-2 text-[12px] font-normal">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="verified-only"
+                />
+                <Label htmlFor="verified-only" className="text-[12px] font-normal">{verifiedStoresText}</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="free-shipping"
+                />
+                <Label htmlFor="free-shipping" className="text-[12px] font-normal">{freeShippingText}</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="next-day-delivery"
+                />
+                <Label htmlFor="next-day-delivery" className="text-[12px] font-normal">{nextDayDeliveryText}</Label>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {marketType === 'b2b' && (
         <div>
-          <h3 className="font-medium mb-2 text-[14px]">{businessOptionsText}</h3>
-          <div className="space-y-2 text-[12px] font-normal">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="bulk-discount"
-              />
-              <Label htmlFor="bulk-discount" className="text-[12px] font-normal">{volumeDiscountsText}</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="wholesale-only"
-              />
-              <Label htmlFor="wholesale-only" className="text-[12px] font-normal">{wholesaleOnlyText}</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="tax-exempt"
-              />
-              <Label htmlFor="tax-exempt" className="text-[12px] font-normal">{taxExemptText}</Label>
-            </div>
+          <div 
+            className="flex items-center justify-between mb-2 cursor-pointer"
+            onClick={() => setStoreOptionsOpen(!storeOptionsOpen)}
+          >
+            <h3 className="font-medium text-[14px]">{businessOptionsText}</h3>
+            <ChevronDown className={`h-4 w-4 transition-transform ${storeOptionsOpen ? 'rotate-180' : ''}`} />
           </div>
+          {storeOptionsOpen && (
+            <div className="space-y-2 text-[12px] font-normal">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="bulk-discount"
+                />
+                <Label htmlFor="bulk-discount" className="text-[12px] font-normal">{volumeDiscountsText}</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="wholesale-only"
+                />
+                <Label htmlFor="wholesale-only" className="text-[12px] font-normal">{wholesaleOnlyText}</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="tax-exempt"
+                />
+                <Label htmlFor="tax-exempt" className="text-[12px] font-normal">{taxExemptText}</Label>
+              </div>
+            </div>
+          )}
         </div>
       )}
+
+      <div>
+        <div 
+          className="flex items-center justify-between mb-2 cursor-pointer"
+          onClick={() => setSortByOpen(!sortByOpen)}
+        >
+          <h3 className="font-medium text-[14px]">{sortByText}</h3>
+          <ChevronDown className={`h-4 w-4 transition-transform ${sortByOpen ? 'rotate-180' : ''}`} />
+        </div>
+        {sortByOpen && (
+          <RadioGroup value={sortBy} onValueChange={setSortBy} className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="trending" id="sort-trending" />
+              <Label htmlFor="sort-trending" className="text-[12px] font-normal cursor-pointer">
+                {trendingText}
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="price-low-high" id="sort-price-low" />
+              <Label htmlFor="sort-price-low" className="text-[12px] font-normal cursor-pointer">
+                {priceLowHighText}
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="price-high-low" id="sort-price-high" />
+              <Label htmlFor="sort-price-high" className="text-[12px] font-normal cursor-pointer">
+                {priceHighLowText}
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="newest" id="sort-newest" />
+              <Label htmlFor="sort-newest" className="text-[12px] font-normal cursor-pointer">
+                {newestProductText}
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="region" id="sort-region" />
+              <Label htmlFor="sort-region" className="text-[12px] font-normal cursor-pointer">
+                {yourRegionText}
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="country" id="sort-country" />
+              <Label htmlFor="sort-country" className="text-[12px] font-normal cursor-pointer">
+                {yourCountryText}
+              </Label>
+            </div>
+          </RadioGroup>
+        )}
+      </div>
 
       <Button
         variant="outline"
@@ -1398,30 +1468,20 @@ export default function Products() {
               {filterText}
             </Button>
           </SheetTrigger>
-          <SheetContent>
+          <SheetContent className="overflow-y-auto">
             <SheetHeader>
-              <SheetTitle>{filterProductsText}</SheetTitle>
-              <SheetDescription>
-                {narrowDownText}
-              </SheetDescription>
+              <SheetTitle>{filterText}</SheetTitle>
             </SheetHeader>
-            <div className="py-4">
+            <div className="py-4 overflow-y-auto max-h-[calc(100vh-8rem)]">
               <FilterContent />
             </div>
           </SheetContent>
         </Sheet>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-8">
-        {/* Sidebar filters - desktop */}
-        <div className="hidden md:block w-64 flex-shrink-0">
-          <div className="sticky top-20">
-            <FilterContent />
-          </div>
-        </div>
-
+      <div>
         {/* Main content */}
-        <div className="flex-1">
+        <div className="w-full">
           {/* Product count and active filters */}
           <div className="flex flex-wrap justify-between items-center mb-6">
             <div className="flex items-center gap-4">
@@ -1489,25 +1549,6 @@ export default function Products() {
                   </button>
                 </Badge>
               )}
-              
-                {(selectedCategories.length > 0 || selectedRegions.length > 0 || selectedProductTypes.length < 2 || showSale || showNew) && (
-                  <Button variant="ghost" size="sm" onClick={resetFilters} className="h-7 px-2">
-                    {clearAllText}
-                  </Button>
-                )}
-                
-                {/* Add Product/Service Button - Conditional styling for RQST */}
-                <Button 
-                  onClick={() => setLocation('/add-product')}
-                  size="sm" 
-                  className={`h-7 px-3 ${
-                    marketType === 'rqst' 
-                      ? 'bg-red-600 text-white hover:bg-red-700' 
-                      : 'bg-black text-white hover:bg-gray-800'
-                  }`}
-                >
-                  {marketType === 'rqst' ? '+ Request Product/Service' : '+ Add Product/Service'}
-                </Button>
               </div>
             </div>
             
@@ -1571,46 +1612,32 @@ export default function Products() {
                 </button>
               </div>
 
-              {/* Sort by dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+              {/* Filter button */}
+              <Sheet>
+                <SheetTrigger asChild>
                   <Button variant="ghost" size="sm" className="flex items-center gap-2 border-0 hover:bg-transparent">
-                    {sortByText}
-                    <ChevronDown className="h-4 w-4" />
+                    <SlidersHorizontal className="h-4 w-4" />
+                    {filterText}
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" side="bottom" sideOffset={4} avoidCollisions={false}>
-                  <DropdownMenuLabel>{sortOptionsText}</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setSortBy('trending')}>
-                    {trendingText}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('price-low-high')}>
-                    {priceLowHighText}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('price-high-low')}>
-                    {priceHighLowText}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('newest')}>
-                    {newestProductText}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('region')}>
-                    {yourRegionText}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('country')}>
-                    {yourCountryText}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </SheetTrigger>
+                <SheetContent className="overflow-y-auto">
+                  <SheetHeader>
+                    <SheetTitle>{filterText}</SheetTitle>
+                  </SheetHeader>
+                  <div className="py-4 overflow-y-auto max-h-[calc(100vh-8rem)]">
+                    <FilterContent />
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
 
           {/* Product grid */}
           <div className={`grid gap-6 ${
-            columnsPerRow === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' :
-            columnsPerRow === 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' :
-            columnsPerRow === 5 ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' :
-            'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+            columnsPerRow === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3' :
+            columnsPerRow === 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3' :
+            columnsPerRow === 5 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3' :
+            'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3'
           }`}>
             {renderProductGrid()}
           </div>
@@ -1621,15 +1648,21 @@ export default function Products() {
       <Dialog open={repostDialogOpen} onOpenChange={setRepostDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogDescription>
-              {addMessageText}
-            </DialogDescription>
+            <DialogTitle className="font-bold">Repost</DialogTitle>
           </DialogHeader>
           
           {selectedProduct && (
             <div className="my-4">
-              <div className="flex gap-3 p-3 bg-gray-50 rounded-lg">
-                <div className="w-12 h-12 bg-gray-200 rounded flex-shrink-0"></div>
+              <div className="flex gap-3">
+                <div className="w-12 h-12 bg-gray-200 rounded flex-shrink-0 overflow-hidden">
+                  {selectedProduct.imageUrl && (
+                    <img 
+                      src={selectedProduct.imageUrl} 
+                      alt={selectedProduct.name}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="font-medium text-sm truncate">{selectedProduct.name}</h4>
                   <p className="text-sm text-gray-600">
@@ -1677,15 +1710,20 @@ export default function Products() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{sendOfferTitle}</DialogTitle>
-            <DialogDescription>
-              {sendPriceOfferText}
-            </DialogDescription>
           </DialogHeader>
           
           {selectedOfferProduct && (
             <div className="my-4">
-              <div className="flex gap-3 p-3 bg-gray-50 rounded-lg">
-                <div className="w-12 h-12 bg-gray-200 rounded flex-shrink-0"></div>
+              <div className="flex gap-3">
+                <div className="w-12 h-12 bg-gray-200 rounded flex-shrink-0 overflow-hidden">
+                  {selectedOfferProduct.imageUrl && (
+                    <img 
+                      src={selectedOfferProduct.imageUrl} 
+                      alt={selectedOfferProduct.name}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="font-medium text-sm truncate">{selectedOfferProduct.name}</h4>
                   <p className="text-sm text-gray-600">
@@ -1698,7 +1736,7 @@ export default function Products() {
 
           <div className="space-y-4">
             <div>
-              <Label htmlFor="offer-amount" className="text-sm font-medium">{yourOfferAmountText}</Label>
+              <Label htmlFor="offer-amount" className="text-sm font-medium">{enterOfferAmountText}</Label>
               <Input
                 id="offer-amount"
                 type="number"
@@ -1711,7 +1749,22 @@ export default function Products() {
               />
             </div>
             <div>
-              <Label htmlFor="offer-message" className="text-sm font-medium">{messageOptionalText}</Label>
+              <Label htmlFor="offer-currency" className="text-sm font-medium">{currencyText}</Label>
+              <Select value={offerCurrency} onValueChange={setOfferCurrency}>
+                <SelectTrigger className="mt-2">
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {currencyList.map((currency) => (
+                    <SelectItem key={currency.code} value={currency.code}>
+                      {currency.flag} {currency.code} - {currency.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="offer-message" className="text-sm font-medium">{wouldYouLikeAddMessageOfferText}</Label>
               <Textarea
                 id="offer-message"
                 placeholder={addMessageWithOfferText}

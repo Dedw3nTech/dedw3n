@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { z } from "zod";
-import { Store, Users, Building, CheckCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -20,41 +20,27 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 
-// Private Vendor Schema - Simple form for individual sellers
+// Private Vendor Schema - Simplified to match actual form fields
 const privateVendorSchema = z.object({
   vendorType: z.literal("private"),
   storeName: z.string().min(2, "Store name must be at least 2 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().min(10, "Phone number must be at least 10 characters"),
-  address: z.string().min(5, "Address must be at least 5 characters"),
-  city: z.string().min(2, "City must be at least 2 characters"),
-  state: z.string().min(2, "State must be at least 2 characters"),
-  zipCode: z.string().min(5, "Zip code must be at least 5 characters"),
-  country: z.string().min(2, "Country must be at least 2 characters"),
   website: z.string().url("Invalid URL").optional().or(z.literal("")),
 });
 
-// Business Vendor Schema - Comprehensive form with all business fields
+// Business Vendor Schema - Simplified to match actual form fields
 const businessVendorSchema = z.object({
   vendorType: z.literal("business"),
   storeName: z.string().min(2, "Store name must be at least 2 characters"),
   businessName: z.string().min(2, "Business name must be at least 2 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   businessType: z.enum(["sole_proprietorship", "partnership", "corporation", "llc", "other"]),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().min(10, "Phone number must be at least 10 characters"),
-  address: z.string().min(5, "Address must be at least 5 characters"),
-  city: z.string().min(2, "City must be at least 2 characters"),
-  state: z.string().min(2, "State must be at least 2 characters"),
-  zipCode: z.string().min(5, "Zip code must be at least 5 characters"),
-  country: z.string().min(2, "Country must be at least 2 characters"),
+  website: z.string().url("Invalid URL").optional().or(z.literal("")),
   
   // Business-specific fields
   vatNumber: z.string().min(5, "VAT number must be at least 5 characters"),
   taxId: z.string().min(5, "Tax ID must be at least 5 characters"),
   businessRegistrationNumber: z.string().min(5, "Registration number must be at least 5 characters"),
-  website: z.string().url("Invalid URL").optional().or(z.literal("")),
   businessLicense: z.string().optional(),
   
   // Additional business information
@@ -62,12 +48,6 @@ const businessVendorSchema = z.object({
   numberOfEmployees: z.enum(["1-10", "11-50", "51-100", "101-500", "500+"]),
   businessCategory: z.enum(["retail", "wholesale", "manufacturing", "services", "technology", "other"]),
   annualRevenue: z.enum(["0-100k", "100k-500k", "500k-1M", "1M-5M", "5M+"]),
-  
-  // Contact information
-  primaryContactName: z.string().min(2, "Primary contact name required"),
-  primaryContactTitle: z.string().min(2, "Primary contact title required"),
-  secondaryEmail: z.string().email("Invalid secondary email").optional().or(z.literal("")),
-  secondaryPhone: z.string().optional(),
   
   // Banking and financial
   bankName: z.string().min(2, "Bank name required"),
@@ -80,10 +60,42 @@ type BusinessVendorForm = z.infer<typeof businessVendorSchema>;
 
 export default function BecomeVendorPage() {
   const [vendorType, setVendorType] = useState<"private" | "business" | null>(null);
+  const [showProxyAlert, setShowProxyAlert] = useState(false);
+  const [hasActiveProxy, setHasActiveProxy] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+
+  // Fetch proxy accounts
+  const { data: proxyAccounts } = useQuery({
+    queryKey: ['/api/proxy-accounts'],
+    enabled: !!user,
+  });
+
+  // Check if user already has an active vendor account
+  const { data: vendorData } = useQuery({
+    queryKey: ["/api/vendors/me"],
+    queryFn: async () => {
+      const response = await fetch("/api/vendors/me");
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null;
+        }
+        throw new Error("Failed to fetch vendor profile");
+      }
+      return response.json();
+    },
+    enabled: !!user,
+  });
+
+  // Redirect active vendors to add-product page
+  useEffect(() => {
+    if (vendorData && vendorData.isActive) {
+      console.log('[VENDOR-REDIRECT] User already has active vendor account, redirecting to add-product');
+      setLocation('/add-product');
+    }
+  }, [vendorData, setLocation]);
 
   // Check for query parameter to auto-select vendor type
   useEffect(() => {
@@ -137,13 +149,23 @@ export default function BecomeVendorPage() {
     "Back", "Submit Application", "Submitting...", "Choose Vendor Type",
     "Registration Successful", "Registration Failed", "Failed to register as vendor",
     
+    // Business Account Validation
+    "Business Account Required", "Only Business account holders can create a Business Vendor. Please upgrade your account to Business type first.",
+    
+    // Profile Completeness Validation
+    "Profile Incomplete", "Please complete your profile before activating your vendor account.",
+    "Personal Information Required", "Please complete your personal information (name, email, phone, address, city, country, region, date of birth, gender).",
+    "Compliance Documents Required", "Please upload required compliance documents (ID document front/back, proof of address, ID selfie).",
+    "Financial Information Required", "Please complete your financial information (bank details, card proof).",
+    "Complete Profile",
+    
     // Placeholders
-    "Enter your store name", "Enter your business name", "Describe your business...",
-    "your@email.com", "+1234567890", "https://yourwebsite.com",
-    "123 Main Street", "City", "State", "12345", "Country",
-    "VAT123456789", "TAX123456789", "REG123456789", "License Number",
-    "2020", "John Doe", "CEO", "bank@email.com", "+1987654321",
-    "Bank of America", "1234567890", "123456789", "Manager Name", "MGR123"
+    "Please provide store name", "Please provide business name", "Provide a description of your store",
+    "example@email.com", "Please provide phone number", "https://www.example.com",
+    "Please provide street address", "Please provide city", "Please provide state/region", "Please provide postal code", "Please select country",
+    "Please provide VAT number", "Please provide tax ID", "Please provide registration number", "Please provide license number",
+    "Please provide year", "Please provide contact name", "Please provide contact title", "Please provide secondary email", "Please provide secondary phone",
+    "Please provide bank name", "Please provide account number", "Please provide routing number", "Please provide manager name", "Please provide manager ID"
   ];
 
   const { translations: t } = useMasterBatchTranslation(vendorTexts);
@@ -166,6 +188,8 @@ export default function BecomeVendorPage() {
     hasSalesManagerText, salesManagerNameText, salesManagerIdText, salesManagerCommissionText,
     backText, submitApplicationText, submittingText, chooseVendorTypeText,
     registrationSuccessText, registrationFailedText, registrationErrorText,
+    businessAccountRequiredText, businessAccountMessageText,
+    profileIncompleteText, profileIncompleteMessageText, personalInfoRequiredText, complianceDocsRequiredText, financialInfoRequiredText, completeProfileText,
     // Placeholders
     storeNamePlaceholderText, businessNamePlaceholderText, descriptionPlaceholderText,
     emailPlaceholderText, phonePlaceholderText, websitePlaceholderText,
@@ -184,17 +208,7 @@ export default function BecomeVendorPage() {
       vendorType: "private",
       storeName: "",
       description: "",
-      email: user?.email || "",
-      phone: user?.phone || "",
-      address: user?.address || "",
-      city: user?.city || "",
-      state: user?.state || "",
-      zipCode: user?.zipCode || "",
-      country: user?.country || "",
-      website: user?.website || "",
-      hasSalesManager: false,
-      salesManagerName: "",
-      salesManagerId: "",
+      website: "",
     },
   });
 
@@ -207,51 +221,42 @@ export default function BecomeVendorPage() {
       businessName: "",
       description: "",
       businessType: "sole_proprietorship",
-      email: user?.email || "",
-      phone: user?.phone || "",
-      address: user?.address || "",
-      city: user?.city || "",
-      state: user?.state || "",
-      zipCode: user?.zipCode || "",
-      country: user?.country || "",
       vatNumber: "",
       taxId: "",
       businessRegistrationNumber: "",
-      website: user?.website || "",
+      website: "",
       businessLicense: "",
       yearEstablished: "",
       numberOfEmployees: "1-10",
       businessCategory: "retail",
       annualRevenue: "0-100k",
-      primaryContactName: user?.name || "",
-      primaryContactTitle: "",
-      secondaryEmail: "",
-      secondaryPhone: "",
       bankName: "",
       bankAccountNumber: "",
       routingNumber: "",
-      hasSalesManager: false,
-      salesManagerName: "",
-      salesManagerId: "",
     },
   });
 
   // Registration mutation
   const registerVendorMutation = useMutation({
     mutationFn: async (data: PrivateVendorForm | BusinessVendorForm) => {
+      console.log('[VENDOR-ACTIVATION] Sending request to backend:', data);
       const response = await apiRequest("POST", "/api/vendors/register", data);
-      return response.json();
+      const result = await response.json();
+      console.log('[VENDOR-ACTIVATION] Backend response:', result);
+      return result;
     },
     onSuccess: (data) => {
+      console.log('[VENDOR-ACTIVATION] Registration successful:', data);
       toast({
         title: registrationSuccessText,
         description: data.message,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/vendors/me"] });
-      setLocation("/vendor-dashboard");
+      setLocation("/add-product");
     },
     onError: (error: any) => {
+      console.error('[VENDOR-ACTIVATION] Registration failed:', error);
       toast({
         title: registrationFailedText,
         description: error.message || registrationErrorText,
@@ -260,13 +265,152 @@ export default function BecomeVendorPage() {
     },
   });
 
+  // Validate profile completeness before activation (memoized for reactivity)
+  const profileValidation = useMemo(() => {
+    if (!user) return { isValid: false, missingFields: ['user'], missingCategories: [] };
+    
+    const missingFields: string[] = [];
+    const missingCategories: { category: string; label: string }[] = [];
+    
+    // Personal Information Check
+    const personalInfoComplete = user.name && user.email && user.phone && user.shippingAddress && 
+                                  user.shippingCity && user.country && user.region && 
+                                  user.dateOfBirth && user.gender;
+    if (!personalInfoComplete) {
+      missingFields.push('personal');
+      missingCategories.push({ category: 'personal', label: 'Personal Information' });
+    }
+    
+    // Compliance Documents Check
+    const complianceComplete = user.idDocumentFrontUrl && user.idDocumentBackUrl && 
+                                user.proofOfAddressUrl && user.idSelfieUrl;
+    if (!complianceComplete) {
+      missingFields.push('compliance');
+      missingCategories.push({ category: 'compliance', label: 'Compliance Documents' });
+    }
+    
+    // Financial Information Check
+    const financialComplete = user.bankName && user.bankAccountNumber && 
+                               user.bankRoutingNumber && user.cardProofUrl;
+    if (!financialComplete) {
+      missingFields.push('financial');
+      missingCategories.push({ category: 'financial', label: 'Financial Information' });
+    }
+    
+    return {
+      isValid: missingFields.length === 0,
+      missingFields,
+      missingCategories
+    };
+  }, [user]);
+
   // Handle form submissions
   const handlePrivateSubmit = (data: PrivateVendorForm) => {
+    console.log('[VENDOR-ACTIVATION] Private vendor form submitted', { data });
+    console.log('[VENDOR-ACTIVATION] Profile validation result:', profileValidation);
+    
+    if (!profileValidation.isValid) {
+      let errorMessage = profileIncompleteMessageText;
+      
+      if (profileValidation.missingFields.includes('personal')) {
+        errorMessage = personalInfoRequiredText;
+      } else if (profileValidation.missingFields.includes('compliance')) {
+        errorMessage = complianceDocsRequiredText;
+      } else if (profileValidation.missingFields.includes('financial')) {
+        errorMessage = financialInfoRequiredText;
+      }
+      
+      console.log('[VENDOR-ACTIVATION] Profile incomplete - showing error toast');
+      toast({
+        title: profileIncompleteText,
+        description: errorMessage,
+        variant: "destructive",
+        action: (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setLocation('/profile')}
+            className="bg-white text-black hover:bg-gray-100"
+          >
+            {completeProfileText}
+          </Button>
+        )
+      });
+      return;
+    }
+    
+    console.log('[VENDOR-ACTIVATION] Profile complete - submitting to backend');
     registerVendorMutation.mutate(data);
   };
 
   const handleBusinessSubmit = (data: BusinessVendorForm) => {
+    console.log('[VENDOR-ACTIVATION] Business vendor form submitted', { data });
+    console.log('[VENDOR-ACTIVATION] Profile validation result:', profileValidation);
+    
+    if (!profileValidation.isValid) {
+      let errorMessage = profileIncompleteMessageText;
+      
+      if (profileValidation.missingFields.includes('personal')) {
+        errorMessage = personalInfoRequiredText;
+      } else if (profileValidation.missingFields.includes('compliance')) {
+        errorMessage = complianceDocsRequiredText;
+      } else if (profileValidation.missingFields.includes('financial')) {
+        errorMessage = financialInfoRequiredText;
+      }
+      
+      console.log('[VENDOR-ACTIVATION] Profile incomplete - showing error toast');
+      toast({
+        title: profileIncompleteText,
+        description: errorMessage,
+        variant: "destructive",
+        action: (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setLocation('/profile')}
+            className="bg-white text-black hover:bg-gray-100"
+          >
+            {completeProfileText}
+          </Button>
+        )
+      });
+      return;
+    }
+    
+    console.log('[VENDOR-ACTIVATION] Profile complete - submitting to backend');
     registerVendorMutation.mutate(data);
+  };
+
+  // Handle business vendor card click - check for account type and proxy accounts
+  const handleBusinessVendorClick = () => {
+    // Check if user has business account type
+    if (user && user.accountType !== 'business') {
+      toast({
+        title: businessAccountRequiredText,
+        description: businessAccountMessageText,
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!proxyAccounts || !Array.isArray(proxyAccounts)) {
+      setVendorType("business");
+      return;
+    }
+
+    const activeBusinessProxy = proxyAccounts.find(
+      (account: any) => 
+        (account.accountType === 'organization' || account.accountType === 'company') &&
+        account.status === 'verified'
+    );
+
+    if (activeBusinessProxy) {
+      setHasActiveProxy(true);
+      setShowProxyAlert(true);
+    } else {
+      setHasActiveProxy(false);
+      setShowProxyAlert(true);
+    }
   };
 
   if (!user) {
@@ -274,7 +418,6 @@ export default function BecomeVendorPage() {
       <div className="container max-w-md mx-auto py-16 px-4 text-center">
         <Card>
           <CardHeader>
-            <Store className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <CardTitle>{becomeVendorText}</CardTitle>
             <CardDescription>
               Please log in to become a vendor
@@ -291,53 +434,83 @@ export default function BecomeVendorPage() {
   }
 
   return (
-    <div className="container max-w-4xl mx-auto py-8 px-4">
+    <div className="container max-w-3xl mx-auto py-8 px-4">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">{becomeVendorText}</h1>
+        <p className="text-muted-foreground">{chooseVendorTypeDescText}</p>
+      </div>
 
       {!vendorType && (
-        <div className="grid gap-6 md:grid-cols-2 max-w-4xl mx-auto">
-          {/* Private Vendor Option */}
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setVendorType("private")}>
-            <CardHeader className="text-center">
-              <Users className="h-12 w-12 mx-auto text-primary mb-4" />
-              <CardTitle className="flex items-center justify-center gap-2">
-                {privateVendorText}
-              </CardTitle>
-              <CardDescription className="text-base">
-                {individualSellerText}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">{privateDescText}</p>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>• Simple registration process</li>
-                <li>• Individual seller profile</li>
-                <li>• Basic tax reporting</li>
-                <li>• Personal contact information</li>
-              </ul>
-            </CardContent>
-          </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>{chooseVendorTypeText}</CardTitle>
+            <CardDescription>Select the type of vendor account you want to create</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <RadioGroup 
+              value={vendorType || ""} 
+              onValueChange={(value) => {
+                if (value === "business") {
+                  handleBusinessVendorClick();
+                } else {
+                  setVendorType(value as "private" | "business");
+                }
+              }}
+            >
+              <div className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                <RadioGroupItem value="private" id="private" className="mt-1" data-testid="radio-private-vendor" />
+                <Label htmlFor="private" className="flex-1 cursor-pointer">
+                  <div className="font-semibold text-black">{privateVendorText}</div>
+                  <p className="text-sm text-muted-foreground mt-1">{privateDescText}</p>
+                  <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+                    <li>• Sell personal products/services</li>
+                    <li>• Simple setup process</li>
+                    <li>• Basic analytics</li>
+                    <li>• 15% commission</li>
+                  </ul>
+                </Label>
+              </div>
 
-          {/* Business Vendor Option */}
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setVendorType("business")}>
-            <CardHeader className="text-center">
-              <Building className="h-12 w-12 mx-auto text-primary mb-4" />
-              <CardTitle className="flex items-center justify-center gap-2">
-                {businessVendorText}
-              </CardTitle>
-              <CardDescription className="text-base">
-                {professionalBusinessText}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">{businessDescText}</p>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>• Comprehensive business profile</li>
-                <li>• Business verification required</li>
-                <li>• Advanced tax documentation</li>
-                <li>• Professional seller features</li>
-              </ul>
-            </CardContent>
-          </Card>
+              <div className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                <RadioGroupItem value="business" id="business" className="mt-1" data-testid="radio-business-vendor" />
+                <Label htmlFor="business" className="flex-1 cursor-pointer">
+                  <div className="font-semibold text-black">{businessVendorText}</div>
+                  <p className="text-sm text-muted-foreground mt-1">{businessDescText}</p>
+                  <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+                    <li>• Sell Business products/services</li>
+                    <li>• Bulk product uploads</li>
+                    <li>• Basic analytics</li>
+                    <li>• 15% commission</li>
+                  </ul>
+                </Label>
+              </div>
+            </RadioGroup>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Proxy Account Alert */}
+      {showProxyAlert && (
+        <div className="max-w-4xl mx-auto mt-6">
+          <Alert>
+            <AlertTitle className="text-black">
+              {hasActiveProxy ? "Switch to Business Account" : "Business Account Required"}
+            </AlertTitle>
+            <AlertDescription className="text-black">
+              {hasActiveProxy 
+                ? "You have an active business/organization proxy account. Please switch to your business account to continue with business vendor registration."
+                : "You need to create a business or organization proxy account before you can register as a business vendor. Please create a proxy account first to continue."}
+            </AlertDescription>
+            <div className="mt-4 flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowProxyAlert(false)}
+                className="border-black text-black hover:bg-gray-100"
+              >
+                Close
+              </Button>
+            </div>
+          </Alert>
         </div>
       )}
 
@@ -346,16 +519,41 @@ export default function BecomeVendorPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b pb-4">
             <div className="flex items-center">
-              <Users className="h-6 w-6 text-primary mr-2" />
               <h3 className="text-xl font-semibold">{privateVendorText} Registration</h3>
             </div>
-            <Button variant="outline" onClick={() => setVendorType(null)}>
+            <Button variant="ghost" onClick={() => setVendorType(null)}>
               {backText}
             </Button>
           </div>
 
+          {/* Profile Status Alert */}
+          {!profileValidation.isValid && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertTitle>Profile Incomplete</AlertTitle>
+              <AlertDescription className="space-y-2">
+                <p>Complete your profile before activating your vendor account. Missing:</p>
+                <ul className="list-disc list-inside mt-2">
+                  {profileValidation.missingCategories.map((cat) => (
+                    <li key={cat.category}>{cat.label}</li>
+                  ))}
+                </ul>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setLocation('/profile')}
+                  className="mt-3 bg-white text-black hover:bg-gray-100"
+                >
+                  Complete Profile Now
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+
           <Form {...privateForm}>
             <form onSubmit={privateForm.handleSubmit(handlePrivateSubmit)} className="space-y-6">
+              {/* Hidden field for vendorType */}
+              <input type="hidden" {...privateForm.register('vendorType')} value="private" />
+              
               {/* Store Information */}
               <Card>
                 <CardHeader>
@@ -367,9 +565,9 @@ export default function BecomeVendorPage() {
                     name="storeName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{storeNameText}</FormLabel>
+                        <FormLabel>{storeNameText} *</FormLabel>
                         <FormControl>
-                          <Input placeholder={storeNamePlaceholderText} {...field} />
+                          <Input {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -380,9 +578,9 @@ export default function BecomeVendorPage() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{descriptionText}</FormLabel>
+                        <FormLabel>{descriptionText} *</FormLabel>
                         <FormControl>
-                          <Textarea placeholder={descriptionPlaceholderText} {...field} />
+                          <Textarea {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -395,186 +593,28 @@ export default function BecomeVendorPage() {
                       <FormItem>
                         <FormLabel>{websiteText} (Optional)</FormLabel>
                         <FormControl>
-                          <Input placeholder={websitePlaceholderText} {...field} />
+                          <Input {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </CardContent>
-              </Card>
-
-              {/* Contact Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>{contactInfoText}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={privateForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{emailText}</FormLabel>
-                          <FormControl>
-                            <Input placeholder={emailPlaceholderText} {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={privateForm.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{phoneText}</FormLabel>
-                          <FormControl>
-                            <Input placeholder={phonePlaceholderText} {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <FormField
-                    control={privateForm.control}
-                    name="address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{addressText}</FormLabel>
-                        <FormControl>
-                          <Input placeholder={addressPlaceholderText} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField
-                      control={privateForm.control}
-                      name="city"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{cityText}</FormLabel>
-                          <FormControl>
-                            <Input placeholder={cityPlaceholderText} {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={privateForm.control}
-                      name="state"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{stateText}</FormLabel>
-                          <FormControl>
-                            <Input placeholder={statePlaceholderText} {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={privateForm.control}
-                      name="zipCode"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{zipCodeText}</FormLabel>
-                          <FormControl>
-                            <Input placeholder={zipCodePlaceholderText} {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <FormField
-                    control={privateForm.control}
-                    name="country"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{countryText}</FormLabel>
-                        <FormControl>
-                          <Input placeholder={countryPlaceholderText} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </CardContent>
-              </Card>
-
-              {/* Sales Manager */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>{salesManagerText}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <FormField
-                    control={privateForm.control}
-                    name="hasSalesManager"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base">{hasSalesManagerText}</FormLabel>
-                          <p className="text-sm text-muted-foreground">
-                            {salesManagerCommissionText}
-                          </p>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  {privateForm.watch("hasSalesManager") && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={privateForm.control}
-                        name="salesManagerName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{salesManagerNameText}</FormLabel>
-                            <FormControl>
-                              <Input placeholder={salesManagerNamePlaceholderText} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={privateForm.control}
-                        name="salesManagerId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{salesManagerIdText}</FormLabel>
-                            <FormControl>
-                              <Input placeholder={salesManagerIdPlaceholderText} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  )}
                 </CardContent>
               </Card>
 
               {/* Submit Button */}
-              <div className="flex justify-center pt-6">
+              <div className="flex justify-end pt-6">
                 <Button 
                   type="submit" 
                   className="bg-black text-white hover:bg-gray-800 px-8 py-2"
-                  disabled={registerVendorMutation.isPending}
+                  disabled={registerVendorMutation.isPending || !profileValidation.isValid}
+                  data-testid="button-activate-private-vendor"
                 >
-                  {registerVendorMutation.isPending ? submittingText : submitApplicationText}
+                  {registerVendorMutation.isPending 
+                    ? "Activating..." 
+                    : !profileValidation.isValid 
+                    ? "Complete Profile to Activate" 
+                    : "Activate"}
                 </Button>
               </div>
             </form>
@@ -587,16 +627,41 @@ export default function BecomeVendorPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b pb-4">
             <div className="flex items-center">
-              <Building className="h-6 w-6 text-primary mr-2" />
               <h3 className="text-xl font-semibold">{businessVendorText} Registration</h3>
             </div>
-            <Button variant="outline" onClick={() => setVendorType(null)}>
+            <Button variant="ghost" onClick={() => setVendorType(null)}>
               {backText}
             </Button>
           </div>
 
+          {/* Profile Status Alert */}
+          {!profileValidation.isValid && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertTitle>Profile Incomplete</AlertTitle>
+              <AlertDescription className="space-y-2">
+                <p>Complete your profile before activating your vendor account. Missing:</p>
+                <ul className="list-disc list-inside mt-2">
+                  {profileValidation.missingCategories.map((cat) => (
+                    <li key={cat.category}>{cat.label}</li>
+                  ))}
+                </ul>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setLocation('/profile')}
+                  className="mt-3 bg-white text-black hover:bg-gray-100"
+                >
+                  Complete Profile Now
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+
           <Form {...businessForm}>
             <form onSubmit={businessForm.handleSubmit(handleBusinessSubmit)} className="space-y-6">
+              {/* Hidden field for vendorType */}
+              <input type="hidden" {...businessForm.register('vendorType')} value="business" />
+              
               {/* Store Information */}
               <Card>
                 <CardHeader>
@@ -609,9 +674,9 @@ export default function BecomeVendorPage() {
                       name="storeName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{storeNameText}</FormLabel>
+                          <FormLabel>{storeNameText} *</FormLabel>
                           <FormControl>
-                            <Input placeholder={storeNamePlaceholderText} {...field} />
+                            <Input {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -624,7 +689,7 @@ export default function BecomeVendorPage() {
                         <FormItem>
                           <FormLabel>{businessNameText}</FormLabel>
                           <FormControl>
-                            <Input placeholder={businessNamePlaceholderText} {...field} />
+                            <Input {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -636,9 +701,9 @@ export default function BecomeVendorPage() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{descriptionText}</FormLabel>
+                        <FormLabel>{descriptionText} *</FormLabel>
                         <FormControl>
-                          <Textarea placeholder={descriptionPlaceholderText} {...field} />
+                          <Textarea {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -676,7 +741,7 @@ export default function BecomeVendorPage() {
                         <FormItem>
                           <FormLabel>{websiteText} (Optional)</FormLabel>
                           <FormControl>
-                            <Input placeholder={websitePlaceholderText} {...field} />
+                            <Input {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -700,7 +765,7 @@ export default function BecomeVendorPage() {
                         <FormItem>
                           <FormLabel>{vatNumberText}</FormLabel>
                           <FormControl>
-                            <Input placeholder={vatNumberPlaceholderText} {...field} />
+                            <Input {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -713,7 +778,7 @@ export default function BecomeVendorPage() {
                         <FormItem>
                           <FormLabel>{taxIdText}</FormLabel>
                           <FormControl>
-                            <Input placeholder={taxIdPlaceholderText} {...field} />
+                            <Input {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -726,7 +791,7 @@ export default function BecomeVendorPage() {
                         <FormItem>
                           <FormLabel>{businessRegNumberText} *</FormLabel>
                           <FormControl>
-                            <Input placeholder={businessRegNumberPlaceholderText} {...field} />
+                            <Input {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -741,7 +806,7 @@ export default function BecomeVendorPage() {
                         <FormItem>
                           <FormLabel>{businessLicenseText} (Optional)</FormLabel>
                           <FormControl>
-                            <Input placeholder={businessLicensePlaceholderText} {...field} />
+                            <Input {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -754,7 +819,7 @@ export default function BecomeVendorPage() {
                         <FormItem>
                           <FormLabel>{yearEstablishedText}</FormLabel>
                           <FormControl>
-                            <Input placeholder={yearEstablishedPlaceholderText} {...field} />
+                            <Input {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -839,166 +904,6 @@ export default function BecomeVendorPage() {
                 </CardContent>
               </Card>
 
-              {/* Contact Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>{contactInfoText}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={businessForm.control}
-                      name="primaryContactName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{primaryContactNameText}</FormLabel>
-                          <FormControl>
-                            <Input placeholder={primaryContactNamePlaceholderText} {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={businessForm.control}
-                      name="primaryContactTitle"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{primaryContactTitleText}</FormLabel>
-                          <FormControl>
-                            <Input placeholder={primaryContactTitlePlaceholderText} {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={businessForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{emailText}</FormLabel>
-                          <FormControl>
-                            <Input placeholder={emailPlaceholderText} {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={businessForm.control}
-                      name="secondaryEmail"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{secondaryEmailText} (Optional)</FormLabel>
-                          <FormControl>
-                            <Input placeholder={secondaryEmailPlaceholderText} {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={businessForm.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{phoneText}</FormLabel>
-                          <FormControl>
-                            <Input placeholder={phonePlaceholderText} {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={businessForm.control}
-                      name="secondaryPhone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{secondaryPhoneText} (Optional)</FormLabel>
-                          <FormControl>
-                            <Input placeholder={secondaryPhonePlaceholderText} {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <FormField
-                    control={businessForm.control}
-                    name="address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{addressText}</FormLabel>
-                        <FormControl>
-                          <Input placeholder={addressPlaceholderText} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField
-                      control={businessForm.control}
-                      name="city"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{cityText}</FormLabel>
-                          <FormControl>
-                            <Input placeholder={cityPlaceholderText} {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={businessForm.control}
-                      name="state"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{stateText}</FormLabel>
-                          <FormControl>
-                            <Input placeholder={statePlaceholderText} {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={businessForm.control}
-                      name="zipCode"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{zipCodeText}</FormLabel>
-                          <FormControl>
-                            <Input placeholder={zipCodePlaceholderText} {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <FormField
-                    control={businessForm.control}
-                    name="country"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{countryText}</FormLabel>
-                        <FormControl>
-                          <Input placeholder={countryPlaceholderText} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </CardContent>
-              </Card>
-
               {/* Financial Information */}
               <Card>
                 <CardHeader>
@@ -1012,7 +917,7 @@ export default function BecomeVendorPage() {
                       <FormItem>
                         <FormLabel>{bankNameText}</FormLabel>
                         <FormControl>
-                          <Input placeholder={bankNamePlaceholderText} {...field} />
+                          <Input {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -1026,7 +931,7 @@ export default function BecomeVendorPage() {
                         <FormItem>
                           <FormLabel>{bankAccountNumberText}</FormLabel>
                           <FormControl>
-                            <Input placeholder={bankAccountNumberPlaceholderText} {...field} />
+                            <Input {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -1039,7 +944,7 @@ export default function BecomeVendorPage() {
                         <FormItem>
                           <FormLabel>{routingNumberText}</FormLabel>
                           <FormControl>
-                            <Input placeholder={routingNumberPlaceholderText} {...field} />
+                            <Input {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -1052,13 +957,18 @@ export default function BecomeVendorPage() {
 
 
               {/* Submit Button */}
-              <div className="flex justify-center pt-6">
+              <div className="flex justify-end pt-6">
                 <Button 
                   type="submit" 
                   className="bg-black text-white hover:bg-gray-800 px-8 py-2"
-                  disabled={registerVendorMutation.isPending}
+                  disabled={registerVendorMutation.isPending || !profileValidation.isValid}
+                  data-testid="button-activate-business-vendor"
                 >
-                  {registerVendorMutation.isPending ? submittingText : submitApplicationText}
+                  {registerVendorMutation.isPending 
+                    ? "Activating..." 
+                    : !profileValidation.isValid 
+                    ? "Complete Profile to Activate" 
+                    : "Activate"}
                 </Button>
               </div>
             </form>

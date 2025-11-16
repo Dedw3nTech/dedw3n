@@ -83,6 +83,7 @@
     "password": "Contraseña",
     "confirm_password": "Confirmar Contraseña",
     "forgot_password": "¿Olvidaste tu Contraseña?",
+    "forgot_password_link": "¿Olvidaste la contraseña? Haz clic aquí para restablecerla",
     "already_have_account": "¿Ya tienes una cuenta?",
     "dont_have_account": "¿No tienes una cuenta?",
     "create_account": "Crear Cuenta",
@@ -181,5 +182,122 @@
     "payment_success": "¡Pago Exitoso!",
     "payment_failed": "Pago Fallido",
     "order_confirmed": "Pedido Confirmado"
+  },
+  "giftcards": {
+    "title": "Tarjetas de Regalo",
+    "page_title": "Tarjetas de Regalo Dedw3n",
+    "description": "Da el regalo perfecto con una tarjeta de regalo Dedw3n. Elige entre tarjetas digitales o físicas.",
+    "purchase": "Comprar Tarjeta de Regalo",
+    "redeem": "Canjear Tarjeta de Regalo",
+    "check_balance": "Verificar Saldo",
+    "my_gift_cards": "Mis Tarjetas de Regalo",
+    "give_gift": "Da el Regalo de la Elección",
+    "perfect_gift": "Perfecto para cualquier ocasión",
+    "instant_delivery": "Entrega digital instantánea disponible",
+    "no_expiry": "Sin fecha de vencimiento",
+    "amounts": {
+      "select_amount": "Seleccionar Cantidad",
+      "custom_amount": "Cantidad Personalizada",
+      "minimum": "Mínimo $10",
+      "maximum": "Máximo $1000",
+      "currency": "USD"
+    },
+    "types": {
+      "digital": "Tarjeta de Regalo Digital",
+      "physical": "Tarjeta de Regalo Física",
+      "email": "Entrega por Email",
+      "mail": "Entrega por Correo"
+    },
+    "purchase_form": {
+      "recipient_name": "Nombre del Destinatario",
+      "recipient_email": "Email del Destinatario",
+      "sender_name": "Tu Nombre",
+      "personal_message": "Mensaje Personal",
+      "message_placeholder": "Escribe un mensaje personal...",
+      "delivery_date": "Fecha de Entrega",
+      "delivery_method": "Método de Entrega",
+      "preview": "Vista Previa de la Tarjeta",
+      "add_to_cart": "Añadir al Carrito",
+      "buy_now": "Comprar Ahora"
+    },
+    "redeem_form": {
+      "gift_card_code": "Código de Tarjeta de Regalo",
+      "code_placeholder": "Ingresa tu código de tarjeta de regalo",
+      "redeem_button": "Canjear Tarjeta de Regalo",
+      "apply_to_order": "Aplicar a Pedido Actual",
+      "check_balance_button": "Solo Verificar Saldo"
+    },
+    "balance": {
+      "current_balance": "Saldo Actual",
+      "remaining_balance": "Saldo Restante",
+      "used_amount": "Cantidad Utilizada",
+      "transaction_history": "Historial de Transacciones",
+      "date_purchased": "Fecha de Compra",
+      "date_expires": "Vence",
+      "never_expires": "Nunca"
+    },
+    "status": {
+      "active": "Activa",
+      "redeemed": "Completamente Canjeada",
+      "expired": "Vencida",
+      "pending": "Pendiente",
+      "cancelled": "Cancelada"
+    },
+    "messages": {
+      "purchase_success": "¡Tarjeta de regalo comprada exitosamente!",
+      "redeem_success": "¡Tarjeta de regalo canjeada exitosamente!",
+      "balance_applied": "Saldo de tarjeta de regalo aplicado a tu pedido",
+      "invalid_code": "Código de tarjeta de regalo inválido",
+      "expired_card": "Esta tarjeta de regalo ha vencido",
+      "already_redeemed": "Esta tarjeta de regalo ya ha sido completamente canjeada",
+      "insufficient_balance": "Saldo insuficiente en la tarjeta de regalo",
+      "email_sent": "Email de tarjeta de regalo enviado exitosamente",
+      "code_required": "Por favor ingresa un código de tarjeta de regalo"
+    },
+    "terms": {
+      "title": "Términos y Condiciones",
+      "no_refund": "Las tarjetas de regalo no son reembolsables",
+      "no_exchange": "Las tarjetas de regalo no pueden canjearse por dinero",
+      "marketplace_only": "Válidas solo para compras en el marketplace Dedw3n",
+      "fraud_protection": "Las tarjetas perdidas o robadas no pueden ser reemplazadas",
+      "balance_check": "Verifica tu saldo en cualquier momento en esta página"
+    },
+    "common": {
+      "amount": "Cantidad",
+      "code": "Código",
+      "date": "Fecha",
+      "status": "Estado",
+      "actions": "Acciones",
+      "view": "Ver",
+      "print": "Imprimir",
+      "email": "Email",
+      "copy_code": "Copiar Código",
+      "download": "Descargar",
+      "share": "Compartir"
+    },
+    "help": {
+      "how_to_use": "Cómo Usar Tarjetas de Regalo",
+      "purchase_guide": "Cómo Comprar",
+      "redeem_guide": "Cómo Canjear",
+      "contact_support": "Contactar Soporte",
+      "faq": "Preguntas Frecuentes"
+    },
+    "designs": {
+      "classic_blue": "Azul Clásico",
+      "elegant_gold": "Oro Elegante",
+      "festive_red": "Rojo Festivo",
+      "modern_purple": "Púrpura Moderno",
+      "nature_green": "Verde Natural",
+      "luxury_black": "Negro Lujoso",
+      "premium_silver": "Plata Premium",
+      "exclusive_diamond": "Diamante Exclusivo",
+      "customize": "Personalizar"
+    },
+    "validation": {
+      "card_number_16_digits": "El número de tarjeta debe tener 16 dígitos",
+      "pin_4_digits": "El PIN debe tener 4 dígitos",
+      "enter_amount": "Ingrese cantidad",
+      "continue": "Continuar"
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -445,7 +445,7 @@ export default function VendorAnalytics() {
                     <ResponsiveContainer width="100%" height={200}>
                       <PieChart>
                         <Pie
-                          data={analytics.sessionAnalytics}
+                          data={analytics.sessionAnalytics as any}
                           cx="50%"
                           cy="50%"
                           innerRadius={40}
@@ -681,7 +681,7 @@ export default function VendorAnalytics() {
                     <ResponsiveContainer width="100%" height={200}>
                       <PieChart>
                         <Pie
-                          data={analytics.profitBreakdown.slice(0, 5)}
+                          data={analytics.profitBreakdown.slice(0, 5) as any}
                           cx="50%"
                           cy="50%"
                           innerRadius={40}

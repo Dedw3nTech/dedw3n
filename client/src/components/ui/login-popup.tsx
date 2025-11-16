@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { X, LogIn, UserPlus } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useMasterTranslation } from "@/hooks/use-master-translation";
 
 interface LoginPopupProps {
   delay?: number; // Delay in milliseconds before showing popup
@@ -14,6 +15,7 @@ export function LoginPopup({ delay = 5000 }: LoginPopupProps) {
   const [showPopup, setShowPopup] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const { user } = useAuth();
+  const { translateText } = useMasterTranslation();
 
   useEffect(() => {
     // Don't show popup if user is already logged in or has dismissed it
@@ -69,31 +71,31 @@ export function LoginPopup({ delay = 5000 }: LoginPopupProps) {
                 </div>
                 
                 <h2 className="text-2xl font-bold text-gray-900">
-                  Join Our Community
+                  {translateText("Join Our Community")}
                 </h2>
                 
                 <p className="text-gray-600">
-                  Sign in to unlock all features including posting, messaging, and personalized content.
+                  {translateText("Sign in to unlock all features including posting, messaging, and personalized content")}
                 </p>
 
                 <div className="space-y-3 pt-4">
                   <Button asChild className="w-full bg-black hover:bg-gray-900 text-white">
                     <Link href="/auth?mode=signin" onClick={handleDismiss}>
                       <LogIn className="h-4 w-4 mr-2" />
-                      Sign In
+                      {translateText("Sign In")}
                     </Link>
                   </Button>
                   
                   <Button asChild variant="outline" className="w-full border-gray-300 hover:bg-gray-50">
                     <Link href="/auth?mode=signup" onClick={handleDismiss}>
                       <UserPlus className="h-4 w-4 mr-2" />
-                      Create Account
+                      {translateText("Create Account")}
                     </Link>
                   </Button>
                 </div>
 
                 <p className="text-xs text-gray-500 pt-2">
-                  Continue browsing without an account or sign in for the full experience.
+                  {translateText("Continue browsing without an account or sign in for the full experience")}
                 </p>
               </div>
             </Card>

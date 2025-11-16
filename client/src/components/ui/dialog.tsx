@@ -4,7 +4,7 @@ import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 import { motion } from "framer-motion"
-const logoImage = "/dedw3n-logo-black.png"
+const logoImage = "/logo.png"
 
 import { cn } from "@/lib/utils"
 
@@ -23,7 +23,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-50 bg-white/80 text-black data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className
     )}
     {...props}
@@ -70,7 +70,7 @@ const DialogHeader = ({
       <img 
         src={logoImage} 
         alt="Dedw3n Logo" 
-        className="h-12 w-12 object-contain"
+        className="h-48 w-48 object-contain"
       />
     </div>
     {props.children}

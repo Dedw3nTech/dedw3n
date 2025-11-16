@@ -39,7 +39,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ResolvedUserAvatar } from '@/components/ui/resolved-user-avatar';
 import {
   User,
   Mail,
@@ -342,12 +343,13 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
                     <TableRow key={customer.id} className="group">
                       <TableCell>
                         <div className="flex items-center space-x-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={customer.avatar} alt={customer.name} />
-                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                              {getInitials(customer.name)}
-                            </AvatarFallback>
-                          </Avatar>
+                          <ResolvedUserAvatar
+                            avatarUrl={customer.avatar}
+                            username={customer.username}
+                            name={customer.name}
+                            size="sm"
+                            className="h-8 w-8"
+                          />
                           <div>
                             <div className="font-medium">{customer.name || "Unknown"}</div>
                             <div className="text-sm text-muted-foreground">
@@ -470,12 +472,13 @@ export default function CustomersList({ vendorId }: CustomersListProps) {
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center space-x-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={selectedCustomer.avatar} alt={selectedCustomer.name} />
-                  <AvatarFallback className="bg-primary/10 text-primary">
-                    {getInitials(selectedCustomer.name)}
-                  </AvatarFallback>
-                </Avatar>
+                <ResolvedUserAvatar
+                  avatarUrl={selectedCustomer.avatar}
+                  username={selectedCustomer.username}
+                  name={selectedCustomer.name}
+                  size="md"
+                  className="h-10 w-10"
+                />
                 <div>
                   <div className="text-xl font-semibold">{selectedCustomer.name || "Unknown Customer"}</div>
                   <div className="text-sm text-muted-foreground">{selectedCustomer.email}</div>

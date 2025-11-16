@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import Stripe from "stripe";
 import { storage } from "./storage";
+import { logger } from "./logger";
 
 // Initialize Stripe with the secret key
 const stripe = process.env.STRIPE_SECRET_KEY 
@@ -72,7 +73,7 @@ export async function createMembershipPaymentIntent(req: Request, res: Response)
       tier
     });
   } catch (error: any) {
-    console.error("Error creating membership payment intent:", error);
+    logger.error("Failed to create membership payment intent", { tierId: req.body.tierId, communityId: req.body.communityId }, error, 'api');
     res.status(500).json({
       error: error.message || "Failed to create payment intent"
     });
@@ -149,7 +150,7 @@ export async function processMembershipPayment(req: Request, res: Response) {
       membership
     });
   } catch (error: any) {
-    console.error("Error processing membership payment:", error);
+    logger.error("Failed to process membership payment", { paymentIntentId: req.body.paymentIntentId }, error, 'api');
     res.status(500).json({
       error: error.message || "Failed to process payment"
     });
@@ -218,7 +219,7 @@ export async function createPaypalMembershipOrder(req: Request, res: Response) {
       ]
     });
   } catch (error: any) {
-    console.error("Error creating PayPal membership order:", error);
+    logger.error("Failed to create PayPal membership order", { tierId: req.body.tierId, communityId: req.body.communityId }, error, 'api');
     res.status(500).json({
       error: error.message || "Failed to create PayPal order"
     });
@@ -291,7 +292,7 @@ export async function processPaypalMembership(req: Request, res: Response) {
       membership
     });
   } catch (error: any) {
-    console.error("Error processing PayPal membership payment:", error);
+    logger.error("Failed to process PayPal membership payment", { orderId: req.body.orderId }, error, 'api');
     res.status(500).json({
       error: error.message || "Failed to process payment"
     });
@@ -390,7 +391,7 @@ export async function processEWalletMembershipPayment(req: Request, res: Respons
       transaction
     });
   } catch (error: any) {
-    console.error("Error processing e-wallet membership payment:", error);
+    logger.error("Failed to process e-wallet membership payment", { walletId: req.body.walletId, tierId: req.body.tierId }, error, 'api');
     res.status(500).json({
       error: error.message || "Failed to process e-wallet payment"
     });
@@ -465,7 +466,7 @@ export async function initiateMobileMoneyMembershipPayment(req: Request, res: Re
       tier
     });
   } catch (error: any) {
-    console.error("Error initiating mobile money membership payment:", error);
+    logger.error("Failed to initiate mobile money membership payment", { provider: req.body.provider, tierId: req.body.tierId }, error, 'api');
     res.status(500).json({
       error: error.message || "Failed to initiate mobile money payment"
     });

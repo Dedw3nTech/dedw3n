@@ -99,7 +99,7 @@ export default function ValidationDemo() {
     } catch (error) {
       console.error('[DEMO] Form submission error:', error);
       toast({
-        title: "Validation Error",
+        title: "Error",
         description: "Unable to validate contact information. Please try again.",
         variant: "destructive"
       });

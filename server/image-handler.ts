@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as fsp from 'fs/promises';
 import * as path from 'path';
 import { Request, Response } from 'express';
 
@@ -7,7 +8,7 @@ const ensureUploadDirs = () => {
   const dirs = [
     './public/uploads', 
     './public/uploads/product', 
-    './public/uploads/profile',
+    './public/uploads/avatars',
     './public/uploads/post'
   ];
   
@@ -29,8 +30,9 @@ const generateFilename = (prefix: string = 'img'): string => {
 
 /**
  * Handle image upload from a JSON request with base64 encoded image data
+ * Now uses async operations for non-blocking performance
  */
-export const handleImageUpload = (req: Request, res: Response) => {
+export const handleImageUpload = async (req: Request, res: Response) => {
   console.log('[IMAGE] Image upload requested');
   
   // Ensure upload directories exist
@@ -61,8 +63,11 @@ export const handleImageUpload = (req: Request, res: Response) => {
     }
     
     // Select upload directory based on image type
+    // Map 'profile' to 'avatars' for consistency
     let uploadDir = 'product';
-    if (['product', 'profile', 'post'].includes(imageType)) {
+    if (imageType === 'profile') {
+      uploadDir = 'avatars';
+    } else if (['product', 'post'].includes(imageType)) {
       uploadDir = imageType;
     }
     
@@ -95,10 +100,16 @@ export const handleImageUpload = (req: Request, res: Response) => {
     const finalFilename = filename.replace(/\.png$/, '.' + fileExtension);
     const filePath = path.join('./public/uploads', uploadDir, finalFilename);
     
-    // Write the file
-    fs.writeFileSync(filePath, base64Data, 'base64');
+    // Write the file asynchronously (non-blocking)
+    await fsp.writeFile(filePath, base64Data, 'base64');
     
     console.log(`[IMAGE] Successfully saved image to ${filePath}`);
+    
+    // Set aggressive caching headers for instant subsequent loads
+    res.set({
+      'Cache-Control': 'public, max-age=31536000, immutable',
+      'ETag': `"${Date.now()}-${finalFilename}"`,
+    });
     
     // Return success response with file path
     return res.status(200).json({
@@ -122,8 +133,9 @@ export const handleImageUpload = (req: Request, res: Response) => {
 
 /**
  * Handle small chunked uploads for larger images
+ * Now uses async operations for better performance
  */
-export const handleChunkedUpload = (req: Request, res: Response) => {
+export const handleChunkedUpload = async (req: Request, res: Response) => {
   console.log('[IMAGE] Chunked upload requested');
   
   // Ensure upload directories exist
@@ -156,16 +168,19 @@ export const handleChunkedUpload = (req: Request, res: Response) => {
       chunkData = chunk.split(',')[1];
     }
     
-    // Write the chunk
-    fs.writeFileSync(chunkPath, chunkData, 'base64');
+    // Write the chunk asynchronously
+    await fsp.writeFile(chunkPath, chunkData, 'base64');
     
     // Check if this is the final chunk
     if (parseInt(chunkIndex) === parseInt(totalChunks) - 1) {
       // All chunks received, combine them
       
       // Select upload directory based on image type
+      // Map 'profile' to 'avatars' for consistency
       let uploadDir = 'product';
-      if (['product', 'profile', 'post'].includes(imageType)) {
+      if (imageType === 'profile') {
+        uploadDir = 'avatars';
+      } else if (['product', 'post'].includes(imageType)) {
         uploadDir = imageType;
       }
       

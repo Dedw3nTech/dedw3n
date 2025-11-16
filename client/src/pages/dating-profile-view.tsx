@@ -18,7 +18,7 @@ import {
   User
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useTranslation } from "react-i18next";
+import { useMasterTranslation } from "@/hooks/use-master-translation";
 
 interface DatingProfile {
   id: number;
@@ -45,7 +45,7 @@ export default function DatingProfileView() {
   const params = useParams();
   const [, setLocation] = useLocation();
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { translateText } = useMasterTranslation();
   
   const profileId = params.profileId;
 
@@ -56,22 +56,22 @@ export default function DatingProfileView() {
   });
 
   // Translation keys
-  const backToDatingText = t('backToDating', 'Back to Dating');
-  const messageText = t('message', 'Message');
-  const likeText = t('like', 'Like');
-  const aboutText = t('about', 'About');
-  const interestsText = t('interests', 'Interests');
-  const lookingForText = t('lookingFor', 'Looking For');
-  const relationshipTypeText = t('relationshipType', 'Relationship Type');
-  const heightText = t('height', 'Height');
-  const educationText = t('education', 'Education');
-  const incomeRangeText = t('incomeRange', 'Income Range');
-  const memberSinceText = t('memberSince', 'Member Since');
-  const normalText = t('normal', 'NORMAL');
-  const vipText = t('vip', 'VIP');
-  const vvipText = t('vvip', 'VVIP');
-  const profileNotFoundText = t('profileNotFound', 'Dating profile not found');
-  const loadingText = t('loading', 'Loading...');
+  const backToDatingText = translateText('Back to Dating');
+  const messageText = translateText('Message');
+  const likeText = translateText('Like');
+  const aboutText = translateText('About');
+  const interestsText = translateText('Interests');
+  const lookingForText = translateText('Looking For');
+  const relationshipTypeText = translateText('Relationship Type');
+  const heightText = translateText('Height');
+  const educationText = translateText('Education');
+  const incomeRangeText = translateText('Income Range');
+  const memberSinceText = translateText('Member Since');
+  const normalText = translateText('NORMAL');
+  const vipText = translateText('VIP');
+  const vvipText = translateText('VVIP');
+  const profileNotFoundText = translateText('Dating profile not found');
+  const loadingText = translateText('Loading...');
 
   // Get tier icon and color
   const getTierInfo = (tier: string) => {
@@ -105,14 +105,14 @@ export default function DatingProfileView() {
   };
 
   const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Recently';
+    if (!dateString) return translateText('Recently');
     try {
       return new Date(dateString).toLocaleDateString('en-GB', { 
         year: 'numeric', 
         month: 'long' 
       });
     } catch {
-      return 'Recently';
+      return translateText('Recently');
     }
   };
 
@@ -120,9 +120,9 @@ export default function DatingProfileView() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">Please log in to view dating profiles</p>
+          <p className="text-gray-600 mb-4">{translateText('Please log in to view dating profiles')}</p>
           <Link href="/login">
-            <Button>Log In</Button>
+            <Button>{translateText('Log In')}</Button>
           </Link>
         </div>
       </div>

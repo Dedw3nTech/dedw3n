@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useSpendingAnalytics, TimePeriod } from '@/hooks/use-spending-analytics';
 import { Redirect } from 'wouter';
-import { useTranslation } from 'react-i18next';
+import { useMasterTranslation } from '@/hooks/use-master-translation';
 import { formatCurrency } from '@/lib/currencyConverter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,7 +38,7 @@ import {
 } from 'recharts';
 
 export default function SpendingAnalytics() {
-  const { t } = useTranslation();
+  const { translateText } = useMasterTranslation();
   const { user } = useAuth();
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('monthly');
   const [activeTab, setActiveTab] = useState('overview');

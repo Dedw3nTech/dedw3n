@@ -6,6 +6,7 @@ import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { useQuery } from '@tanstack/react-query';
 import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
+import { sanitizeImageUrl } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,7 +23,8 @@ import {
   Settings, 
   ChevronDown, 
   ChevronRight,
-  Edit3
+  Edit3,
+  MessageSquare
 } from 'lucide-react';
 
 const ProfilePage = () => {
@@ -58,7 +60,18 @@ const ProfilePage = () => {
     "Privacy Settings",
     "Security",
     "Language",
-    "Currency"
+    "Currency",
+    "Messages",
+    "Cart Items",
+    "Pending Orders",
+    "Vendor Status",
+    "Marketplace",
+    "Loading...",
+    "Full Name",
+    "Username",
+    "Region",
+    "Country",
+    "City"
   ];
 
   const { translations } = useMasterBatchTranslation(profileTexts);
@@ -85,6 +98,11 @@ const ProfilePage = () => {
     enabled: isAuthenticated,
   });
 
+  const { data: unreadMessagesData } = useQuery<{ count: number }>({
+    queryKey: ['/api/messages/unread/count'],
+    enabled: isAuthenticated,
+  });
+
   if (!isAuthenticated || !user) {
     return null;
   }
@@ -92,6 +110,7 @@ const ProfilePage = () => {
   const likedCount = Array.isArray(likedProducts) ? likedProducts.length : 0;
   const cartCount = Array.isArray(cartData) ? cartData.length : 0;
   const ordersCount = ordersNotifications?.count || 0;
+  const messagesCount = unreadMessagesData?.count || 0;
 
   const sidebarItems = [
     {
@@ -108,7 +127,7 @@ const ProfilePage = () => {
       icon: ShoppingCart,
       count: cartCount,
       color: 'text-blue-500',
-      onClick: () => setActiveSection('cart')
+      onClick: () => setLocation('/cart')
     },
     {
       id: 'orders',
@@ -117,6 +136,14 @@ const ProfilePage = () => {
       count: ordersCount,
       color: 'text-green-500',
       onClick: () => setActiveSection('orders')
+    },
+    {
+      id: 'messages',
+      title: t(18),
+      icon: MessageSquare,
+      count: messagesCount,
+      color: 'text-blue-500',
+      onClick: () => setLocation('/messages')
     },
     {
       id: 'vendor',
@@ -152,7 +179,6 @@ const ProfilePage = () => {
                   size="sm"
                   onClick={() => setLocation('/profile-settings')}
                 >
-                  <Edit3 className="h-4 w-4 mr-2" />
                   {t(10)}
                 </Button>
               </div>
@@ -162,7 +188,7 @@ const ProfilePage = () => {
               <div className="flex items-center gap-6">
                 <div className="relative">
                   <Avatar className="h-24 w-24">
-                    <AvatarImage src={user.avatar || ''} alt={user.name || user.username} />
+                    <AvatarImage src={sanitizeImageUrl(user.avatar || '', '/assets/default-avatar.png')} alt={user.name || user.username} />
                     <AvatarFallback className="text-2xl">
                       <User className="h-12 w-12" />
                     </AvatarFallback>
@@ -184,7 +210,7 @@ const ProfilePage = () => {
               {/* Profile Form */}
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="name">{t(24)}</Label>
                   <Input 
                     id="name"
                     value={user.name || ''}
@@ -194,7 +220,7 @@ const ProfilePage = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
+                  <Label htmlFor="username">{t(25)}</Label>
                   <Input 
                     id="username"
                     value={user.username || ''}
@@ -224,11 +250,31 @@ const ProfilePage = () => {
                   />
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="location">{t(9)}</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="region">{t(26)}</Label>
                   <Input 
-                    id="location"
-                    value={(user as any)?.location || ''}
+                    id="region"
+                    value={(user as any)?.region || ''}
+                    disabled={true}
+                    className="bg-gray-50"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="country">{t(27)}</Label>
+                  <Input 
+                    id="country"
+                    value={(user as any)?.country || ''}
+                    disabled={true}
+                    className="bg-gray-50"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="city">{t(28)}</Label>
+                  <Input 
+                    id="city"
+                    value={(user as any)?.city || ''}
                     disabled={true}
                     className="bg-gray-50"
                   />
@@ -241,20 +287,20 @@ const ProfilePage = () => {
               
               <div className="grid gap-4 md:grid-cols-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-red-500">{likedCount}</div>
+                  <div className="text-2xl font-bold text-black">{likedCount}</div>
                   <div className="text-sm text-gray-600">{t(1)}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-500">{cartCount}</div>
-                  <div className="text-sm text-gray-600">Cart Items</div>
+                  <div className="text-2xl font-bold text-black">{cartCount}</div>
+                  <div className="text-sm text-gray-600">{t(19)}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-500">{ordersCount}</div>
-                  <div className="text-sm text-gray-600">Pending Orders</div>
+                  <div className="text-2xl font-bold text-black">{ordersCount}</div>
+                  <div className="text-sm text-gray-600">{t(20)}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-500">{vendorData ? '1' : '0'}</div>
-                  <div className="text-sm text-gray-600">Vendor Status</div>
+                  <div className="text-2xl font-bold text-black">{vendorData ? '1' : '0'}</div>
+                  <div className="text-sm text-gray-600">{t(21)}</div>
                 </div>
               </div>
             </CardContent>
@@ -264,23 +310,22 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Sidebar */}
           <div className="w-full lg:w-80">
             <Card className="sticky top-8">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  {t(0)}
+                <CardTitle>
+                  {t(22)}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 {/* Profile Summary */}
-                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg mb-4">
+                <div className="flex items-center gap-3 p-4 bg-white rounded-lg mb-4">
                   <Avatar className="h-12 w-12">
-                    <AvatarImage src={user.avatar || ''} alt={user.name || user.username} />
+                    <AvatarImage src={sanitizeImageUrl(user.avatar || '', '/assets/default-avatar.png')} alt={user.name || user.username} />
                     <AvatarFallback>
                       <User className="h-6 w-6" />
                     </AvatarFallback>
@@ -301,13 +346,12 @@ const ProfilePage = () => {
                     }`}
                     onClick={item.onClick}
                   >
-                    <div className="flex items-center gap-3">
-                      <item.icon className={`h-5 w-5 ${item.color}`} />
+                    <div className="flex items-center">
                       <span>{item.title}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       {item.count !== undefined && item.count > 0 && (
-                        <Badge variant="secondary" className="bg-red-100 text-red-600 text-xs">
+                        <Badge variant="secondary" className="bg-black text-white text-xs">
                           {item.count > 99 ? '99+' : item.count}
                         </Badge>
                       )}
@@ -324,45 +368,11 @@ const ProfilePage = () => {
                   }`}
                   onClick={() => setActiveSection('personal-info')}
                 >
-                  <div className="flex items-center gap-3">
-                    <User className="h-5 w-5 text-blue-500" />
+                  <div className="flex items-center">
                     <span>{t(6)}</span>
                   </div>
                   <ChevronRight className="h-4 w-4 text-gray-400" />
                 </Button>
-
-                <Separator className="my-4" />
-
-                {/* Settings Sections */}
-                <Button
-                  variant="ghost"
-                  className="w-full justify-between h-12 px-4"
-                  onClick={() => toggleSection('settings')}
-                >
-                  <div className="flex items-center gap-3">
-                    <Settings className="h-5 w-5 text-gray-600" />
-                    <span>{t(5)}</span>
-                  </div>
-                  {expandedSection === 'settings' ? (
-                    <ChevronDown className="h-4 w-4 text-gray-400" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4 text-gray-400" />
-                  )}
-                </Button>
-
-                {expandedSection === 'settings' && (
-                  <div className="ml-8 space-y-1">
-                    <Button variant="ghost" size="sm" className="w-full justify-start text-sm">
-                      {t(13)}
-                    </Button>
-                    <Button variant="ghost" size="sm" className="w-full justify-start text-sm">
-                      {t(14)}
-                    </Button>
-                    <Button variant="ghost" size="sm" className="w-full justify-start text-sm">
-                      {t(15)}
-                    </Button>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </div>
@@ -373,7 +383,7 @@ const ProfilePage = () => {
               <Card>
                 <CardContent className="p-8 text-center">
                   <div className="animate-spin h-8 w-8 border-2 border-gray-300 border-t-black rounded-full mx-auto mb-4"></div>
-                  <p>Loading...</p>
+                  <p>{t(23)}</p>
                 </CardContent>
               </Card>
             }>

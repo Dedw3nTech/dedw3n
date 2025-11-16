@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTypedTranslation } from './use-master-translation';
 
 export interface NameValidationResponse {
   status: 'valid' | 'invalid' | 'error';
@@ -13,6 +14,7 @@ export interface NameValidationResponse {
 }
 
 export function useNameValidation() {
+  const t = useTypedTranslation();
   const [isValidating, setIsValidating] = useState(false);
   const [isValid, setIsValid] = useState<boolean | null>(null);
   const [validationMessage, setValidationMessage] = useState<string>('');
@@ -44,22 +46,23 @@ export function useNameValidation() {
       
       if (result.status === 'valid') {
         setIsValid(true);
-        setValidationMessage(result.message || 'Name verified as genuine');
+        // Store the raw message from server
+        setValidationMessage(result.message || t["Name is valid"]);
       } else if (result.status === 'invalid') {
         setIsValid(false);
-        setValidationMessage(result.message || 'Name appears to be invalid or gibberish');
+        setValidationMessage(result.message || t["Name appears to be invalid or gibberish"]);
       } else {
         setIsValid(false);
-        setValidationMessage(result.message || 'Unable to verify name');
+        setValidationMessage(result.message || t["Unable to verify name"]);
       }
     } catch (error) {
       console.error('Name validation error:', error);
       setIsValid(false);
-      setValidationMessage('Name validation service temporarily unavailable');
+      setValidationMessage(t["Name validation service temporarily unavailable"]);
     } finally {
       setIsValidating(false);
     }
-  }, []);
+  }, [t]);
 
   const resetValidation = useCallback(() => {
     setIsValid(null);

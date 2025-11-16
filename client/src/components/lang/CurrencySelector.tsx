@@ -119,30 +119,6 @@ export function CurrencySelector() {
     return names[code];
   };
 
-  // Get currency flag emoji
-  const getCurrencyFlag = (code: CurrencyCode): string => {
-    const flags: Record<CurrencyCode, string> = {
-      // Major Global Currencies
-      GBP: '🇬🇧', EUR: '🇪🇺', USD: '🇺🇸', CNY: '🇨🇳', INR: '🇮🇳', BRL: '🇧🇷', JMD: '🇯🇲', AUD: '🇦🇺',
-      // East Asia & Pacific
-      JPY: '🇯🇵', KRW: '🇰🇷', SGD: '🇸🇬', HKD: '🇭🇰', TWD: '🇹🇼', THB: '🇹🇭', MYR: '🇲🇾', IDR: '🇮🇩', 
-      VND: '🇻🇳', PHP: '🇵🇭', NZD: '🇳🇿', FJD: '🇫🇯',
-      // Europe
-      CHF: '🇨🇭', SEK: '🇸🇪', NOK: '🇳🇴', DKK: '🇩🇰', PLN: '🇵🇱', CZK: '🇨🇿', HUF: '🇭🇺', RON: '🇷🇴', 
-      BGN: '🇧🇬', HRK: '🇭🇷', RUB: '🇷🇺', TRY: '🇹🇷', ISK: '🇮🇸', ALL: '🇦🇱',
-      // Americas
-      CAD: '🇨🇦', MXN: '🇲🇽', PEN: '🇵🇪', CLP: '🇨🇱', UYU: '🇺🇾', PYG: '🇵🇾', VES: '🇻🇪', ARS: '🇦🇷', 
-      BOB: '🇧🇴', CRC: '🇨🇷', COP: '🇨🇴', HTG: '🇭🇹', DOP: '🇩🇴', SRD: '🇸🇷',
-      // Africa
-      RWF: '🇷🇼', XOF: '🌍', SLL: '🇸🇱', UGX: '🇺🇬', ZMW: '🇿🇲', GHS: '🇬🇭', XAF: '🌍', GNF: '🇬🇳', 
-      KES: '🇰🇪', TZS: '🇹🇿', MWK: '🇲🇼', MGA: '🇲🇬', CDF: '🇨🇩', LRD: '🇱🇷', NGN: '🇳🇬', ZAR: '🇿🇦', 
-      EGP: '🇪🇬', DZD: '🇩🇿', MAD: '🇲🇦', AOA: '🇦🇴',
-      // Middle East & South Asia
-      AED: '🇦🇪', SAR: '🇸🇦', ILS: '🇮🇱', QAR: '🇶🇦', KWD: '🇰🇼', BHD: '🇧🇭', OMR: '🇴🇲', JOD: '🇯🇴', 
-      LBP: '🇱🇧', IRR: '🇮🇷', AFN: '🇦🇫', PKR: '🇵🇰', BDT: '🇧🇩', MVR: '🇲🇻', LKR: '🇱🇰', NPR: '🇳🇵',
-    };
-    return flags[code] || '🌍';
-  };
 
   // Define popular currencies for quick access
   const popularCurrencies: CurrencyCode[] = ['GBP', 'EUR', 'USD', 'JPY', 'CNY', 'CAD', 'AUD', 'CHF'];
@@ -192,7 +168,6 @@ export function CurrencySelector() {
       <DropdownMenuTrigger asChild>
         <span className="text-xs font-medium cursor-pointer flex items-center gap-1" style={{ fontSize: '12px' }}>
           <span className="text-blue-600 flex items-center gap-1">
-            <span className="text-sm">{getCurrencyFlag(currency)}</span>
             {currency}
           </span>
           <ChevronDown className="h-3 w-3 text-gray-600" />
@@ -228,7 +203,6 @@ export function CurrencySelector() {
                 className="flex items-center justify-between px-3 py-2 text-sm hover:bg-gray-50"
               >
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <span className="text-base">{getCurrencyFlag(code)}</span>
                   <span className="font-medium text-gray-700 min-w-[40px]">{code}</span>
                   <span className="text-gray-500 mr-2">{currencySymbols[code]}</span>
                   <span className="text-gray-600 truncate">{getCurrencyName(code)}</span>

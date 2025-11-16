@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useTranslation } from 'react-i18next';
+import { useMasterTranslation } from '@/hooks/use-master-translation';
 import { 
   ChevronUpIcon, 
   ChevronDownIcon, 
@@ -55,7 +55,7 @@ import {
 } from '@/lib/currencyConverter';
 
 export default function WalletPage() {
-  const { t } = useTranslation();
+  const { translateText } = useMasterTranslation();
   const { toast } = useToast();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
@@ -282,7 +282,7 @@ export default function WalletPage() {
     } catch (error) {
       console.error("Payment error:", error);
       toast({
-        title: "Payment Error",
+        title: translateText("Error"),
         description: "An error occurred while processing your payment.",
         variant: "destructive"
       });
@@ -314,7 +314,7 @@ export default function WalletPage() {
     } catch (error) {
       console.error("Mobile money payment error:", error);
       toast({
-        title: "Payment Error",
+        title: translateText("Error"),
         description: "An error occurred while processing your mobile money payment.",
         variant: "destructive"
       });
@@ -346,7 +346,7 @@ export default function WalletPage() {
     } catch (error) {
       console.error("PayPal payment error:", error);
       toast({
-        title: "Payment Error",
+        title: translateText("Error"),
         description: "An error occurred while processing your PayPal payment.",
         variant: "destructive"
       });

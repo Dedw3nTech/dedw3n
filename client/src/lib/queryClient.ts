@@ -1,6 +1,57 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { offlineAwareFetch, useOfflineStore, cacheResponse, clearCache } from "./offline";
 
+// API Base URL Configuration
+// Automatically determines the correct API base URL based on environment
+function getApiBaseUrl(): string {
+  // 1. Check environment variable first (production builds)
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  
+  // 2. For development/mobile: use current origin (works for both desktop and mobile)
+  // This ensures mobile previews connect to the correct server
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  
+  // 3. Fallback to relative URLs (SSR case)
+  return '';
+}
+
+const API_BASE_URL = getApiBaseUrl();
+
+// In-flight request cache to deduplicate concurrent identical requests
+// Stores the original response that can be cloned for each consumer
+interface InflightEntry {
+  promise: Promise<Response>;
+  response?: Response;
+}
+const inflightRequests = new Map<string, InflightEntry>();
+const INFLIGHT_TTL = 1000; // 1 second TTL for in-flight cache
+
+function getInflightKey(url: string, method: string, body?: string): string {
+  return `${method}:${url}:${body || ''}`;
+}
+
+// Helper function to construct full API URLs
+function getApiUrl(path: string): string {
+  // If path already starts with http:// or https://, return as is
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  
+  // If no base URL is configured, use relative path (development)
+  if (!API_BASE_URL) {
+    return path;
+  }
+  
+  // Construct full URL with base URL (production)
+  const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+  const apiPath = path.startsWith('/') ? path : `/${path}`;
+  return `${baseUrl}${apiPath}`;
+}
+
 // Auth token management
 const AUTH_TOKEN_KEY = 'dedwen_auth_token';
 
@@ -80,27 +131,15 @@ async function apiRequestFull(
   // Extract isFormData from options
   const isFormData = options?.isFormData;
   
-  // Get userId from session or localStorage if available
+  // TEMPORARILY DISABLED: Get userId from session or localStorage to fix auth loop
   let userId = null;
+  // Clear any stored userData to prevent authentication loops
   try {
-    // First try sessionStorage - faster and more reliable for same session
-    const userDataString = sessionStorage.getItem('userData');
-    if (userDataString) {
-      const userData = JSON.parse(userDataString);
-      userId = userData.id;
-      console.log('Using userId from sessionStorage:', userId);
-    } 
-    // Fallback to localStorage if needed
-    else {
-      const localUserDataString = localStorage.getItem('userData');
-      if (localUserDataString) {
-        const localUserData = JSON.parse(localUserDataString);
-        userId = localUserData.id;
-        console.log('Using userId from localStorage:', userId);
-      }
-    }
+    sessionStorage.removeItem('userData');
+    localStorage.removeItem('userData');
+    console.log('Cleared userData from storage in apiRequest');
   } catch (e) {
-    console.error('Error retrieving user data from storage:', e);
+    console.error('Error clearing user data from storage:', e);
   }
   
   // Check for logout state from unified system
@@ -125,10 +164,11 @@ async function apiRequestFull(
       // Add logout header if user has logged out
       ...(userLoggedOut ? { 'X-Auth-Logged-Out': 'true' } : {}),
       ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
-      ...(userId && !userLoggedOut ? { 
-        'X-Client-User-ID': userId.toString(), 
-        'X-Test-User-ID': userId.toString() 
-      } : {})
+      // userId temporarily disabled
+      // ...(userId && !userLoggedOut ? { 
+      //   'X-Client-User-ID': userId.toString(), 
+      //   'X-Test-User-ID': userId.toString() 
+      // } : {})
     } as HeadersInit,
     ...(typeof options === 'object' && options !== null ? options : {})
   };
@@ -219,8 +259,66 @@ async function apiRequestFull(
   }
 
   try {
-    // Use our offline-aware fetch implementation
-    const res = await offlineAwareFetch(url, requestOptions);
+    // Construct full URL with API base URL
+    const fullUrl = getApiUrl(url);
+    
+    // Check for in-flight requests with same key (for GET requests)
+    const inflightKey = getInflightKey(fullUrl, method, method === 'GET' ? undefined : requestOptions.body as string);
+    
+    if (method === 'GET') {
+      const existing = inflightRequests.get(inflightKey);
+      if (existing) {
+        try {
+          // Wait for the in-flight request to complete
+          await existing.promise;
+          // Return a fresh clone for this consumer
+          if (existing.response) {
+            const clone = existing.response.clone();
+            // Validate response status before returning
+            await throwIfResNotOk(clone);
+            // Return a new clone since throwIfResNotOk may have consumed the body
+            return existing.response.clone();
+          }
+        } catch (error) {
+          // If the shared request failed, remove it so retry can happen
+          inflightRequests.delete(inflightKey);
+          throw error;
+        }
+      }
+      
+      // Create new request promise
+      const requestPromise = offlineAwareFetch(fullUrl, requestOptions);
+      const entry: InflightEntry = { promise: requestPromise };
+      inflightRequests.set(inflightKey, entry);
+      
+      // Use finally to ensure cleanup happens on both success and failure
+      requestPromise.finally(() => {
+        setTimeout(() => {
+          inflightRequests.delete(inflightKey);
+        }, INFLIGHT_TTL);
+      });
+      
+      try {
+        // Wait for response and store it for cloning
+        const response = await requestPromise;
+        
+        // Validate response status before storing
+        await throwIfResNotOk(response.clone());
+        
+        // Store a clone for future consumers
+        entry.response = response.clone();
+        
+        // Return the original response
+        return response;
+      } catch (error) {
+        // Clean up immediately on error so retries can happen faster
+        inflightRequests.delete(inflightKey);
+        throw error;
+      }
+    }
+    
+    // For non-GET requests, just make the request directly
+    const res = await offlineAwareFetch(fullUrl, requestOptions);
 
     // Clear logout state on successful authentication
     if (res.ok && (url.includes('/auth/login') || url.includes('/auth/register'))) {
@@ -237,88 +335,40 @@ async function apiRequestFull(
     // If this was a successful mutation (non-GET request), invalidate related caches
     // This ensures we don't show stale data after mutations
     if (method !== 'GET' && res.ok && useOfflineStore.getState().isOnline) {
-      // Extract the base path to invalidate related queries
-      const basePath = url.split('?')[0].split('/').slice(0, -1).join('/');
+      // Extract the exact path and base path for proper invalidation
+      const exactPath = url.split('?')[0];
+      const basePath = exactPath.split('/').slice(0, -1).join('/');
+      
+      // Clear cache for both exact and base paths
+      clearCache(exactPath);
       if (basePath) {
-        // Clear cache for this endpoint pattern
         clearCache(basePath);
-        
-        // Invalidate related queries in React Query cache with refetchType:'all'
+      }
+      
+      // Invalidate queries with partial matching to refresh list queries
+      // Use refetchType:'inactive' to avoid cascading unnecessary refetches
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const queryKey = query.queryKey[0] as string;
+          return queryKey === exactPath || queryKey === basePath || queryKey.startsWith(basePath + '/');
+        },
+        refetchType: 'inactive'
+      });
+      
+      // Special case for posts - also invalidate feed endpoints
+      if (url.includes('/api/posts')) {
         queryClient.invalidateQueries({ 
-          queryKey: [basePath],
-          refetchType: 'all'
+          queryKey: ['/api/feed/personal'],
+          refetchType: 'inactive'
         });
-        
-        // Special case for posts - also invalidate all feed endpoints
-        if (url.includes('/api/posts')) {
-          console.log('Post created or modified - invalidating all feed endpoints');
-          
-          // Make sure we handle 401 errors gracefully for post creation
-          if (res.status >= 200 && res.status < 300) {
-            console.log('Post creation successful - refreshing feeds');
-          } else if (res.status === 401) {
-            console.warn('Authentication error detected during post creation. Attempting to refresh session...');
-            // Try to refresh the session by fetching the user endpoint
-            try {
-              // Attempt to refresh auth session
-              const refreshResponse = await fetch('/api/auth/me', { 
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                  'Authorization': `Bearer ${getStoredAuthToken()}`,
-                  'Cache-Control': 'no-cache',
-                  'X-Auth-Refresh': 'true'
-                }
-              });
-              
-              // Look for WWW-Authenticate header for debugging
-              const authHeader = refreshResponse.headers.get('WWW-Authenticate');
-              if (authHeader) {
-                console.log('WWW-Authenticate header received:', authHeader);
-              }
-              
-              // If refresh succeeded, retry the original post request
-              if (refreshResponse.ok) {
-                console.log('Session refreshed successfully, retrying post creation...');
-                
-                // Retry the original request with fresh credentials
-                const retryResponse = await fetch(url, {
-                  method: 'POST',
-                  credentials: 'include',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getStoredAuthToken()}`,
-                    'X-Retry-After-Auth-Refresh': 'true'
-                  },
-                  body: options?.body
-                });
-                
-                if (retryResponse.ok) {
-                  console.log('Post creation retry successful after auth refresh!');
-                  return retryResponse; // Return the successful retry response instead
-                } else {
-                  console.error('Post creation retry failed after auth refresh:', await retryResponse.text());
-                }
-              }
-            } catch (e) {
-              console.error('Failed to refresh session:', e);
-            }
-          }
-          
-          // Invalidate feed queries to refresh data
-          queryClient.invalidateQueries({ 
-            queryKey: ['/api/feed/personal'],
-            refetchType: 'all'
-          });
-          queryClient.invalidateQueries({ 
-            queryKey: ['/api/feed/communities'],
-            refetchType: 'all'
-          });
-          queryClient.invalidateQueries({ 
-            queryKey: ['/api/feed/recommended'],
-            refetchType: 'all'
-          });
-        }
+        queryClient.invalidateQueries({ 
+          queryKey: ['/api/feed/communities'],
+          refetchType: 'inactive'
+        });
+        queryClient.invalidateQueries({ 
+          queryKey: ['/api/feed/recommended'],
+          refetchType: 'inactive'
+        });
       }
     }
     
@@ -333,6 +383,27 @@ async function apiRequestFull(
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
+
+/**
+ * Determines a safe default return value based on the API endpoint URL
+ * This prevents "Cannot read properties of null" errors when queries return null
+ */
+function getSafeDefaultForEndpoint(url: string): any {
+  // List endpoints typically return arrays
+  const arrayEndpoints = [
+    '/products', '/users', '/orders', '/categories', '/vendors',
+    '/messages', '/notifications', '/reviews', '/conversations',
+    '/posts', '/comments', '/communities', '/feed',
+    '/cart', '/liked-products', '/saved-posts'
+  ];
+  
+  // Check if this URL is for a list endpoint
+  const isArrayEndpoint = arrayEndpoints.some(endpoint => url.includes(endpoint));
+  
+  // Return empty array for list endpoints, null for others
+  return isArrayEndpoint ? [] : null;
+}
+
 export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
@@ -359,6 +430,10 @@ export const getQueryFn: <T>(options: {
     
     console.log('Fetching URL:', url);
     
+    // Construct full URL with API base URL
+    const fullUrl = getApiUrl(url);
+    console.log('Full API URL:', fullUrl);
+    
     // Set up request options
     const options: RequestInit = {
       credentials: "include",
@@ -371,14 +446,13 @@ export const getQueryFn: <T>(options: {
       }
     };
 
-    // Get user ID from sessionStorage if present
+    // TEMPORARILY DISABLED: Get user ID from sessionStorage to fix auth loop
     let userId = null;
+    // Clear any stored userData to prevent authentication loops
     try {
-      const userDataString = sessionStorage.getItem('userData') || localStorage.getItem('userData');
-      if (userDataString) {
-        const userData = JSON.parse(userDataString);
-        userId = userData.id;
-      }
+      sessionStorage.removeItem('userData');
+      localStorage.removeItem('userData');
+      console.log('Cleared userData from storage in getQueryFn');
     } catch (e) {
       // Continue without user ID
     }
@@ -418,16 +492,16 @@ export const getQueryFn: <T>(options: {
       };
     }
 
-    // Add user ID to headers if available
-    if (userId) {
-      options.headers = {
-        ...options.headers,
-        'X-Client-User-ID': userId.toString()
-      };
-    }
+    // Add user ID to headers if available (temporarily disabled)
+    // if (userId) {
+    //   options.headers = {
+    //     ...options.headers,
+    //     'X-Client-User-ID': userId.toString()
+    //   };
+    // }
 
     try {
-      const res = await offlineAwareFetch(url, options);
+      const res = await offlineAwareFetch(fullUrl, options);
 
       // Clear logout state on successful authentication
       if (res.ok && (url.includes('/auth/login') || url.includes('/auth/register'))) {
@@ -441,7 +515,8 @@ export const getQueryFn: <T>(options: {
 
       if (res.status === 401) {
         if (unauthorizedBehavior === "returnNull") {
-          return null;
+          // Return a safe default value instead of null to prevent "Cannot read properties of null" errors
+          return getSafeDefaultForEndpoint(url);
         } else {
           throw new Error("Unauthorized");
         }
@@ -454,7 +529,20 @@ export const getQueryFn: <T>(options: {
         cacheResponse(url, res.clone());
       }
 
-      return res.json();
+      try {
+        const data = await res.json();
+        
+        // Additional safety: if data is null/undefined for array endpoints, return empty array
+        if (data === null || data === undefined) {
+          return getSafeDefaultForEndpoint(url);
+        }
+        
+        return data;
+      } catch (jsonError) {
+        // If JSON parsing fails, log the error and return a safe default
+        console.error('JSON parsing error for', url, jsonError);
+        return getSafeDefaultForEndpoint(url);
+      }
     } catch (error) {
       throw error;
     }
@@ -465,6 +553,9 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: getQueryFn({ on401: "returnNull" }),
       staleTime: 5 * 60 * 1000,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
       retry: (failureCount, error) => {
         // Don't retry on 401 errors
         if (error?.message?.includes('401')) {
@@ -481,11 +572,24 @@ export const sanitizeImageUrl = (url: string, fallback: string = "/assets/defaul
     return fallback;
   }
   
-  // If it's already a valid URL, return it
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/')) {
+  // If URL contains a full domain (http:// or https://), extract the path only
+  // This ensures avatars work across all domains (production, staging, dev)
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    try {
+      const urlObj = new URL(url);
+      // Return only the pathname (e.g., /public-objects/avatars/image.png)
+      return urlObj.pathname;
+    } catch (e) {
+      console.warn('[sanitizeImageUrl] Invalid URL, using fallback:', url);
+      return fallback;
+    }
+  }
+  
+  // If it's already a relative path starting with /, return it
+  if (url.startsWith('/')) {
     return url;
   }
   
-  // If it's a relative path, prepend with a slash
+  // If it's a relative path without /, prepend with a slash
   return `/${url}`;
 };

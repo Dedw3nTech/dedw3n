@@ -1,73 +1,350 @@
-import React from 'react';
-import { Switch, Route, Redirect } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { ThemeProvider } from "next-themes";
-import { ViewProvider } from "@/hooks/use-view";
-import { AuthProvider } from "@/hooks/use-auth";
-import { MessagingProvider } from "@/hooks/use-messaging";
-import { MarketTypeProvider, useMarketType } from "@/hooks/use-market-type";
+import React, { lazy, Suspense, useEffect, useState, useMemo } from 'react';
+import { Switch, Route } from "wouter";
 import { useLocation } from 'wouter';
-import { SubscriptionProvider } from "@/hooks/use-subscription";
-import { CurrencyProvider } from "@/contexts/CurrencyContext";
-import { LanguageProvider } from "@/contexts/LanguageContext";
-import { WeightUnitProvider } from "@/contexts/WeightUnitContext";
-import { DimensionUnitProvider } from "@/hooks/use-dimension-unit";
-import { GPCProvider } from "@/components/GPCProvider";
-import { CookieConsentProvider } from "@/components/CookieConsentProvider";
+import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { CoreProviders } from "@/components/CoreProviders";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { ApiErrorBoundary } from "@/components/ui/api-error-boundary";
+import { OfflineIndicator } from "@/components/ui/offline-indicator";
 import { LowerCookieBanner } from "@/components/LowerCookieBanner";
-// import { useCanonicalUrl } from "@/hooks/useCanonicalUrl"; // Deprecated - using SEOHead instead
+import { GlobalLoginHandler } from "@/components/GlobalLoginHandler";
+import { MobileRedirectHandler } from "@/components/MobileRedirectHandler";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
+import { CacheBuster } from "@/components/CacheBuster";
 
 import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
-import "@/utils/unified-logout-system"; // Initialize unified logout system
+import "@/utils/unified-logout-system";
+import leopardVideo from "@assets/Generated File November 09, 2025 - 8_24PM (1)_1762805360661.mp4";
 
-import { useEffect, useState } from "react";
+// Loading indicator for code-split chunks with video background
+function PageLoadingFallback() {
+  const loadingTexts = useMemo(() => ['Thinking'], []);
+  const { translations } = useMasterBatchTranslation(loadingTexts);
+  const [thinkingText] = translations || loadingTexts;
 
-// Auto-login functionality completely removed for security compliance
+  return (
+    <div 
+      className="fixed inset-0 flex items-center justify-center bg-white"
+      style={{ minHeight: '100dvh' }}
+      role="status"
+      aria-live="polite"
+      aria-label="Loading application"
+      data-testid="page-loading-fallback"
+    >
+      <div className="text-center py-12">
+        <video 
+          src={leopardVideo} 
+          autoPlay 
+          loop 
+          muted 
+          playsInline
+          className="h-24 w-auto object-contain mx-auto mb-4"
+          data-testid="loading-video"
+        />
+        <p className="text-gray-600">
+          {thinkingText}
+          <span className="inline-flex ml-1">
+            <span className="animate-bounce" style={{ animationDelay: '0ms' }}>.</span>
+            <span className="animate-bounce" style={{ animationDelay: '150ms' }}>.</span>
+            <span className="animate-bounce" style={{ animationDelay: '300ms' }}>.</span>
+          </span>
+        </p>
+      </div>
+    </div>
+  );
+}
 
-// Initialize advertisement preloader on app startup
-import { OfflineIndicator } from "@/components/ui/offline-indicator";
-import { ProtectedRoute, AdminOnlyRoute } from "@/lib/protected-route";
-import { ErrorBoundary } from "@/components/ui/error-boundary";
-import SafeComponentWrapper from "@/components/ui/safe-component-wrapper";
-import { ApiErrorBoundary } from "@/components/ui/api-error-boundary";
-import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { apiRequest } from "@/lib/queryClient";
-import { LazyImage } from "@/components/ui/lazy-image";
-// Auto-login helper removed for security compliance
+// Chunk Load Error Boundary - catches when lazy route bundles fail to load
+class ChunkLoadErrorBoundaryCore extends React.Component<
+  { children: React.ReactNode; translations: string[] },
+  { hasError: boolean; error: Error | null; isReporting: boolean; reportSent: boolean }
+> {
+  constructor(props: { children: React.ReactNode; translations: string[] }) {
+    super(props);
+    this.state = { hasError: false, error: null, isReporting: false, reportSent: false };
+  }
 
-import { GlobalLoginHandler } from "@/components/GlobalLoginHandler";
-import { MobileRedirectHandler } from "@/components/MobileRedirectHandler";
-import { CommunityNav } from "@/components/layout/CommunityNav";
-import { DatingNav } from "@/components/layout/DatingNav";
-import { SEOHead, seoConfigs } from "@/components/seo/SEOHead";
-import { GPCBanner } from "@/components/GPCBanner";
-import AICommunityTools from "@/components/AICommunityTools";
-import AIDatingTools from "@/components/AIDatingTools";
+  static getDerivedStateFromError(error: Error) {
+    console.error('[CHUNK-LOAD-ERROR] Lazy route failed to load:', error);
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    const isChunkError = 
+      error.message.includes('Failed to fetch') ||
+      error.message.includes('Loading chunk') ||
+      error.message.includes('ChunkLoadError') ||
+      error.name === 'ChunkLoadError';
+
+    console.error('[CHUNK-LOAD-ERROR] Component error boundary caught:', {
+      error: error.message,
+      isChunkError,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack
+    });
+
+    if (isChunkError) {
+      console.warn('[CHUNK-LOAD-ERROR] Chunk failed to load - user will see reload prompt');
+    }
+  }
+
+  handleReportIssue = async () => {
+    if (this.state.isReporting || this.state.reportSent) return;
+    
+    this.setState({ isReporting: true });
+    
+    try {
+      const reportData = {
+        errorType: 'ChunkLoadError',
+        errorMessage: this.state.error?.message || 'Unknown error',
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        additionalInfo: JSON.stringify({
+          errorStack: this.state.error?.stack || '',
+          timestamp: new Date().toISOString(),
+          browserInfo: {
+            language: navigator.language,
+            platform: navigator.platform,
+            viewport: `${window.innerWidth}x${window.innerHeight}`
+          }
+        }),
+        toastTitle: 'Application Error',
+        toastDescription: this.state.error?.message || 'An unexpected error occurred'
+      };
+
+      const response = await fetch('/api/report-error', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reportData),
+      });
+
+      if (response.ok) {
+        this.setState({ reportSent: true });
+      }
+    } catch (err) {
+      console.error('Failed to send error report:', err);
+    } finally {
+      this.setState({ isReporting: false });
+    }
+  };
+
+  render() {
+    if (this.state.hasError) {
+      const isChunkError = this.state.error && (
+        this.state.error.message.includes('Failed to fetch') ||
+        this.state.error.message.includes('Loading chunk') ||
+        this.state.error.message.includes('ChunkLoadError') ||
+        this.state.error.name === 'ChunkLoadError'
+      );
+
+      const [
+        loadingErrorText,
+        somethingWentWrongText,
+        failedToLoadText,
+        unexpectedErrorText,
+        reloadPageText,
+        goToHomeText,
+        errorDetailsText,
+        reportIssueText,
+        reportSentText
+      ] = this.props.translations;
+
+      return (
+        <div className="flex items-center justify-center min-h-screen bg-white p-4">
+          <div className="text-center space-y-4 max-w-md">
+            <h1 className="text-2xl font-bold text-gray-900">
+              {isChunkError ? loadingErrorText : somethingWentWrongText}
+            </h1>
+            <p className="text-gray-600">
+              {isChunkError 
+                ? failedToLoadText
+                : unexpectedErrorText
+              }
+            </p>
+            <div className="space-y-2">
+              <button
+                onClick={() => window.location.reload()}
+                className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors w-full"
+                data-testid="button-reload-page"
+              >
+                {reloadPageText}
+              </button>
+              <button
+                onClick={() => window.location.href = '/'}
+                className="px-6 py-3 bg-gray-100 text-gray-900 rounded-lg hover:bg-gray-200 transition-colors w-full"
+                data-testid="button-go-home"
+              >
+                {goToHomeText}
+              </button>
+              <button
+                onClick={this.handleReportIssue}
+                disabled={this.state.isReporting || this.state.reportSent}
+                className="px-6 py-3 bg-white text-black border-2 border-black rounded-lg hover:bg-gray-50 transition-colors w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                data-testid="button-report-issue"
+              >
+                {this.state.reportSent ? reportSentText : (this.state.isReporting ? 'Sending...' : reportIssueText)}
+              </button>
+            </div>
+            {this.state.error && (
+              <details className="text-left text-xs text-gray-500 mt-4">
+                <summary className="cursor-pointer">{errorDetailsText}</summary>
+                <pre className="mt-2 p-2 bg-gray-50 rounded overflow-auto">
+                  {this.state.error.message}
+                </pre>
+              </details>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// Wrapper with translation hook
+function ChunkLoadErrorBoundary({ children }: { children: React.ReactNode }) {
+  const errorBoundaryTexts = useMemo(() => [
+    'Loading Error',
+    'Something went wrong',
+    'Failed to load application resources. This could be due to a network issue or outdated cache.',
+    'An unexpected error occurred while loading the page.',
+    'Reload Page',
+    'Go to Home',
+    'Error Details',
+    'Report Issue',
+    'Report Sent'
+  ], []);
+
+  const { translations } = useMasterBatchTranslation(errorBoundaryTexts);
+
+  return (
+    <ChunkLoadErrorBoundaryCore translations={translations || errorBoundaryTexts}>
+      {children}
+    </ChunkLoadErrorBoundaryCore>
+  );
+}
+
+// Eager page imports (critical authentication paths only)
 import VerifyEmail from "@/pages/verify-email";
+import VerifyEmailPending from "@/pages/verify-email-pending";
+import Verify2FA from "@/pages/verify-2fa";
+import LandingPage from "@/pages/LandingPage";
+import AuthPage from "@/pages/auth";
+import MobileLanding from "@/pages/mobile-landing";
+import ResetPassword from "@/pages/reset-password";
+import ResetPasswordConfirm from "@/pages/reset-password-confirm";
+import NotFoundPage from "@/pages/NotFoundPage";
 
-// Community Navigation wrapper
-function CommunityNavWrapper() {
+// SEO component is eager for better SEO performance (meta tags in initial HTML)
+import { SEOHead } from '@/components/seo/SEOHead';
+
+// Eager navigation components for instant UI rendering
+import OptimizedNavigation from '@/components/layout/OptimizedNavigation';
+import MobileNavigation from '@/components/layout/MobileNavigation';
+import { MarketplaceNav } from '@/components/layout/MarketplaceNav';
+import Footer from '@/components/layout/Footer';
+import { CommunityNav } from '@/components/layout/CommunityNav';
+import { DatingNav } from '@/components/layout/DatingNav';
+import { GPCBanner } from '@/components/GPCBanner';
+
+// Lazy route bundles
+const MarketplaceRoutes = lazy(() => import('@/routes/MarketplaceRoutes').then(m => ({ default: m.MarketplaceRoutes })));
+const SocialRoutes = lazy(() => import('@/routes/SocialRoutes').then(m => ({ default: m.SocialRoutes })));
+const AdminRoutes = lazy(() => import('@/routes/AdminRoutes').then(m => ({ default: m.AdminRoutes })));
+const UserSettingsRoutes = lazy(() => import('@/routes/UserSettingsRoutes').then(m => ({ default: m.UserSettingsRoutes })));
+const LegalInfoRoutes = lazy(() => import('@/routes/LegalInfoRoutes').then(m => ({ default: m.LegalInfoRoutes })));
+const SpecialtyRoutes = lazy(() => import('@/routes/SpecialtyRoutes').then(m => ({ default: m.SpecialtyRoutes })));
+
+// Eager-loaded provider wrappers (needed for navigation components that use context hooks)
+import { SocialProviders } from '@/components/SocialProviders';
+import { MessagingProviders } from '@/components/MessagingProviders';
+import { MarketplaceProviders } from '@/components/MarketplaceProviders';
+
+// Global scroll to top component
+function ScrollToTop() {
   const [location] = useLocation();
   
-  // Only show on community page
-  const isCommunityPage = location === "/community";
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [location]);
   
-  if (!isCommunityPage) return null;
+  return null;
+}
+
+// Email verification redirect component
+function EmailVerificationRedirect() {
+  const [location, setLocation] = useLocation();
+  const { user } = useAuth();
+  
+  useEffect(() => {
+    // Public routes that don't require email verification
+    const publicRoutes = [
+      '/auth',
+      '/verify-email',
+      '/verify-email-pending',
+      '/verify-2fa',
+      '/reset-password',
+      '/reset-password-confirm',
+      '/mobile',
+      '/test-cookies',
+      '/video-demo'
+    ];
+    
+    // Check if current route is public
+    const isPublicRoute = publicRoutes.some(route => location.startsWith(route));
+    
+    // Admin users are completely exempt from email verification
+    if (user && user.role === 'admin' && location === '/verify-email-pending') {
+      console.log('[ADMIN-EXEMPTION] Redirecting admin away from verification wall (admins are exempt)');
+      setLocation('/');
+      return;
+    }
+    
+    // Only redirect if:
+    // 1. User is authenticated
+    // 2. Email is not verified
+    // 3. Not already on verification page
+    // 4. Not on a public route
+    // 5. User is not an admin (admins are exempt from email verification)
+    if (user && !user.emailVerified && !isPublicRoute && user.role !== 'admin') {
+      console.log('[VERIFICATION-REDIRECT] Redirecting unverified user to verification wall');
+      setLocation('/verify-email-pending');
+    } else if (user && user.emailVerified && location === '/verify-email-pending') {
+      // If user is verified but somehow on the pending page, redirect to home
+      console.log('[VERIFICATION-CHECK] User is verified, redirecting from pending page to home');
+      setLocation('/');
+    }
+  }, [user, location, setLocation]);
+  
+  return null;
+}
+
+// Navigation wrappers with instant rendering
+function ConditionalNavigation() {
+  return <OptimizedNavigation />;
+}
+
+function ConditionalMobileNavigation() {
+  return <MobileNavigation />;
+}
+
+function CommunityNavWrapper() {
+  const [location] = useLocation();
+  const isCommunityPage = location === "/community";
+  const isProfilePage = location.startsWith("/profile/");
+  
+  if (!isCommunityPage && !isProfilePage) return null;
   
   return <CommunityNav />;
 }
 
-// Dating Navigation wrapper
 function DatingNavWrapper() {
   const [location] = useLocation();
-  
-  // Only show on dating page
   const isDatingPage = location === "/dating";
   
   if (!isDatingPage) return null;
@@ -75,174 +352,43 @@ function DatingNavWrapper() {
   return <DatingNav />;
 }
 
-// Conditional MarketplaceNav wrapper
-function MarketplaceNavWrapper({ searchTerm, setSearchTerm }: { searchTerm?: string; setSearchTerm?: (term: string) => void } = {}) {
+function ConditionalFooter() {
   const [location] = useLocation();
+  const ADMIN_PATHS = ['/admin', '/admin-control-center', '/unified-admin-dashboard'];
+  const isAdminRoute = ADMIN_PATHS.some(path => location === path || location.startsWith(`${path}/`));
+  const isCommunityPage = location === "/community";
   
-  // Only show marketplace nav on marketplace-related pages
-  const showOnPaths = [
-    '/marketplace',
-    '/products',
-    '/product',
-    '/vendors',
-    '/vendor',
-    '/government',
-    '/cart',
-    '/checkout',
-    '/payment-success',
-    '/add-product',
-    '/upload-product',
-    '/vendor-dashboard',
-    '/become-vendor',
-    '/become-business-vendor',
-    '/liked',
-    '/orders-returns',
-    '/shipping-calculator',
-    '/profile',
+  if (isCommunityPage || isAdminRoute) return null;
+  
+  return <Footer />;
+}
 
+function MarketplaceNavWrapper() {
+  const [location] = useLocation();
+  const showOnPaths = [
+    '/marketplace', '/products', '/product', '/vendors', '/vendor',
+    '/government', '/checkout', '/payment-success', '/add-product',
+    '/upload-product', '/vendor-dashboard', '/become-vendor',
+    '/become-business-vendor', '/liked', '/orders-returns',
+    '/shipping-calculator'
   ];
   
-  // Check if current path should show the marketplace nav
   const shouldShowNav = showOnPaths.some(path => 
     location === path || location.startsWith(`${path}/`)
   );
   
-  if (!shouldShowNav) {
-    return null;
-  }
+  if (!shouldShowNav) return null;
   
   return (
     <div className="sticky top-0 z-30 bg-white shadow-sm">
-      <SafeComponentWrapper componentName="MarketplaceNav">
-        <MarketplaceNav searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-      </SafeComponentWrapper>
+      <MarketplaceNav />
     </div>
   );
 }
 
-import NotFound from "@/pages/not-found";
-import NotFoundPage from "@/pages/NotFoundPage";
-import Home from "@/pages/home";
-import Social from "@/pages/social";
-import MobileLanding from "@/pages/mobile-landing";
-
-import Cart from "@/pages/cart";
-import Checkout from "@/pages/checkout";
-import PaymentSuccess from "@/pages/payment-success";
-import LogoutSuccess from "@/pages/logout-success";
-import AdminDashboard from "@/pages/admin-dashboard";
-import AdminControlCenter from "@/pages/admin-control-center";
-import UnifiedAdminDashboard from "@/pages/unified-admin-dashboard";
-import AffiliatePartnership from "@/pages/affiliate-partnership";
-import AIInsightsPage from "@/pages/ai-insights";
-import SocialInsightsPage from "@/pages/social-insights";
-import ApiTestPage from "@/pages/api-test";
-import Analytics from "@/pages/analytics";
 
 
-
-
-
-import OptimizedNavigation from "@/components/layout/OptimizedNavigation";
-import Footer from "@/components/layout/Footer";
-
-// Navigation component - now includes mobile route
-function ConditionalNavigation() {
-  return (
-    <SafeComponentWrapper componentName="OptimizedNavigation">
-      <OptimizedNavigation />
-    </SafeComponentWrapper>
-  );
-}
-import MobileNavigation from "@/components/layout/MobileNavigation";
-import { MarketplaceNav } from "@/components/layout/MarketplaceNav";
-import OfflineSimulator from "@/components/utils/OfflineSimulator";
-import ChatbotWindow from "@/components/ai/ChatbotWindow";
-
-
-// Import new page components
-import Products from "@/pages/products";
-import ProductDetail from "@/pages/product-detail";
-import ProductRedirectHandler from "@/components/ProductRedirectHandler";
-import AddProduct from "@/pages/add-product";
-import UploadProduct from "@/pages/upload-product";
-import MembersPage from "@/pages/members";
-import WalletPage from "@/pages/wallet";
-import VendorAnalyticsPage from "@/pages/vendor-analytics";
-import SpendingAnalytics from "@/pages/spending-analytics";
-import VendorsPage from "@/pages/vendors";
-import VendorDetailPage from "@/pages/vendor-detail";
-import GovernmentPage from "@/pages/government";
-import DatingPage from "@/pages/dating";
-import BecomeVendorPage from "@/pages/become-vendor";
-import BecomeBusinessVendorPage from "@/pages/become-business-vendor";
-import VendorDashboardPage from "@/pages/vendor-dashboard";
-import VendorRegisterPage from "@/pages/vendor-register";
-import LikedPage from "@/pages/liked";
-import SavedPosts from "@/pages/saved-posts";
-import EventsPage from "@/pages/events";
-import EventDetailPage from "@/pages/event-detail";
-import OrdersReturnsPage from "@/pages/orders-returns";
-import LandingPage from "@/pages/LandingPage";
-
-// Import footer pages
-import FAQPage from "@/pages/faq";
-import CatalogueRulesPage from "@/pages/catalogue-rules";
-import TipsTricksPage from "@/pages/tips-tricks";
-
-import PrivacyPage from "@/pages/privacy";
-import TermsPage from "@/pages/terms";
-import BusinessTermsPage from "@/pages/business-terms";
-import CookiesPage from "@/pages/cookies";
-import NetworkPartnerships from "@/pages/network-partnerships";
-import NetworkPartnershipResources from "@/pages/network-partnership-resources";
-import AffiliatePartnerships from "@/pages/affiliate-partnerships";
-import Resources from "@/pages/resources";
-import ContactPage from "@/pages/contact";
-import CommunityGuidelines from "@/pages/community-guidelines";
-import ShippingCalculator from "@/pages/shipping-calculator";
-import CommunityPage from "@/pages/community";
-import RemoveAdsPage from "@/pages/remove-ads";
-import AdminEmail from "@/pages/admin-email";
-import AuthPage from "@/pages/auth";
-import ResetPassword from "@/pages/reset-password";
-import ResetPasswordConfirm from "@/pages/reset-password-confirm";
-import { SiteMap } from "@/components/layout/SiteMap";
-
-
-
-// Import social networking and user components
-import ProfilePage from "@/pages/Profile";
-import SettingsPage from "@/pages/settings";
-import ProfileSettingsPage from "@/pages/profile-settings";
-import WallPage from "@/pages/wall";
-import MessagesPage from "@/pages/Messages";
-import ExplorePage from "@/pages/explore";
-import SearchPage from "@/pages/search";
-import SocialConsolePage from "@/pages/social-console";
-import NotificationsPage from "@/pages/notifications";
-import PostDetailPage from "@/pages/post-detail";
-import DatingProfilePage from "@/pages/dating-profile";
-import DatingProfileView from "@/pages/dating-profile-view";
-import { MyMatches } from "@/pages/MyMatches";
-import PaymentGateway from "@/pages/payment-gateway";
-import UserProfilePage from "@/pages/Profile";
-
-import CommissionPayment from "@/pages/commission-payment";
-import PawapayDepositCallback from "@/pages/pawapay-deposit-callback";
-import PawapayPayoutCallback from "@/pages/pawapay-payout-callback";
-import PawapayRefundCallback from "@/pages/pawapay-refund-callback";
-
-import PremiumVideoPage from "@/pages/premium-video";
-import VideoDemo from "@/pages/video-demo";
-import TestCookiesPage from "@/pages/test-cookies";
-import VendorProfile from "@/pages/vendor-profile";
-import MarketplaceRQST from "@/pages/marketplace-rqst";
-import MarketplaceRaw from "@/pages/marketplace-raw";
-// import ValidationDemo from "@/pages/validation-demo";
-
-
-// SEO wrapper component for routing
+// SEO wrapper - SEOHead is now eager loaded for better SEO performance
 function SEORoute({ path, component: Component, seoConfig, children, ...props }: any) {
   const [location] = useLocation();
   const isActive = location === path || (typeof path === 'string' && location.startsWith(path + '/'));
@@ -257,221 +403,139 @@ function SEORoute({ path, component: Component, seoConfig, children, ...props }:
   );
 }
 
+// Lazy bundle configuration with comprehensive path mappings for code splitting
+const lazyBundles = [
+  {
+    Component: MarketplaceRoutes,
+    mounts: [
+      '/marketplace/:rest*', '/marketplace', '/marketplace/b2c', '/marketplace/b2b', '/marketplace/c2c',
+      '/marketplace/raw', '/marketplace/creators', '/marketplace/real-estate', '/marketplace/rqst',
+      '/products', '/product/:identifier', '/vendors', '/vendor/:slug',
+      '/search', '/gift-cards', '/cart', '/checkout', '/payment-gateway',
+      '/payment-success', '/add-product', '/upload-product', '/categories'
+    ]
+  },
+  {
+    Component: SocialRoutes,
+    mounts: [
+      '/community', '/community/:rest*', '/dating', '/dating/:rest*', '/post/:id', '/vidz/:rest*', '/events', '/events/:rest*',
+      '/social', '/social/:tab', '/social-console', '/social-insights',
+      '/saved-posts', '/drafts', '/messages/:username?', '/messages', '/notifications', '/friend-requests',
+      '/premium-videos', '/premium-videos/:id', '/walls', '/community-search'
+    ]
+  },
+  {
+    Component: AdminRoutes,
+    mounts: ['/admin', '/admin/:rest*', '/admin-control-center', '/admin-control-center/:rest*', '/unified-admin-dashboard', '/unified-admin-dashboard/:rest*']
+  },
+  {
+    Component: UserSettingsRoutes,
+    mounts: [
+      '/profile/:rest*', '/profile', '/settings/:rest*', '/settings', '/account/:rest*',
+      '/profile-settings', '/preferences', '/vendor-dashboard', '/become-vendor', 
+      '/become-business-vendor', '/vendor-register', '/logout-test'
+    ]
+  },
+  {
+    Component: LegalInfoRoutes,
+    mounts: ['/legal/:rest*', '/privacy/:rest*', '/terms/:rest*', '/cookie-policy', '/about']
+  },
+  {
+    Component: SpecialtyRoutes,
+    mounts: ['/affiliates/:rest*', '/partner/:rest*', '/creators/:rest*', '/video-demo', '/test-cookies']
+  }
+];
+
 function Router() {
-  const [location] = useLocation();
-  
   return (
     <Switch>
-      <Route path="/video-demo">
-        <SEOHead title="Video Demo - Dedw3n" description="Watch our video demonstration of Dedw3n's features and capabilities." />
-        <VideoDemo />
+      {/* Eager routes - Critical authentication and landing pages with SEO optimization */}
+      <Route path="/">
+        <SEOHead 
+          title="Dedw3n - Multi-Vendor Social Marketplace & Dating Platform"
+          description="Dedw3n is a multi-vendor marketplace and social platform built with modern web technologies. The platform combines e-commerce capabilities with social networking features, creating an end-to-end transactional ecosystem where users can purchase products, interact socially, and access exclusive content."
+          keywords="marketplace, social platform, dating, e-commerce, multi-vendor, online shopping, social networking"
+        />
+        <LandingPage />
       </Route>
-
-      <Route path="/test-cookies">
-        <TestCookiesPage />
-      </Route>
-
-      {/* <Route path="/validation-demo">
-        <SEOHead title="Real-time Contact Validation Demo - Dedw3n" description="Experience instant email, phone, and name validation powered by Clearout API. See real-time feedback and validation in action." />
-        <ValidationDemo />
-      </Route> */}
 
       <Route path="/auth">
-        <SEOHead title="Authentication - Dedw3n" description="Sign in to your account or create a new one to access all Dedw3n features." />
+        <SEOHead 
+          title="Sign In - Dedw3n"
+          description="Sign in to your Dedw3n account to access the marketplace, community, and dating features."
+          keywords="sign in, login, authentication, account access"
+        />
         <AuthPage />
       </Route>
 
       <Route path="/reset-password">
-        <SEOHead title="Reset Password - Dedw3n" description="Reset your password to regain access to your Dedw3n account." />
+        <SEOHead 
+          title="Reset Password - Dedw3n"
+          description="Reset your Dedw3n account password securely."
+          keywords="reset password, forgot password, account recovery"
+        />
         <ResetPassword />
       </Route>
 
       <Route path="/reset-password-confirm">
-        <SEOHead title="Confirm Password Reset - Dedw3n" description="Set your new password to complete the password reset process." />
+        <SEOHead 
+          title="Confirm Password Reset - Dedw3n"
+          description="Confirm your new password for your Dedw3n account."
+          keywords="confirm password, new password, account security"
+        />
         <ResetPasswordConfirm />
       </Route>
 
       <Route path="/verify-email">
-        <SEOHead title="Verify Email - Dedw3n" description="Complete your email verification to activate your Dedw3n account." />
+        <SEOHead 
+          title="Verify Email - Dedw3n"
+          description="Verify your email address to complete your Dedw3n account setup."
+          keywords="email verification, account verification, confirm email"
+        />
         <VerifyEmail />
       </Route>
 
+      <Route path="/verify-email-pending">
+        <SEOHead 
+          title="Email Verification Pending - Dedw3n"
+          description="Please verify your email address to access all Dedw3n features."
+          keywords="email pending, verification pending, account setup"
+        />
+        <VerifyEmailPending />
+      </Route>
+
+      <Route path="/verify-2fa">
+        <SEOHead 
+          title="Two-Factor Authentication - Dedw3n"
+          description="Enter your two-factor authentication code to access your Dedw3n account."
+          keywords="2fa, two-factor authentication, security code, account security"
+        />
+        <Verify2FA />
+      </Route>
+
       <Route path="/mobile">
-        <SEOHead title="Dedw3n Mobile - Spend More Time Enjoying Life" description="Mobile-optimized experience for Dedw3n. Shop, connect, and discover with our comprehensive mobile platform designed for smartphones." />
         <MobileLanding />
       </Route>
 
-      <Route path="/">
-        <SEOHead title="Welcome to Dedw3n - The Leading Social Platform for Modern Commerce" description="Spend more time enjoying life. We simplify the complexities of conducting business online. Join millions of users worldwide." />
-        <LandingPage />
-      </Route>
+      {/* Lazy route bundles - wrapped in chunk load error boundary */}
+      {lazyBundles.flatMap(({ Component, mounts }) =>
+        mounts.map((path) => (
+          <Route key={path} path={path}>
+            {(params) => (
+              <ChunkLoadErrorBoundary>
+                <Suspense fallback={<PageLoadingFallback />}>
+                  <Component params={params} />
+                </Suspense>
+              </ChunkLoadErrorBoundary>
+            )}
+          </Route>
+        ))
+      )}
 
-      <Route path="/marketplace">
-        <SEOHead {...seoConfigs.home} />
-        <Products />
+      {/* 404 fallback route */}
+      <Route>
+        <NotFoundPage />
       </Route>
-
-      <Route path="/logout-success">
-        <SEOHead title="Logout Successful - Dedw3n" description="You have been successfully logged out from Dedw3n." />
-        <LogoutSuccess />
-      </Route>
-      
-      <Route path="/marketplace/b2c">
-        <SEOHead {...seoConfigs.products} title="B2C Marketplace - Dedw3n" description="Browse our Business-to-Consumer marketplace with thousands of products from verified vendors." />
-        <Products />
-      </Route>
-      
-      <Route path="/marketplace/b2b">
-        <SEOHead {...seoConfigs.products} title="B2B Marketplace - Dedw3n" description="Discover Business-to-Business solutions and wholesale products from trusted suppliers." />
-        <Products />
-      </Route>
-      
-      <Route path="/marketplace/c2c">
-        <SEOHead {...seoConfigs.products} title="C2C Marketplace - Dedw3n" description="Shop Consumer-to-Consumer marketplace for unique items and second-hand products." />
-        <Products />
-      </Route>
-      
-      <Route path="/marketplace/raw">
-        <SEOHead title="Raw Marketplace - Dedw3n" description="Raw materials marketplace where you can find bulk raw materials, commodities, and unfinished goods for your business." />
-        <MarketplaceRaw />
-      </Route>
-      <Route path="/marketplace/rqst">
-        <SEOHead title="RQST Marketplace - Dedw3n" description="Request marketplace where you can post product requests and connect with vendors who can fulfill them." />
-        <MarketplaceRQST />
-      </Route>
-      
-      <Route path="/products">
-        <SEOHead {...seoConfigs.products} />
-        <Products />
-      </Route>
-      
-      <Route path="/product/:identifier">
-        {params => <ProductRedirectHandler identifier={params.identifier} />}
-      </Route>
-      
-      <Route path="/vendors">
-        <SEOHead {...seoConfigs.vendors} />
-        <VendorsPage />
-      </Route>
-      
-      <Route path="/vendor/:slug" component={VendorDetailPage} />
-      
-      <Route path="/government">
-        <SEOHead {...seoConfigs.government} />
-        <GovernmentPage />
-      </Route>
-      
-      <Route path="/search">
-        <SEOHead title="Search Results - Dedw3n" description="Search results for products, vendors, and content on Dedw3n marketplace." />
-        <SearchPage />
-      </Route>
-      
-      <AdminOnlyRoute path="/dating" component={DatingPage} />
-      <Route path="/profile/:username" component={UserProfilePage} />
-      <ProtectedRoute path="/commission-payment/:periodId" component={CommissionPayment} />
-      
-      {/* Pawapay callback routes */}
-      <Route path="/pawapay/deposit/callback" component={PawapayDepositCallback} />
-      <Route path="/pawapay/payout/callback" component={PawapayPayoutCallback} />
-      <Route path="/pawapay/refund/callback" component={PawapayRefundCallback} />
-      
-      <ProtectedRoute path="/become-vendor" component={BecomeVendorPage} />
-      <ProtectedRoute path="/become-business-vendor" component={BecomeBusinessVendorPage} />
-      <ProtectedRoute path="/vendor-dashboard" component={VendorDashboardPage} />
-      <ProtectedRoute path="/vendor-register" component={VendorRegisterPage} />
-      
-      {/* Footer pages - publicly accessible */}
-      <Route path="/faq" component={FAQPage} />
-      <Route path="/catalogue-rules" component={CatalogueRulesPage} />
-      <Route path="/tips-tricks" component={TipsTricksPage} />
-
-      <Route path="/network-partnerships" component={NetworkPartnerships} />
-      <Route path="/network-partnership-resources" component={NetworkPartnershipResources} />
-      <Route path="/affiliate-partnerships" component={AffiliatePartnerships} />
-      <Route path="/resources" component={Resources} />
-      <Route path="/privacy" component={PrivacyPage} />
-      <Route path="/terms" component={TermsPage} />
-      <Route path="/business-terms">
-        <SEOHead title="Business Terms of Service - Dedw3n" description="Business Terms and Conditions for Dedw3n marketplace platform. Comprehensive legal agreement governing business vendor and buyer relationships." />
-        <BusinessTermsPage />
-      </Route>
-      <Route path="/cookies" component={CookiesPage} />
-      <Route path="/contact" component={ContactPage} />
-      <Route path="/admin/email" component={AdminEmail} />
-      <Route path="/community-guidelines" component={CommunityGuidelines} />
-      <Route path="/remove-ads" component={RemoveAdsPage} />
-      <Route path="/sitemap" component={SiteMap} />
-      <Route path="/api-test" component={ApiTestPage} />
-      
-      {/* Protected routes - require authentication */}
-      <ProtectedRoute path="/social" component={WallPage} />
-      <ProtectedRoute path="/social/:tab" component={WallPage} />
-      <ProtectedRoute path="/social-console" component={SocialConsolePage} />
-      <ProtectedRoute path="/social-insights" component={SocialInsightsPage} />
-      <ProtectedRoute path="/ai-insights" component={AIInsightsPage} />
-      <ProtectedRoute path="/cart" component={Cart} />
-      <ProtectedRoute path="/checkout" component={Checkout} />
-      <ProtectedRoute path="/payment-gateway" component={PaymentGateway} />
-      <ProtectedRoute path="/payment-success" component={PaymentSuccess} />
-      <ProtectedRoute path="/liked" component={LikedPage} />
-      <ProtectedRoute path="/saved-posts" component={SavedPosts} />
-      <ProtectedRoute path="/add-product" component={AddProduct} />
-      <ProtectedRoute path="/upload-product" component={UploadProduct} />
-      <ProtectedRoute path="/members" component={MembersPage} />
-      <ProtectedRoute path="/wallet" component={WalletPage} />
-      <ProtectedRoute path="/spending-analytics" component={SpendingAnalytics} />
-      <ProtectedRoute path="/vendor-analytics" component={VendorAnalyticsPage} />
-      <ProtectedRoute path="/analytics" component={Analytics} />
-      <ProtectedRoute path="/profile" component={ProfilePage} />
-      <ProtectedRoute path="/profile/:username" component={ProfilePage} />
-      <ProtectedRoute path="/profile-settings" component={ProfileSettingsPage} />
-      <AdminOnlyRoute path="/dating-profile" component={DatingProfilePage} />
-      <AdminOnlyRoute path="/dating-profile/:profileId" component={DatingProfileView} />
-      <AdminOnlyRoute path="/my-matches" component={MyMatches} />
-      <ProtectedRoute path="/settings" component={SettingsPage} />
-      <ProtectedRoute path="/wall" component={WallPage} />
-      <Route path="/community">
-        <SEOHead {...seoConfigs.community} />
-        <CommunityPage />
-      </Route>
-      <ProtectedRoute path="/community/ai-tools" component={AICommunityTools} />
-      <AdminOnlyRoute path="/dating/ai-tools" component={AIDatingTools} />
-
-      <ProtectedRoute path="/events" component={EventsPage} />
-      <ProtectedRoute path="/event/:id" component={EventDetailPage} />
-      <ProtectedRoute path="/posts/:id" component={PostDetailPage} />
-      <ProtectedRoute path="/messages/:username?" component={MessagesPage} />
-      <ProtectedRoute path="/explore" component={ExplorePage} />
-      <ProtectedRoute path="/notifications" component={NotificationsPage} />
-      <ProtectedRoute path="/orders-returns" component={OrdersReturnsPage} />
-      
-      {/* Shipping Calculator - accessible to all users */}
-      <Route path="/shipping-calculator">
-        <SEOHead title="Shipping Calculator - Dedw3n" description="Calculate shipping costs for different freight types and international destinations on Dedw3n marketplace." />
-        <ShippingCalculator />
-      </Route>
-      
-      {/* Product detail routes */}
-      <Route path="/product/:identifier">
-        {params => <ProductRedirectHandler identifier={params.identifier} />}
-      </Route>
-
-      {/* Vendor profile routes - Removed conflicting route, using VendorDetailPage for slug-based routing */}
-      
-      {/* Premium video routes */}
-      <ProtectedRoute path="/premium-videos" component={PremiumVideoPage} />
-      <ProtectedRoute path="/premium-videos/:id" component={PremiumVideoPage} />
-      
-      {/* Admin routes */}
-      <ProtectedRoute path="/admin" component={UnifiedAdminDashboard} />
-      <ProtectedRoute path="/admin/:tab" component={UnifiedAdminDashboard} />
-      <ProtectedRoute path="/unified-admin-dashboard" component={UnifiedAdminDashboard} />
-      <ProtectedRoute path="/admin-dashboard" component={AdminDashboard} />
-      <ProtectedRoute path="/admin-control-center" component={AdminControlCenter} />
-      <ProtectedRoute path="/affiliate-partnership" component={AffiliatePartnership} />
-      
-
-      <Route component={NotFoundPage} />
     </Switch>
   );
 }
@@ -484,8 +548,8 @@ function App() {
   
   // Initialize offline detection, language, and advertisement preloader
   useEffect(() => {
-    // Initialize offline detection
-    initializeOfflineDetection();
+    // Initialize offline detection and store cleanup function
+    const cleanupOfflineDetection = initializeOfflineDetection();
     
     // Initialize language based on user location
     initializeLanguageFromLocation();
@@ -501,451 +565,53 @@ function App() {
     window.addEventListener('language-changed', handleLanguageChange);
     
     return () => {
+      // Clean up offline detection event listeners
+      cleanupOfflineDetection();
       window.removeEventListener('language-changed', handleLanguageChange);
     };
   }, []);
 
-  // Using forceRefresh in a key forces re-rendering when language changes
+  // Lightweight app shell with eager-loaded providers wrapping entire layout
   return (
-    <QueryClientProvider client={queryClient} key={`query-provider-${forceRefresh}`}>
-        <GPCProvider>
-          <CookieConsentProvider>
-            <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-              <TooltipProvider>
-                <AuthProvider>
-                  <ViewProvider>
-                    <MarketTypeProvider>
-                      <SubscriptionProvider>
-                        <MessagingProvider>
-                          <CurrencyProvider>
-                            <LanguageProvider>
-                              <WeightUnitProvider>
-                                <DimensionUnitProvider>
-                              <ErrorBoundary>
-                        <div className="flex flex-col min-h-screen">
-                          <ConditionalNavigation />
-                          <GPCBanner />
-                          <MarketplaceNavWrapper />
-                          
-                          {/* Community Navigation - Only show on community page */}
-                          <CommunityNavWrapper />
-                          
-                          {/* Dating Navigation - Only show on dating page */}
-                          <DatingNavWrapper />
-                          
-                          {/* New Section Above Main - Only show on marketplace pages */}
-                          <MarketplacePromoSection />
-                          
-                          {/* Dating Header Advertisement - Only show on dating page */}
-                          <DatingHeaderPromoSection />
-                          
-                          <main className="flex-grow">
-                            <ApiErrorBoundary showHomeButton={false}>
-                              <Router />
-                            </ApiErrorBoundary>
-                          </main>
-                          
-                          {/* Dating Footer Advertisement - Only show on dating page */}
-                          <DatingFooterPromoSection />
-                          
-                          {/* New Section Below Main - Only show on marketplace pages */}
-                          <MarketplaceBottomPromoSection />
-                          
-                          <Footer />
-                          <SafeComponentWrapper componentName="MobileNavigation">
-                            <MobileNavigation />
-                          </SafeComponentWrapper>
-                          <OfflineIndicator />
-                          <LowerCookieBanner />
-
-                          <GlobalLoginHandler />
-                          <MobileRedirectHandler />
-                          {/* Offline simulator hidden as requested */}
-                          {/* Chatbot will be implemented later when API key is available */}
-                          {/* <ChatbotWindow /> */}
-                        </div>
-                              </ErrorBoundary>
-                              <Toaster />
-                                </DimensionUnitProvider>
-                              </WeightUnitProvider>
-                            </LanguageProvider>
-                          </CurrencyProvider>
-                        </MessagingProvider>
-                      </SubscriptionProvider>
-                    </MarketTypeProvider>
-                  </ViewProvider>
-                </AuthProvider>
-              </TooltipProvider>
-            </ThemeProvider>
-          </CookieConsentProvider>
-        </GPCProvider>
-    </QueryClientProvider>
-  );
-}
-
-// Marketplace promotional sections that only show on marketplace pages
-function MarketplacePromoSection() {
-  const [location] = useLocation();
-  const { marketType } = useMarketType();
-  
-  // Only show on marketplace-related pages (excluding landing page)
-  const isMarketplacePage = location === "/marketplace" || location === "/categories" || location.startsWith("/marketplace/");
-  
-  if (!isMarketplacePage) return null;
-  
-  // Select appropriate advertisement based on market type
-  const getMarketplaceAd = () => {
-    switch (marketType) {
-      case 'b2b':
-        return '/attached_assets/Dedw3n Business B2B Header.png';
-      case 'b2c':
-        return '/attached_assets/Dedw3n Business _1753731843941.png';
-      case 'c2c':
-        return '/attached_assets/Dedw3n Business  (2)_1753732264836.png';
-      case 'rqst':
-        return '/attached_assets/Dedw3n Business  (3)_1753732357966.png';
-      default:
-        return '/attached_assets/Copy of Dedw3n Marketplace II.png';
-    }
-  };
-
-  return (
-    <div className="w-full" key={`marketplace-top-${marketType}`}>
-      <img 
-        src={getMarketplaceAd()}
-        alt={`${marketType.toUpperCase()} Marketplace`}
-        className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
-        loading="lazy"
-        onError={(e) => {
-          e.currentTarget.src = '/attached_assets/Copy of Dedw3n Marketplace.png';
-        }}
-      />
-    </div>
-  );
-}
-
-function MarketplaceBottomPromoSection() {
-  const [location] = useLocation();
-  const { marketType } = useMarketType();
-  
-  // Only show on marketplace-related pages (excluding landing page)
-  const isMarketplacePage = location === "/marketplace" || location === "/categories" || location.startsWith("/marketplace/");
-  
-  if (!isMarketplacePage) return null;
-  
-  // Select appropriate footer advertisement based on market type
-  const getMarketplaceFooterAd = () => {
-    switch (marketType) {
-      case 'b2b':
-        return '/attached_assets/Dedw3n Business B2B Footer.png';
-      case 'b2c':
-        return '/attached_assets/Dedw3n Business  (4)_1753732509111.png';
-      case 'c2c':
-        return '/attached_assets/Dedw3n Business  (3)_1753732357966.png';
-      default:
-        return '/attached_assets/Copy of Dedw3n Marketplace III.png';
-    }
-  };
-
-  return (
-    <div className="w-full" key={`marketplace-bottom-${marketType}`}>
-      <img 
-        src={getMarketplaceFooterAd()}
-        alt={`${marketType.toUpperCase()} Marketplace Footer`}
-        className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
-        loading="lazy"
-        onError={(e) => {
-          e.currentTarget.src = '/attached_assets/Dedw3n comm Footer.png';
-        }}
-      />
-    </div>
-  );
-}
-
-// Dating-specific advertisement components (separate from marketplace)
-function DatingHeaderPromoSection() {
-  const [location] = useLocation();
-  
-  // Only show on dating page
-  const isDatingPage = location === "/dating";
-  
-  if (!isDatingPage) return null;
-  
-  return (
-    <div className="w-full" key="dating-header-promo">
-      <img 
-        src="/attached_assets/_Dedw3n Dating Header (1).png"
-        alt="Dating Platform Header"
-        className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
-        loading="lazy"
-        onError={(e) => {
-          e.currentTarget.src = '/attached_assets/_Dedw3n Dating Header.png';
-        }}
-      />
-    </div>
-  );
-}
-
-function DatingFooterPromoSection() {
-  const [location] = useLocation();
-  
-  // Only show on dating page
-  const isDatingPage = location === "/dating";
-  
-  if (!isDatingPage) return null;
-  
-  return (
-    <div className="w-full" key="dating-footer-promo">
-      <img 
-        src="/attached_assets/Copy of Dedw3n comm Footer (2)_1749623339958.png"
-        alt="Dedw3n Dating Services - Creating connections among people worldwide"
-        className="w-full h-[300px] sm:h-[350px] md:h-[400px] object-cover"
-        loading="lazy"
-        onError={(e) => {
-          e.currentTarget.src = '/attached_assets/image_1749623253262.png';
-        }}
-      />
-    </div>
-  );
-}
-
-// Test Auth Page component for debugging authentication
-function TestAuthPage() {
-  const [message, setMessage] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  
-  // Query for testing authentication status
-  const { data: authData, isLoading, error, refetch } = useQuery({
-    queryKey: ['/api/auth/test-auth'],
-    retry: false,
-    enabled: false,
-  });
-  
-  // Query to get current user
-  const { data: user, isLoading: userLoading, refetch: refetchUser } = useQuery({
-    queryKey: ['/api/user'],
-    retry: false,
-  });
-  
-  // Test direct login with session-based auth
-  const handleDirectLogin = async (userId: number) => {
-    setLoading(true);
-    setMessage("");
-    
-    try {
-      const response = await fetch(`/api/auth/test-login/${userId}`);
-      const data = await response.json();
-      
-      if (response.ok) {
-        setMessage(`Login successful: ${JSON.stringify(data, null, 2)}`);
-        await refetchUser();
-      } else {
-        setMessage(`Login failed: ${data.message || 'Unknown error'}`);
-      }
-    } catch (err) {
-      setMessage(`Error: ${(err as Error).message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // Get a JWT token for testing
-  const handleGetToken = async (userId: number) => {
-    setLoading(true);
-    setMessage("");
-    
-    try {
-      const response = await fetch(`/api/auth/get-test-token/${userId}`);
-      const data = await response.json();
-      
-      if (response.ok) {
-        // Store token in localStorage
-        localStorage.setItem('auth_token', data.token);
-        setMessage(`Token generated: ${data.token.substring(0, 20)}... (expires: ${new Date(data.expiresAt).toLocaleString()})`);
-        await refetchUser();
-      } else {
-        setMessage(`Token generation failed: ${data.message || 'Unknown error'}`);
-      }
-    } catch (err) {
-      setMessage(`Error: ${(err as Error).message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // Check authentication status
-  const handleCheckAuth = async () => {
-    setLoading(true);
-    await refetch();
-    setLoading(false);
-  };
-  
-  // Logout
-  const handleLogout = async () => {
-    setLoading(true);
-    setMessage("");
-    
-    try {
-      const response = await apiRequest("POST", "/api/logout");
-      
-      if (response.ok) {
-        localStorage.removeItem('auth_token');
-        setMessage("Logged out successfully");
-        await refetchUser();
-      } else {
-        const data = await response.json();
-        setMessage(`Logout failed: ${data.message || 'Unknown error'}`);
-      }
-    } catch (err) {
-      setMessage(`Error: ${(err as Error).message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Authentication Testing Page</h1>
-      
-      <div className="grid md:grid-cols-2 gap-8">
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Authentication Actions</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-medium mb-2">Session Authentication</h3>
-              <div className="flex flex-wrap gap-2">
-                <Button 
-                  onClick={() => handleDirectLogin(1)} 
-                  disabled={loading}
-                  variant="default"
-                >
-                  Login as User ID 1
-                </Button>
-                <Button 
-                  onClick={() => handleDirectLogin(2)} 
-                  disabled={loading}
-                  variant="default"
-                >
-                  Login as User ID 2
-                </Button>
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="font-medium mb-2">JWT Authentication</h3>
-              <div className="flex flex-wrap gap-2">
-                <Button 
-                  onClick={() => handleGetToken(1)} 
-                  disabled={loading}
-                  variant="secondary"
-                >
-                  Get Token for User 1
-                </Button>
-                <Button 
-                  onClick={() => handleGetToken(2)} 
-                  disabled={loading}
-                  variant="secondary"
-                >
-                  Get Token for User 2
-                </Button>
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="font-medium mb-2">Auth Operations</h3>
-              <div className="flex flex-wrap gap-2">
-                <Button 
-                  onClick={handleCheckAuth} 
-                  disabled={loading}
-                  variant="outline"
-                >
-                  Check Auth Status
-                </Button>
-                <Button 
-                  onClick={handleLogout} 
-                  disabled={loading}
-                  variant="destructive"
-                >
-                  Logout
-                </Button>
-              </div>
-            </div>
-          </div>
-          
-          {loading && (
-            <div className="mt-4 text-center">
-              <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
-              <p className="text-sm text-muted-foreground mt-2">Processing...</p>
-            </div>
-          )}
-          
-          {message && (
-            <div className="mt-4 p-3 bg-muted rounded-md">
-              <pre className="whitespace-pre-wrap text-sm">{message}</pre>
-            </div>
-          )}
-        </Card>
-        
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Current Authentication Status</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-medium mb-2">Auth Check Response</h3>
-              {isLoading ? (
-                <p>Checking authentication...</p>
-              ) : error ? (
-                <p className="text-destructive">Error: {(error as Error).message}</p>
-              ) : authData ? (
-                <pre className="p-3 bg-muted rounded-md text-sm whitespace-pre-wrap">
-                  {JSON.stringify(authData, null, 2)}
-                </pre>
-              ) : (
-                <p className="text-muted-foreground">Click "Check Auth Status" to verify authentication</p>
-              )}
-            </div>
-            
-            <div>
-              <h3 className="font-medium mb-2">Current User</h3>
-              {userLoading ? (
-                <p>Loading user data...</p>
-              ) : user ? (
-                <div>
-                  <div className="mb-2 flex items-center gap-2">
-                    <span className="inline-block w-3 h-3 bg-green-500 rounded-full"></span>
-                    <span className="font-medium">Authenticated as: {(user as any)?.username || (user as any)?.email || `User ${(user as any)?.id}`}</span>
-                  </div>
-                  <pre className="p-3 bg-muted rounded-md text-sm whitespace-pre-wrap">
-                    {JSON.stringify(user, null, 2)}
-                  </pre>
+    <CoreProviders forceRefresh={forceRefresh}>
+      <AuthProvider>
+        <SocialProviders>
+          <MessagingProviders>
+            <MarketplaceProviders>
+              <ErrorBoundary>
+                <ScrollToTop />
+                <EmailVerificationRedirect />
+                <div className="flex flex-col min-h-screen">
+                  <ConditionalNavigation />
+                  <GPCBanner />
+                  <MarketplaceNavWrapper />
+                  <CommunityNavWrapper />
+                  <DatingNavWrapper />
+                  
+                  <main className="flex-grow">
+                    <ApiErrorBoundary showHomeButton={false}>
+                      <Suspense fallback={<PageLoadingFallback />}>
+                        <Router />
+                      </Suspense>
+                    </ApiErrorBoundary>
+                  </main>
+                  
+                  <ConditionalFooter />
+                  <ConditionalMobileNavigation />
+                  <OfflineIndicator />
+                  <LowerCookieBanner />
+                  <GlobalLoginHandler />
+                  <MobileRedirectHandler />
                 </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <span className="inline-block w-3 h-3 bg-red-500 rounded-full"></span>
-                  <span>Not authenticated</span>
-                </div>
-              )}
-            </div>
-            
-            <div>
-              <h3 className="font-medium mb-2">Local Storage Token</h3>
-              <div className="p-3 bg-muted rounded-md text-sm font-mono">
-                {localStorage.getItem('auth_token') ? (
-                  <>
-                    <p className="mb-1">Token found:</p>
-                    <p className="truncate">{localStorage.getItem('auth_token')}</p>
-                  </>
-                ) : (
-                  <p>No token in localStorage</p>
-                )}
-              </div>
-            </div>
-          </div>
-        </Card>
-      </div>
-    </div>
+              </ErrorBoundary>
+              <Toaster />
+            </MarketplaceProviders>
+          </MessagingProviders>
+        </SocialProviders>
+      </AuthProvider>
+    </CoreProviders>
   );
 }
+
 
 export default App;

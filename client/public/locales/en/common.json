@@ -224,6 +224,7 @@
     "name": "Full Name",
     "bio": "Bio (optional)",
     "forgot_password": "Forgot Password?",
+    "forgot_password_link": "Forgot password? Click here to reset",
     "no_account": "Don't have an account?",
     "have_account": "Already have an account?",
     "sign_up": "Sign Up",
@@ -419,5 +420,123 @@
     "settings": "Account Settings",
     "become_vendor": "Become a Vendor",
     "vendor_dashboard": "Vendor Dashboard"
+  },
+  "giftcards": {
+    "title": "Gift cards",
+    "page_title": "Dedw3n Gift Cards",
+    "description": "Share with your loved ones, family, and friends. Keep it stored on your electronic devices, in your email, or print gift cards.",
+    "purchase": "Purchase Gift Card",
+    "redeem": "Redeem Gift Card",
+    "check_balance": "How Can I View My Gift Card Balance?",
+    "my_gift_cards": "My Gift Cards",
+    "give_gift": "Give the Gift of Choice",
+    "perfect_gift": "You can print the gift card wherever you like and share it instantly",
+    "instant_delivery": "Instant digital delivery available",
+    "no_expiry": "No, your Gift Card has no expiry date.",
+    "amounts": {
+      "select_amount": "Select Amount",
+      "custom_amount": "Custom Amount",
+      "minimum": "Minimum $10",
+      "maximum": "Maximum $1000",
+      "currency": "USD"
+    },
+    "types": {
+      "digital": "Physical Gift Cards are not available currently.",
+      "physical": "Can I have a physical Gift Card?",
+      "email": "Email Delivery",
+      "mail": "Mail Delivery"
+    },
+    "purchase_form": {
+      "recipient_name": "Recipient Name",
+      "recipient_email": "Recipient Email",
+      "sender_name": "Your Name",
+      "personal_message": "Personal Message",
+      "message_placeholder": "Write a personal message...",
+      "delivery_date": "Delivery Date",
+      "delivery_method": "Delivery Method",
+      "preview": "Preview Gift Card",
+      "add_to_cart": "Add to Cart",
+      "buy_now": "Buy Now"
+    },
+    "redeem_form": {
+      "gift_card_code": "Gift Card Code",
+      "code_placeholder": "Enter your gift card code",
+      "redeem_button": "Redeem Gift Card",
+      "apply_to_order": "Apply to Current Order",
+      "check_balance_button": "Check Balance Only"
+    },
+    "balance": {
+      "current_balance": "Current Balance",
+      "remaining_balance": "Remaining Balance",
+      "used_amount": "Used Amount",
+      "transaction_history": "scroll down to \"What's My Gift Card Balance\" section below.",
+      "date_purchased": "Date Purchased",
+      "date_expires": "Expires",
+      "never_expires": "Never"
+    },
+    "status": {
+      "active": "Active",
+      "redeemed": "Fully Redeemed",
+      "expired": "Expired",
+      "pending": "Pending",
+      "cancelled": "Cancelled"
+    },
+    "messages": {
+      "purchase_success": "Gift card purchased successfully!",
+      "redeem_success": "Gift card redeemed successfully!",
+      "balance_applied": "Gift card balance applied to your order",
+      "invalid_code": "Invalid gift card code",
+      "expired_card": "This gift card has expired",
+      "already_redeemed": "This gift card has already been fully redeemed",
+      "insufficient_balance": "Insufficient gift card balance",
+      "email_sent": "Gift card email sent successfully",
+      "code_required": "Please enter a gift card code"
+    },
+    "terms": {
+      "title": "Terms & Conditions",
+      "no_refund": "Gift cards are non-refundable",
+      "no_exchange": "Gift cards cannot be exchanged for cash",
+      "marketplace_only": "Where Can I Use My Gift Card?",
+      "marketplace_only_answer": "You can use the card only on our (web) app Dedw3n.com.",
+      "fraud_protection": "Lost or stolen cards cannot be replaced",
+      "balance_check": "Check your balance anytime on this page"
+    },
+    "common": {
+      "amount": "Amount",
+      "code": "Code",
+      "date": "Date",
+      "status": "Status",
+      "actions": "Actions",
+      "view": "View",
+      "print": "Print",
+      "email": "Email",
+      "copy_code": "Copy Code",
+      "download": "Download",
+      "share": "Share"
+    },
+    "help": {
+      "how_to_use": "How to Use Gift Cards",
+      "purchase_guide": "How to Purchase",
+      "redeem_guide": "How to Redeem",
+      "contact_support": "Contact Support",
+      "faq": "Does My Gift Card Expire?"
+    },
+    "designs": {
+      "classic_blue": "Classic Blue",
+      "elegant_gold": "Elegant Gold",
+      "festive_red": "Festive Red",
+      "modern_purple": "Modern Purple",
+      "nature_green": "Nature Green",
+      "luxury_black": "Luxury Black",
+      "premium_silver": "Premium Silver",
+      "exclusive_diamond": "Exclusive Diamond",
+      "customize": "Customize"
+    },
+    "validation": {
+      "card_number_16_digits": "Card number must be 16 digits",
+      "pin_4_digits": "PIN must be 4 digits",
+      "enter_amount": "Enter amount",
+      "continue": "Continue"
+    }
   }
 }

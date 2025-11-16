@@ -5,12 +5,23 @@ interface CacheEntry {
   ttl: number;
 }
 
+interface QueryCacheStats {
+  size: number;
+  hits: number;
+  misses: number;
+  hitRate: number;
+}
+
 class QueryCache {
   private static instance: QueryCache;
   private cache = new Map<string, CacheEntry>();
   private readonly DEFAULT_TTL = 5 * 60 * 1000; // 5 minutes
   private readonly SHORT_TTL = 30 * 1000; // 30 seconds
   private readonly LONG_TTL = 30 * 60 * 1000; // 30 minutes
+  private stats = {
+    hits: 0,
+    misses: 0
+  };
 
   static getInstance(): QueryCache {
     if (!QueryCache.instance) {
@@ -36,14 +47,19 @@ class QueryCache {
 
   get(key: string): any | null {
     const entry = this.cache.get(key);
-    if (!entry) return null;
+    if (!entry) {
+      this.stats.misses++;
+      return null;
+    }
 
     const now = Date.now();
     if (now - entry.timestamp > entry.ttl) {
       this.cache.delete(key);
+      this.stats.misses++;
       return null;
     }
 
+    this.stats.hits++;
     return entry.data;
   }
 
@@ -57,6 +73,19 @@ class QueryCache {
 
   clear(): void {
     this.cache.clear();
+    this.stats = { hits: 0, misses: 0 };
+  }
+
+  getStats(): QueryCacheStats {
+    const total = this.stats.hits + this.stats.misses;
+    const hitRate = total > 0 ? this.stats.hits / total : 0;
+    
+    return {
+      size: this.cache.size,
+      hits: this.stats.hits,
+      misses: this.stats.misses,
+      hitRate: Math.round(hitRate * 10000) / 100
+    };
   }
 
   private cleanup(): void {
@@ -104,3 +133,7 @@ class QueryCache {
 }
 
 export const queryCache = QueryCache.getInstance();
+
+export function getQueryCacheStats(): QueryCacheStats {
+  return queryCache.getStats();
+}

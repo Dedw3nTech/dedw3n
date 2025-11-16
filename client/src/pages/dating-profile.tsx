@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
+import { useMasterTranslation } from "@/hooks/use-master-translation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -53,6 +53,7 @@ interface SearchResult {
 
 function GiftsSelection({ selectedGifts, onGiftsChange }: GiftsSelectionProps) {
   const { formatPriceFromGBP } = useCurrency();
+  const { translateText } = useMasterTranslation();
   const [showSearchModal, setShowSearchModal] = useState(false);
   
   // Fetch selected gifts to display
@@ -79,17 +80,20 @@ function GiftsSelection({ selectedGifts, onGiftsChange }: GiftsSelectionProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-600">
-          Select at least 3 gifts to showcase on your profile
+          {translateText("Select at least 3 gifts to showcase on your profile")}
         </p>
         <Badge variant={isValidSelection ? "default" : "secondary"}>
-          {selectedCount}/3+ selected
+          {selectedCount}/3+ {translateText("selected")}
         </Badge>
       </div>
 
       {!isValidSelection && selectedCount > 0 && (
         <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <p className="text-sm text-yellow-700">
-            Please select at least {3 - selectedCount} more gift{3 - selectedCount !== 1 ? 's' : ''} to complete this section.
+            {3 - selectedCount === 1 
+              ? translateText("Please select at least 1 more gift to complete this section")
+              : translateText(`Please select at least ${3 - selectedCount} more gifts to complete this section`)
+            }
           </p>
         </div>
       )}
@@ -102,7 +106,7 @@ function GiftsSelection({ selectedGifts, onGiftsChange }: GiftsSelectionProps) {
           variant="outline"
         >
           <Search className="h-4 w-4" />
-          Search for Gifts
+          {translateText("Search for Gifts")}
           <Plus className="h-4 w-4" />
         </Button>
       </div>
@@ -111,7 +115,7 @@ function GiftsSelection({ selectedGifts, onGiftsChange }: GiftsSelectionProps) {
       {selectedGiftsLoading && selectedGifts.length > 0 && (
         <div className="flex items-center justify-center py-8">
           <Loader2 className="h-6 w-6 animate-spin" />
-          <span className="ml-2">Loading selected gifts...</span>
+          <span className="ml-2">{translateText("Loading selected gifts...")}</span>
         </div>
       )}
 
@@ -155,9 +159,9 @@ function GiftsSelection({ selectedGifts, onGiftsChange }: GiftsSelectionProps) {
       {selectedGifts.length === 0 && (
         <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
           <Gift className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500 mb-2">No gifts selected yet</p>
+          <p className="text-gray-500 mb-2">{translateText("No gifts selected yet")}</p>
           <p className="text-sm text-gray-400">
-            Use the search button above to find and add gifts to your profile
+            {translateText("Use the search button above to find and add gifts to your profile")}
           </p>
         </div>
       )}
@@ -310,7 +314,7 @@ const getAccessibleDatingRooms = (incomeRange: string): string[] => {
 };
 
 export default function DatingProfilePage() {
-  const { t } = useTranslation();
+  const { translateText } = useMasterTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -437,13 +441,13 @@ export default function DatingProfilePage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/dating-profile"] });
       toast({
-        title: "Success",
-        description: "Dating profile updated successfully!",
+        title: translateText("Success"),
+        description: translateText("Dating profile updated successfully"),
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
+        title: translateText("Error"),
         description: error.message,
         variant: "destructive",
       });
@@ -454,8 +458,8 @@ export default function DatingProfilePage() {
   const handleSaveProfile = () => {
     if (!displayName.trim()) {
       toast({
-        title: "Error",
-        description: "Display name is required",
+        title: translateText("Error"),
+        description: translateText("Display name is required"),
         variant: "destructive",
       });
       return;
@@ -463,8 +467,8 @@ export default function DatingProfilePage() {
 
     if (selectedGifts.length < 3) {
       toast({
-        title: "Error",
-        description: "Please select at least 3 gifts to showcase on your profile",
+        title: translateText("Error"),
+        description: translateText("Please select at least 3 gifts to showcase on your profile"),
         variant: "destructive",
       });
       return;
@@ -472,8 +476,8 @@ export default function DatingProfilePage() {
 
     if (profileImages.length < 3) {
       toast({
-        title: "Error",
-        description: "Please upload at least 3 photos for your dating profile",
+        title: translateText("Error"),
+        description: translateText("Please upload at least 3 photos for your dating profile"),
         variant: "destructive",
       });
       return;
@@ -584,8 +588,8 @@ export default function DatingProfilePage() {
       
     } catch (error) {
       toast({
-        title: "Navigation Error",
-        description: "Failed to navigate to payment gateway. Please try again.",
+        title: translateText("Error"),
+        description: translateText("Failed to navigate to payment gateway. Please try again"),
         variant: "destructive",
       });
     } finally {
@@ -598,8 +602,8 @@ export default function DatingProfilePage() {
     // First validate profile completeness
     if (!displayName.trim()) {
       toast({
-        title: "Error",
-        description: "Display name is required",
+        title: translateText("Error"),
+        description: translateText("Display name is required"),
         variant: "destructive",
       });
       return;
@@ -607,8 +611,8 @@ export default function DatingProfilePage() {
 
     if (selectedGifts.length < 3) {
       toast({
-        title: "Error",
-        description: "Please select at least 3 gifts to showcase on your profile",
+        title: translateText("Error"),
+        description: translateText("Please select at least 3 gifts to showcase on your profile"),
         variant: "destructive",
       });
       return;
@@ -616,8 +620,8 @@ export default function DatingProfilePage() {
 
     if (profileImages.length < 3) {
       toast({
-        title: "Error",
-        description: "Please upload at least 3 photos for your dating profile",
+        title: translateText("Error"),
+        description: translateText("Please upload at least 3 photos for your dating profile"),
         variant: "destructive",
       });
       return;
@@ -625,8 +629,8 @@ export default function DatingProfilePage() {
 
     if (!income) {
       toast({
-        title: "Error",
-        description: "Please select your income range to determine your tier",
+        title: translateText("Error"),
+        description: translateText("Please select your income range to determine your tier"),
         variant: "destructive",
       });
       return;
@@ -650,8 +654,8 @@ export default function DatingProfilePage() {
 
     if (requiresProof && incomeDocuments.length === 0) {
       toast({
-        title: "Proof of Income Required",
-        description: `As a ${tierName} applicant, you must provide proof of income before your application can be approved. Please upload documentation such as payslips, tax returns, or bank statements.`,
+        title: translateText("Proof of Income Required"),
+        description: `${translateText("As a")} ${tierName} ${translateText("applicant, you must provide proof of income before your application can be approved. Please upload documentation such as payslips, tax returns, or bank statements")}`,
         variant: "destructive",
       });
       return;
@@ -691,8 +695,8 @@ export default function DatingProfilePage() {
       await updateProfileMutation.mutateAsync(profileData);
       
       toast({
-        title: "Application Approved!",
-        description: `Your ${tierName} dating profile has been automatically approved and activated. You can now access the dating rooms.`,
+        title: translateText("Application Approved"),
+        description: `${translateText("Your")} ${tierName} ${translateText("dating profile has been automatically approved and activated. You can now access the dating rooms")}`,
       });
 
       // Update local state
@@ -700,8 +704,8 @@ export default function DatingProfilePage() {
 
     } catch (error) {
       toast({
-        title: "Application Error",
-        description: "Failed to submit application. Please try again.",
+        title: translateText("Error"),
+        description: translateText("Failed to submit application. Please try again"),
         variant: "destructive",
       });
     } finally {
@@ -721,8 +725,8 @@ export default function DatingProfilePage() {
       
       if (newFiles.length !== files.length) {
         toast({
-          title: "Invalid File Type",
-          description: "Only PDF, JPG, and PNG files are allowed for income verification.",
+          title: translateText("Invalid File Type"),
+          description: translateText("Only PDF, JPG, and PNG files are allowed for income verification"),
           variant: "destructive",
         });
       }
@@ -756,13 +760,13 @@ export default function DatingProfilePage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8 flex items-center justify-between">
           <h1 className="text-3xl font-bold text-gray-900">
-            Dating Dashboard
+            {translateText("Dating Dashboard")}
           </h1>
           {user && (
             <Link href={`/profile/${user.id}`}>
               <Button variant="outline" className="flex items-center gap-2 text-blue-600 border-blue-600 hover:bg-blue-50">
                 <User className="h-4 w-4" />
-                View My Dating Profile
+                {translateText("View My Dating Profile")}
               </Button>
             </Link>
           )}
@@ -774,16 +778,16 @@ export default function DatingProfilePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 {isActive ? <Eye className="h-5 w-5 text-green-500" /> : <EyeOff className="h-5 w-5 text-gray-400" />}
-                Profile Status
+                {translateText("Profile Status")}
               </CardTitle>
 
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <Label>Activate Dating Profile</Label>
+                  <Label>{translateText("Activate Dating Profile")}</Label>
                   <p className="text-sm text-gray-500">
-                    {isActive ? "Your profile is visible to others" : "Your profile is not active"}
+                    {isActive ? translateText("Your profile is visible to others") : translateText("Your profile is not active")}
                   </p>
                 </div>
                 <Switch
@@ -794,9 +798,9 @@ export default function DatingProfilePage() {
               
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <Label>Add Open To Badge Button On Your Wall</Label>
+                  <Label>{translateText("Add Open To Badge Button On Your Wall")}</Label>
                   <p className="text-sm text-gray-500">
-                    {showOnWall ? "Dating button will appear on your wall" : "Dating button hidden from wall"}
+                    {showOnWall ? translateText("Dating button will appear on your wall") : translateText("Dating button hidden from wall")}
                   </p>
                 </div>
                 <Switch
@@ -812,7 +816,7 @@ export default function DatingProfilePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
-                Dating Room
+                {translateText("Dating Room")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -827,9 +831,9 @@ export default function DatingProfilePage() {
                   onClick={() => processDatingRoomPayment("normal")}
                 >
                   <div className="text-center space-y-2">
-                    <h3 className="font-semibold text-lg">Normal</h3>
-                    <p className="text-2xl font-bold">Free</p>
-                    <p className="text-sm text-gray-600">Basic dating features</p>
+                    <h3 className="font-semibold text-lg">{translateText("Normal")}</h3>
+                    <p className="text-2xl font-bold">{translateText("Free")}</p>
+                    <p className="text-sm text-gray-600">{translateText("Basic dating features")}</p>
                   </div>
                 </div>
 
@@ -843,14 +847,14 @@ export default function DatingProfilePage() {
                   onClick={() => processDatingRoomPayment("vip")}
                 >
                   <div className="text-center space-y-2">
-                    <h3 className="font-semibold text-lg">VIP</h3>
+                    <h3 className="font-semibold text-lg">{translateText("VIP")}</h3>
                     <p className="text-2xl font-bold">{formatPriceFromGBP(199.99)}</p>
-                    <p className="text-xs text-gray-500">/ month</p>
-                    <p className="text-sm text-gray-600">For users who make over {formatPriceFromGBP(150000)} per year</p>
+                    <p className="text-xs text-gray-500">{translateText("/ month")}</p>
+                    <p className="text-sm text-gray-600">{translateText("For users who make over")} {formatPriceFromGBP(150000)} {translateText("per year")}</p>
                     {isProcessingPayment && datingRoomTier === "vip" && (
                       <div className="flex items-center justify-center mt-2">
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        <span className="text-xs">Processing...</span>
+                        <span className="text-xs">{translateText("Processing...")}</span>
                       </div>
                     )}
                   </div>
@@ -866,14 +870,14 @@ export default function DatingProfilePage() {
                   onClick={() => processDatingRoomPayment("vvip")}
                 >
                   <div className="text-center space-y-2">
-                    <h3 className="font-semibold text-lg">VVIP</h3>
+                    <h3 className="font-semibold text-lg">{translateText("VVIP")}</h3>
                     <p className="text-2xl font-bold">{formatPriceFromGBP(1999.99)}</p>
-                    <p className="text-xs text-gray-500">/ month</p>
-                    <p className="text-sm text-gray-600">For users who make over {formatPriceFromGBP(1500000)} per year</p>
+                    <p className="text-xs text-gray-500">{translateText("/ month")}</p>
+                    <p className="text-sm text-gray-600">{translateText("For users who make over")} {formatPriceFromGBP(1500000)} {translateText("per year")}</p>
                     {isProcessingPayment && datingRoomTier === "vvip" && (
                       <div className="flex items-center justify-center mt-2">
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        <span className="text-xs">Processing...</span>
+                        <span className="text-xs">{translateText("Processing...")}</span>
                       </div>
                     )}
                   </div>
@@ -887,22 +891,22 @@ export default function DatingProfilePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
-                Basic Information
+                {translateText("Basic Information")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="displayName">Display Name *</Label>
+                  <Label htmlFor="displayName">{translateText("Display Name *")}</Label>
                   <Input
                     id="displayName"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="How others will see your name"
+                    placeholder={translateText("How others will see your name")}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="age">Age *</Label>
+                  <Label htmlFor="age">{translateText("Age *")}</Label>
                   <Input
                     id="age"
                     type="number"
@@ -915,103 +919,103 @@ export default function DatingProfilePage() {
                   />
                   {user && user.dateOfBirth && (
                     <p className="text-xs text-black">
-                      Age automatically calculated from your date of birth in profile settings
+                      {translateText("Age automatically calculated from your date of birth in profile settings")}
                     </p>
                   )}
                   {(!user || !user.dateOfBirth) && (
                     <p className="text-xs text-amber-600">
-                      Add your date of birth in profile settings for automatic age calculation
+                      {translateText("Add your date of birth in profile settings for automatic age calculation")}
                     </p>
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="gender">Gender</Label>
+                  <Label htmlFor="gender">{translateText("Gender")}</Label>
                   <Select 
                     value={gender} 
                     onValueChange={setGender}
                     disabled={!!(user && user.gender)}
                   >
                     <SelectTrigger className={user && user.gender ? "bg-gray-50 cursor-not-allowed" : ""}>
-                      <SelectValue placeholder="Select your gender" />
+                      <SelectValue placeholder={translateText("Select your gender")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      <SelectItem value="male">{translateText("Male")}</SelectItem>
+                      <SelectItem value="female">{translateText("Female")}</SelectItem>
+                      <SelectItem value="other">{translateText("Other")}</SelectItem>
                     </SelectContent>
                   </Select>
                   {user && user.gender && gender === user.gender && (
                     <p className="text-xs text-black">
-                      Auto-filled from your profile settings
+                      {translateText("Auto-filled from your profile settings")}
                     </p>
                   )}
                   {(!user || !user.gender) && (
                     <p className="text-xs text-amber-600">
-                      Add your gender in profile settings for automatic fill
+                      {translateText("Add your gender in profile settings for automatic fill")}
                     </p>
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="sexualOrientation">Sexual Orientation</Label>
+                  <Label htmlFor="sexualOrientation">{translateText("Sexual Orientation")}</Label>
                   <Select value={sexualOrientation} onValueChange={setSexualOrientation}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select your sexual orientation" />
+                      <SelectValue placeholder={translateText("Select your sexual orientation")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="heterosexual">Heterosexual</SelectItem>
-                      <SelectItem value="asexual">Asexual</SelectItem>
-                      <SelectItem value="autosexual">Autosexual</SelectItem>
-                      <SelectItem value="bisexual">Bisexual</SelectItem>
-                      <SelectItem value="demisexual">Demisexual</SelectItem>
-                      <SelectItem value="gray-asexual">Gray-asexual</SelectItem>
-                      <SelectItem value="homosexual">Homosexual</SelectItem>
-                      <SelectItem value="pansexual">Pansexual</SelectItem>
-                      <SelectItem value="queer">Queer</SelectItem>
+                      <SelectItem value="heterosexual">{translateText("Heterosexual")}</SelectItem>
+                      <SelectItem value="asexual">{translateText("Asexual")}</SelectItem>
+                      <SelectItem value="autosexual">{translateText("Autosexual")}</SelectItem>
+                      <SelectItem value="bisexual">{translateText("Bisexual")}</SelectItem>
+                      <SelectItem value="demisexual">{translateText("Demisexual")}</SelectItem>
+                      <SelectItem value="gray-asexual">{translateText("Gray-asexual")}</SelectItem>
+                      <SelectItem value="homosexual">{translateText("Homosexual")}</SelectItem>
+                      <SelectItem value="pansexual">{translateText("Pansexual")}</SelectItem>
+                      <SelectItem value="queer">{translateText("Queer")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="height">Height</Label>
+                  <Label htmlFor="height">{translateText("Height")}</Label>
                   <Select value={height} onValueChange={setHeight}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select your height" />
+                      <SelectValue placeholder={translateText("Select your height")} />
                     </SelectTrigger>
                     <SelectContent>
                       {HEIGHT_OPTIONS.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
-                          {option.label}
+                          {translateText(option.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="incomeRange">Income Range</Label>
+                  <Label htmlFor="incomeRange">{translateText("Income Range")}</Label>
                   <Select value={incomeRange} onValueChange={setIncomeRange}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select your income range" />
+                      <SelectValue placeholder={translateText("Select your income range")} />
                     </SelectTrigger>
                     <SelectContent>
                       {INCOME_TIERS.map((tier) => (
                         <SelectItem key={tier.value} value={tier.value}>
-                          {tier.label}
+                          {translateText(tier.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-gray-500">
-                    Income tier determines dating room access
+                    {translateText("Income tier determines dating room access")}
                   </p>
                   {incomeRange && (
                     <div className="text-xs bg-blue-50 p-2 rounded">
-                      <p className="font-medium text-blue-800">Dating Room Access:</p>
+                      <p className="font-medium text-blue-800">{translateText("Dating Room Access:")}</p>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {getAccessibleDatingRooms(incomeRange).map((room) => (
                           <span 
                             key={room} 
                             className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs"
                           >
-                            {room.charAt(0).toUpperCase() + room.slice(1)}
+                            {translateText(room.charAt(0).toUpperCase() + room.slice(1))}
                           </span>
                         ))}
                       </div>
@@ -1023,16 +1027,16 @@ export default function DatingProfilePage() {
 
 
               <div className="space-y-2">
-                <Label htmlFor="bio">About you</Label>
+                <Label htmlFor="bio">{translateText("About you")}</Label>
                 <Textarea
                   id="bio"
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  placeholder="Tell others about yourself..."
+                  placeholder={translateText("Tell others about yourself...")}
                   rows={4}
                   maxLength={500}
                 />
-                <p className="text-xs text-gray-500">{bio.length}/500 characters</p>
+                <p className="text-xs text-gray-500">{bio.length}/500 {translateText("characters")}</p>
               </div>
             </CardContent>
           </Card>
@@ -1040,52 +1044,52 @@ export default function DatingProfilePage() {
           {/* Geographic Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Geographic Information</CardTitle>
+              <CardTitle>{translateText("Geographic Information")}</CardTitle>
               <CardDescription>
-                Help others find you based on your location preferences
+                {translateText("Help others find you based on your location preferences")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="country">Country</Label>
+                  <Label htmlFor="country">{translateText("Country")}</Label>
                   <Input
                     id="country"
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
-                    placeholder="e.g., United States"
+                    placeholder={translateText("e.g., United States")}
                   />
                   {user && user.country && country === user.country && (
                     <p className="text-xs text-black">
-                      Auto-filled from your profile
+                      {translateText("Auto-filled from your profile")}
                     </p>
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="region">Region</Label>
+                  <Label htmlFor="region">{translateText("Region")}</Label>
                   <Input
                     id="region"
                     value={region}
                     onChange={(e) => setRegion(e.target.value)}
-                    placeholder="e.g., California"
+                    placeholder={translateText("e.g., California")}
                   />
                   {user && user.region && region === user.region && (
                     <p className="text-xs text-black">
-                      Auto-filled from your profile
+                      {translateText("Auto-filled from your profile")}
                     </p>
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="city">City</Label>
+                  <Label htmlFor="city">{translateText("City")}</Label>
                   <Input
                     id="city"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    placeholder="e.g., Los Angeles"
+                    placeholder={translateText("e.g., Los Angeles")}
                   />
                   {user && user.city && city === user.city && (
                     <p className="text-xs text-black">
-                      Auto-filled from your profile
+                      {translateText("Auto-filled from your profile")}
                     </p>
                   )}
                 </div>
@@ -1096,38 +1100,38 @@ export default function DatingProfilePage() {
           {/* Demographic Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Demographic Information</CardTitle>
+              <CardTitle>{translateText("Demographic Information")}</CardTitle>
               <CardDescription>
-                Share demographic details to help with better matching
+                {translateText("Share demographic details to help with better matching")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="tribe">Ethnicity</Label>
+                  <Label htmlFor="tribe">{translateText("Ethnicity")}</Label>
                   <Select value={tribe} onValueChange={setTribe}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select your ethnicity" />
+                      <SelectValue placeholder={translateText("Select your ethnicity")} />
                     </SelectTrigger>
                     <SelectContent>
                       {ETHNICITY_OPTIONS.map((ethnicity) => (
                         <SelectItem key={ethnicity} value={ethnicity}>
-                          {ethnicity}
+                          {translateText(ethnicity)}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="roots">Roots</Label>
+                  <Label htmlFor="roots">{translateText("Roots")}</Label>
                   <Select value={roots} onValueChange={setRoots}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select your country of origin" />
+                      <SelectValue placeholder={translateText("Select your country of origin")} />
                     </SelectTrigger>
                     <SelectContent>
                       {COUNTRIES.sort().map((country) => (
                         <SelectItem key={country} value={country}>
-                          {country}
+                          {translateText(country)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1135,15 +1139,15 @@ export default function DatingProfilePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="language">Primary Language</Label>
+                  <Label htmlFor="language">{translateText("Primary Language")}</Label>
                   <Select value={language} onValueChange={setLanguage}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select your primary language" />
+                      <SelectValue placeholder={translateText("Select your primary language")} />
                     </SelectTrigger>
                     <SelectContent>
                       {LANGUAGE_OPTIONS.sort().map((lang) => (
                         <SelectItem key={lang} value={lang}>
-                          {lang}
+                          {translateText(lang)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1151,15 +1155,15 @@ export default function DatingProfilePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="secondaryLanguage">Secondary Language</Label>
+                  <Label htmlFor="secondaryLanguage">{translateText("Secondary Language")}</Label>
                   <Select value={secondaryLanguage} onValueChange={setSecondaryLanguage}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select your secondary language" />
+                      <SelectValue placeholder={translateText("Select your secondary language")} />
                     </SelectTrigger>
                     <SelectContent>
                       {LANGUAGE_OPTIONS.sort().map((lang) => (
                         <SelectItem key={lang} value={lang}>
-                          {lang}
+                          {translateText(lang)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1167,15 +1171,15 @@ export default function DatingProfilePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="education">Education Level</Label>
+                  <Label htmlFor="education">{translateText("Education Level")}</Label>
                   <Select value={education} onValueChange={setEducation}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select your education level" />
+                      <SelectValue placeholder={translateText("Select your education level")} />
                     </SelectTrigger>
                     <SelectContent>
                       {EDUCATION_LEVELS.map((level) => (
                         <SelectItem key={level} value={level}>
-                          {level}
+                          {translateText(level)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1188,9 +1192,9 @@ export default function DatingProfilePage() {
           {/* Interests */}
           <Card>
             <CardHeader>
-              <CardTitle>Interests</CardTitle>
+              <CardTitle>{translateText("Interests")}</CardTitle>
               <CardDescription>
-                Add up to 10 interests to help others find you
+                {translateText("Add up to 10 interests to help others find you")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1201,7 +1205,7 @@ export default function DatingProfilePage() {
                     variant="secondary"
                     className="flex items-center gap-1"
                   >
-                    {interest}
+                    {translateText(interest)}
                     <X
                       className="h-3 w-3 cursor-pointer"
                       onClick={() => removeInterest(interest)}
@@ -1213,12 +1217,12 @@ export default function DatingProfilePage() {
               <div className="flex gap-2">
                 <Select value={newInterest} onValueChange={setNewInterest}>
                   <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Add an interest" />
+                    <SelectValue placeholder={translateText("Add an interest")} />
                   </SelectTrigger>
                   <SelectContent>
                     {INTEREST_OPTIONS.filter(option => !interests.includes(option)).map((option) => (
                       <SelectItem key={option} value={option}>
-                        {option}
+                        {translateText(option)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -1228,12 +1232,12 @@ export default function DatingProfilePage() {
                   disabled={!newInterest || interests.includes(newInterest) || interests.length >= 10}
                   variant="outline"
                 >
-                  Add
+                  {translateText("Add")}
                 </Button>
               </div>
               
               {interests.length >= 10 && (
-                <p className="text-sm text-amber-600">You can add up to 10 interests</p>
+                <p className="text-sm text-amber-600">{translateText("You can add up to 10 interests")}</p>
               )}
             </CardContent>
           </Card>
@@ -1241,19 +1245,19 @@ export default function DatingProfilePage() {
           {/* Dating Preferences */}
           <Card>
             <CardHeader>
-              <CardTitle>Dating Preferences</CardTitle>
+              <CardTitle>{translateText("Dating Preferences")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="relationshipType">Looking For</Label>
+                <Label htmlFor="relationshipType">{translateText("Looking For")}</Label>
                 <Select value={relationshipType} onValueChange={setRelationshipType}>
                   <SelectTrigger>
-                    <SelectValue placeholder="What type of relationship are you seeking?" />
+                    <SelectValue placeholder={translateText("What type of relationship are you seeking?")} />
                   </SelectTrigger>
                   <SelectContent>
                     {RELATIONSHIP_TYPES.map((type) => (
                       <SelectItem key={type.value} value={type.value}>
-                        {type.label}
+                        {translateText(type.label)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -1261,16 +1265,16 @@ export default function DatingProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="lookingFor">Ideal Partner</Label>
+                <Label htmlFor="lookingFor">{translateText("Ideal Partner")}</Label>
                 <Textarea
                   id="lookingFor"
                   value={lookingFor}
                   onChange={(e) => setLookingFor(e.target.value)}
-                  placeholder="Describe what you're looking for in a partner..."
+                  placeholder={translateText("Describe what you're looking for in a partner...")}
                   rows={3}
                   maxLength={300}
                 />
-                <p className="text-xs text-gray-500">{lookingFor.length}/300 characters</p>
+                <p className="text-xs text-gray-500">{lookingFor.length}/300 {translateText("characters")}</p>
               </div>
             </CardContent>
           </Card>
@@ -1280,10 +1284,10 @@ export default function DatingProfilePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Gift className="h-5 w-5" />
-                Gifts
+                {translateText("Gifts")}
               </CardTitle>
               <CardDescription>
-                Select at least 3 gifts from the marketplace or events to showcase on your profile
+                {translateText("Select at least 3 gifts from the marketplace or events to showcase on your profile")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1299,10 +1303,10 @@ export default function DatingProfilePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Camera className="h-5 w-5" />
-                Profile Pictures
+                {translateText("Profile Pictures")}
               </CardTitle>
               <CardDescription>
-                Upload at least 3 photos for your dating profile. First photo will be your main profile picture. Drag to reorder.
+                {translateText("Upload at least 3 photos for your dating profile. First photo will be your main profile picture. Drag to reorder.")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

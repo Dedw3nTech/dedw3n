@@ -179,22 +179,6 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
       console.log('[AUTH] Session passport data:', sessionData?.passport);
       console.log('[AUTH] Full session data:', sessionData);
       
-      // If testing mode is enabled, provide a test user for development
-      if (process.env.NODE_ENV === 'development' && req.query.test_user_id) {
-        console.log(`[AUTH] Development mode - using test user ID: ${req.query.test_user_id}`);
-        try {
-          const testUserId = parseInt(req.query.test_user_id as string);
-          const user = await storage.getUser(testUserId);
-          if (user) {
-            console.log(`[AUTH] Test user found in database: ${user.id}`);
-            req.user = user;
-            return next();
-          }
-        } catch (error) {
-          console.error('[AUTH] Error retrieving test user:', error);
-        }
-      }
-      
       if (sessionUserId) {
         console.log(`[AUTH] User ID found in session: ${sessionUserId}`);
         try {
@@ -206,20 +190,6 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
           }
         } catch (error) {
           console.error('[AUTH] Error retrieving user from session ID:', error);
-        }
-      }
-      
-      // For demo/testing purposes - auto-login with user ID 1 if in development
-      if (process.env.NODE_ENV === 'development' && req.query.auto_login === 'true') {
-        try {
-          const user = await storage.getUser(1); // User ID 1 is typically admin
-          if (user) {
-            console.log(`[AUTH] Auto-login with admin user ID: ${user.id}`);
-            req.user = user;
-            return next();
-          }
-        } catch (error) {
-          console.error('[AUTH] Error with auto-login:', error);
         }
       }
       
@@ -387,6 +357,92 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     console.error('[AUTH] Error during authentication:', error);
     return res.status(500).json({ message: 'Internal server error during authentication' });
   }
+};
+
+/**
+ * Optional authentication middleware that doesn't return 401 if not authenticated.
+ * Useful for endpoints that should work for both authenticated and unauthenticated users.
+ */
+export const optionalAuth = async (req: Request, res: Response, next: NextFunction) => {
+  console.log(`[OPTIONAL-AUTH] Processing request for ${req.method} ${req.path}`);
+  
+  // Try all the same authentication methods as isAuthenticated, but don't fail if none work
+  
+  // First: Check for client user ID header
+  const clientUserId = req.headers['x-client-user-id'];
+  if (clientUserId && typeof clientUserId === 'string') {
+    try {
+      const userId = parseInt(clientUserId);
+      const user = await storage.getUser(userId);
+      if (user) {
+        console.log(`[OPTIONAL-AUTH] Client user authenticated: ${user.username} (ID: ${user.id})`);
+        req.user = user;
+        return next();
+      }
+    } catch (error) {
+      console.error('[OPTIONAL-AUTH] Error with client user authentication:', error);
+    }
+  }
+
+  // Second: Check Passport session authentication
+  if (req.isAuthenticated && req.isAuthenticated()) {
+    if (req.user) {
+      console.log('[OPTIONAL-AUTH] Passport session authentication successful');
+      return next();
+    }
+  }
+  
+  // Fallback: Check session passport data directly
+  if (req.session && typeof (req.session as any).passport !== 'undefined' && (req.session as any).passport.user) {
+    try {
+      const userId = (req.session as any).passport.user;
+      const user = await storage.getUser(userId);
+      if (user) {
+        console.log('[OPTIONAL-AUTH] Passport session authentication successful (fallback)');
+        req.user = user;
+        return next();
+      }
+    } catch (error) {
+      console.error('[OPTIONAL-AUTH] Error with passport session authentication:', error);
+    }
+  }
+
+  // Check for stored user session
+  if (req.session && (req.session as any).userId) {
+    try {
+      const user = await storage.getUser((req.session as any).userId);
+      if (user) {
+        console.log('[OPTIONAL-AUTH] Session fallback authentication successful');
+        req.user = user;
+        return next();
+      }
+    } catch (error) {
+      console.error('[OPTIONAL-AUTH] Error with session fallback authentication:', error);
+    }
+  }
+  
+  // Third: Check JWT token authentication
+  const jwtAuthHeader = req.headers.authorization;
+  if (jwtAuthHeader && jwtAuthHeader.startsWith('Bearer ')) {
+    const token = jwtAuthHeader.substring(7);
+    try {
+      const payload = verifyToken(token);
+      if (payload) {
+        const user = await storage.getUser(payload.userId);
+        if (user) {
+          console.log(`[OPTIONAL-AUTH] JWT authentication successful: ${user.username} (ID: ${user.id})`);
+          req.user = user;
+          return next();
+        }
+      }
+    } catch (error) {
+      console.error('[OPTIONAL-AUTH] JWT authentication failed:', error);
+    }
+  }
+  
+  // No authentication found, but that's okay for optional auth
+  console.log('[OPTIONAL-AUTH] No authentication found, continuing without user');
+  next();
 };
 
 /**

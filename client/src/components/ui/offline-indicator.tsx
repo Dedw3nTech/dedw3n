@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useOfflineStore } from "@/lib/offline";
-import { useTranslation } from "react-i18next";
+import { useMasterTranslation } from "@/hooks/use-master-translation";
 import { X, Wifi, WifiOff, Cloud, ArrowUpFromLine } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -8,7 +8,7 @@ export function OfflineIndicator() {
   const { isOnline, queuedRequests } = useOfflineStore();
   const [showBanner, setShowBanner] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
-  const { t } = useTranslation();
+  const { translateText } = useMasterTranslation();
 
   // Show the banner when offline, or when there are queued requests
   useEffect(() => {
@@ -43,38 +43,30 @@ export function OfflineIndicator() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 50, opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className={`fixed bottom-0 left-0 right-0 z-50 p-4 flex items-center justify-between shadow-lg ${
-            isOnline ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" : 
-                       "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100"
-          }`}
+          className="fixed bottom-0 left-0 right-0 z-50 p-4 flex items-center justify-between shadow-lg bg-black text-white"
         >
           <div className="flex items-center space-x-3">
-            <div className="bg-white dark:bg-gray-800 p-2 rounded-full">
+            <div className="p-2 rounded-full">
               {!isOnline ? (
-                <WifiOff size={18} className="text-amber-500" />
+                <WifiOff size={18} className="text-white" />
               ) : queuedRequests.length > 0 ? (
-                <ArrowUpFromLine size={18} className="text-green-500" />
+                <ArrowUpFromLine size={18} className="text-white" />
               ) : (
-                <Wifi size={18} className="text-green-500" />
+                <Wifi size={18} className="text-white" />
               )}
             </div>
             <div>
               {!isOnline ? (
-                <p className="font-medium text-sm">
-                  {t('offline.status')}
-                  {queuedRequests.length > 0 && (
-                    <span className="ml-1">
-                      {t('offline.pending', {count: queuedRequests.length})}
-                    </span>
-                  )}
+                <p className="font-medium text-sm text-white">
+                  {translateText('You are offline')}{queuedRequests.length > 0 && ` (${queuedRequests.length})`}
                 </p>
               ) : queuedRequests.length > 0 ? (
-                <p className="font-medium text-sm">
-                  {t('offline.syncing', {count: queuedRequests.length})}
+                <p className="font-medium text-sm text-white">
+                  {translateText('Syncing offline changes...')} ({queuedRequests.length})
                 </p>
               ) : (
-                <p className="font-medium text-sm">
-                  {t('offline.back_online')}
+                <p className="font-medium text-sm text-white">
+                  {translateText('Back online')}
                 </p>
               )}
             </div>
@@ -84,7 +76,7 @@ export function OfflineIndicator() {
               setIsDismissed(true);
               setShowBanner(false);
             }}
-            className="p-1 rounded-full hover:bg-white/20 dark:hover:bg-black/20 transition-colors"
+            className="p-1 rounded-full hover:bg-white/10 transition-colors text-white"
             aria-label="Dismiss"
           >
             <X size={16} />

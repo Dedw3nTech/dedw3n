@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import TranslationCacheManager from '@/utils/TranslationCacheManager';
+import { getStoredConsent } from '@/lib/cookie-consent';
 
 // Master Translation System - Single Source of Truth
 // Consolidates all translation systems into one unified architecture
@@ -51,23 +52,24 @@ class MasterTranslationManager {
   };
 
   private readonly BATCH_DELAYS = {
-    instant: 50,   // 50ms for instant translations
-    high: 100,     // 100ms for high priority
-    normal: 200,   // 200ms for normal priority
-    low: 500       // 500ms for low priority
+    instant: 0,    // TRUE zero delay - no setTimeout, immediate execution
+    high: 5,       // Reduced from 10ms for faster response
+    normal: 25,    // Reduced from 50ms for better UX
+    low: 100       // Reduced from 200ms for better overall speed
   };
 
   private readonly BATCH_SIZES = {
-    instant: 10,   // Smaller batches for instant processing
-    high: 15,      // Medium batches for balance
-    normal: 20,    // Larger batches for efficiency
-    low: 25        // Largest batches for low priority
+    instant: 50,   // Increased from 30 for better batching efficiency
+    high: 50,      // Increased from 40 for better throughput
+    normal: 60,    // Increased from 50 for efficiency
+    low: 80        // Increased from 60 for low priority
   };
 
   private constructor() {
     this.loadFromStorage();
     this.setupCleanupInterval();
     this.setupStoragePersistence();
+    this.setupCookieConsentListener();
   }
 
   static getInstance(): MasterTranslationManager {
@@ -249,9 +251,15 @@ class MasterTranslationManager {
     if (this.isProcessing.get(queueKey)) return;
 
     const delay = this.BATCH_DELAYS[priority];
-    setTimeout(() => {
-      this.processPendingBatch(queueKey);
-    }, delay);
+    
+    // Process instant priority TRULY immediately - no setTimeout, no microtask queue
+    if (priority === 'instant') {
+      void this.processPendingBatch(queueKey);
+    } else {
+      setTimeout(() => {
+        this.processPendingBatch(queueKey);
+      }, delay);
+    }
   }
 
   private scheduleBatchProcessing(queueKey: string, priority: TranslationPriority): void {
@@ -262,11 +270,16 @@ class MasterTranslationManager {
     }
 
     const delay = this.BATCH_DELAYS[priority];
-    const timer = setTimeout(() => {
-      this.processBatch(queueKey);
-    }, delay);
-
-    this.batchTimers.set(queueKey, timer);
+    
+    // Process instant priority TRULY immediately - no setTimeout, direct execution
+    if (priority === 'instant') {
+      void this.processBatch(queueKey);
+    } else {
+      const timer = setTimeout(() => {
+        this.processBatch(queueKey);
+      }, delay);
+      this.batchTimers.set(queueKey, timer);
+    }
   }
 
   private async processPendingBatch(queueKey: string): Promise<void> {
@@ -422,6 +435,12 @@ class MasterTranslationManager {
   }
 
   private loadFromStorage(): void {
+    // Only load from localStorage if preferences cookies are allowed
+    if (!this.canUseLocalStorage()) {
+      console.log('[Master Translation] Skipping localStorage load - preferences cookies not allowed');
+      return;
+    }
+
     try {
       const stored = localStorage.getItem('masterTranslationCache');
       if (stored) {
@@ -448,10 +467,16 @@ class MasterTranslationManager {
 
     this.saveTimer = setTimeout(() => {
       this.saveToStorage();
-    }, 2000); // Save after 2 seconds of inactivity
+    }, 5000); // Save after 5 seconds of inactivity - reduced write frequency
   }
 
   private saveToStorage(): void {
+    // Only save to localStorage if preferences cookies are allowed
+    if (!this.canUseLocalStorage()) {
+      console.log('[Master Translation] Skipping localStorage save - preferences cookies not allowed');
+      return;
+    }
+
     try {
       const data = {
         entries: Array.from(this.cache.entries()),
@@ -492,6 +517,52 @@ class MasterTranslationManager {
 
     if (cleaned > 0) {
       console.log(`[Master Translation] Cleaned ${cleaned} expired cache entries`);
+    }
+  }
+
+  // Cookie preferences integration
+  private canUseLocalStorage(): boolean {
+    try {
+      const consent = getStoredConsent();
+      // Allow localStorage usage only if user has consented to preferences cookies
+      const canUse = consent?.preferences === true;
+      console.log(`[Master Translation] LocalStorage usage: ${canUse ? 'allowed' : 'denied'} (preferences consent: ${consent?.preferences})`);
+      return canUse;
+    } catch (error) {
+      console.warn('[Master Translation] Error checking cookie preferences, defaulting to memory-only:', error);
+      return false;
+    }
+  }
+
+  private setupCookieConsentListener(): void {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('cookie-consent-changed', (event: Event) => {
+        const customEvent = event as CustomEvent;
+        const consent = customEvent.detail;
+        
+        // Guard against missing detail payload
+        if (!consent || typeof consent !== 'object') {
+          console.warn('[Master Translation] Invalid consent payload received:', consent);
+          return;
+        }
+        
+        console.log('[Master Translation] Cookie consent changed:', consent);
+        
+        // If preferences are now disabled, clear localStorage and switch to memory-only
+        if (!consent.preferences) {
+          this.clearStorageOnly();
+          console.log('[Master Translation] Preferences disabled, cleared localStorage cache');
+        }
+      });
+    }
+  }
+
+  private clearStorageOnly(): void {
+    try {
+      localStorage.removeItem('masterTranslationCache');
+      console.log('[Master Translation] Cleared localStorage cache');
+    } catch (error) {
+      console.warn('[Master Translation] Failed to clear localStorage cache:', error);
     }
   }
 
@@ -542,21 +613,68 @@ class MasterTranslationManager {
     }
   }
 
+  // Preload common UI strings for instant translation
+  async preloadCommonTranslations(commonTexts: string[], targetLanguage: string): Promise<void> {
+    if (!targetLanguage || targetLanguage === 'EN') return;
+    
+    const needsTranslation: string[] = [];
+    
+    // Check which texts are not already cached
+    commonTexts.forEach(text => {
+      const cacheKey = this.getCacheKey(text, targetLanguage);
+      if (!this.getCachedTranslation(cacheKey)) {
+        needsTranslation.push(text);
+      }
+    });
+    
+    if (needsTranslation.length === 0) {
+      console.log(`[Master Translation] All ${commonTexts.length} common texts already cached for ${targetLanguage}`);
+      return;
+    }
+    
+    console.log(`[Master Translation] Preloading ${needsTranslation.length} common texts for ${targetLanguage}`);
+    
+    // Use batch translation with instant priority
+    try {
+      const translations = await this.performBatchTranslation(needsTranslation, targetLanguage, 'instant');
+      
+      // Cache all translations with instant priority
+      needsTranslation.forEach(text => {
+        const translated = translations[text] || text;
+        this.updateCache(text, translated, targetLanguage, 'instant');
+      });
+      
+      console.log(`[Master Translation] Preloaded ${needsTranslation.length} translations for ${targetLanguage}`);
+    } catch (error) {
+      console.error('[Master Translation] Preload failed:', error);
+    }
+  }
+
   // Clear all caches - useful for debugging
   clearCache(): void {
     this.cache.clear();
-    localStorage.removeItem('masterTranslationCache');
-    console.log('[Master Translation] Cache cleared');
+    
+    // Only clear localStorage if we're allowed to use it (or if we need to clean up)
+    if (this.canUseLocalStorage()) {
+      localStorage.removeItem('masterTranslationCache');
+      console.log('[Master Translation] Memory and localStorage cache cleared');
+    } else {
+      console.log('[Master Translation] Memory cache cleared (localStorage not touched due to cookie preferences)');
+    }
   }
 }
 
 // Singleton instance
 const masterTranslationManager = MasterTranslationManager.getInstance();
 
+// Export for external use (preloading, initialization, etc.)
+export { masterTranslationManager };
+
 // Hook for single text translation with state
+// Defaults to 'instant' priority for optimal UI performance
 export function useSingleTranslation(
   text: string,
-  priority: TranslationPriority = 'normal'
+  priority: TranslationPriority = 'instant'
 ): { translatedText: string; isLoading: boolean } {
   const { currentLanguage } = useLanguage();
   const [translatedText, setTranslatedText] = useState(text);
@@ -597,9 +715,10 @@ export function useSingleTranslation(
 }
 
 // Main hook for batch translation - replaces all other batch translation hooks
+// Defaults to 'instant' priority for optimal UI performance
 export function useMasterBatchTranslation(
   texts: string[],
-  priority: TranslationPriority = 'normal'
+  priority: TranslationPriority = 'instant'
 ): { translations: string[]; isLoading: boolean } {
   const { currentLanguage } = useLanguage();
   const [translations, setTranslations] = useState<string[]>([]);
@@ -733,7 +852,36 @@ export function useMasterTranslation() {
     return text;
   }, [currentLanguage, translations]);
 
-  return { translateText };
+  const translateTextAsync = useCallback((text: string, priority: TranslationPriority = 'normal'): Promise<string> => {
+    if (!currentLanguage || currentLanguage === 'EN') {
+      return Promise.resolve(text);
+    }
+
+    // Check if we already have this translation
+    const cacheKey = `${text}_${currentLanguage}`;
+    if (translations[cacheKey]) {
+      return Promise.resolve(translations[cacheKey]);
+    }
+
+    // Return a Promise that resolves when translation completes
+    return new Promise((resolve) => {
+      masterTranslationManager.translateText(
+        text,
+        currentLanguage,
+        priority,
+        componentIdRef.current,
+        (translated) => {
+          setTranslations(prev => ({
+            ...prev,
+            [cacheKey]: translated
+          }));
+          resolve(translated);
+        }
+      );
+    });
+  }, [currentLanguage, translations]);
+
+  return { translateText, translateTextAsync };
 }
 
 // Typed translation accessor hook for LoginPromptModal
@@ -790,6 +938,33 @@ export function useTypedTranslation() {
   }, [getTranslation]);
 
   return translationProxy;
+}
+
+// Utility function for preloading common UI strings
+export function preloadCommonUIStrings(targetLanguage: string): Promise<void> {
+  // Common UI strings that appear across the application
+  const commonStrings = [
+    'Home', 'Products', 'Cart', 'Search', 'Login', 'Logout', 'Sign Up',
+    'Welcome', 'Settings', 'Profile', 'Account', 'Orders', 'Favorites',
+    'Add to Cart', 'Buy Now', 'View Details', 'Read More', 'Contact',
+    'About', 'Help', 'Support', 'Terms', 'Privacy', 'Loading',
+    'Save', 'Cancel', 'Delete', 'Edit', 'Submit', 'Back', 'Next',
+    'Yes', 'No', 'OK', 'Close', 'Open', 'Filter', 'Sort', 'Categories', 'Dismiss',
+    'Error', 'Something went wrong.', 'Please try again or report this issue to our team.', 'Refresh Page',
+    'Check your email', 'We\'ve sent password reset instructions to', 
+    'Didn\'t receive the email? Check your spam folder or', 'try again',
+    'Enter your email address below', 'Forgot password? Click here to reset'
+  ];
+  
+  return masterTranslationManager.preloadCommonTranslations(commonStrings, targetLanguage);
+}
+
+export function getTranslationStats() {
+  return masterTranslationManager.getCacheStats();
+}
+
+export function clearLanguageTranslations(language: string): void {
+  masterTranslationManager.clearLanguageCache(language);
 }
 
 export { type TranslationPriority };

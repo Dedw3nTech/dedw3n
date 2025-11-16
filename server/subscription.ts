@@ -2,6 +2,7 @@ import { Request, Response, Express, NextFunction } from "express";
 import { storage } from "./storage";
 import { isAuthenticated } from "./unified-auth";
 import { highRiskActionMiddleware } from "./fraud-prevention";
+import { logger } from "./logger";
 
 /**
  * Check if the user has an active subscription or free trial
@@ -52,7 +53,7 @@ export async function getSubscriptionStatus(req: Request, res: Response) {
       isActive: true
     });
   } catch (error) {
-    console.error("Error fetching subscription:", error);
+    logger.error("Failed to fetch subscription", { userId: req.user.id }, error as Error, 'api');
     return res.status(500).json({ message: "Server error" });
   }
 }
@@ -82,7 +83,7 @@ export async function activateSubscription(req: Request, res: Response) {
       isActive: true
     });
   } catch (error) {
-    console.error("Error activating subscription:", error);
+    logger.error("Failed to activate subscription", { userId: req.user.id }, error as Error, 'api');
     return res.status(500).json({ message: "Server error" });
   }
 }
@@ -119,7 +120,7 @@ export async function activateTrial(req: Request, res: Response) {
       isActive: true
     });
   } catch (error) {
-    console.error("Error activating trial:", error);
+    logger.error("Failed to activate trial", { userId: req.user.id }, error as Error, 'api');
     return res.status(500).json({ message: "Server error" });
   }
 }
@@ -149,7 +150,7 @@ export async function cancelSubscription(req: Request, res: Response) {
       isActive: false
     });
   } catch (error) {
-    console.error("Error cancelling subscription:", error);
+    logger.error("Failed to cancel subscription", { userId: req.user.id }, error as Error, 'api');
     return res.status(500).json({ message: "Server error" });
   }
 }
@@ -184,7 +185,7 @@ export const hasActiveSubscription = async (req: Request, res: Response, next: N
     // User has an active subscription
     next();
   } catch (error) {
-    console.error("Error checking subscription:", error);
+    logger.error("Failed to check subscription", { userId: req.user.id }, error as Error, 'api');
     return res.status(500).json({ message: "Server error" });
   }
 };

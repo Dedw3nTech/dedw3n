@@ -1,0 +1,1445 @@
+import { useState, useEffect, useMemo } from 'react';
+import { useLocation } from 'wouter';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { 
+  Card, 
+  CardHeader, 
+  CardTitle, 
+  CardDescription, 
+  CardContent, 
+  CardFooter 
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Loader2, Trash2, MinusCircle, PlusCircle, ShoppingCart, ShoppingBag, AlertTriangle, Shield, Check, MapPin, Weight, Package, Truck, Plane, Ship, FileText, Calculator, Gift, Users, Search } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { calculatePricing, amountNeededForFreeShipping } from '@/lib/pricing';
+import { useMasterTranslation } from '@/hooks/use-master-translation';
+import { useWeightUnit } from '@/contexts/WeightUnitContext';
+
+
+export default function Cart() {
+  const [, setLocation] = useLocation();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { formatPriceFromGBP } = useCurrency();
+  const { translateText } = useMasterTranslation();
+  const { formatWeight } = useWeightUnit();
+  
+  // Escrow state management
+  const [useEscrow, setUseEscrow] = useState(false);
+  const [escrowTransaction, setEscrowTransaction] = useState<any>(null);
+  const [escrowLoading, setEscrowLoading] = useState(false);
+  
+  // Shipping type selection
+  const [selectedShippingType, setSelectedShippingType] = useState<string>('normal-freight');
+  
+  // Location editing state
+  const [isEditingLocation, setIsEditingLocation] = useState(false);
+  const [editCity, setEditCity] = useState('');
+  const [editCountry, setEditCountry] = useState('');
+  
+  // Gift functionality state
+  const [giftDialogOpen, setGiftDialogOpen] = useState(false);
+  const [selectedRecipient, setSelectedRecipient] = useState<any>(null);
+  const [giftMessage, setGiftMessage] = useState('');
+  const [recipientSearch, setRecipientSearch] = useState('');
+  
+  // Navigation helper
+  const handleProductClick = (productId: number) => {
+    setLocation(`/product/${productId}`);
+  };
+  
+  // Query for platform users (for gift recipients)
+  const { data: platformUsers, isLoading: usersLoading } = useQuery({
+    queryKey: ['/api/users/platform-users'],
+    enabled: giftDialogOpen,
+  });
+  
+  // Filtered users based on search
+  const filteredUsers = useMemo(() => {
+    if (!platformUsers || !recipientSearch) return platformUsers || [];
+    return platformUsers.filter((user: any) => 
+      user.name?.toLowerCase().includes(recipientSearch.toLowerCase()) ||
+      user.username?.toLowerCase().includes(recipientSearch.toLowerCase())
+    );
+  }, [platformUsers, recipientSearch]);
+  
+  // Show authentication message if not logged in
+  if (!user) {
+    return (
+      <div className="container max-w-md mx-auto py-16 px-4 text-center">
+        <Card>
+          <CardHeader>
+            <ShoppingCart className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <CardTitle>{translateText('Shopping Cart')}</CardTitle>
+            <CardDescription>
+              {translateText('Please log in to view your shopping cart')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-6">
+              {translateText('You need to be signed in to manage your cart and make purchases.')}
+            </p>
+            <Button onClick={() => setLocation('/')}>
+              {translateText('Go to Home')}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
+  // Fetch cart items with proper authentication
+  const { 
+    data: cartItems = [], 
+    isLoading, 
+    error 
+  } = useQuery({
+    queryKey: ['/api/cart'],
+    queryFn: async () => {
+      if (!user?.id) {
+        throw new Error('User authentication required');
+      }
+
+      // Get auth token for authentication
+      const authToken = localStorage.getItem('dedwen_auth_token');
+      
+      const response = await fetch('/api/cart', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
+          'X-Use-Session': 'true',
+          'X-Client-Auth': 'true',
+          'X-Client-User-ID': user.id.toString(),
+          'Accept': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to fetch cart: ${response.status}`);
+      }
+
+      return response.json();
+    },
+    enabled: !!user,
+  });
+
+  // Fetch vendor details for shipping info
+  const { data: vendorDetails = {} } = useQuery({
+    queryKey: ['/api/vendors/details'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/vendors/details');
+      return response.json();
+    },
+    enabled: !!cartItems.length,
+  });
+
+  // Auto-calculate shipping costs - ensure cartItems is available
+  const cartTotalWeight = useMemo(() => {
+    if (!cartItems || cartItems.length === 0) return 0;
+    return cartItems.reduce((total: number, item: any) => 
+      total + ((item.product?.weight || 0) * item.quantity), 0
+    );
+  }, [cartItems]);
+  
+  // Determine predominant offering type from cart items
+  const cartOfferingType = useMemo(() => {
+    if (!cartItems || cartItems.length === 0) return 'Product';
+    
+    // Get all offering types from cart items
+    const offeringTypes = cartItems.map((item: any) => item.product?.offeringType || 'product');
+    
+    // Find the most common offering type
+    const typeCounts = offeringTypes.reduce((acc: Record<string, number>, type: string) => {
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {});
+    
+    // Return the most common type, capitalized
+    const predominantType = Object.entries(typeCounts).reduce((a, b) => 
+      typeCounts[a[0]] > typeCounts[b[0]] ? a : b
+    )[0];
+    
+    return predominantType.charAt(0).toUpperCase() + predominantType.slice(1);
+  }, [cartItems]);
+
+  // Get available shipping methods for destination and offering type
+  const { data: availableShippingMethods } = useQuery({
+    queryKey: ['/api/shipping/methods/available', {
+      destinationCountry: user?.country || 'United Kingdom',
+      offeringType: cartOfferingType
+    }],
+    enabled: !isLoading && cartItems && cartItems.length > 0
+  });
+
+  // Get shipping calculation automatically
+  const { data: autoShippingCalculation } = useQuery({
+    queryKey: ['/api/shipping/calculate', {
+      shippingType: selectedShippingType,
+      weight: cartTotalWeight,
+      originCountry: 'DR Congo',
+      destinationCountry: user?.country || 'United Kingdom',
+      originCity: 'Kinshasa',
+      destinationCity: user?.city || 'London',
+      offeringType: cartOfferingType
+    }],
+    enabled: !isLoading && cartItems && cartItems.length > 0 && cartTotalWeight > 0
+  });
+  
+  // Update quantity mutation
+  const updateQuantityMutation = useMutation({
+    mutationFn: async ({ id, quantity }: { id: number; quantity: number }) => {
+      return apiRequest('PUT', `/api/cart/${id}`, { quantity });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: translateText('Error'),
+        description: `${translateText('Failed to update quantity')}: ${error.message}`,
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  // Remove from cart mutation
+  const removeFromCartMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest('DELETE', `/api/cart/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
+      toast({
+        title: translateText('Item Removed'),
+        description: translateText('The item was removed from your cart.'),
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: translateText('Error'),
+        description: `${translateText('Failed to remove item')}: ${error.message}`,
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  // Send gift mutation
+  const sendGiftMutation = useMutation({
+    mutationFn: async (giftData: any) => {
+      return apiRequest('POST', '/api/gifts/send', giftData);
+    },
+    onSuccess: () => {
+      toast({
+        title: translateText('Gift Sent Successfully'),
+        description: translateText('Your gift has been sent to the recipient'),
+      });
+      setGiftDialogOpen(false);
+      setSelectedRecipient(null);
+      setGiftMessage('');
+      setRecipientSearch('');
+      // Clear cart after successful gift
+      queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: translateText('Gift Send Failed'),
+        description: error.message || translateText('Failed to send gift'),
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  // Handle gift sending
+  const handleSendGift = () => {
+    if (!selectedRecipient) {
+      toast({
+        title: translateText('No Recipient Selected'),
+        description: translateText('Please select a recipient for the gift'),
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    const giftData = {
+      recipientId: selectedRecipient.id,
+      cartItems: cartItems,
+      message: giftMessage,
+      total: total,
+      shippingCost: finalShippingCost,
+      shippingType: selectedShippingType
+    };
+    
+    sendGiftMutation.mutate(giftData);
+  };
+  
+  // Update quantity handler
+  const handleUpdateQuantity = (id: number, currentQuantity: number, change: number) => {
+    const newQuantity = currentQuantity + change;
+    if (newQuantity < 1) return;
+    
+    updateQuantityMutation.mutate({ id, quantity: newQuantity });
+  };
+  
+  // Remove from cart handler
+  const handleRemoveFromCart = (id: number) => {
+    removeFromCartMutation.mutate(id);
+  };
+  
+
+
+  // Escrow transaction handler
+  const handleEscrowTransaction = async () => {
+    if (escrowLoading) return;
+    
+    setEscrowLoading(true);
+    try {
+      const escrowData = {
+        amount: total,
+        currency: 'GBP',
+        description: `Marketplace purchase - ${cartItems.length} item(s)`,
+        buyerEmail: user?.email,
+        items: cartItems.map((item: any) => ({
+          name: item.product?.name || 'Product',
+          price: item.product?.price || 0,
+          quantity: item.quantity
+        }))
+      };
+
+      const response = await apiRequest('/api/escrow/create-transaction', 'POST', escrowData);
+
+      setEscrowTransaction(response);
+      toast({
+        title: translateText('Escrow Transaction Created'),
+        description: translateText('Your secure payment has been initialized'),
+      });
+    } catch (error: any) {
+      toast({
+        title: translateText('Error'),
+        description: error.message || translateText('Failed to create escrow transaction'),
+        variant: 'destructive',
+      });
+    } finally {
+      setEscrowLoading(false);
+    }
+  };
+
+  // Proceed to checkout handler
+  const handleCheckout = () => {
+    // If escrow is selected but no transaction created yet, create it first
+    if (useEscrow && !escrowTransaction) {
+      handleEscrowTransaction();
+    }
+    // Always proceed to checkout regardless of escrow status
+    setLocation('/checkout-new');
+  };
+  
+  // Continue shopping handler
+  const handleContinueShopping = () => {
+    setLocation('/');
+  };
+  
+  // TODO: Get vendor-specific pricing config from product data
+  // For now using default configuration, but this should be dynamic based on vendor/product
+  const pricingConfig = {
+    // Example: Different vendors could have different thresholds/rates
+    // freeShippingThreshold: vendor?.freeShippingThreshold || 50,
+    // shippingCost: vendor?.shippingCost || 5.99,
+    // taxRate: vendor?.taxRate || 0.2
+  };
+  
+
+  
+  // Calculate pricing using centralized system with auto-calculated shipping
+  const pricing = calculatePricing(cartItems, pricingConfig);
+  const { subtotal, tax } = pricing;
+  
+  // Use auto-calculated shipping cost if available, otherwise fallback to basic calculation
+  const finalShippingCost = useMemo(() => {
+    return autoShippingCalculation?.totalCost || pricing.shippingCost;
+  }, [autoShippingCalculation, pricing.shippingCost]);
+  
+  // Calculate 1.5% transaction commission on subtotal with £2 minimum
+  const calculatedCommission = subtotal * 0.015;
+  const transactionCommission = subtotal > 0 ? Math.max(calculatedCommission, 2) : 0;
+  
+  // Recalculate total with commission using final shipping cost
+  const total = subtotal + finalShippingCost + tax + transactionCommission;
+  
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="container max-w-4xl mx-auto py-12 px-4 flex justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  // Error state
+  if (error) {
+    return (
+      <div className="container max-w-4xl mx-auto py-12 px-4">
+        <Card className="border-none">
+          <CardHeader>
+            <CardTitle>{translateText('Shopping Cart')}</CardTitle>
+            <CardDescription>{translateText('There was an error loading your cart')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-red-50 text-red-800 p-4 rounded-md">
+              {(error as Error).message}
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={handleContinueShopping}>{translateText('Continue Shopping')}</Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+  
+  // Empty cart state
+  if (cartItems.length === 0) {
+    return (
+      <div className="container max-w-4xl mx-auto py-12 px-4">
+        <Card className="text-center border-none">
+
+          <CardHeader>
+            <div className="flex justify-center mb-4">
+              <ShoppingBag className="h-16 w-16 text-muted-foreground" />
+            </div>
+            <CardTitle className="text-xl">{translateText('Your Cart is Empty')}</CardTitle>
+            <CardDescription>{translateText("Looks like you haven't added any items to your cart yet.")}</CardDescription>
+          </CardHeader>
+          <CardFooter className="flex justify-center">
+            <Button onClick={handleContinueShopping} className="bg-black hover:bg-gray-800">{translateText('Browse Products')}</Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="container max-w-7xl mx-auto py-6 px-4 sm:py-8">
+      {/* Checkout Header */}
+      <div className="mb-6 border-b pb-4">
+        <p className="text-xs text-gray-600 uppercase tracking-wide mb-1">{translateText('YOU ARE CHECKING OUT AS')}:</p>
+        <p className="text-sm font-medium">{user?.email}</p>
+      </div>
+
+      {/* Two Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column - Checkout Sections */}
+        <div className="lg:col-span-2 space-y-6">
+          
+          {/* Section 1: SHIPPING ADDRESS */}
+          <div className="border rounded-lg">
+            <div className="border-b px-6 py-4 bg-gray-50">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white text-sm font-semibold">
+                  1
+                </div>
+                <h2 className="text-lg font-semibold uppercase tracking-wide">{translateText('SHIPPING ADDRESS')}</h2>
+              </div>
+              <p className="text-sm text-gray-600 mt-1 ml-11">{translateText('Where should we deliver to?')}</p>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Delivery Method */}
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="delivery" className="w-4 h-4" defaultChecked />
+                  <div>
+                    <span className="font-medium text-sm">{translateText('Home Delivery')}</span>
+                    <p className="text-xs text-gray-500">{translateText('1 - 2 business days')}</p>
+                  </div>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="delivery" className="w-4 h-4" />
+                  <div>
+                    <span className="font-medium text-sm">{translateText('Collect In-Store')}</span>
+                    <p className="text-xs text-gray-500">{translateText('1 - 2 business days')}</p>
+                  </div>
+                </label>
+              </div>
+
+              {/* Name Fields */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-medium text-gray-700 uppercase block mb-1">{translateText('FIRST NAME')}*</label>
+                  <Input defaultValue={user?.firstName || ''} className="bg-white" data-testid="input-firstname" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-700 uppercase block mb-1">{translateText('SURNAME')}*</label>
+                  <Input defaultValue={user?.surname || ''} className="bg-white" data-testid="input-surname" />
+                </div>
+              </div>
+
+              {/* Address Line 1 */}
+              <div>
+                <label className="text-xs font-medium text-gray-700 uppercase block mb-1">{translateText('ADDRESS LINE 1')}*</label>
+                <Input defaultValue={user?.address || ''} className="bg-white" data-testid="input-address" />
+              </div>
+
+              {/* Address Line 2 */}
+              <button className="text-sm underline text-gray-700">{translateText('Enter address line 2')}</button>
+
+              {/* Country, City, Postal Code */}
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="text-xs font-medium text-gray-700 uppercase block mb-1">{translateText('COUNTRY/REGION')}</label>
+                  <Select defaultValue={user?.country || 'Belgium'}>
+                    <SelectTrigger data-testid="select-country">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Belgium">🇧🇪 Belgium</SelectItem>
+                      <SelectItem value="UK">🇬🇧 United Kingdom</SelectItem>
+                      <SelectItem value="France">🇫🇷 France</SelectItem>
+                      <SelectItem value="Germany">🇩🇪 Germany</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-700 uppercase block mb-1">{translateText('CITY')}*</label>
+                  <Input defaultValue={user?.city || ''} className="bg-white" data-testid="input-city" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-700 uppercase block mb-1">{translateText('POSTAL CODE')}*</label>
+                  <Input defaultValue={user?.zipCode || ''} className="bg-white" data-testid="input-postal" />
+                </div>
+              </div>
+
+              {/* Business Address Checkbox */}
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" className="w-4 h-4" />
+                <span>{translateText('This is a business address.')}</span>
+              </label>
+
+              {/* Mobile Number */}
+              <div>
+                <label className="text-xs font-medium text-gray-700 uppercase block mb-1">{translateText('MOBILE')}*</label>
+                <p className="text-xs text-gray-500 mb-2">{translateText('SMS delivery updates will be sent to this number.')}</p>
+                <div className="flex gap-2">
+                  <Select defaultValue="+32">
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="+32">+32 Belgium</SelectItem>
+                      <SelectItem value="+44">+44 UK</SelectItem>
+                      <SelectItem value="+33">+33 France</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input defaultValue={user?.phone || ''} className="flex-1 bg-white" data-testid="input-phone" />
+                </div>
+              </div>
+
+              {/* Additional Options */}
+              <div className="space-y-2 text-sm">
+                <p className="underline cursor-pointer">{translateText('Add additional contact number.')}</p>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" className="w-4 h-4" />
+                  <span>{translateText('Save shipping address information to address book.')}</span>
+                </label>
+              </div>
+
+              {/* Delivery Method Section */}
+              <div className="mt-6 pt-6 border-t">
+                <h3 className="font-semibold text-sm mb-3 uppercase">{translateText('DELIVERY METHOD')}</h3>
+                <div className="bg-gray-100 p-4 rounded text-center text-sm text-gray-600">
+                  {translateText('Enter your postal code above to see shipping options.')}
+                </div>
+              </div>
+
+              {/* Continue Button */}
+              <Button className="w-full bg-black hover:bg-gray-800 text-white font-semibold uppercase" data-testid="button-continue-packaging">
+                {translateText('CONTINUE TO PACKAGING')}
+              </Button>
+            </div>
+          </div>
+
+          {/* Section 2: PACKAGING OPTIONS & GIFTING */}
+          <div className="border rounded-lg opacity-60">
+            <div className="border-b px-6 py-4 bg-gray-50">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-300 text-white text-sm font-semibold">
+                  2
+                </div>
+                <h2 className="text-lg font-semibold uppercase tracking-wide">{translateText('PACKAGING OPTIONS & GIFTING')}</h2>
+              </div>
+              <p className="text-sm text-gray-600 mt-1 ml-11">{translateText('Signature Box, Signature box and Boutique Shopping bag')}</p>
+            </div>
+          </div>
+
+          {/* Section 3: PAYMENT */}
+          <div className="border rounded-lg opacity-60">
+            <div className="border-b px-6 py-4 bg-gray-50">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-300 text-white text-sm font-semibold">
+                  3
+                </div>
+                <h2 className="text-lg font-semibold uppercase tracking-wide">{translateText('PAYMENT')}</h2>
+              </div>
+              <p className="text-sm text-gray-600 mt-1 ml-11">{translateText('Credit Card, PayPal, Klarna, Wire Transfer')}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column - Order Summary */}
+        <div className="lg:col-span-1">
+          <div className="border rounded-lg sticky top-4">
+            <div className="border-b px-6 py-4 bg-gray-50">
+              <h2 className="text-lg font-semibold uppercase tracking-wide text-center">{translateText('ORDER SUMMARY')}</h2>
+              <p className="text-sm text-center flex items-center justify-center gap-2 mt-1">
+                <ShoppingBag className="h-4 w-4" />
+                {cartItems.length} {translateText('ITEM')}
+              </p>
+            </div>
+            
+            {/* Cart Items */}
+            <div className="p-6 space-y-4 max-h-96 overflow-y-auto">
+              {cartItems.map((item: any) => (
+                <div key={item.id} className="flex gap-4 pb-4 border-b last:border-b-0">
+                  <div className="w-20 h-20 bg-gray-100 rounded flex-shrink-0 overflow-hidden">
+                    {item.product?.imageUrl ? (
+                      <img src={item.product.imageUrl} alt={item.product.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center"><Package className="h-8 w-8 text-gray-400" /></div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-medium text-gray-900 mb-1">{item.product?.name}</h3>
+                    <p className="text-xs text-gray-500 mb-1">{translateText('Style')} #{item.product?.id}</p>
+                    <p className="text-xs text-gray-500 mb-2">{translateText('Variation')}: {item.product?.variant || 'Standard'}</p>
+                    <p className="text-xs text-gray-500 mb-1">{translateText('QTY')}: {item.quantity}</p>
+                    <p className="text-sm font-semibold">{formatPriceFromGBP(item.product?.price || 0)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Pricing Summary */}
+            <div className="px-6 py-4 border-t space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>{translateText('Subtotal')}</span>
+                <span className="font-medium">{formatPriceFromGBP(subtotal)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>{translateText('Shipping')}</span>
+                <span className="font-medium">{finalShippingCost === 0 ? translateText('€ 0 (DHL Express Worldwide)') : formatPriceFromGBP(finalShippingCost)}</span>
+              </div>
+              <div className="flex justify-between text-sm font-semibold pt-2 border-t">
+                <span>{translateText('TOTAL')}</span>
+                <span>{formatPriceFromGBP(total)}</span>
+              </div>
+              <div className="text-xs text-gray-600">
+                {translateText('VAT (Included)')}: {formatPriceFromGBP(tax)}
+              </div>
+            </div>
+
+            {/* View Details Button */}
+            <div className="px-6 pb-4">
+              <button className="w-full flex items-center justify-between text-sm font-medium py-2 border-t pt-4">
+                <span>{translateText('VIEW DETAILS')}</span>
+                <span>+</span>
+              </button>
+              <p className="text-xs text-gray-600 mt-2">
+                {translateText('You will be charged only at the time of shipment except for DIY orders where the full amount is charged at the time of the purchase.')}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Gift Dialog */}
+      <Dialog open={giftDialogOpen} onOpenChange={setGiftDialogOpen}>
+              <Card key={item.id} className="border border-gray-200">
+                <CardContent className="p-4">
+                  <div className="flex items-start space-x-4">
+                    {/* Product Image */}
+                    <div 
+                      className="h-16 w-16 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => handleProductClick(item.product?.id)}
+                    >
+                      {item.product?.imageUrl ? (
+                        <img
+                          src={item.product.imageUrl}
+                          alt={item.product.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center text-gray-400">
+                          <ShoppingCart className="h-6 w-6" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Product Details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1 pr-2">
+                          <h3 
+                            className="text-sm font-medium text-gray-900 truncate cursor-pointer hover:text-blue-600 transition-colors"
+                            onClick={() => handleProductClick(item.product?.id)}
+                          >
+                            {translateText(item.product?.name || 'Product')}
+                          </h3>
+                          {item.product?.vendorId && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              {translateText('Sold by')}: {translateText('Vendor')} #{item.product.vendorId}
+                            </p>
+                          )}
+                        </div>
+                        
+                        {/* Remove Button */}
+                        <button
+                          onClick={() => handleRemoveFromCart(item.id)}
+                          className="text-red-600 hover:text-red-800 p-1"
+                          disabled={removeFromCartMutation.isPending}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                      
+                      {/* Price and Quantity Row */}
+                      <div className="flex justify-between items-center">
+                        <div className="text-sm">
+                          <span className="text-gray-600">{translateText('Price')}: </span>
+                          <span className="font-medium text-gray-900">
+                            {formatPriceFromGBP(item.product?.price || 0)}
+                          </span>
+                        </div>
+                        
+                        {/* Quantity Controls */}
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => handleUpdateQuantity(item.id, item.quantity, -1)}
+                            className="text-gray-500 hover:text-gray-700 p-1"
+                            disabled={updateQuantityMutation.isPending}
+                          >
+                            <MinusCircle className="h-4 w-4" />
+                          </button>
+                          <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
+                          <button
+                            onClick={() => handleUpdateQuantity(item.id, item.quantity, 1)}
+                            className="text-gray-500 hover:text-gray-700 p-1"
+                            disabled={updateQuantityMutation.isPending}
+                          >
+                            <PlusCircle className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* Subtotal */}
+                      <div className="mt-2 text-right">
+                        <span className="text-xs text-gray-600">{translateText('Subtotal')}: </span>
+                        <span className="text-sm font-semibold text-gray-900">
+                          {formatPriceFromGBP((item.product?.price || 0) * item.quantity)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            
+            {/* Mobile Order Summary */}
+            <Card className="border border-gray-200 bg-gray-50">
+              <CardContent className="p-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">{translateText('Order Summary')}</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">{translateText('Subtotal')}</span>
+                    <span className="font-medium">{formatPriceFromGBP(subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">{translateText('Shipping')}</span>
+                    <span className="font-medium">
+                      {finalShippingCost === 0 ? (
+                        <span className="text-green-600">{translateText('Free')}</span>
+                      ) : (
+                        formatPriceFromGBP(finalShippingCost)
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">{translateText('Tax (VAT)')}</span>
+                    <span className="font-medium">{formatPriceFromGBP(tax)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">{translateText('Dedw3n 1.5%')} (min £2)</span>
+                    <span className="font-medium">{formatPriceFromGBP(transactionCommission)}</span>
+                  </div>
+                  <div className="border-t pt-2 mt-2">
+                    <div className="flex justify-between text-base font-semibold">
+                      <span>{translateText('Total')}</span>
+                      <span>{formatPriceFromGBP(total)}</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Desktop Table View */}
+          <div className="hidden lg:block border rounded-md overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {translateText('Product')}
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {translateText('Quantity')}
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {translateText('Price')}
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {translateText('Subtotal')}
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {translateText('Actions')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {cartItems.map((item: any) => (
+                  <tr key={item.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div 
+                          className="h-10 w-10 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden mr-4 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => handleProductClick(item.product?.id)}
+                        >
+                          {item.product?.imageUrl ? (
+                            <img
+                              src={item.product.imageUrl}
+                              alt={item.product.name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center text-gray-400">
+                              <ShoppingCart className="h-5 w-5" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="ml-4">
+                          <div 
+                            className="text-sm font-medium text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+                            onClick={() => handleProductClick(item.product?.id)}
+                          >
+                            {translateText(item.product?.name || 'Product')}
+                          </div>
+                          {item.product?.vendorId && (
+                            <div className="text-xs text-gray-500">
+                              {translateText('Sold by')}: {translateText('Vendor')} #{item.product.vendorId}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center justify-center">
+                        <button
+                          onClick={() => handleUpdateQuantity(item.id, item.quantity, -1)}
+                          className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                          disabled={updateQuantityMutation.isPending}
+                        >
+                          <MinusCircle className="h-5 w-5" />
+                        </button>
+                        <span className="mx-2 w-8 text-center">{item.quantity}</span>
+                        <button
+                          onClick={() => handleUpdateQuantity(item.id, item.quantity, 1)}
+                          className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                          disabled={updateQuantityMutation.isPending}
+                        >
+                          <PlusCircle className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
+                      {formatPriceFromGBP(item.product?.price || 0)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
+                      {formatPriceFromGBP((item.product?.price || 0) * item.quantity)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => handleRemoveFromCart(item.id)}
+                        className="text-red-600 hover:text-red-900 focus:outline-none"
+                        disabled={removeFromCartMutation.isPending}
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="bg-gray-50">
+                <tr className="border-t">
+                  <th colSpan={3} scope="row" className="px-6 py-3 text-right text-sm text-gray-700">
+                    {translateText('Subtotal')}
+                  </th>
+                  <td className="px-6 py-3 text-right text-sm text-gray-900">
+                    {formatPriceFromGBP(subtotal)}
+                  </td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <th colSpan={3} scope="row" className="px-6 py-3 text-right text-sm text-gray-700">
+                    {translateText('Shipping')}
+                  </th>
+                  <td className="px-6 py-3 text-right text-sm text-gray-900">
+                    {finalShippingCost === 0 ? (
+                      <span className="text-green-600">{translateText('Free')}</span>
+                    ) : (
+                      formatPriceFromGBP(finalShippingCost)
+                    )}
+                  </td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <th colSpan={3} scope="row" className="px-6 py-3 text-right text-sm text-gray-700">
+                    {translateText('Tax (VAT)')}
+                  </th>
+                  <td className="px-6 py-3 text-right text-sm text-gray-900">
+                    {formatPriceFromGBP(tax)}
+                  </td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <th colSpan={3} scope="row" className="px-6 py-3 text-right text-sm text-gray-700">
+                    {translateText('Dedw3n 1.5% Transaction Commission')} (min £2)
+                  </th>
+                  <td className="px-6 py-3 text-right text-sm text-gray-900">
+                    {formatPriceFromGBP(transactionCommission)}
+                  </td>
+                  <td></td>
+                </tr>
+                <tr className="border-t">
+                  <th colSpan={3} scope="row" className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
+                    {translateText('Total')}
+                  </th>
+                  <td className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
+                    {formatPriceFromGBP(total)}
+                  </td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          
+          {/* Shipping Information Card */}
+          {cartItems.length > 0 && (
+            <Card className="mt-6 border border-blue-200 bg-blue-50">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Package className="h-5 w-5 text-blue-600" />
+                  {translateText('Shipping Information')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid gap-4 md:grid-cols-2">
+                  {cartItems.map((item: any) => {
+                    const vendor = vendorDetails[item.product?.vendorId];
+                    const totalWeight = (item.product?.weight || 0) * item.quantity;
+                    const totalPrice = (item.product?.price || 0) * item.quantity;
+                    
+                    return (
+                      <div key={item.id} className="bg-white rounded-lg p-4 border border-gray-200">
+                        <div className="flex items-start gap-3 mb-3">
+                          <div 
+                            className="h-12 w-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => handleProductClick(item.product?.id)}
+                          >
+                            {item.product?.imageUrl ? (
+                              <img
+                                src={item.product.imageUrl}
+                                alt={item.product.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="h-full w-full flex items-center justify-center text-gray-400">
+                                <Package className="h-5 w-5" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 
+                              className="font-medium text-gray-900 text-sm truncate cursor-pointer hover:text-blue-600 transition-colors"
+                              onClick={() => handleProductClick(item.product?.id)}
+                            >
+                              {translateText(item.product?.name || 'Product')}
+                            </h4>
+                            <p className="text-xs text-gray-500">
+                              {translateText('Quantity')}: {item.quantity}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2 text-sm">
+                          {/* Location Seller */}
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-green-600 flex-shrink-0" />
+                            <span className="text-gray-600">{translateText('Seller Location')}:</span>
+                            <span className="font-medium text-gray-900">
+                              {item.product?.vendorId === 1 
+                                ? 'Kinshasa, DR Congo'
+                                : vendor?.city && vendor?.country 
+                                  ? `${vendor.city}, ${vendor.country}`
+                                  : vendor?.location || translateText('Location not specified')
+                              }
+                            </span>
+                          </div>
+                          
+                          {/* Location Buyer */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                <MapPin className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                                <span className="text-gray-600">{translateText('Buyer Location')}:</span>
+                                {!isEditingLocation && (
+                                  <span className="font-medium text-gray-900">
+                                    {user?.location || user?.city 
+                                      ? `${user.city || ''}, ${user.country || ''}`.replace(/^,\s*/, '').replace(/,\s*$/, '') || translateText('Set in profile')
+                                      : translateText('Set in profile')
+                                    }
+                                  </span>
+                                )}
+                              </div>
+                              {!isEditingLocation ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setIsEditingLocation(true);
+                                    setEditCity(user?.city || '');
+                                    setEditCountry(user?.country || '');
+                                  }}
+                                  className="text-xs h-6 px-2"
+                                >
+                                  {translateText('Change')}
+                                </Button>
+                              ) : (
+                                <div className="flex gap-1">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={async () => {
+                                      try {
+                                        // Update user location via API
+                                        await apiRequest('PATCH', '/api/user/location', {
+                                          city: editCity,
+                                          country: editCountry
+                                        });
+                                        
+                                        // Invalidate user query to refresh data
+                                        queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+                                        
+                                        // Invalidate shipping calculation query to auto-recalculate with new location
+                                        queryClient.invalidateQueries({ queryKey: ['/api/shipping/calculate'] });
+                                        
+                                        toast({
+                                          title: translateText('Success'),
+                                          description: translateText('Location updated and shipping recalculated'),
+                                        });
+                                        
+                                        setIsEditingLocation(false);
+                                      } catch (error: any) {
+                                        toast({
+                                          title: translateText('Error'),
+                                          description: translateText('Failed to update location'),
+                                          variant: 'destructive',
+                                        });
+                                      }
+                                    }}
+                                    className="text-xs h-6 px-2"
+                                  >
+                                    {translateText('Save')}
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setIsEditingLocation(false)}
+                                    className="text-xs h-6 px-2"
+                                  >
+                                    {translateText('Cancel')}
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {isEditingLocation && (
+                              <div className="flex gap-2 ml-6">
+                                <Input
+                                  placeholder={translateText('City')}
+                                  value={editCity}
+                                  onChange={(e) => setEditCity(e.target.value)}
+                                  className="text-xs h-7"
+                                />
+                                <Input
+                                  placeholder={translateText('Country')}
+                                  value={editCountry}
+                                  onChange={(e) => setEditCountry(e.target.value)}
+                                  className="text-xs h-7"
+                                />
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Weight Product */}
+                          <div className="flex items-center gap-2">
+                            <Weight className="h-4 w-4 text-orange-600 flex-shrink-0" />
+                            <span className="text-gray-600">{translateText('Total Weight')}:</span>
+                            <span className="font-medium text-gray-900">
+                              {totalWeight > 0 
+                                ? formatWeight(totalWeight)
+                                : translateText('Weight not specified')
+                              }
+                            </span>
+                          </div>
+                          
+                          {/* Price */}
+                          <div className="flex items-center gap-2">
+                            <ShoppingCart className="h-4 w-4 text-purple-600 flex-shrink-0" />
+                            <span className="text-gray-600">{translateText('Item Total')}:</span>
+                            <span className="font-semibold text-gray-900">
+                              {formatPriceFromGBP(totalPrice)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {/* Shipping Method Selection */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {translateText('Select Shipping Method')}
+                  </label>
+                  <Select value={selectedShippingType} onValueChange={setSelectedShippingType}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={translateText('Choose shipping method')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableShippingMethods?.shippingMethods.map((method: any) => (
+                        <SelectItem 
+                          key={method.value} 
+                          value={method.value}
+                          disabled={!method.available}
+                          className={!method.available ? 'opacity-50 cursor-not-allowed text-gray-400' : ''}
+                        >
+                          <div className={`flex items-center gap-2 ${!method.available ? 'opacity-50' : ''}`}>
+                            {method.icon === 'Truck' && <Truck className="h-4 w-4" />}
+                            {method.icon === 'Plane' && <Plane className="h-4 w-4" />}
+                            {method.icon === 'Ship' && <Ship className="h-4 w-4" />}
+                            {method.icon === 'FileText' && <FileText className="h-4 w-4" />}
+                            <span>
+                              {translateText(method.label)} 
+                              {!method.available && (
+                                <span className="text-red-500 ml-1">- {translateText('Not Available')}</span>
+                              )}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  {/* Shipping Method Info */}
+                  {availableShippingMethods && (
+                    <div className="mt-2 text-xs text-gray-500">
+                      <div className="flex items-center gap-1">
+                        <span>{translateText('Destination')}:</span>
+                        <span className="font-medium">{availableShippingMethods.destinationCountry}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span>{translateText('Offering Type')}:</span>
+                        <span className="font-medium capitalize">{availableShippingMethods.offeringType}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Shipping Summary */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">{translateText('Calculated Shipping')}:</span>
+                    <span className="font-medium">
+                      {finalShippingCost === 0 ? (
+                        <span className="text-green-600">{translateText('Free')}</span>
+                      ) : (
+                        <span className="text-blue-600">{formatPriceFromGBP(finalShippingCost)}</span>
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm mt-1">
+                    <span className="text-gray-600">{translateText('Total Weight')}:</span>
+                    <span className="font-medium">
+                      {formatWeight(cartItems.reduce((total: number, item: any) => 
+                        total + ((item.product?.weight || 0) * item.quantity), 0
+                      ))}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm mt-1">
+                    <span className="text-gray-600">{translateText('Shipping Method')}:</span>
+                    <span className="font-medium text-blue-600">
+                      {selectedShippingType === 'normal-freight' && translateText('Normal Freight')}
+                      {selectedShippingType === 'air-freight' && translateText('Air Freight')}
+                      {selectedShippingType === 'sea-freight' && translateText('Sea Freight')}
+                      {selectedShippingType === 'express-freight' && translateText('Express Freight')}
+                    </span>
+                  </div>
+                  
+                  {/* Auto-calculated shipping details */}
+                  {autoShippingCalculation && (
+                    <div className="mt-2 pt-2 border-t border-gray-100">
+                      <div className="text-xs text-gray-500 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span>{translateText('Carrier')}:</span>
+                          <span className="font-medium">{autoShippingCalculation.carrier}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>{translateText('Estimated Delivery')}:</span>
+                          <span className="font-medium">{autoShippingCalculation.estimatedDays}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>{translateText('Route')}:</span>
+                          <span className="font-medium text-xs">{autoShippingCalculation.origin} → {autoShippingCalculation.destination}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Auto-calculated shipping notification */}
+          {autoShippingCalculation && (
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center gap-2 text-sm text-blue-800">
+                <Calculator className="h-4 w-4" />
+                <span className="font-medium">{translateText('Shipping automatically calculated based on cart contents and destination')}</span>
+              </div>
+              <p className="text-xs text-blue-600 mt-1">
+                {translateText('Carrier')}: {autoShippingCalculation.carrier} • {translateText('Estimated')}: {autoShippingCalculation.estimatedDays}
+              </p>
+            </div>
+          )}
+        </CardContent>
+
+        {/* Disclaimer text above checkout button */}
+        <div className="px-6 pb-2">
+          <p className="text-gray-600" style={{ fontSize: '10px' }}>
+            {translateText('We would like to inform you that, although we are unable to provide direct advice, we will ensure you have all the necessary information to make informed decisions on your own.')}
+          </p>
+        </div>
+
+        <CardFooter className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row justify-between gap-4">
+            <Button
+              variant="outline"
+              onClick={handleContinueShopping}
+              className="w-full sm:w-auto"
+            >
+              {translateText('Continue Shopping')}
+            </Button>
+            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+              <Button
+                variant="outline"
+                onClick={() => setGiftDialogOpen(true)}
+                className="w-full sm:w-auto bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
+                disabled={cartItems.length === 0}
+              >
+                <Gift className="mr-2 h-4 w-4" />
+                {translateText('Send as Gift')}
+              </Button>
+              <Button
+                onClick={handleCheckout}
+                className="w-full sm:w-auto"
+                disabled={
+                  updateQuantityMutation.isPending || 
+                  removeFromCartMutation.isPending
+                }
+              >
+                {updateQuantityMutation.isPending || removeFromCartMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {translateText('Processing...')}
+                  </>
+                ) : (
+                  translateText('Proceed to Checkout')
+                )}
+              </Button>
+            </div>
+          </div>
+        </CardFooter>
+      </Card>
+
+      {/* Gift Dialog */}
+      <Dialog open={giftDialogOpen} onOpenChange={setGiftDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Gift className="h-5 w-5 text-blue-600" />
+              {translateText('Send Cart as Gift')}
+            </DialogTitle>
+            <DialogDescription>
+              {translateText('Choose a recipient from the platform and add a personal message')}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* Gift Summary */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h4 className="font-medium text-gray-900 mb-3">{translateText('Gift Summary')}</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>{translateText('Items')}:</span>
+                  <span>{cartItems.length} {cartItems.length === 1 ? translateText('item') : translateText('items')}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>{translateText('Total Value')}:</span>
+                  <span className="font-medium">{formatPriceFromGBP(total)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>{translateText('Shipping Cost')}:</span>
+                  <span className="font-medium">
+                    {finalShippingCost === 0 ? translateText('Free') : formatPriceFromGBP(finalShippingCost)}
+                  </span>
+                </div>
+                <div className="flex justify-between font-medium text-base pt-2 border-t">
+                  <span>{translateText('Gift Total')}:</span>
+                  <span>{formatPriceFromGBP(total + finalShippingCost)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Recipient Selection */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">{translateText('Select Recipient')}</h4>
+              
+              {/* Search Input */}
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  type="text"
+                  placeholder={translateText('Search platform users...')}
+                  value={recipientSearch}
+                  onChange={(e) => setRecipientSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
+              {/* Recipients List */}
+              <div className="max-h-60 overflow-y-auto border rounded-lg">
+                {usersLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                  </div>
+                ) : filteredUsers.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Users className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                    {recipientSearch ? translateText('No users found') : translateText('No users available')}
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {filteredUsers.map((user: any) => (
+                      <div
+                        key={user.id}
+                        className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
+                          selectedRecipient?.id === user.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                        }`}
+                        onClick={() => setSelectedRecipient(user)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+                            {user.avatar ? (
+                              <img
+                                src={user.avatar}
+                                alt={user.name || user.username}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <Users className="h-5 w-5 text-gray-400" />
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900">
+                              {user.name || user.username}
+                            </div>
+                            {user.name && user.username && (
+                              <div className="text-sm text-gray-500">@{user.username}</div>
+                            )}
+                          </div>
+                          {selectedRecipient?.id === user.id && (
+                            <Check className="h-5 w-5 text-blue-600" />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Gift Message */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">{translateText('Personal Message')}</h4>
+              <Input
+                type="text"
+                placeholder={translateText('Add a personal message (optional)...')}
+                value={giftMessage}
+                onChange={(e) => setGiftMessage(e.target.value)}
+                className="w-full"
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setGiftDialogOpen(false);
+                  setSelectedRecipient(null);
+                  setGiftMessage('');
+                  setRecipientSearch('');
+                }}
+              >
+                {translateText('Cancel')}
+              </Button>
+              <Button
+                onClick={handleSendGift}
+                disabled={!selectedRecipient || sendGiftMutation.isPending}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {sendGiftMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {translateText('Sending Gift...')}
+                  </>
+                ) : (
+                  <>
+                    <Gift className="mr-2 h-4 w-4" />
+                    {translateText('Send Gift')}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

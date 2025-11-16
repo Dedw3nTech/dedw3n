@@ -18,7 +18,17 @@ export function formatPrice(price: number, currencyCode: string = "GBP"): string
     BRL: "pt-BR",
   };
   
+  // Cryptocurrencies and stablecoins - use up to 10 decimal places
+  const cryptoCurrencies = ['BTC', 'ETH', 'BNB', 'ADA', 'SOL', 'DOT', 'AVAX', 'LINK', 'MATIC', 'LTC'];
+  const stablecoins = ['USDT', 'USDC', 'BUSD', 'DAI', 'TUSD'];
+  
   const locale = currencyLocales[currencyCode] || "en-GB";
+  
+  if (cryptoCurrencies.includes(currencyCode) || stablecoins.includes(currencyCode)) {
+    // For crypto: use up to 10 decimal places, don't use Intl currency formatting
+    const formattedNumber = price.toFixed(10).replace(/\.?0+$/, '');
+    return `${currencyCode} ${formattedNumber}`;
+  }
   
   return new Intl.NumberFormat(locale, {
     style: "currency",
@@ -43,7 +53,17 @@ export function formatCurrency(price: number, currencyCode: string = "GBP"): str
     SGD: "en-SG",
   };
   
+  // Cryptocurrencies and stablecoins - use up to 10 decimal places
+  const cryptoCurrencies = ['BTC', 'ETH', 'BNB', 'ADA', 'SOL', 'DOT', 'AVAX', 'LINK', 'MATIC', 'LTC'];
+  const stablecoins = ['USDT', 'USDC', 'BUSD', 'DAI', 'TUSD'];
+  
   const locale = currencyLocales[currencyCode] || "en-US";
+  
+  if (cryptoCurrencies.includes(currencyCode) || stablecoins.includes(currencyCode)) {
+    // For crypto: use up to 10 decimal places, don't use Intl currency formatting
+    const formattedNumber = price.toFixed(10).replace(/\.?0+$/, '');
+    return `${currencyCode} ${formattedNumber}`;
+  }
   
   return new Intl.NumberFormat(locale, {
     style: "currency",

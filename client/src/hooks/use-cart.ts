@@ -38,10 +38,6 @@ export function useCart() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
       queryClient.invalidateQueries({ queryKey: ['/api/cart/count'] });
-      toast({
-        title: "Added to Cart",
-        description: "Product has been added to your shopping bag!",
-      });
     },
     onError: (error: any) => {
       toast({

@@ -3,7 +3,8 @@ import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ResolvedUserAvatar } from "@/components/ui/resolved-user-avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -270,14 +271,18 @@ export default function ChatbotWindow() {
                       </div>
                       
                       {message.sender === "user" && (
-                        <Avatar className="h-8 w-8 ml-2">
-                          {user?.avatar ? (
-                            <AvatarImage src={user.avatar} alt={user.name || "User"} />
-                          ) : null}
-                          <AvatarFallback>
-                            {user?.name?.charAt(0) || "U"}
-                          </AvatarFallback>
-                        </Avatar>
+                        user ? (
+                          <ResolvedUserAvatar
+                            userId={user?.id}
+                            username={user?.username}
+                            size="sm"
+                            className="ml-2"
+                          />
+                        ) : (
+                          <Avatar className="h-8 w-8 ml-2">
+                            <AvatarFallback>U</AvatarFallback>
+                          </Avatar>
+                        )
                       )}
                     </div>
                   ))}

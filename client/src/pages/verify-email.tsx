@@ -2,15 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, Loader2, Mail } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useTypedTranslation } from "@/hooks/use-master-translation";
 
 export default function VerifyEmail() {
   const [location, navigate] = useLocation();
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'invalid'>('loading');
   const [message, setMessage] = useState('');
-  const { toast } = useToast();
+  const [errorDetails, setErrorDetails] = useState<string>('');
+  const [isReporting, setIsReporting] = useState(false);
+  const t = useTypedTranslation();
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -18,7 +19,7 @@ export default function VerifyEmail() {
 
     if (!token) {
       setStatus('invalid');
-      setMessage('Invalid or missing verification token.');
+      setMessage('');
       return;
     }
 
@@ -29,147 +30,174 @@ export default function VerifyEmail() {
           token: token
         });
 
-        setStatus('success');
-        setMessage('Your email has been verified successfully! You can now access all features.');
+        console.log('[VERIFY-EMAIL] Email verified successfully, refreshing user data');
         
-        toast({
-          title: "Email Verified!",
-          description: "Your email has been successfully verified.",
-        });
+        // Invalidate and refetch user data to get updated emailVerified status
+        await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+        await queryClient.refetchQueries({ queryKey: ["/api/user"] });
+        
+        setStatus('success');
+        setMessage(t['Your email has been verified successfully! You can now access all features.']);
 
-        // Redirect to home after 3 seconds
+        // Redirect to home after 2 seconds
         setTimeout(() => {
-          navigate('/');
-        }, 3000);
+          console.log('[VERIFY-EMAIL] Redirecting to home page with verified status');
+          window.location.href = '/';
+        }, 2000);
 
       } catch (error: any) {
         console.error('Email verification failed:', error);
         setStatus('error');
         
+        // Capture error details for reporting
+        const errorInfo = {
+          errorMessage: error.message || 'Unknown error',
+          errorStack: error.stack || 'No stack trace available',
+          timestamp: new Date().toISOString(),
+          page: 'Email Verification Page',
+          url: window.location.href,
+          token: token || 'No token provided',
+          userAgent: navigator.userAgent
+        };
+        setErrorDetails(JSON.stringify(errorInfo, null, 2));
+        
         if (error.message?.includes('Invalid verification token')) {
-          setMessage('This verification link is invalid or has already been used.');
+          setMessage(t['This verification link is invalid or has already been used.']);
         } else if (error.message?.includes('expired')) {
-          setMessage('This verification link has expired. Please request a new one.');
+          setMessage(t['This verification link has expired. Please request a new one.']);
         } else {
-          setMessage('Failed to verify your email. Please try again or contact support.');
+          setMessage(t['Failed to verify your email. Please try again or contact support.']);
         }
-
-        toast({
-          title: "Verification Failed",
-          description: "There was an issue verifying your email.",
-          variant: "destructive",
-        });
       }
     };
 
     verifyEmail();
-  }, [navigate, toast]);
-
-  const getIcon = () => {
-    switch (status) {
-      case 'loading':
-        return <Loader2 className="h-16 w-16 animate-spin text-blue-500" />;
-      case 'success':
-        return <CheckCircle className="h-16 w-16 text-green-500" />;
-      case 'error':
-      case 'invalid':
-        return <XCircle className="h-16 w-16 text-red-500" />;
-      default:
-        return <Mail className="h-16 w-16 text-gray-400" />;
-    }
-  };
+  }, [navigate, t]);
 
   const getTitle = () => {
     switch (status) {
       case 'loading':
-        return 'Verifying Your Email...';
+        return t['Verifying Your Email...'];
       case 'success':
-        return 'Email Verified Successfully!';
+        return t['Email Verified Successfully!'];
       case 'error':
-        return 'Verification Failed';
+        return t['Verification Failed'];
       case 'invalid':
-        return 'Invalid Verification Link';
+        return t['Invalid Verification Link'];
       default:
-        return 'Email Verification';
+        return t['Email Verification'];
     }
   };
 
   const getDescription = () => {
     switch (status) {
       case 'loading':
-        return 'Please wait while we verify your email address.';
+        return t['Please wait while we verify your email address.'];
       case 'success':
-        return 'Welcome to Dedw3n! Your account is now fully activated.';
+        return t['Welcome to Dedw3n! Your account is now fully activated.'];
       case 'error':
-        return 'We encountered an issue while verifying your email.';
+        return t['We encountered an issue while verifying your email.'];
       case 'invalid':
-        return 'The verification link appears to be invalid or malformed.';
+        return t['The verification link appears to be invalid or malformed.'];
       default:
-        return 'Verifying your email address...';
+        return t['Verifying your email address...'];
+    }
+  };
+
+  const handleReport = async () => {
+    if (!errorDetails) return;
+    
+    setIsReporting(true);
+    
+    try {
+      await apiRequest('POST', '/api/error-reports', {
+        errorDetails: errorDetails,
+        page: 'Email Verification',
+        reportedAt: new Date().toISOString()
+      });
+      
+      alert('Error report submitted successfully. Our team will investigate this issue.');
+    } catch (error) {
+      console.error('Failed to submit error report:', error);
+      alert('Failed to submit error report. Please contact support directly.');
+    } finally {
+      setIsReporting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            {getIcon()}
-          </div>
-          <CardTitle className="text-2xl font-bold">
+    <div className="min-h-screen bg-white flex items-center justify-center">
+      <Card className="w-full max-w-md shadow-none border-0">
+        <CardHeader className="text-center pb-4">
+          <CardTitle className="text-2xl font-bold" data-testid="text-title">
             {getTitle()}
           </CardTitle>
-          <CardDescription className="text-base">
+          <CardDescription className="text-base mt-2" data-testid="text-description">
             {getDescription()}
           </CardDescription>
         </CardHeader>
         
-        <CardContent className="text-center space-y-4">
-          <p className="text-sm text-gray-600">
-            {message}
-          </p>
+        <CardContent className="text-center space-y-3 pt-0">
+          {message && (
+            <p className="text-sm text-gray-600" data-testid="text-message">
+              {message}
+            </p>
+          )}
           
           {status === 'success' && (
-            <div className="space-y-3">
-              <p className="text-sm text-green-600 font-medium">
-                You will be redirected automatically in a few seconds...
+            <div className="space-y-2">
+              <p className="text-sm text-green-600 font-medium" data-testid="text-redirect">
+                {t['You will be redirected automatically in a few seconds...']}
               </p>
               <Button 
                 onClick={() => navigate('/')}
                 className="w-full"
+                data-testid="button-continue"
               >
-                Continue to Dedw3n
+                {t['Continue to Dedw3n']}
               </Button>
             </div>
           )}
           
           {(status === 'error' || status === 'invalid') && (
-            <div className="space-y-3">
+            <div className="space-y-2">
               <Button 
                 onClick={() => navigate('/')}
                 variant="outline"
                 className="w-full"
+                data-testid="button-home"
               >
-                Return to Home
+                {t['Return to Home']}
               </Button>
               
               {status === 'error' && (
-                <Button 
-                  onClick={() => window.location.reload()}
-                  variant="secondary"
-                  className="w-full"
-                >
-                  Try Again
-                </Button>
+                <>
+                  <Button 
+                    onClick={() => window.location.reload()}
+                    variant="secondary"
+                    className="w-full"
+                    data-testid="button-retry"
+                  >
+                    {t['Try Again']}
+                  </Button>
+                  
+                  <Button 
+                    onClick={handleReport}
+                    variant="ghost"
+                    className="w-full"
+                    disabled={isReporting || !errorDetails}
+                    data-testid="button-report"
+                  >
+                    {isReporting ? t['Sending Report...'] : t['Report']}
+                  </Button>
+                </>
               )}
             </div>
           )}
           
           {status === 'loading' && (
-            <div className="space-y-2">
-              <div className="text-sm text-gray-500">
-                This should only take a moment...
-              </div>
+            <div className="text-sm text-gray-500" data-testid="text-loading">
+              {t['This should only take a moment...']}
             </div>
           )}
         </CardContent>

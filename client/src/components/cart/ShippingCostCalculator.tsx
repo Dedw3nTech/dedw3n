@@ -141,7 +141,7 @@ export default function ShippingCostCalculator({
       }
     } catch (error) {
       toast({
-        title: translateText('Connection Error'),
+        title: translateText('Error'),
         description: translateText('Unable to connect to payment service. Please check your connection and try again.'),
         variant: 'destructive',
       });

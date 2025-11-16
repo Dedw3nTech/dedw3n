@@ -2,14 +2,15 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { resources } from '@/locales';
 
-// Core supported languages with stable translation
+// Core supported languages with stable translation (matching available translation files)
 export const languages = [
-  { code: 'en', name: 'English' },
-  { code: 'es', name: 'Spanish' },
-  { code: 'fr', name: 'French' },
-  { code: 'de', name: 'German' },
-  { code: 'zh', name: 'Chinese' },
-  { code: 'ja', name: 'Japanese' }
+  { code: 'en', name: 'English', nativeName: 'English', flag: '🇺🇸' },
+  { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦' },
+  { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
+  { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
+  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳' },
+  { code: 'pt', name: 'Portuguese', nativeName: 'Português', flag: '🇵🇹' },
+  { code: 'zh', name: 'Chinese', nativeName: '中文', flag: '🇨🇳' }
 ];
 
 // Stable initialization with English default

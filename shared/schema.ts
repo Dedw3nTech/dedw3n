@@ -188,11 +188,12 @@ export const eventTypeEnum = pgEnum('event_type', ['live_stream', 'course', 'wor
 export const subscriptionIntervalEnum = pgEnum('subscription_interval', ['daily', 'weekly', 'monthly', 'yearly', 'one_time']);
 export const videoTypeEnum = pgEnum('video_type', ['short_form', 'story', 'live_stream', 'live_commerce', 'recorded']);
 export const videoVisibilityEnum = pgEnum('video_visibility', ['public', 'followers', 'private']);
+export const videoMonetizationEnum = pgEnum('video_monetization', ['free', 'ppv', 'subscription']);
 export const moderationMatchTypeEnum = pgEnum('moderation_match_type', ['exact', 'partial', 'regex']);
 export const moderationSeverityEnum = pgEnum('moderation_severity', ['low', 'medium', 'high']);
 export const flaggedContentTypeEnum = pgEnum('flagged_content_type', ['post', 'comment', 'message', 'product', 'profile', 'community']);
 export const flaggedContentStatusEnum = pgEnum('flagged_content_status', ['pending', 'approved', 'rejected']);
-export const notificationTypeEnum = pgEnum('notification_type', ['like', 'comment', 'follow', 'mention', 'message', 'order', 'payment', 'system', 'gift_received']);
+export const notificationTypeEnum = pgEnum('notification_type', ['like', 'comment', 'follow', 'mention', 'message', 'order', 'payment', 'system', 'gift_received', 'gift_accepted', 'gift_declined', 'finance', 'government', 'lifestyle', 'marketplace', 'community']);
 export const notificationChannelEnum = pgEnum('notification_channel', ['app', 'email', 'push', 'sms']);
 
 // Fraud prevention enums
@@ -254,6 +255,9 @@ export const commissionStatusEnum = pgEnum('commission_status', ['pending', 'sen
 // Define payment status enum
 export const paymentStatusEnum = pgEnum('payment_status', ['pending', 'processing', 'completed', 'failed', 'cancelled']);
 
+// Define cryptocurrency payment status enum
+export const cryptoPaymentStatusEnum = pgEnum('crypto_payment_status', ['pending', 'confirmed', 'failed', 'expired', 'cancelled']);
+
 // Define vendor account status enum
 export const vendorAccountStatusEnum = pgEnum('vendor_account_status', ['active', 'on_hold', 'suspended', 'permanently_suspended']);
 
@@ -296,6 +300,24 @@ export const affiliateStatusEnum = pgEnum('affiliate_status', ['active', 'pendin
 // Define affiliate tier enum  
 export const affiliateTierEnum = pgEnum('affiliate_tier', ['bronze', 'silver', 'gold', 'platinum', 'diamond']);
 
+// Define KYC document type enum
+export const kycDocumentTypeEnum = pgEnum('kyc_document_type', ['passport', 'national_id', 'drivers_license']);
+
+// Define KYC status enum
+export const kycStatusEnum = pgEnum('kyc_status', ['pending', 'verified', 'rejected', 'not_submitted']);
+
+// Define ticket department enum
+export const ticketDepartmentEnum = pgEnum('ticket_department', ['operations', 'tech', 'legal', 'marketing', 'sales', 'finance', 'hr']);
+
+// Define ticket status enum
+export const ticketStatusEnum = pgEnum('ticket_status', ['open', 'in_progress', 'waiting_customer', 'resolved', 'closed']);
+
+// Define ticket priority enum
+export const ticketPriorityEnum = pgEnum('ticket_priority', ['low', 'medium', 'high', 'urgent']);
+
+// Define user account type enum
+export const userAccountTypeEnum = pgEnum('user_account_type', ['personal', 'business']);
+
 // User model
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -303,11 +325,17 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   affiliatePartner: text("affiliate_partner"),
   name: text("name").notNull(),
+  firstName: text("first_name"),
+  surname: text("surname"),
+  lastUsernameChange: timestamp("last_username_change"),
+  usernameChangeCount: integer("username_change_count").default(0),
   email: text("email").notNull().unique(),
   bio: text("bio"),
   avatar: text("avatar"),
+  avatarUpdatedAt: timestamp("avatar_updated_at"),
   isVendor: boolean("is_vendor").default(false),
   role: userRoleEnum("role").default('user').notNull(),
+  accountType: userAccountTypeEnum("account_type").default('personal'),
   lastLogin: timestamp("last_login"),
   failedLoginAttempts: integer("failed_login_attempts").default(0),
   isLocked: boolean("is_locked").default(false),
@@ -315,8 +343,15 @@ export const users = pgTable("users", {
   passwordResetExpires: timestamp("password_reset_expires"),
   emailVerified: boolean("email_verified").default(false),
   verificationToken: text("verification_token"),
+  verificationTokenExpires: timestamp("verification_token_expires"),
+  emailChangeToken: text("email_change_token"),
+  emailChangeTokenExpires: timestamp("email_change_token_expires"),
+  pendingEmail: text("pending_email"),
   twoFactorEnabled: boolean("two_factor_enabled").default(false),
   twoFactorSecret: text("two_factor_secret"),
+  twoFactorCode: text("two_factor_code"),
+  twoFactorCodeExpires: timestamp("two_factor_code_expires"),
+  twoFactorMethod: text("two_factor_method"), // 'email' or 'whatsapp'
   datingSubscription: datingSubscriptionEnum("dating_subscription").default('normal'),
   datingEnabled: boolean("dating_enabled").default(false),
   region: regionEnum("region"),
@@ -329,24 +364,75 @@ export const users = pgTable("users", {
   shippingLastName: text("shipping_last_name"),
   shippingPhone: text("shipping_phone"),
   shippingAddress: text("shipping_address"),
+  shippingHouseNumber: text("shipping_house_number"),
   shippingCity: text("shipping_city"),
   shippingState: text("shipping_state"),
   shippingZipCode: text("shipping_zip_code"),
   shippingCountry: text("shipping_country"),
   shippingSpecialInstructions: text("shipping_special_instructions"),
+  shippingExtraGuidelines: text("shipping_extra_guidelines"),
   // Billing Information
   billingFirstName: text("billing_first_name"),
   billingLastName: text("billing_last_name"),
   billingPhone: text("billing_phone"),
   billingAddress: text("billing_address"),
+  billingHouseNumber: text("billing_house_number"),
   billingCity: text("billing_city"),
   billingState: text("billing_state"),
   billingZipCode: text("billing_zip_code"),
   billingCountry: text("billing_country"),
+  billingSpecialInstructions: text("billing_special_instructions"),
+  billingExtraGuidelines: text("billing_extra_guidelines"),
   // Profile preferences
   useShippingAsBilling: boolean("use_shipping_as_billing").default(true),
   preferredLanguage: text("preferred_language").default('EN'),
-  language: text("language").default('EN'), // User's selected language for web app interface
+  phone: text("phone"), // Personal contact phone number
+  // Email notification preferences
+  emailOnNewNotification: boolean("email_on_new_notification").default(true),
+  emailOnNewMessage: boolean("email_on_new_message").default(true),
+  emailOnNewOrder: boolean("email_on_new_order").default(true),
+  // Privacy preferences
+  aiTrainingConsent: boolean("ai_training_consent").default(false),
+  // Account suspension
+  accountSuspended: boolean("account_suspended").default(false),
+  accountSuspendedAt: timestamp("account_suspended_at"),
+  // Account deletion (soft delete - data retained)
+  accountDeleted: boolean("account_deleted").default(false),
+  accountDeletedAt: timestamp("account_deleted_at"),
+  originalUsername: text("original_username"), // Store original username before release
+  // Professional profile fields
+  currentPosition: text("current_position"),
+  industry: text("industry"),
+  education: text("education"),
+  website: text("website"),
+  salaryRange: text("salary_range"),
+  // KYC/AML Compliance fields
+  idDocumentType: kycDocumentTypeEnum("id_document_type"),
+  idDocumentNumber: text("id_document_number"),
+  idDocumentExpiryDate: date("id_document_expiry_date"),
+  idDocumentIssueCountry: text("id_document_issue_country"),
+  occupation: text("occupation"),
+  isPoliticallyExposed: boolean("is_politically_exposed").default(false),
+  politicalExposureDetails: text("political_exposure_details"),
+  proofOfAddressUrl: text("proof_of_address_url"),
+  sourceOfIncomeDocumentUrl: text("source_of_income_document_url"),
+  idDocumentFrontUrl: text("id_document_front_url"),
+  idDocumentBackUrl: text("id_document_back_url"),
+  idSelfieUrl: text("id_selfie_url"),
+  kycStatus: kycStatusEnum("kyc_status").default('not_submitted'),
+  kycVerifiedAt: timestamp("kyc_verified_at"),
+  amlRiskLevel: riskLevelEnum("aml_risk_level").default('low'),
+  amlCheckedAt: timestamp("aml_checked_at"),
+  // Financial Information
+  bankName: text("bank_name"),
+  bankAccountHolderName: text("bank_account_holder_name"),
+  bankAccountNumber: text("bank_account_number"),
+  bankRoutingNumber: text("bank_routing_number"),
+  paypalEmail: text("paypal_email"),
+  cardProofUrl: text("card_proof_url"),
+  cardLast4Digits: text("card_last_4_digits"),
+  cardHolderName: text("card_holder_name"),
+  bankStatementUrl: text("bank_statement_url"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -425,7 +511,6 @@ export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   vendorId: integer("vendor_id").notNull().references(() => vendors.id),
   name: text("name").notNull(),
-  title: text("title"), // Alias for name
   slug: text("slug").notNull().unique(),
   description: text("description").notNull(),
   price: doublePrecision("price").notNull(),
@@ -435,11 +520,13 @@ export const products = pgTable("products", {
   subcategory: text("subcategory"), // Product subcategory
   condition: text("condition").default('new'), // new, used, refurbished
   imageUrl: text("image_url").notNull(),
+  thumbnail: text("thumbnail"), // Product thumbnail
+  images: text("images").array(), // Additional product images
   inventory: integer("inventory").default(1),
-  stockQuantity: integer("stock_quantity").default(1), // Alias for inventory
   isNew: boolean("is_new").default(false),
   isOnSale: boolean("is_on_sale").default(false),
   productType: productTypeEnum("product_type").default('product').notNull(),
+  offeringType: text("offering_type").default('product'),
   // New Shopify-style fields
   status: productStatusEnum("status").default('active').notNull(),
   publishedOnOnlineStore: boolean("published_on_online_store").default(true),
@@ -493,6 +580,9 @@ export const categories = pgTable("categories", {
 // Define post review status enum
 export const postReviewStatusEnum = pgEnum('post_review_status', ['pending', 'approved', 'rejected']);
 
+// Modern CMS publishing workflow status
+export const publishStatusEnum = pgEnum('publish_status', ['draft', 'scheduled', 'published', 'archived']);
+
 export const posts = pgTable("posts", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
@@ -510,7 +600,12 @@ export const posts = pgTable("posts", {
   tags: text("tags").array(), // Array of tags for better content discovery
   isPromoted: boolean("is_promoted").default(false), // For advertisements
   promotionEndDate: timestamp("promotion_end_date"), // For advertisements
-  isPublished: boolean("is_published").default(true),
+  isPublished: boolean("is_published").default(true), // Legacy field - use publishStatus instead
+  // Modern CMS Publishing Workflow
+  publishStatus: publishStatusEnum("publish_status").default('published'), // draft, scheduled, published, archived
+  publishAt: timestamp("publish_at"), // Scheduled publish time
+  contentJson: json("content_json"), // Lexical editor state for rich text content
+  contentVersion: integer("content_version").default(1), // Track content versions
   // Moderation fields
   isFlagged: boolean("is_flagged").default(false),
   flagReason: text("flag_reason"),
@@ -529,6 +624,7 @@ export const comments = pgTable("comments", {
   userId: integer("user_id").notNull().references(() => users.id),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Like model
@@ -642,6 +738,22 @@ export const connections = pgTable("connections", {
 }, (table) => {
   return {
     uniqueConnection: unique().on(table.userId, table.connectedUserId),
+  };
+});
+
+// Friendships model - for accepted friend connections
+export const friendships = pgTable("friendships", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  friendId: integer("friend_id").notNull().references(() => users.id),
+  status: varchar("status", { length: 20 }).notNull().default("accepted"), // accepted, blocked
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    uniqueFriendship: unique().on(table.userId, table.friendId),
+    userIdIdx: index("friendships_user_id_idx").on(table.userId),
+    friendIdIdx: index("friendships_friend_id_idx").on(table.friendId),
   };
 });
 
@@ -768,6 +880,28 @@ export const orderItems = pgTable("order_items", {
   totalPrice: doublePrecision("total_price").notNull(),
   status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, shipped, delivered, returned
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Cryptocurrency payments model
+export const cryptoPayments = pgTable("crypto_payments", {
+  id: serial("id").primaryKey(),
+  paymentId: varchar("payment_id", { length: 100 }).notNull().unique(), // Unique payment identifier
+  orderId: integer("order_id").references(() => orders.id),
+  userId: integer("user_id").references(() => users.id),
+  amount: doublePrecision("amount").notNull(), // Amount in USD
+  currency: varchar("currency", { length: 10 }).notNull(), // BTC, ETH, etc.
+  exchangeRate: doublePrecision("exchange_rate").notNull(), // USD per crypto unit at time of payment
+  amountInCrypto: doublePrecision("amount_in_crypto").notNull(), // Amount in cryptocurrency
+  walletAddress: varchar("wallet_address", { length: 255 }).notNull(), // Payment wallet address
+  status: cryptoPaymentStatusEnum("status").notNull().default("pending"),
+  transactionHash: varchar("transaction_hash", { length: 255 }), // Blockchain transaction hash
+  confirmations: integer("confirmations").default(0), // Number of blockchain confirmations
+  requiredConfirmations: integer("required_confirmations").default(3), // Required confirmations for completion
+  expiresAt: timestamp("expires_at").notNull(), // Payment expiration time
+  confirmedAt: timestamp("confirmed_at"), // When payment was confirmed
+  metadata: json("metadata"), // Additional payment metadata
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Returns model for handling product returns
@@ -998,7 +1132,19 @@ export const insertUserSchema = createInsertSchema(users)
   .omit({ id: true, createdAt: true });
 
 export const insertVendorSchema = createInsertSchema(vendors)
-  .omit({ id: true, rating: true, ratingCount: true, isApproved: true, createdAt: true, updatedAt: true });
+  .omit({ id: true, rating: true, ratingCount: true, isApproved: true, createdAt: true, updatedAt: true })
+  .extend({
+    // Make fields optional that are not collected in simplified forms
+    businessName: z.string().optional(),
+    businessType: z.string().optional(),
+    email: z.string().email().optional(),
+    phone: z.string().optional(),
+    address: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    zipCode: z.string().optional(),
+    country: z.string().optional(),
+  });
 
 // Store Users schemas
 export const insertStoreUserSchema = createInsertSchema(storeUsers).omit({
@@ -1042,6 +1188,14 @@ export const insertCommentSchema = createInsertSchema(comments)
 export const insertMessageSchema = createInsertSchema(messages)
   .omit({ id: true, isRead: true, createdAt: true });
 
+export const insertCallSessionSchema = createInsertSchema(callSessions)
+  .omit({ id: true, startedAt: true, endedAt: true });
+
+export const selectCallSessionSchema = createSelectSchema(callSessions);
+
+export type CallSession = typeof callSessions.$inferSelect;
+export type InsertCallSession = z.infer<typeof insertCallSessionSchema>;
+
 export const insertReviewSchema = createInsertSchema(reviews)
   .omit({ id: true, createdAt: true });
 
@@ -1062,6 +1216,9 @@ export const insertOrderSchema = createInsertSchema(orders)
 
 export const insertOrderItemSchema = createInsertSchema(orderItems)
   .omit({ id: true, createdAt: true });
+
+export const insertCryptoPaymentSchema = createInsertSchema(cryptoPayments)
+  .omit({ id: true, createdAt: true, updatedAt: true });
 
 // Community and Monetization Schemas
 export const insertCommunitySchema = createInsertSchema(communities)
@@ -1100,6 +1257,9 @@ export const insertFriendRequestSchema = createInsertSchema(friendRequests)
   .omit({ id: true, status: true, createdAt: true, updatedAt: true });
 
 export const insertConnectionSchema = createInsertSchema(connections)
+  .omit({ id: true, status: true, createdAt: true, updatedAt: true });
+
+export const insertFriendshipSchema = createInsertSchema(friendships)
   .omit({ id: true, status: true, createdAt: true, updatedAt: true });
   
 export const insertLikeSchema = createInsertSchema(likes)
@@ -1151,6 +1311,9 @@ export type InsertOrder = z.infer<typeof insertOrderSchema>;
 export type OrderItem = typeof orderItems.$inferSelect;
 export type InsertOrderItem = z.infer<typeof insertOrderItemSchema>;
 
+export type CryptoPayment = typeof cryptoPayments.$inferSelect;
+export type InsertCryptoPayment = z.infer<typeof insertCryptoPaymentSchema>;
+
 // Community and Monetization Types
 export type Community = typeof communities.$inferSelect;
 export type InsertCommunity = z.infer<typeof insertCommunitySchema>;
@@ -1187,6 +1350,9 @@ export type InsertFriendRequest = z.infer<typeof insertFriendRequestSchema>;
 
 export type Connection = typeof connections.$inferSelect;
 export type InsertConnection = z.infer<typeof insertConnectionSchema>;
+
+export type Friendship = typeof friendships.$inferSelect;
+export type InsertFriendship = z.infer<typeof insertFriendshipSchema>;
 
 export type Like = typeof likes.$inferSelect;
 export type InsertLike = z.infer<typeof insertLikeSchema>;
@@ -1308,6 +1474,12 @@ export const videos = pgTable("videos", {
   tags: text("tags").array(),
   isPremium: boolean("is_premium").default(false), // Whether this is a premium video requiring payment
   price: doublePrecision("price"), // Price for accessing premium content, null for free content
+  currency: varchar("currency", { length: 3 }).default("GBP"), // Currency for pricing
+  monetizationType: videoMonetizationEnum("monetization_type").default("free"), // free, ppv, subscription
+  stripeProductId: varchar("stripe_product_id", { length: 100 }), // Stripe product ID for monetization
+  stripePriceId: varchar("stripe_price_id", { length: 100 }), // Stripe price ID for monetization
+  storageKey: varchar("storage_key", { length: 255 }), // Object storage key for protected content
+  previewUrl: text("preview_url"), // Preview video URL for subscription content
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -1405,7 +1577,8 @@ export const videoPurchases = pgTable("video_purchases", {
   };
 });
 
-export const insertVideoSchema = createInsertSchema(videos);
+export const insertVideoSchema = createInsertSchema(videos)
+  .omit({ id: true, views: true, likes: true, shares: true, createdAt: true, updatedAt: true });
 export const insertVideoEngagementSchema = createInsertSchema(videoEngagements);
 export const insertVideoProductOverlaySchema = createInsertSchema(videoProductOverlays)
   .omit({ id: true, clickCount: true, conversionCount: true, createdAt: true, updatedAt: true });
@@ -1551,11 +1724,29 @@ export const insertCommunityContentSchema = createInsertSchema(communityContents
 export type CommunityContent = typeof communityContents.$inferSelect;
 export type InsertCommunityContent = z.infer<typeof insertCommunityContentSchema>;
 
+// Community content likes
+export const communityContentLikes = pgTable("community_content_likes", {
+  id: serial("id").primaryKey(),
+  contentId: integer("content_id").notNull().references(() => communityContents.id, { onDelete: 'cascade' }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    uniqueLike: unique().on(table.contentId, table.userId),
+  };
+});
+
+export const insertCommunityContentLikeSchema = createInsertSchema(communityContentLikes)
+  .omit({ id: true, createdAt: true });
+
+export type CommunityContentLike = typeof communityContentLikes.$inferSelect;
+export type InsertCommunityContentLike = z.infer<typeof insertCommunityContentLikeSchema>;
+
 // Auth tokens for token-based authentication (multi-device support)
 export const authTokens = pgTable("auth_tokens", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
-  token: varchar("token", { length: 128 }).notNull().unique(),
+  token: varchar("token", { length: 512 }).notNull().unique(), // Increased to 512 to accommodate JWT tokens
   clientId: varchar("client_id", { length: 100 }), // Client identifier
   deviceType: varchar("device_type", { length: 50 }), // mobile, tablet, desktop, etc.
   deviceInfo: varchar("device_info", { length: 512 }), // Browser/device details for security
@@ -1646,12 +1837,50 @@ export const moderationReports = pgTable("moderation_reports", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const userBlocks = pgTable("user_blocks", {
+  id: serial("id").primaryKey(),
+  blockerId: integer("blocker_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  blockedId: integer("blocked_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  reason: text("reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    uniqueBlock: unique().on(table.blockerId, table.blockedId),
+    blockerIdIdx: index("user_blocks_blocker_id_idx").on(table.blockerId),
+    blockedIdIdx: index("user_blocks_blocked_id_idx").on(table.blockedId),
+  };
+});
+
+export const toastReports = pgTable("toast_reports", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  errorType: text("error_type").notNull(),
+  errorMessage: text("error_message").notNull(),
+  toastTitle: text("toast_title"),
+  toastDescription: text("toast_description"),
+  url: text("url").notNull(),
+  userAgent: text("user_agent"),
+  status: text("status").notNull().default("pending"),
+  reviewedById: integer("reviewed_by_id").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    userIdIdx: index("toast_reports_user_id_idx").on(table.userId),
+    statusIdx: index("toast_reports_status_idx").on(table.status),
+    createdAtIdx: index("toast_reports_created_at_idx").on(table.createdAt),
+  };
+});
+
 // Schemas
 export const insertAllowListSchema = createInsertSchema(allowList).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertBlockListSchema = createInsertSchema(blockList).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertFlaggedContentSchema = createInsertSchema(flaggedContent).omit({ id: true, reviewedAt: true, createdAt: true, updatedAt: true });
 export const insertFlaggedImageSchema = createInsertSchema(flaggedImages).omit({ id: true, reviewedAt: true, createdAt: true, updatedAt: true });
 export const insertModerationReportSchema = createInsertSchema(moderationReports).omit({ id: true, reviewedAt: true, createdAt: true, updatedAt: true });
+export const insertUserBlockSchema = createInsertSchema(userBlocks).omit({ id: true, createdAt: true });
+export const insertToastReportSchema = createInsertSchema(toastReports).omit({ id: true, reviewedAt: true, createdAt: true, updatedAt: true });
 
 // Types
 export type AllowListItem = typeof allowList.$inferSelect;
@@ -1668,6 +1897,12 @@ export type InsertFlaggedImage = z.infer<typeof insertFlaggedImageSchema>;
 
 export type ModerationReport = typeof moderationReports.$inferSelect;
 export type InsertModerationReport = z.infer<typeof insertModerationReportSchema>;
+
+export type UserBlock = typeof userBlocks.$inferSelect;
+export type InsertUserBlock = z.infer<typeof insertUserBlockSchema>;
+
+export type ToastReport = typeof toastReports.$inferSelect;
+export type InsertToastReport = z.infer<typeof insertToastReportSchema>;
 
 // Vendor Analytics Tables
 
@@ -3148,4 +3383,990 @@ export const insertReturnSchema = createInsertSchema(returns).omit({
 export type Return = typeof returns.$inferSelect;
 export type InsertReturn = z.infer<typeof insertReturnSchema>;
 
+// Gift Card System Enums
+export const giftCardStatusEnum = pgEnum('gift_card_status', ['active', 'redeemed', 'expired', 'cancelled']);
+export const giftCardDesignEnum = pgEnum('gift_card_design', ['classic_blue', 'elegant_gold', 'festive_red', 'modern_purple', 'nature_green', 'luxury_black', 'premium_silver', 'exclusive_diamond']);
+export const giftCardTransactionTypeEnum = pgEnum('gift_card_transaction_type', ['purchase', 'redemption', 'refund']);
 
+// Gift Cards table
+export const giftCards = pgTable("gift_cards", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(), // Unique gift card code
+  cardNumber: text("card_number").notNull().unique(), // 16-digit card number for balance checking
+  pin: text("pin").notNull(), // 4-digit PIN for security
+  amount: doublePrecision("amount").notNull(), // Gift card value in GBP
+  currency: text("currency").default('GBP').notNull(),
+  design: giftCardDesignEnum("design").notNull(),
+  status: giftCardStatusEnum("status").default('active').notNull(),
+  
+  // Purchase information
+  purchasedBy: integer("purchased_by").references(() => users.id, { onDelete: 'set null' }),
+  purchaseOrderId: integer("purchase_order_id").references(() => orders.id, { onDelete: 'set null' }),
+  
+  // Redemption information
+  redeemedBy: integer("redeemed_by").references(() => users.id, { onDelete: 'set null' }),
+  redeemedAt: timestamp("redeemed_at"),
+  redeemedAmount: doublePrecision("redeemed_amount").default(0), // Track partial redemptions
+  
+  // Recipient information (optional for gifting)
+  recipientEmail: text("recipient_email"),
+  recipientName: text("recipient_name"),
+  giftMessage: text("gift_message"),
+  
+  // Expiry information
+  expiresAt: timestamp("expires_at"), // Gift card expiry date
+  
+  // Metadata
+  stripePaymentIntentId: text("stripe_payment_intent_id"), // Link to Stripe payment
+  notes: text("notes"), // Admin notes
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  codeIdx: index("gift_cards_code_idx").on(table.code),
+  cardNumberIdx: index("gift_cards_card_number_idx").on(table.cardNumber),
+  statusIdx: index("gift_cards_status_idx").on(table.status),
+  purchasedByIdx: index("gift_cards_purchased_by_idx").on(table.purchasedBy),
+  redeemedByIdx: index("gift_cards_redeemed_by_idx").on(table.redeemedBy),
+  expiresAtIdx: index("gift_cards_expires_at_idx").on(table.expiresAt),
+}));
+
+// Gift Card Transactions table - track all gift card related transactions
+export const giftCardTransactions = pgTable("gift_card_transactions", {
+  id: serial("id").primaryKey(),
+  giftCardId: integer("gift_card_id").notNull().references(() => giftCards.id, { onDelete: 'cascade' }),
+  type: giftCardTransactionTypeEnum("type").notNull(),
+  
+  // Transaction details
+  amount: doublePrecision("amount").notNull(),
+  currency: text("currency").default('GBP').notNull(),
+  
+  // User information
+  userId: integer("user_id").references(() => users.id, { onDelete: 'set null' }),
+  
+  // Order/payment information
+  orderId: integer("order_id").references(() => orders.id, { onDelete: 'set null' }),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  
+  // Transaction metadata
+  description: text("description"),
+  metadata: json("metadata"), // Store additional transaction data
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  giftCardIdIdx: index("gift_card_transactions_gift_card_id_idx").on(table.giftCardId),
+  typeIdx: index("gift_card_transactions_type_idx").on(table.type),
+  userIdIdx: index("gift_card_transactions_user_id_idx").on(table.userId),
+  createdAtIdx: index("gift_card_transactions_created_at_idx").on(table.createdAt),
+}));
+
+// Gift Card Redemptions table - detailed redemption tracking
+export const giftCardRedemptions = pgTable("gift_card_redemptions", {
+  id: serial("id").primaryKey(),
+  giftCardId: integer("gift_card_id").notNull().references(() => giftCards.id, { onDelete: 'cascade' }),
+  orderId: integer("order_id").notNull().references(() => orders.id, { onDelete: 'cascade' }),
+  
+  // Redemption details
+  redeemedAmount: doublePrecision("redeemed_amount").notNull(), // Amount used in this redemption
+  remainingBalance: doublePrecision("remaining_balance").notNull(), // Balance left after redemption
+  
+  // User information
+  redeemedBy: integer("redeemed_by").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  giftCardIdIdx: index("gift_card_redemptions_gift_card_id_idx").on(table.giftCardId),
+  orderIdIdx: index("gift_card_redemptions_order_id_idx").on(table.orderId),
+  redeemedByIdx: index("gift_card_redemptions_redeemed_by_idx").on(table.redeemedBy),
+}));
+
+// Create insert and select schemas for gift cards
+export const insertGiftCardSchema = createInsertSchema(giftCards).omit({
+  id: true,
+  code: true, // Generated automatically
+  cardNumber: true, // Generated automatically
+  pin: true, // Generated automatically
+  redeemedBy: true,
+  redeemedAt: true,
+  redeemedAmount: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const selectGiftCardSchema = createSelectSchema(giftCards);
+
+export const insertGiftCardTransactionSchema = createInsertSchema(giftCardTransactions).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertGiftCardRedemptionSchema = createInsertSchema(giftCardRedemptions).omit({
+  id: true,
+  createdAt: true
+});
+
+// Export types
+export type GiftCard = typeof giftCards.$inferSelect;
+export type InsertGiftCard = z.infer<typeof insertGiftCardSchema>;
+export type GiftCardTransaction = typeof giftCardTransactions.$inferSelect;
+export type InsertGiftCardTransaction = z.infer<typeof insertGiftCardTransactionSchema>;
+export type GiftCardRedemption = typeof giftCardRedemptions.$inferSelect;
+export type InsertGiftCardRedemption = z.infer<typeof insertGiftCardRedemptionSchema>;
+
+// Gift Card Design Configurations
+export const GIFT_CARD_DESIGNS = {
+  classic_blue: {
+    name: 'Classic Blue',
+    description: 'Timeless blue design with elegant styling',
+    backgroundColor: '#1e40af',
+    textColor: '#ffffff',
+    accentColor: '#3b82f6'
+  },
+  elegant_gold: {
+    name: 'Elegant Gold',
+    description: 'Luxurious gold design for special occasions',
+    backgroundColor: '#d97706',
+    textColor: '#ffffff',
+    accentColor: '#f59e0b'
+  },
+  festive_red: {
+    name: 'Festive Red',
+    description: 'Vibrant red design perfect for celebrations',
+    backgroundColor: '#dc2626',
+    textColor: '#ffffff',
+    accentColor: '#ef4444'
+  },
+  modern_purple: {
+    name: 'Modern Purple',
+    description: 'Contemporary purple design with modern flair',
+    backgroundColor: '#7c3aed',
+    textColor: '#ffffff',
+    accentColor: '#8b5cf6'
+  },
+  nature_green: {
+    name: 'Nature Green',
+    description: 'Fresh green design inspired by nature',
+    backgroundColor: '#059669',
+    textColor: '#ffffff',
+    accentColor: '#10b981'
+  },
+  luxury_black: {
+    name: 'Luxury Black',
+    description: 'Premium black design for exclusive occasions',
+    backgroundColor: '#111827',
+    textColor: '#ffffff',
+    accentColor: '#374151'
+  },
+  premium_silver: {
+    name: 'Premium Silver',
+    description: 'Sophisticated silver design with metallic finish',
+    backgroundColor: '#6b7280',
+    textColor: '#ffffff',
+    accentColor: '#9ca3af'
+  },
+  exclusive_diamond: {
+    name: 'Exclusive Diamond',
+    description: 'Ultra-premium diamond design for high-value cards',
+    backgroundColor: '#1f2937',
+    textColor: '#ffffff',
+    accentColor: '#f3f4f6'
+  }
+} as const;
+
+// Gift Card Denominations
+export const GIFT_CARD_DENOMINATIONS = [5, 10, 25, 50, 100, 500, 1000, 2500] as const;
+
+// Proxy Accounts - KYC/BYC/AML Compliant Account Management
+export const proxyAccountTypeEnum = pgEnum('proxy_account_type', ['kids', 'organization', 'company']);
+export const proxyAccountStatusEnum = pgEnum('proxy_account_status', ['pending', 'under_review', 'verified', 'rejected', 'suspended']);
+export const kycVerificationStatusEnum = pgEnum('kyc_verification_status', ['not_started', 'pending', 'approved', 'rejected']);
+export const documentTypeEnum = pgEnum('document_type', ['passport', 'drivers_license', 'national_id', 'proof_of_address', 'business_registration', 'tax_certificate', 'bank_statement', 'articles_of_incorporation', 'beneficial_ownership']);
+
+export const proxyAccounts = pgTable("proxy_accounts", {
+  id: serial("id").primaryKey(),
+  parentUserId: integer("parent_user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  accountType: proxyAccountTypeEnum("account_type").notNull(),
+  status: proxyAccountStatusEnum("status").default('pending').notNull(),
+  
+  // Basic Account Information
+  accountName: text("account_name").notNull(),
+  email: text("email"),
+  phoneNumber: text("phone_number"),
+  dateOfBirth: date("date_of_birth"),
+  nationality: text("nationality"),
+  
+  // Kids Account Specific Fields
+  childFirstName: text("child_first_name"),
+  childLastName: text("child_last_name"),
+  kidsUsername: text("kids_username"),
+  kidsEmail: text("kids_email"),
+  kidsUserId: integer("kids_user_id").references(() => users.id, { onDelete: 'set null' }),
+  guardianFullName: text("guardian_full_name"),
+  guardianRelationship: text("guardian_relationship"),
+  guardianIdNumber: text("guardian_id_number"),
+  guardianEmail: text("guardian_email"),
+  guardianPhone: text("guardian_phone"),
+  childAge: integer("child_age"),
+  kidsVerificationDocumentUrl: text("kids_verification_document_url"),
+  
+  // Organization/Company Specific Fields
+  legalEntityName: text("legal_entity_name"),
+  businessRegistrationNumber: text("business_registration_number"),
+  taxIdNumber: text("tax_id_number"),
+  vatNumber: text("vat_number"),
+  incorporationDate: date("incorporation_date"),
+  businessType: text("business_type"),
+  industryType: text("industry_type"),
+  numberOfEmployees: text("number_of_employees"),
+  annualRevenue: text("annual_revenue"),
+  
+  // Company Account Credentials
+  companyUsername: text("company_username"),
+  companyEmail: text("company_email"),
+  companyPassword: text("company_password"),
+  
+  // Registered Address
+  registeredAddress: text("registered_address"),
+  registeredHouseNumber: text("registered_house_number"),
+  registeredCity: text("registered_city"),
+  registeredState: text("registered_state"),
+  registeredCountry: text("registered_country"),
+  registeredPostalCode: text("registered_postal_code"),
+  
+  // Operating Address (if different)
+  operatingAddress: text("operating_address"),
+  operatingCity: text("operating_city"),
+  operatingState: text("operating_state"),
+  operatingCountry: text("operating_country"),
+  operatingPostalCode: text("operating_postal_code"),
+  
+  // Directors/Officers Information (JSON array for multiple)
+  directors: json("directors"), // [{name, dob, nationality, idNumber, address}]
+  beneficialOwners: json("beneficial_owners"), // [{name, ownershipPercentage, nationality, idNumber}]
+  authorizedSignatories: json("authorized_signatories"), // [{name, position, idNumber}]
+  
+  // KYC/AML Compliance Fields
+  kycStatus: kycVerificationStatusEnum("kyc_status").default('not_started').notNull(),
+  kycVerifiedAt: timestamp("kyc_verified_at"),
+  kycVerifiedBy: integer("kyc_verified_by").references(() => users.id),
+  identityVerified: boolean("identity_verified").default(false),
+  addressVerified: boolean("address_verified").default(false),
+  
+  // AML Fields
+  purposeOfAccount: text("purpose_of_account"),
+  expectedTransactionVolume: text("expected_transaction_volume"),
+  isPoliticallyExposed: boolean("is_politically_exposed").default(false),
+  politicalExposureDetails: text("political_exposure_details"),
+  
+  // Risk Assessment
+  riskLevel: riskLevelEnum("risk_level").default('low'),
+  riskAssessmentDate: timestamp("risk_assessment_date"),
+  riskAssessmentNotes: text("risk_assessment_notes"),
+  
+  // Compliance Documents
+  documentsUploaded: json("documents_uploaded"), // [{type, url, uploadedAt, verified}]
+  
+  // Banking Information
+  bankName: text("bank_name"),
+  bankAccountNumber: text("bank_account_number"),
+  bankSwiftCode: text("bank_swift_code"),
+  bankIban: text("bank_iban"),
+  
+  // Account Settings
+  isActive: boolean("is_active").default(true),
+  suspensionReason: text("suspension_reason"),
+  suspendedAt: timestamp("suspended_at"),
+  
+  // Verification Notes
+  verificationNotes: text("verification_notes"),
+  rejectionReason: text("rejection_reason"),
+  
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  verifiedAt: timestamp("verified_at"),
+}, (table) => ({
+  parentUserIdIdx: index("proxy_accounts_parent_user_id_idx").on(table.parentUserId),
+  accountTypeIdx: index("proxy_accounts_account_type_idx").on(table.accountType),
+  statusIdx: index("proxy_accounts_status_idx").on(table.status),
+  kycStatusIdx: index("proxy_accounts_kyc_status_idx").on(table.kycStatus),
+}));
+
+// Create insert and select schemas for proxy accounts
+export const insertProxyAccountSchema = createInsertSchema(proxyAccounts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  verifiedAt: true,
+  kycVerifiedAt: true,
+  suspendedAt: true,
+});
+
+export const selectProxyAccountSchema = createSelectSchema(proxyAccounts);
+
+// Export types
+export type ProxyAccount = typeof proxyAccounts.$inferSelect;
+export type InsertProxyAccount = z.infer<typeof insertProxyAccountSchema>;
+
+// Financial Services Table
+export const financialServices = pgTable("financial_services", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  serviceType: text("service_type").notNull(), // banking, insurance, loans, investing, crypto, remittance
+  serviceName: text("service_name").notNull(),
+  status: text("status").default('interested').notNull(), // interested, applied, approved, rejected, active, closed
+  applicationData: json("application_data"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  approvedAt: timestamp("approved_at"),
+  rejectedAt: timestamp("rejected_at"),
+}, (table) => ({
+  userIdIdx: index("financial_services_user_id_idx").on(table.userId),
+  serviceTypeIdx: index("financial_services_service_type_idx").on(table.serviceType),
+  statusIdx: index("financial_services_status_idx").on(table.status),
+}));
+
+export const insertFinancialServiceSchema = createInsertSchema(financialServices).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  approvedAt: true,
+  rejectedAt: true,
+});
+
+export const selectFinancialServiceSchema = createSelectSchema(financialServices);
+
+export type FinancialService = typeof financialServices.$inferSelect;
+export type InsertFinancialService = z.infer<typeof insertFinancialServiceSchema>;
+
+// Government Services Table
+export const governmentServices = pgTable("government_services", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  serviceType: text("service_type").notNull(), // documents, public_services, youth_centres
+  serviceName: text("service_name").notNull(),
+  status: text("status").default('pending').notNull(), // pending, in_progress, completed, rejected
+  requestData: json("request_data"),
+  documentType: text("document_type"), // for documents: passport, id_card, drivers_license, etc
+  appointmentDate: timestamp("appointment_date"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+  rejectedAt: timestamp("rejected_at"),
+}, (table) => ({
+  userIdIdx: index("government_services_user_id_idx").on(table.userId),
+  serviceTypeIdx: index("government_services_service_type_idx").on(table.serviceType),
+  statusIdx: index("government_services_status_idx").on(table.status),
+}));
+
+export const insertGovernmentServiceSchema = createInsertSchema(governmentServices).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  completedAt: true,
+  rejectedAt: true,
+});
+
+export const selectGovernmentServiceSchema = createSelectSchema(governmentServices);
+
+export type GovernmentService = typeof governmentServices.$inferSelect;
+export type InsertGovernmentService = z.infer<typeof insertGovernmentServiceSchema>;
+
+// Calendar event category enum
+export const calendarEventCategoryEnum = pgEnum('calendar_event_category', [
+  'dating',
+  'marketplace',
+  'community',
+  'finance',
+  'government',
+  'lifestyle',
+  'services',
+  'appointment',
+  'personal',
+  'work',
+  'social',
+  'delivery',
+  'payment',
+  'meeting'
+]);
+
+// Calendar event priority enum
+export const calendarEventPriorityEnum = pgEnum('calendar_event_priority', ['low', 'medium', 'high', 'urgent']);
+
+// Calendar events table - unified calendar for all app functionalities
+export const calendarEvents = pgTable("calendar_events", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  category: calendarEventCategoryEnum("category").notNull(),
+  priority: calendarEventPriorityEnum("priority").default('medium'),
+  
+  // Date and time
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  isAllDay: boolean("is_all_day").default(false),
+  timezone: text("timezone").default('UTC'),
+  
+  // Location
+  location: text("location"),
+  people: text("people"),
+  isOnline: boolean("is_online").default(false),
+  meetingLink: text("meeting_link"),
+  
+  // Related entities
+  relatedType: text("related_type"), // 'order', 'product', 'community', 'date', 'service', etc.
+  relatedId: integer("related_id"), // ID of the related entity
+  
+  // Participants
+  participants: json("participants"), // Array of user IDs
+  
+  // Recurrence
+  isRecurring: boolean("is_recurring").default(false),
+  recurrenceRule: text("recurrence_rule"), // RRULE format for recurring events
+  parentEventId: integer("parent_event_id"), // Reference to parent event for recurring instances
+  
+  // Reminder and notifications
+  reminderMinutes: integer("reminder_minutes").default(30), // Minutes before event
+  hasNotified: boolean("has_notified").default(false),
+  
+  // Status
+  status: text("status").default('scheduled').notNull(), // scheduled, completed, cancelled, in_progress
+  isCancelled: boolean("is_cancelled").default(false),
+  
+  // Additional metadata
+  color: text("color"), // For calendar UI customization
+  notes: text("notes"),
+  attachments: json("attachments"), // Array of attachment metadata objects: {id, name, mimeType, size, storagePath, checksum, uploadedBy, uploadedAt}
+  shareWithParticipants: boolean("share_with_participants").default(false), // Enable file sharing with event participants
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  userIdIdx: index("calendar_events_user_id_idx").on(table.userId),
+  categoryIdx: index("calendar_events_category_idx").on(table.category),
+  startDateIdx: index("calendar_events_start_date_idx").on(table.startDate),
+  statusIdx: index("calendar_events_status_idx").on(table.status),
+  relatedTypeIdx: index("calendar_events_related_type_idx").on(table.relatedType),
+}));
+
+// Calendar event participants table
+export const calendarEventParticipants = pgTable("calendar_event_participants", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").references(() => calendarEvents.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  status: text("status").default('pending').notNull(), // pending, accepted, declined, maybe
+  role: text("role").default('attendee'), // organizer, attendee, optional
+  responseAt: timestamp("response_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  uniqueParticipant: unique().on(table.eventId, table.userId),
+  eventIdIdx: index("calendar_event_participants_event_id_idx").on(table.eventId),
+  userIdIdx: index("calendar_event_participants_user_id_idx").on(table.userId),
+}));
+
+// Calendar event reminders table
+export const calendarEventReminders = pgTable("calendar_event_reminders", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").references(() => calendarEvents.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  reminderTime: timestamp("reminder_time").notNull(),
+  reminderType: text("reminder_type").default('notification'), // notification, email, sms
+  isSent: boolean("is_sent").default(false),
+  sentAt: timestamp("sent_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  eventIdIdx: index("calendar_event_reminders_event_id_idx").on(table.eventId),
+  userIdIdx: index("calendar_event_reminders_user_id_idx").on(table.userId),
+  reminderTimeIdx: index("calendar_event_reminders_time_idx").on(table.reminderTime),
+}));
+
+// Insert and select schemas for calendar events
+export const insertCalendarEventSchema = createInsertSchema(calendarEvents).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const selectCalendarEventSchema = createSelectSchema(calendarEvents);
+
+export type CalendarEvent = typeof calendarEvents.$inferSelect;
+export type InsertCalendarEvent = z.infer<typeof insertCalendarEventSchema>;
+
+// Calendar event attachment metadata interface
+export interface CalendarEventAttachment {
+  id: string;
+  name: string;
+  mimeType: string;
+  size: number;
+  storagePath: string;
+  checksum?: string;
+  uploadedBy: number;
+  uploadedAt: string;
+}
+
+// Insert and select schemas for calendar event participants
+export const insertCalendarEventParticipantSchema = createInsertSchema(calendarEventParticipants).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const selectCalendarEventParticipantSchema = createSelectSchema(calendarEventParticipants);
+
+export type CalendarEventParticipant = typeof calendarEventParticipants.$inferSelect;
+export type InsertCalendarEventParticipant = z.infer<typeof insertCalendarEventParticipantSchema>;
+
+// Insert and select schemas for calendar event reminders
+export const insertCalendarEventReminderSchema = createInsertSchema(calendarEventReminders).omit({
+  id: true,
+  createdAt: true,
+  sentAt: true,
+});
+
+export const selectCalendarEventReminderSchema = createSelectSchema(calendarEventReminders);
+
+export type CalendarEventReminder = typeof calendarEventReminders.$inferSelect;
+export type InsertCalendarEventReminder = z.infer<typeof insertCalendarEventReminderSchema>;
+
+// Schema for updating participant status
+export const updateCalendarEventParticipantStatusSchema = z.object({
+  status: z.enum(['pending', 'accepted', 'declined', 'tentative']),
+});
+
+// Global holidays table - stores worldwide public holidays
+export const globalHolidays = pgTable("global_holidays", {
+  id: serial("id").primaryKey(),
+  date: date("date").notNull(),
+  name: text("name").notNull(),
+  localName: text("local_name"),
+  countryCode: text("country_code").notNull(),
+  fixed: boolean("fixed").default(false),
+  global: boolean("global").default(false),
+  counties: text("counties").array(),
+  launchYear: integer("launch_year"),
+  types: text("types").array(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  dateIdx: index("global_holidays_date_idx").on(table.date),
+  countryCodeIdx: index("global_holidays_country_code_idx").on(table.countryCode),
+  uniqueHoliday: unique().on(table.date, table.countryCode, table.name),
+}));
+
+export const insertGlobalHolidaySchema = createInsertSchema(globalHolidays).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const selectGlobalHolidaySchema = createSelectSchema(globalHolidays);
+
+export type GlobalHoliday = typeof globalHolidays.$inferSelect;
+export type InsertGlobalHoliday = z.infer<typeof insertGlobalHolidaySchema>;
+
+// Lifestyle Services Schema
+export const lifestyleServices = pgTable("lifestyle_services", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  category: text("category").notNull(), // restaurant, ride_sharing, flights, public_transportation, free_time, hotels, house_sharing, activities, food_delivery
+  title: text("title").notNull(),
+  description: text("description"),
+  location: text("location"),
+  city: text("city"),
+  country: text("country"),
+  address: text("address"),
+  latitude: text("latitude"),
+  longitude: text("longitude"),
+  price: text("price"),
+  currency: text("currency").default("USD"),
+  priceType: text("price_type"), // per_hour, per_day, per_night, per_person, fixed
+  images: text("images").array(),
+  contactName: text("contact_name"),
+  contactPhone: text("contact_phone"),
+  contactEmail: text("contact_email"),
+  website: text("website"),
+  operatingHours: text("operating_hours"),
+  amenities: text("amenities").array(),
+  rating: text("rating"),
+  reviewCount: integer("review_count").default(0),
+  isActive: boolean("is_active").default(true),
+  isFeatured: boolean("is_featured").default(false),
+  isVerified: boolean("is_verified").default(false),
+  metadata: json("metadata"), // Additional category-specific data
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertLifestyleServiceSchema = createInsertSchema(lifestyleServices).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  reviewCount: true,
+});
+
+export const selectLifestyleServiceSchema = createSelectSchema(lifestyleServices);
+
+export type LifestyleService = typeof lifestyleServices.$inferSelect;
+export type InsertLifestyleService = z.infer<typeof insertLifestyleServiceSchema>;
+
+export const services = pgTable("services", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  category: text("category").notNull(), // health, education, utilities, jobs, freelance, courier_freight, charities_ngos
+  title: text("title").notNull(),
+  description: text("description"),
+  location: text("location"),
+  city: text("city"),
+  country: text("country"),
+  address: text("address"),
+  latitude: text("latitude"),
+  longitude: text("longitude"),
+  price: text("price"),
+  currency: text("currency").default("USD"),
+  priceType: text("price_type"), // per_hour, per_day, per_project, fixed
+  images: text("images").array(),
+  contactName: text("contact_name"),
+  contactPhone: text("contact_phone"),
+  contactEmail: text("contact_email"),
+  website: text("website"),
+  operatingHours: text("operating_hours"),
+  skills: text("skills").array(),
+  certifications: text("certifications").array(),
+  rating: text("rating"),
+  reviewCount: integer("review_count").default(0),
+  isActive: boolean("is_active").default(true),
+  isFeatured: boolean("is_featured").default(false),
+  isVerified: boolean("is_verified").default(false),
+  metadata: json("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertServiceSchema = createInsertSchema(services).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  reviewCount: true,
+});
+
+export const selectServiceSchema = createSelectSchema(services);
+
+export type Service = typeof services.$inferSelect;
+export type InsertService = z.infer<typeof insertServiceSchema>;
+
+// Admin Operations: Admin Notes
+export const adminNotes = pgTable("admin_notes", {
+  id: serial("id").primaryKey(),
+  adminId: integer("admin_id").notNull().references(() => users.id),
+  relatedType: text("related_type").notNull(), // user, order, product, vendor, fraud_case, credit_case, etc.
+  relatedId: integer("related_id").notNull(),
+  note: text("note").notNull(),
+  priority: text("priority").default('normal'), // low, normal, high, critical
+  isInternal: boolean("is_internal").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  relatedTypeIdx: index("admin_notes_related_type_idx").on(table.relatedType),
+  relatedIdIdx: index("admin_notes_related_id_idx").on(table.relatedId),
+  adminIdIdx: index("admin_notes_admin_id_idx").on(table.adminId),
+}));
+
+export const insertAdminNoteSchema = createInsertSchema(adminNotes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const selectAdminNoteSchema = createSelectSchema(adminNotes);
+
+export type AdminNote = typeof adminNotes.$inferSelect;
+export type InsertAdminNote = z.infer<typeof insertAdminNoteSchema>;
+
+// Admin Operations: Credit & Collection
+export const creditCollections = pgTable("credit_collections", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  orderId: integer("order_id").references(() => orders.id),
+  amountDue: text("amount_due").notNull(),
+  currency: text("currency").default('USD').notNull(),
+  dueDate: timestamp("due_date").notNull(),
+  status: text("status").default('pending').notNull(), // pending, overdue, partial, paid, written_off
+  paymentPlanActive: boolean("payment_plan_active").default(false),
+  paymentPlanTerms: json("payment_plan_terms"), // {installments, frequency, amount}
+  lastContactDate: timestamp("last_contact_date"),
+  nextFollowUpDate: timestamp("next_follow_up_date"),
+  assignedTo: integer("assigned_to").references(() => users.id),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  userIdIdx: index("credit_collections_user_id_idx").on(table.userId),
+  statusIdx: index("credit_collections_status_idx").on(table.status),
+  dueDateIdx: index("credit_collections_due_date_idx").on(table.dueDate),
+  assignedToIdx: index("credit_collections_assigned_to_idx").on(table.assignedTo),
+}));
+
+export const insertCreditCollectionSchema = createInsertSchema(creditCollections).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const selectCreditCollectionSchema = createSelectSchema(creditCollections);
+
+export type CreditCollection = typeof creditCollections.$inferSelect;
+export type InsertCreditCollection = z.infer<typeof insertCreditCollectionSchema>;
+
+// Admin Operations: Fraud Cases
+export const fraudCases = pgTable("fraud_cases", {
+  id: serial("id").primaryKey(),
+  caseNumber: text("case_number").notNull().unique(),
+  userId: integer("user_id").references(() => users.id),
+  orderId: integer("order_id").references(() => orders.id),
+  type: text("type").notNull(), // payment_fraud, account_fraud, chargeback, identity_theft, suspicious_activity
+  riskLevel: text("risk_level").default('medium').notNull(), // low, medium, high, critical
+  status: text("status").default('open').notNull(), // open, investigating, resolved, false_positive, confirmed_fraud
+  description: text("description").notNull(),
+  evidence: json("evidence"), // {type, details, timestamp}[]
+  assignedTo: integer("assigned_to").references(() => users.id),
+  resolvedAt: timestamp("resolved_at"),
+  resolution: text("resolution"),
+  actionsTaken: text("actions_taken").array(),
+  flaggedBy: text("flagged_by").default('system'), // system, admin, user_report
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  caseNumberIdx: index("fraud_cases_case_number_idx").on(table.caseNumber),
+  userIdIdx: index("fraud_cases_user_id_idx").on(table.userId),
+  statusIdx: index("fraud_cases_status_idx").on(table.status),
+  riskLevelIdx: index("fraud_cases_risk_level_idx").on(table.riskLevel),
+  assignedToIdx: index("fraud_cases_assigned_to_idx").on(table.assignedTo),
+}));
+
+export const insertFraudCaseSchema = createInsertSchema(fraudCases).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const selectFraudCaseSchema = createSelectSchema(fraudCases);
+
+export type FraudCase = typeof fraudCases.$inferSelect;
+export type InsertFraudCase = z.infer<typeof insertFraudCaseSchema>;
+
+// Admin Operations: Shipping & Returns
+export const shippingReturns = pgTable("shipping_returns", {
+  id: serial("id").primaryKey(),
+  returnNumber: text("return_number").notNull().unique(),
+  orderId: integer("order_id").notNull().references(() => orders.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  reason: text("reason").notNull(), // defective, wrong_item, not_as_described, changed_mind, other
+  status: text("status").default('requested').notNull(), // requested, approved, rejected, in_transit, received, refunded, completed
+  itemsReturned: json("items_returned").notNull(), // [{productId, quantity, condition}]
+  refundAmount: text("refund_amount"),
+  currency: text("currency").default('USD'),
+  refundMethod: text("refund_method"), // original_payment, store_credit, replacement
+  trackingNumber: text("tracking_number"),
+  carrier: text("carrier"),
+  shippingLabel: text("shipping_label"),
+  receivedAt: timestamp("received_at"),
+  inspectionNotes: text("inspection_notes"),
+  approvedBy: integer("approved_by").references(() => users.id),
+  processedBy: integer("processed_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  returnNumberIdx: index("shipping_returns_return_number_idx").on(table.returnNumber),
+  orderIdIdx: index("shipping_returns_order_id_idx").on(table.orderId),
+  userIdIdx: index("shipping_returns_user_id_idx").on(table.userId),
+  statusIdx: index("shipping_returns_status_idx").on(table.status),
+}));
+
+export const insertShippingReturnSchema = createInsertSchema(shippingReturns).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const selectShippingReturnSchema = createSelectSchema(shippingReturns);
+
+export type ShippingReturn = typeof shippingReturns.$inferSelect;
+export type InsertShippingReturn = z.infer<typeof insertShippingReturnSchema>;
+
+// Admin Operations: Finance Payouts
+export const financePayouts = pgTable("finance_payouts", {
+  id: serial("id").primaryKey(),
+  payoutNumber: text("payout_number").notNull().unique(),
+  vendorId: integer("vendor_id").references(() => users.id),
+  amount: text("amount").notNull(),
+  currency: text("currency").default('USD').notNull(),
+  period: text("period").notNull(), // YYYY-MM format
+  status: text("status").default('pending').notNull(), // pending, processing, completed, failed, cancelled
+  paymentMethod: text("payment_method"), // bank_transfer, paypal, stripe, check
+  orderIds: integer("order_ids").array(),
+  commission: text("commission"),
+  fees: text("fees"),
+  netAmount: text("net_amount"),
+  transactionId: text("transaction_id"),
+  processedAt: timestamp("processed_at"),
+  processedBy: integer("processed_by").references(() => users.id),
+  failureReason: text("failure_reason"),
+  notes: text("notes"),
+  reconciliationData: json("reconciliation_data"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  payoutNumberIdx: index("finance_payouts_payout_number_idx").on(table.payoutNumber),
+  vendorIdIdx: index("finance_payouts_vendor_id_idx").on(table.vendorId),
+  statusIdx: index("finance_payouts_status_idx").on(table.status),
+  periodIdx: index("finance_payouts_period_idx").on(table.period),
+}));
+
+export const insertFinancePayoutSchema = createInsertSchema(financePayouts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const selectFinancePayoutSchema = createSelectSchema(financePayouts);
+
+export type FinancePayout = typeof financePayouts.$inferSelect;
+export type InsertFinancePayout = z.infer<typeof insertFinancePayoutSchema>;
+
+// Ticketing System
+export const tickets = pgTable("tickets", {
+  id: serial("id").primaryKey(),
+  ticketNumber: text("ticket_number").notNull().unique(),
+  subject: text("subject").notNull(),
+  description: text("description").notNull(),
+  status: ticketStatusEnum("status").default('open').notNull(),
+  priority: ticketPriorityEnum("priority").default('medium').notNull(),
+  department: ticketDepartmentEnum("department").notNull(),
+  assignedTo: integer("assigned_to").references(() => users.id),
+  userId: integer("user_id").references(() => users.id),
+  email: text("email").notNull(),
+  senderName: text("sender_name"),
+  emailMessageId: text("email_message_id"),
+  tags: text("tags").array(),
+  resolvedAt: timestamp("resolved_at"),
+  resolvedBy: integer("resolved_by").references(() => users.id),
+  closedAt: timestamp("closed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  ticketNumberIdx: index("tickets_ticket_number_idx").on(table.ticketNumber),
+  statusIdx: index("tickets_status_idx").on(table.status),
+  departmentIdx: index("tickets_department_idx").on(table.department),
+  assignedToIdx: index("tickets_assigned_to_idx").on(table.assignedTo),
+  userIdIdx: index("tickets_user_id_idx").on(table.userId),
+  emailIdx: index("tickets_email_idx").on(table.email),
+}));
+
+export const insertTicketSchema = createInsertSchema(tickets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const selectTicketSchema = createSelectSchema(tickets);
+
+export type Ticket = typeof tickets.$inferSelect;
+export type InsertTicket = z.infer<typeof insertTicketSchema>;
+
+export const ticketMessages = pgTable("ticket_messages", {
+  id: serial("id").primaryKey(),
+  ticketId: integer("ticket_id").notNull().references(() => tickets.id, { onDelete: 'cascade' }),
+  userId: integer("user_id").references(() => users.id),
+  message: text("message").notNull(),
+  isInternal: boolean("is_internal").default(false).notNull(),
+  isEmailReply: boolean("is_email_reply").default(false).notNull(),
+  senderEmail: text("sender_email"),
+  senderName: text("sender_name"),
+  emailMessageId: text("email_message_id"),
+  attachments: json("attachments"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  ticketIdIdx: index("ticket_messages_ticket_id_idx").on(table.ticketId),
+  userIdIdx: index("ticket_messages_user_id_idx").on(table.userId),
+}));
+
+export const insertTicketMessageSchema = createInsertSchema(ticketMessages).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const selectTicketMessageSchema = createSelectSchema(ticketMessages);
+
+export type TicketMessage = typeof ticketMessages.$inferSelect;
+export type InsertTicketMessage = z.infer<typeof insertTicketMessageSchema>;
+
+// =====================================
+// User Analytics Tracking
+// =====================================
+
+export const profileViews = pgTable("profile_views", {
+  id: serial("id").primaryKey(),
+  profileUserId: integer("profile_user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  viewerUserId: integer("viewer_user_id").references(() => users.id, { onDelete: 'cascade' }),
+  viewerIp: varchar("viewer_ip", { length: 45 }),
+  viewerUserAgent: text("viewer_user_agent"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  profileUserIdx: index("profile_views_profile_user_idx").on(table.profileUserId),
+  viewerUserIdx: index("profile_views_viewer_user_idx").on(table.viewerUserId),
+  createdAtIdx: index("profile_views_created_at_idx").on(table.createdAt),
+}));
+
+export const postImpressions = pgTable("post_impressions", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").notNull().references(() => posts.id, { onDelete: 'cascade' }),
+  userId: integer("user_id").references(() => users.id, { onDelete: 'cascade' }),
+  impressionType: varchar("impression_type", { length: 20 }).notNull().default('view'),
+  userIp: varchar("user_ip", { length: 45 }),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  postIdIdx: index("post_impressions_post_id_idx").on(table.postId),
+  userIdIdx: index("post_impressions_user_id_idx").on(table.userId),
+  createdAtIdx: index("post_impressions_created_at_idx").on(table.createdAt),
+}));
+
+export const searchAppearances = pgTable("search_appearances", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  searchQuery: text("search_query").notNull(),
+  searchType: varchar("search_type", { length: 50 }).notNull(),
+  position: integer("position"),
+  searcherUserId: integer("searcher_user_id").references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  userIdIdx: index("search_appearances_user_id_idx").on(table.userId),
+  searcherUserIdx: index("search_appearances_searcher_user_idx").on(table.searcherUserId),
+  createdAtIdx: index("search_appearances_created_at_idx").on(table.createdAt),
+}));
+
+export const insertProfileViewSchema = createInsertSchema(profileViews).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const insertPostImpressionSchema = createInsertSchema(postImpressions).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const insertSearchAppearanceSchema = createInsertSchema(searchAppearances).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export type ProfileView = typeof profileViews.$inferSelect;
+export type InsertProfileView = z.infer<typeof insertProfileViewSchema>;
+
+export type PostImpression = typeof postImpressions.$inferSelect;
+export type InsertPostImpression = z.infer<typeof insertPostImpressionSchema>;
+
+export type SearchAppearance = typeof searchAppearances.$inferSelect;
+export type InsertSearchAppearance = z.infer<typeof insertSearchAppearanceSchema>;

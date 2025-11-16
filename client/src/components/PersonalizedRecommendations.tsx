@@ -87,10 +87,6 @@ export function PersonalizedRecommendations() {
       return response.json();
     },
     onSuccess: () => {
-      toast({
-        title: "Added to cart",
-        description: "Product has been added to your cart",
-      });
       queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
       // Track add to cart interaction
       trackInteractionMutation.mutate({

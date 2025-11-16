@@ -44,7 +44,7 @@ const MemberCard = ({ member, onMessageClick, onCallClick, onVideoClick }: {
   onCallClick: (member: UserWithoutPassword) => void,
   onVideoClick: (member: UserWithoutPassword) => void
 }) => {
-  const { t } = useTranslation();
+  const { translateText } = useMasterTranslation();
   const [, setLocation] = useLocation();
   
   // For grabbing vendor data if the user is a vendor
@@ -136,7 +136,7 @@ interface ChatDialogProps {
 }
 
 const ChatDialog: React.FC<ChatDialogProps> = ({ isOpen, member, onClose }) => {
-  const { t } = useTranslation();
+  const { translateText } = useMasterTranslation();
   const { user } = useAuth();
   const [message, setMessage] = useState('');
   const [chatMessages, setChatMessages] = useState<Array<{
@@ -447,7 +447,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({ isOpen, member, onClose }) => {
 
 // Main Directory Page
 const MembersPage = () => {
-  const { t } = useTranslation();
+  const { translateText } = useMasterTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -542,7 +542,7 @@ const MembersPage = () => {
         else if (data.type === 'error') {
           console.error('WebSocket error message:', data.message);
           toast({
-            title: "Connection Error",
+            title: "Error",
             description: data.message,
             variant: "destructive"
           });

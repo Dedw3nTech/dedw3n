@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { updateCryptocurrencyRates } from '../services/cryptoApiService';
 
 export interface Currency {
   code: string;
@@ -6,23 +7,24 @@ export interface Currency {
   symbol: string;
   flag: string;
   rate: number; // Exchange rate to USD
+  category?: string; // For grouping currencies (Traditional, Cryptocurrencies, Stablecoins)
 }
 
 export const currencies: Currency[] = [
-  // Major Global Currencies  
-  { code: 'GBP', name: 'British Pound', symbol: '£', flag: '🇬🇧', rate: 1.0 },
-  { code: 'USD', name: 'US Dollar', symbol: '$', flag: '🇺🇸', rate: 1.27 },
-  { code: 'EUR', name: 'Euro', symbol: '€', flag: '🇪🇺', rate: 1.18 },
-  { code: 'CNY', name: 'Chinese Yuan', symbol: '¥', flag: '🇨🇳', rate: 9.15 },
-  { code: 'INR', name: 'Indian Rupee', symbol: '₹', flag: '🇮🇳', rate: 105.43 },
-  { code: 'BRL', name: 'Brazilian Real', symbol: 'R$', flag: '🇧🇷', rate: 6.85 },
-  { code: 'JMD', name: 'Jamaican Dollar', symbol: 'J$', flag: '🇯🇲', rate: 195.50 },
-  { code: 'AUD', name: 'Australian Dollar', symbol: 'A$', flag: '🇦🇺', rate: 1.92 },
+  // Major Global Currencies (USD per unit)
+  { code: 'GBP', name: 'British Pound', symbol: '£', flag: '🇬🇧', rate: 1.27 },
+  { code: 'USD', name: 'US Dollar', symbol: '$', flag: '🇺🇸', rate: 1.0 },
+  { code: 'EUR', name: 'Euro', symbol: '€', flag: '🇪🇺', rate: 1.08 },
+  { code: 'CNY', name: 'Chinese Yuan', symbol: '¥', flag: '🇨🇳', rate: 0.14 },
+  { code: 'INR', name: 'Indian Rupee', symbol: '₹', flag: '🇮🇳', rate: 0.012 },
+  { code: 'BRL', name: 'Brazilian Real', symbol: 'R$', flag: '🇧🇷', rate: 0.19 },
+  { code: 'JMD', name: 'Jamaican Dollar', symbol: 'J$', flag: '🇯🇲', rate: 0.0065 },
+  { code: 'AUD', name: 'Australian Dollar', symbol: 'A$', flag: '🇦🇺', rate: 0.66 },
   
-  // East Asia & Pacific
-  { code: 'JPY', name: 'Japanese Yen', symbol: '¥', flag: '🇯🇵', rate: 190.45 },
-  { code: 'KRW', name: 'South Korean Won', symbol: '₩', flag: '🇰🇷', rate: 1685.30 },
-  { code: 'SGD', name: 'Singapore Dollar', symbol: 'S$', flag: '🇸🇬', rate: 1.72 },
+  // East Asia & Pacific (USD per unit)
+  { code: 'JPY', name: 'Japanese Yen', symbol: '¥', flag: '🇯🇵', rate: 0.0067 },
+  { code: 'KRW', name: 'South Korean Won', symbol: '₩', flag: '🇰🇷', rate: 0.00075 },
+  { code: 'SGD', name: 'Singapore Dollar', symbol: 'S$', flag: '🇸🇬', rate: 0.74 },
   { code: 'HKD', name: 'Hong Kong Dollar', symbol: 'HK$', flag: '🇭🇰', rate: 9.95 },
   { code: 'TWD', name: 'Taiwan Dollar', symbol: 'NT$', flag: '🇹🇼', rate: 40.85 },
   { code: 'THB', name: 'Thai Baht', symbol: '฿', flag: '🇹🇭', rate: 45.20 },
@@ -104,6 +106,25 @@ export const currencies: Currency[] = [
   { code: 'MVR', name: 'Maldivian Rufiyaa', symbol: 'Rf', flag: '🇲🇻', rate: 19.65 },
   { code: 'LKR', name: 'Sri Lankan Rupee', symbol: 'Rs', flag: '🇱🇰', rate: 385.40 },
   { code: 'NPR', name: 'Nepalese Rupee', symbol: 'Rs', flag: '🇳🇵', rate: 167.10 },
+
+  // Major Cryptocurrencies (USD per coin)
+  { code: 'BTC', name: 'Bitcoin', symbol: '₿', flag: '🟠', rate: 40000.0, category: 'Cryptocurrencies' }, // ~$40,000 USD per BTC
+  { code: 'ETH', name: 'Ethereum', symbol: 'Ξ', flag: '🔷', rate: 2680.0, category: 'Cryptocurrencies' }, // ~$2,680 USD per ETH
+  { code: 'BNB', name: 'Binance Coin', symbol: 'BNB', flag: '🟡', rate: 596.0, category: 'Cryptocurrencies' }, // ~$596 USD per BNB
+  { code: 'ADA', name: 'Cardano', symbol: '₳', flag: '🔵', rate: 0.536, category: 'Cryptocurrencies' }, // ~$0.536 USD per ADA
+  { code: 'SOL', name: 'Solana', symbol: 'SOL', flag: '🟣', rate: 134.0, category: 'Cryptocurrencies' }, // ~$134 USD per SOL
+  { code: 'DOT', name: 'Polkadot', symbol: 'DOT', flag: '🔴', rate: 7.14, category: 'Cryptocurrencies' }, // ~$7.14 USD per DOT
+  { code: 'AVAX', name: 'Avalanche', symbol: 'AVAX', flag: '🔺', rate: 35.5, category: 'Cryptocurrencies' }, // ~$35.5 USD per AVAX
+  { code: 'LINK', name: 'Chainlink', symbol: 'LINK', flag: '🔗', rate: 14.3, category: 'Cryptocurrencies' }, // ~$14.3 USD per LINK
+  { code: 'MATIC', name: 'Polygon', symbol: 'MATIC', flag: '🟣', rate: 0.416, category: 'Cryptocurrencies' }, // ~$0.416 USD per MATIC
+  { code: 'LTC', name: 'Litecoin', symbol: 'Ł', flag: '🥈', rate: 83.5, category: 'Cryptocurrencies' }, // ~$83.5 USD per LTC
+
+  // Major Stablecoins (USD per coin)
+  { code: 'USDT', name: 'Tether', symbol: 'USDT', flag: '🟢', rate: 1.0, category: 'Stablecoins' }, // $1 USD per USDT
+  { code: 'USDC', name: 'USD Coin', symbol: 'USDC', flag: '🔵', rate: 1.0, category: 'Stablecoins' }, // $1 USD per USDC
+  { code: 'BUSD', name: 'Binance USD', symbol: 'BUSD', flag: '🟡', rate: 1.0, category: 'Stablecoins' }, // $1 USD per BUSD
+  { code: 'DAI', name: 'DAI', symbol: 'DAI', flag: '🟠', rate: 1.0, category: 'Stablecoins' }, // $1 USD per DAI
+  { code: 'TUSD', name: 'TrueUSD', symbol: 'TUSD', flag: '💙', rate: 1.0, category: 'Stablecoins' }, // $1 USD per TUSD
 ];
 
 interface CurrencyContextType {
@@ -112,20 +133,67 @@ interface CurrencyContextType {
   convertPrice: (priceInUSD: number) => number;
   formatPrice: (priceInUSD: number) => string;
   formatPriceFromGBP: (priceInGBP: number) => string;
+  currencyList: Currency[];
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
 export function CurrencyProvider({ children }: { children: ReactNode }) {
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>(currencies[0]); // Default to GBP
+  const [currencyList, setCurrencyList] = useState<Currency[]>(currencies);
+
+  // Update cryptocurrency rates on component mount and periodically
+  useEffect(() => {
+    const updateRates = async () => {
+      try {
+        const updatedCurrencies = await updateCryptocurrencyRates(currencyList);
+        setCurrencyList(updatedCurrencies);
+        
+        // Update selected currency if it's a cryptocurrency
+        if (selectedCurrency.category === 'Cryptocurrencies' || selectedCurrency.category === 'Stablecoins') {
+          const updatedSelectedCurrency = updatedCurrencies.find(c => c.code === selectedCurrency.code);
+          if (updatedSelectedCurrency) {
+            setSelectedCurrency(updatedSelectedCurrency);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to update cryptocurrency rates:', error);
+      }
+    };
+
+    // Update rates immediately
+    updateRates();
+
+    // Update rates every 5 minutes
+    const interval = setInterval(updateRates, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [currencyList.length, selectedCurrency.code]); // Only depend on list length and selected currency code
 
   const convertPrice = (priceInUSD: number): number => {
     return priceInUSD / selectedCurrency.rate;
   };
 
+  const formatCryptoAmount = (amount: number): string => {
+    // Use toFixed(10) for precision, then manually remove trailing zeros to avoid scientific notation
+    const fixed = amount.toFixed(10);
+    return fixed.replace(/\.?0+$/, '');
+  };
+
   const formatPrice = (priceInUSD: number): string => {
     const convertedPrice = convertPrice(priceInUSD);
-    return `${selectedCurrency.symbol}${convertedPrice.toFixed(2)}`;
+    
+    // Use 10 decimal places for cryptocurrencies and stablecoins, 2 for traditional currencies
+    const isCrypto = selectedCurrency.category === 'Cryptocurrencies' || selectedCurrency.category === 'Stablecoins';
+    
+    let formattedPrice: string;
+    if (isCrypto) {
+      formattedPrice = formatCryptoAmount(convertedPrice);
+    } else {
+      formattedPrice = convertedPrice.toFixed(2);
+    }
+    
+    return `${selectedCurrency.symbol}${formattedPrice}`;
   };
 
   const formatPriceFromGBP = (priceInGBP: number): string => {
@@ -141,10 +209,15 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       convertedPrice = priceInUSD / selectedCurrency.rate;
     }
     
-    // Format without .00 for whole numbers, with .xx for decimals
-    const formatted = convertedPrice % 1 === 0 
-      ? convertedPrice.toLocaleString() 
-      : convertedPrice.toFixed(2);
+    // Use different formatting for crypto vs traditional currencies
+    let formatted: string;
+    if (selectedCurrency.category === 'Cryptocurrencies' || selectedCurrency.category === 'Stablecoins') {
+      // For crypto: use up to 10 decimal places, remove trailing zeros
+      formatted = formatCryptoAmount(convertedPrice);
+    } else {
+      // For traditional currencies: always show exactly 2 decimal places
+      formatted = convertedPrice.toFixed(2);
+    }
     
     return `${selectedCurrency.symbol}${formatted}`;
   };
@@ -155,7 +228,8 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       setSelectedCurrency,
       convertPrice,
       formatPrice,
-      formatPriceFromGBP
+      formatPriceFromGBP,
+      currencyList
     }}>
       {children}
     </CurrencyContext.Provider>
@@ -172,9 +246,19 @@ export function useCurrency() {
       convertPrice: (priceInUSD: number) => priceInUSD / currencies[0].rate,
       formatPrice: (priceInUSD: number) => `${currencies[0].symbol}${(priceInUSD / currencies[0].rate).toFixed(2)}`,
       formatPriceFromGBP: (priceInGBP: number) => {
-        const formatted = priceInGBP % 1 === 0 ? priceInGBP.toLocaleString() : priceInGBP.toFixed(2);
-        return `${currencies[0].symbol}${formatted}`;
-      }
+        const currency = currencies[0]; // Default to GBP
+        let formatted: string;
+        if (currency.category === 'Cryptocurrencies' || currency.category === 'Stablecoins') {
+          // For crypto: use up to 10 decimal places, remove trailing zeros safely
+          const fixed = priceInGBP.toFixed(10);
+          formatted = fixed.replace(/\.?0+$/, '');
+        } else {
+          // For traditional currencies: always show exactly 2 decimal places
+          formatted = priceInGBP.toFixed(2);
+        }
+        return `${currency.symbol}${formatted}`;
+      },
+      currencyList: currencies
     };
   }
   return context;

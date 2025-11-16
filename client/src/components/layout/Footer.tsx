@@ -1,29 +1,16 @@
 import { Link } from "wouter";
 import { useMemo } from "react";
+import { Globe } from "lucide-react";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
-import { useOfflineMode } from "@/hooks/use-offline-mode";
+import { useLocation } from "@/hooks/use-location";
+import { useLocationConsent } from "@/hooks/use-location-consent";
 import ErrorBoundary from "@/components/ui/error-boundary";
 import { WeightUnitSelector } from "@/components/ui/weight-unit-selector";
 import { DimensionUnitSelector } from "@/components/ui/dimension-unit-selector";
 
-// Custom Link component that scrolls to top on navigation
-function ScrollToTopLink({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) {
-  const handleClick = () => {
-    // Small delay to ensure navigation happens first
-    setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 100);
-  };
-
-  return (
-    <Link href={href} className={className} onClick={handleClick}>
-      {children}
-    </Link>
-  );
-}
-
 function FooterContent() {
-  const { toggleOfflineMode, isOffline } = useOfflineMode();
+  const { consentStatus } = useLocationConsent();
+  const { location, isLoading: locationLoading } = useLocation(consentStatus === 'granted');
   
   // Define all footer texts with stable references
   const footerTexts = useMemo(() => [
@@ -36,9 +23,11 @@ function FooterContent() {
     "Community Guidelines",
     "Contact Us",
     "FAQ",
-    "Offline Mode",
     "Catalogue Rules",
     "Tips & Tricks",
+    "Payment Options",
+    "Delivery & Return Options",
+    "How to use",
 
     "Download our mobile app",
     "Download on the",
@@ -48,55 +37,192 @@ function FooterContent() {
     "is a British Company registered in England, Wales and Scotland under registration number",
     "whose registered office is situated",
     "Our bank is registered with HSBC UK IBAN",
-    "our sole official website is"
+    "our sole official website is",
+
+    // New footer section headers and links
+    "Gift Cards",
+    "Help",
+    "Legal",
+    "Dedw3n",
+    "About Us",
+    "Code Of Ethics",
+    "Careers",
+    "Location",
+    
+    // Location button texts
+    "Location / Country:",
+    "Loading...",
+    "Unknown",
+    "Education Policy",
+    "Intellectual Property Claims Policy",
+    "Advertisement Terms of Service",
+    "Percentage Calculator"
   ], []);
 
   const { translations } = useMasterBatchTranslation(footerTexts);
+  
+  // Translate country name dynamically
+  const countryName = location?.country || 'Unknown';
+  const { translations: countryTranslations } = useMasterBatchTranslation([countryName]);
 
   // Extract individual translations from array using Master Translation System
   const [
     allRightsReservedText, networkPartnershipsText, affiliatePartnershipsText, privacyPolicyText, termsOfServiceText, cookiePolicyText,
-    communityGuidelinesText, contactUsText, faqText, offlineModeText, catalogueRulesText, tipsTricksText,
+    communityGuidelinesText, contactUsText, faqText, catalogueRulesText, tipsTricksText, paymentOptionsText, deliveryReturnsText, howToUseText,
     downloadMobileAppText, downloadOnTheText, appStoreText, getItOnText, googlePlayText,
-    britishCompanyText, registeredOfficeText, bankRegisteredText, officialWebsiteText
+    britishCompanyText, registeredOfficeText, bankRegisteredText, officialWebsiteText,
+    giftCardsText, helpText, legalText, dedw3nText, aboutUsText, codeOfEthicsText, careersText, locationText,
+    locationCountryText, loadingText, unknownText, educationPolicyText, intellectualPropertyText, advertisementTermsText,
+    percentageCalculatorText
   ] = translations || footerTexts;
+  
+  // Get translated country name
+  const translatedCountryName = countryTranslations?.[0] || countryName;
   return (
     <footer className="bg-white border-t border-gray-200 mt-10">
       <div className="container mx-auto px-4 py-8">
 
 
         <div className="border-t border-gray-200 mt-8 pt-6 flex flex-col space-y-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm text-gray-600 mb-4 md:mb-0">© 2025 <span className="text-black font-medium">Dedw3n Ltd.</span> {allRightsReservedText}</p>
-            <div className="flex flex-wrap justify-center md:justify-end gap-x-3 gap-y-2 items-center">
-              <WeightUnitSelector />
-              <DimensionUnitSelector />
-              <ScrollToTopLink href="/network-partnerships" className="text-xs text-gray-600 hover:text-primary">{networkPartnershipsText}</ScrollToTopLink>
-              <ScrollToTopLink href="/affiliate-partnerships" className="text-xs text-gray-600 hover:text-primary">{affiliatePartnershipsText}</ScrollToTopLink>
-              <ScrollToTopLink href="/terms" className="text-xs text-gray-600 hover:text-primary">{termsOfServiceText}</ScrollToTopLink>
-              <ScrollToTopLink href="/privacy" className="text-xs text-gray-600 hover:text-primary">{privacyPolicyText}</ScrollToTopLink>
-              <ScrollToTopLink href="/cookies" className="text-xs text-gray-600 hover:text-primary">{cookiePolicyText}</ScrollToTopLink>
-              <ScrollToTopLink href="/community-guidelines" className="text-xs text-gray-600 hover:text-primary">{communityGuidelinesText}</ScrollToTopLink>
-              <ScrollToTopLink href="/catalogue-rules" className="text-xs text-gray-600 hover:text-primary">{catalogueRulesText}</ScrollToTopLink>
-              <ScrollToTopLink href="/tips-tricks" className="text-xs text-gray-600 hover:text-primary">{tipsTricksText}</ScrollToTopLink>
-              <ScrollToTopLink href="/faq" className="text-xs text-gray-600 hover:text-primary">{faqText}</ScrollToTopLink>
-              <ScrollToTopLink href="/contact" className="text-xs text-gray-600 hover:text-primary">{contactUsText}</ScrollToTopLink>
-              <button 
-                onClick={toggleOfflineMode} 
-                className={`text-xs transition-colors duration-200 ${
-                  isOffline 
-                    ? 'text-blue-600 hover:text-blue-700 font-medium' 
-                    : 'text-gray-600 hover:text-primary'
-                }`}
-                title={isOffline ? 'Offline Mode Active - Click to disable' : 'Click to enable offline mode'}
-              >
-                {offlineModeText} {isOffline ? '(Active)' : ''}
-              </button>
+          <div className="flex flex-wrap justify-center md:justify-end gap-x-3 gap-y-2 items-center">
+            <WeightUnitSelector />
+            <DimensionUnitSelector />
+            <span className="text-xs text-gray-400">|</span>
+            <Link 
+              href="/percentage-calculator"
+              className="text-xs text-gray-600 hover:text-primary transition-colors duration-200"
+              data-testid="link-percentage-calculator"
+            >
+              {percentageCalculatorText}
+            </Link>
+          </div>
+          
+          {/* Footer Links Sections */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-8 py-8">
+            {/* Dedw3n Section */}
+            <div>
+              <h3 className="text-sm font-semibold text-black mb-3">{dedw3nText}</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link href="/about-us" className="text-xs text-gray-600 hover:text-primary">
+                    {aboutUsText}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/code-of-ethics" className="text-xs text-gray-600 hover:text-primary">
+                    {codeOfEthicsText}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/network-partnership-resources" className="text-xs text-gray-600 hover:text-primary">
+                    {networkPartnershipsText}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/resources" className="text-xs text-gray-600 hover:text-primary">
+                    {affiliatePartnershipsText}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/careers" className="text-xs text-gray-600 hover:text-primary">
+                    {careersText}
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Help Section */}
+            <div>
+              <h3 className="text-sm font-semibold text-black mb-3">{helpText}</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link href="/contact" className="text-xs text-gray-600 hover:text-primary">
+                    {contactUsText}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/gift-cards" className="text-xs text-gray-600 hover:text-primary">
+                    {giftCardsText}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/faq" className="text-xs text-gray-600 hover:text-primary">
+                    {faqText}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/tips-tricks" className="text-xs text-gray-600 hover:text-primary">
+                    {tipsTricksText}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/payment-options" className="text-xs text-gray-600 hover:text-primary" data-testid="link-payment-options">
+                    {paymentOptionsText}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/delivery-returns" className="text-xs text-gray-600 hover:text-primary" data-testid="link-delivery-returns">
+                    {deliveryReturnsText}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/how-to-use" className="text-xs text-gray-600 hover:text-primary" data-testid="link-how-to-use">
+                    {howToUseText}
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Legal Section */}
+            <div>
+              <h3 className="text-sm font-semibold text-black mb-3">{legalText}</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link href="/terms" className="text-xs text-gray-600 hover:text-primary">
+                    {termsOfServiceText}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/advertisement-terms" className="text-xs text-gray-600 hover:text-primary" data-testid="link-advertisement-terms">
+                    {advertisementTermsText}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/privacy" className="text-xs text-gray-600 hover:text-primary">
+                    {privacyPolicyText}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/cookies" className="text-xs text-gray-600 hover:text-primary">
+                    {cookiePolicyText}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/education-policy" className="text-xs text-gray-600 hover:text-primary" data-testid="link-education-policy">
+                    {educationPolicyText}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/intellectual-property" className="text-xs text-gray-600 hover:text-primary" data-testid="link-intellectual-property">
+                    {intellectualPropertyText}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/community-guidelines" className="text-xs text-gray-600 hover:text-primary">
+                    {communityGuidelinesText}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/catalogue-rules" className="text-xs text-gray-600 hover:text-primary">
+                    {catalogueRulesText}
+                  </Link>
+                </li>
+              </ul>
             </div>
           </div>
           
           {/* App Download Section */}
-          <div className="flex flex-col md:flex-row justify-center md:justify-start items-center">
+          <div className="flex flex-col md:flex-row justify-center md:justify-start items-center py-6">
             <div className="mb-4 md:mb-0">
               <p className="text-sm text-gray-600 mb-2 text-center md:text-left">{downloadMobileAppText}</p>
               <div className="flex space-x-3 justify-center md:justify-start">
@@ -131,14 +257,26 @@ function FooterContent() {
             </div>
           </div>
           
-
+          {/* Location Section */}
+          <div className="flex justify-center md:justify-start py-4">
+            <div 
+              className="text-xs text-gray-600 flex items-center gap-1"
+              title={location ? `${location.city}, ${location.region}` : loadingText}
+              data-testid="button-location"
+            >
+              <Globe className="w-3 h-3" />
+              {locationLoading ? (
+                <>{locationCountryText} {loadingText}</>
+              ) : (
+                <>{locationCountryText} <span className="font-bold">{translatedCountryName}</span></>
+              )}
+            </div>
+          </div>
           
-          <p className="text-xs text-gray-500 text-center md:text-left">
-            <span className="text-black font-medium">Dedw3n Ltd.</span> {britishCompanyText} <span className="font-medium">15930281</span>, {registeredOfficeText} <span className="font-medium">50 Essex Street, London, England, WC2R3JF</span>.
-          </p>
-          <p className="text-xs text-gray-500 text-center md:text-left">
-            {bankRegisteredText} <span className="font-medium">GB79 HBUK 4003 2782 3984 94</span> (BIC <span className="font-medium">BUKGB4B</span>), {officialWebsiteText} <a href="https://www.dedw3n.com" className="text-gray-500 hover:underline" target="_blank" rel="noopener noreferrer">www.dedw3n.com</a>.
-          </p>
+          {/* Copyright Section - Bottom Right */}
+          <div className="flex justify-center md:justify-end pt-4 border-t border-gray-100">
+            <p className="text-sm text-gray-600">© 2025 <span className="text-black font-medium">Dedw3n Ltd.</span> {allRightsReservedText}</p>
+          </div>
         </div>
       </div>
     </footer>

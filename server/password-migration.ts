@@ -1,5 +1,6 @@
 import { storage } from './storage';
 import { hashPassword } from './auth';
+import { logger } from './logger';
 
 // Known passwords for existing users that need migration
 const USER_PASSWORDS = {
@@ -9,7 +10,7 @@ const USER_PASSWORDS = {
 };
 
 export async function migrateAllPasswordsToEnhancedSecurity() {
-  console.log('[SECURITY MIGRATION] Starting password migration to enhanced pepper-based security...');
+  logger.info('Starting password migration to enhanced security', { userCount: Object.keys(USER_PASSWORDS).length }, 'server');
   
   try {
     let migratedCount = 0;
@@ -19,7 +20,7 @@ export async function migrateAllPasswordsToEnhancedSecurity() {
         // Get user by username
         const user = await storage.getUserByUsername(username);
         if (!user) {
-          console.log(`[MIGRATION] User ${username} not found, skipping...`);
+          logger.debug('User not found during password migration', { username }, 'server');
           continue;
         }
         
@@ -31,17 +32,15 @@ export async function migrateAllPasswordsToEnhancedSecurity() {
           password: newHashedPassword
         });
         
-        console.log(`[MIGRATION] ✓ Successfully migrated password for user: ${username}`);
+        logger.info('Successfully migrated password for user', { username }, 'server');
         migratedCount++;
         
       } catch (userError) {
-        console.error(`[MIGRATION] Failed to migrate password for user ${username}:`, userError);
+        logger.error('Failed to migrate password for user', { username }, userError as Error, 'server');
       }
     }
     
-    console.log(`[SECURITY MIGRATION] Password migration completed successfully!`);
-    console.log(`[SECURITY MIGRATION] Total users migrated: ${migratedCount}/${Object.keys(USER_PASSWORDS).length}`);
-    console.log(`[SECURITY MIGRATION] All users now use enhanced pepper-based password security`);
+    logger.info('Password migration completed', { migratedCount, totalUsers: Object.keys(USER_PASSWORDS).length }, 'server');
     
     return {
       success: true,
@@ -50,7 +49,7 @@ export async function migrateAllPasswordsToEnhancedSecurity() {
     };
     
   } catch (error) {
-    console.error('[SECURITY MIGRATION] Password migration failed:', error);
+    logger.error('Password migration failed', undefined, error as Error, 'server');
     throw error;
   }
 }
@@ -62,10 +61,10 @@ export async function autoMigratePasswordsOnStartup() {
     const testUser = await storage.getUserByUsername('admin');
     if (testUser) {
       // Simple check: if we can authenticate with old format, migration is needed
-      console.log('[STARTUP] Checking if password migration is needed...');
+      logger.debug('Checking if password migration is needed', undefined, 'startup');
       await migrateAllPasswordsToEnhancedSecurity();
     }
   } catch (error) {
-    console.log('[STARTUP] Password migration check completed or not needed');
+    logger.debug('Password migration check completed', undefined, 'startup');
   }
 }

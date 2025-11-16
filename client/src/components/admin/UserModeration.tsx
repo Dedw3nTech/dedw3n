@@ -97,7 +97,8 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Switch } from "@/components/ui/switch";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ResolvedUserAvatar } from "@/components/ui/resolved-user-avatar";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 
@@ -1086,12 +1087,13 @@ export default function UserModeration() {
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              <Avatar className="h-7 w-7">
-                                <AvatarImage src={user.avatarUrl} alt={user.username} />
-                                <AvatarFallback>
-                                  {user.name.substring(0, 2).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
+                              <ResolvedUserAvatar
+                                avatarUrl={user.avatarUrl}
+                                username={user.username}
+                                name={user.name}
+                                size="sm"
+                                className="h-7 w-7"
+                              />
                               <div>
                                 <div className="font-medium">{user.name}</div>
                                 <div className="text-xs text-muted-foreground">@{user.username}</div>
@@ -1444,12 +1446,13 @@ export default function UserModeration() {
               <div className="flex-1 space-y-4">
                 {/* Basic User Info */}
                 <div className="flex flex-col items-center text-center gap-2">
-                  <Avatar className="h-16 w-16">
-                    <AvatarImage src={selectedUser.avatarUrl} alt={selectedUser.username} />
-                    <AvatarFallback>
-                      {selectedUser.name.substring(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <ResolvedUserAvatar
+                    avatarUrl={selectedUser.avatarUrl}
+                    username={selectedUser.username}
+                    name={selectedUser.name}
+                    size="lg"
+                    className="h-16 w-16"
+                  />
                   <div>
                     <h3 className="text-xl font-bold">{selectedUser.name}</h3>
                     <p className="text-sm text-muted-foreground">@{selectedUser.username}</p>

@@ -3,7 +3,7 @@ import { ChevronRight, Home } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import { useMemo } from "react";
-import { Vendor } from "@shared/schema";
+import { Vendor, Product } from "@shared/schema";
 import { createStoreSlug } from "@shared/utils";
 
 interface BreadcrumbItem {
@@ -34,7 +34,7 @@ export function Breadcrumbs() {
   }, [location]);
   
   // Fetch vendor data to determine correct vendor type for breadcrumb
-  const { data: vendorData } = useQuery({
+  const { data: vendorData } = useQuery<{ vendor: Vendor }>({
     queryKey: ['/api/vendors/me'],
     enabled: location === '/vendor-dashboard',
     staleTime: 5 * 60 * 1000,
@@ -50,7 +50,7 @@ export function Breadcrumbs() {
   });
 
   // Fetch product data for product detail pages
-  const { data: productData } = useQuery({
+  const { data: productData } = useQuery<Product>({
     queryKey: [`/api/products/${productMatch}`],
     enabled: !!productMatch,
     staleTime: 5 * 60 * 1000,
@@ -190,16 +190,9 @@ export function Breadcrumbs() {
       return breadcrumbs;
     }
     
-    // Special handling for network partnerships
-    if (path === '/network-partnerships') {
-      breadcrumbs.push({ label: translatedLabels.networkPartnerships });
-      return breadcrumbs;
-    }
-    
-    // Special handling for network partnership resources to show network partnership hierarchy
+    // Special handling for network partnership resources
     if (path === '/network-partnership-resources') {
-      breadcrumbs.push({ label: translatedLabels.networkPartnerships, path: '/network-partnerships' });
-      breadcrumbs.push({ label: translatedLabels.resources });
+      breadcrumbs.push({ label: translatedLabels.networkPartnerships });
       return breadcrumbs;
     }
     
@@ -292,7 +285,6 @@ export function Breadcrumbs() {
       'cookies': translatedLabels.cookiePolicy,
       'community-guidelines': translatedLabels.communityGuidelines,
       'sitemap': translatedLabels.siteMap,
-      'network-partnerships': translatedLabels.networkPartnerships,
       'affiliate-partnerships': translatedLabels.affiliatePartnerships,
       'resources': translatedLabels.resources
     };

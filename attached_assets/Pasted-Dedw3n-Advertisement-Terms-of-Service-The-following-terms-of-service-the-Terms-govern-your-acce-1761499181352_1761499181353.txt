@@ -1,0 +1,58 @@
+Dedw3n Advertisement Terms of Service
+
+The following terms of service (the “Terms”) govern your access to and use of the Dedw3n Advertisement program (“Dedw3n Advertisement”, the “Program”, or the “Service”) by Dedw3n Ltd. and its subsidiaries as applicable (collectively, “Dedw3n” or “we”).
+ 
+Please read these Terms carefully before you start using Dedw3n Advertisement. By using Dedw3n Advertisement, you accept and agree to be bound and abide by the Terms, incorporated herein by reference. If you do not want to agree to these Terms, you must not access or use the Service. These Terms are supplemental to Dedw3n.com’s general Terms of Service (the “Terms of Service”), which also apply to Dedw3n Advertisement. Capitalized terms used but not defined herein shall have the respective meanings given to them in the Terms of Service.
+ 
+1. Dedw3n Advertisement
+
+The Dedw3n Advertisement Program allows qualified Sellers to promote their business by making their services visible as Advertisement in prime locations in the marketplace (the “Advertisement”), within certain categories. Dedw3n Advertisement uses a first-price auction mechanism to determine the cost and placement of Advertisement from participating Sellers. In Dedw3n Advertisement, Sellers pay a fee only when Buyers click on the Sellers’ Advertisement. Dedw3n Advertisement is available for qualified Sellers who meet various quality metrics and are not found to be in violation of the Terms of Service and/or Dedw3n’s Community Standards. 
+ 
+2. Bids
+
+A bid is the highest amount the Seller is willing to pay for one click on their Dedw3n Advertisement' Ad. Higher bids may increase Sellers’ chances of winning auctions; however, other metrics—such as relevancy or quality (the likelihood of views, sales, etc.)—are also taken into consideration for determining the service's “Ad rank”, which ultimately determines the auction winners.
+ 
+Please note that the highest bid does not necessarily win the auction. High-quality services may win auctions with lower bids (while maintaining the highest Ad ranks). Under no circumstances does the Program constitute a guarantee or obligation by Dedw3n to promote your services. Furthermore, we cannot promise that an Ad will be clicked, nor that if the Ad is clicked, that the Dedw3n Ad will be purchased. Should you win an auction, the placement of your Dedw3n Ad, if any, will be subject to Dedw3n’s sole choice and discretion. Bids are subject to minimum amounts set by Dedw3n in advance.
+ 
+3. Auction
+
+Dedw3n Advertisement are based on a “First-Price Auction” process, which means that while the service with the highest Ad rank wins, the price that the Seller will be charged for each click (Cost-Per-Click) is based on the bid for the winning Ad, and calculated automatically by Dedw3n. Click here to learn more.
+ 
+4. Advertisement Location
+
+Locations of Advertisement on the Site are based on a variety of factors, including the bid amount, the quality of the service, relevance, and others, and in any event, are subject, at any time, to Dedw3n’s sole discretion.
+ 
+5. Daily Limit
+
+The daily limit is the maximum amount a Seller is willing to pay in a single day to promote their services. Sellers are required to define a daily limit in order to turn on Dedw3n Advertisement. A day, for this purpose, is defined as a calendar day in Coordinated Universal Time (UTC).
+ 
+Please note that there is no guarantee that the entire daily limit will be used on any day. The daily limit may be updated by the Seller at any point, with effect no later than the next business day.
+ 
+6. Payment Terms
+
+Dedw3n Advertisement' fees are charged on a monthly basis, during the first week of each calendar month, based on the clicks made in the previous month. By default, the fee is charged from the Seller's Dedw3n Credits and/or Dedw3n Balance (if there are not enough Dedw3n Credits). However, when there are no sufficient funds in the Seller's Dedw3n Balance, the remaining fee will be charged from the payment method defined by the Seller in their account, or deducted from the Seller’s future earnings if no payment method is defined.
+ 
+Sellers may be charged with indirect taxes (such as Sales Tax, VAT, or GST) depending on residency, location, and any applicable law, in addition to the fee which was calculated in the auction process. Please note that the daily limit set by the Sellers does not include any and all taxes. 
+ 
+For all other terms, please read the Purchasing section in our Terms of Service.
+ 
+7. Disclaimer of Warranties
+
+THE Dedw3n Advertisement PROGRAM IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS, WITHOUT ANY WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. NEITHER Dedw3n NOR ANY PERSON ASSOCIATED WITH Dedw3n MAKES ANY WARRANTY OR REPRESENTATION WITH RESPECT TO THE COMPLETENESS, SECURITY, RELIABILITY, QUALITY, ACCURACY, OR AVAILABILITY OF THE SERVICE. THE FOREGOING DOES NOT AFFECT ANY WARRANTIES WHICH CANNOT BE EXCLUDED OR LIMITED UNDER APPLICABLE LAW.
+ 
+8. Limitation on Liability
+
+IN NO EVENT WILL Dedw3n, ITS AFFILIATES OR THEIR LICENSORS, SERVICE PROVIDERS, EMPLOYEES, AGENTS, OFFICERS, OR DIRECTORS BE LIABLE FOR DAMAGES OF ANY KIND, UNDER ANY LEGAL THEORY, ARISING OUT OF OR IN CONNECTION WITH YOUR USE, OR INABILITY TO USE, THE SITE, ANY WEBSITES LINKED TO IT, ANY CONTENT ON THE WEBSITE OR SUCH OTHER WEBSITES OR ANY COURSES OR ITEMS OBTAINED THROUGH THE WEBSITE OR SUCH OTHER WEBSITES, INCLUDING ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL, CONSEQUENTIAL OR PUNITIVE DAMAGES, INCLUDING BUT NOT LIMITED TO, PERSONAL INJURY, PAIN AND SUFFERING, EMOTIONAL DISTRESS, LOSS OF REVENUE, LOSS OF PROFITS, LOSS OF BUSINESS OR ANTICIPATED SAVINGS, LOSS OF USE, LOSS OF GOODWILL, LOSS OF DATA, AND WHETHER CAUSED BY TORT (INCLUDING NEGLIGENCE), BREACH OF CONTRACT OR OTHERWISE, EVEN IF FORESEEABLE.
+
+THE FOREGOING DOES NOT AFFECT ANY LIABILITY WHICH CANNOT BE EXCLUDED OR LIMITED UNDER APPLICABLE LAW.
+ 
+We reserve the right to suspend your account should we notice any activity we determine fraudulent or inappropriate.
+ 
+Users who are suspended from Dedw3n due to a violation of our Terms of Service cannot access the Program.
+ 
+We may make changes to these Terms from time to time. When these changes are made, we will make a new copy of the Terms available on this page.
+ 
+You understand and agree that if you use the Service after the date on which the Terms have changed, we will treat your use as acceptance of the updated Terms.
+ 
+We reserve the right to suspend the Program at any time without notice.
+

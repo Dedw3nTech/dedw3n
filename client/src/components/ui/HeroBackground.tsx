@@ -13,18 +13,23 @@ interface HeroBackgroundProps {
 export function HeroBackground({
   children,
   className = "min-h-screen w-full relative flex flex-col",
-  alt = "Coming Soon - Dedw3n",
-  src = "/attached_assets/coming soon_1756963751096.png",
+  alt = "Dedw3n Marketplace",
+  src,
   onLoad,
   onError
 }: HeroBackgroundProps) {
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const defaultSrc = isMobile 
+    ? "/attached_assets/hero-image-mobile.png" 
+    : "/attached_assets/hero-background-main.png";
+
+  const imageSrc = src || defaultSrc;
+
   const defaultOnLoad = () => {
-    console.log('Hero background image loaded successfully');
     onLoad?.();
   };
 
   const defaultOnError = () => {
-    console.error('Failed to load hero background image');
     onError?.();
   };
 
@@ -32,7 +37,7 @@ export function HeroBackground({
     <div className={className}>
       {/* Unified Background using OptimizedImage */}
       <OptimizedImage 
-        src={src}
+        src={imageSrc}
         alt={alt}
         className="absolute inset-0 w-full h-full object-cover"
         priority={true}

@@ -1,0 +1,20 @@
+If you are a developer experiencing issues with products and videos not showing in wall posts, the problem is likely related to incorrect API configurations, missing permissions, or platform-specific limitations. 
+Here are potential causes and steps to resolve the issue:
+Common Causes & Fixes
+Missing or Incorrect Permissions: The app may not have the necessary permissions to access and display "products and videos" content.
+Fix: Double-check your application's settings on the developer platform (e.g., Facebook, a custom platform) and ensure you have requested and been granted the required permissions (e.g., user_posts, specific commerce or video permissions if available). Re-authorize the user with the correct permissions.
+Incorrect API Implementation: The way the API call is structured might be the issue. Automated feeds for "message" fields might be blocked; structured data should go via "attachment" or specific media fields.
+Fix: Review the developer documentation for the specific platform's wall post API. Ensure you are using the correct fields and format for including media and products. Specifying secure (HTTPS) URLs for video sources is often required for inline display.
+Platform Restrictions (Web vs. Client App): Some permissions (like "wall access") might be unavailable for websites and only work for native client applications.
+Fix: Verify if the access you need is permitted for your application type (web, iOS, Android, etc.). You may need to change your application's platform settings or rethink your implementation strategy.
+Content Visibility Settings (Privacy/Algorithm): The content might be successfully posted but not immediately visible due to the platform's algorithms or privacy settings.
+Fix: Check the privacy settings of the posts in question. If they are set to "Only Me" or a restricted audience, they won't show publicly. Also, be aware that social media feeds are not always chronological and use algorithms, so posts may not appear at the top of a general feed.
+App/Platform Glitches or Outages: The issue could be a temporary bug or server problem on the platform's end.
+Fix: Check the platform's official developer status page or services like Downdetector to see if there are known outages.
+Outdated App/SDK: Using an old version of the SDK or app can lead to compatibility errors.
+Fix: Update your application's SDK to the latest version and ensure your test environment is current. 
+Next Steps for Developers
+Check API Responses: Log the API responses when you attempt to post or retrieve content. Error codes or messages often pinpoint the exact problem.
+Use Debugging Tools: Utilize the platform's developer debugging tools (e.g., Facebook's Open Graph Object Debugger) to test the URLs and data you are trying to post.
+Review Documentation: Re-read the specific documentation for posting products and videos, as guidelines and required parameters change frequently.
+Test with a Simple Post: Try posting plain text to confirm basic wall post functionality is working. If that works, the issue is specific to the media content. 

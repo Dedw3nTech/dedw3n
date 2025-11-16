@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useTranslation } from 'react-i18next';
+import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 import { useQuery } from '@tanstack/react-query';
 
 // API functions to fetch data from our comprehensive city database
@@ -180,7 +180,24 @@ export default function RegionSelector({
   showErrors = false,
   disabled = false
 }: RegionSelectorProps) {
-  const { t } = useTranslation();
+  // Texts for translation
+  const regionTexts = useMemo(() => [
+    'region',
+    'regionRequired',
+    'country',
+    'countryRequired',
+    'city',
+    'selectCity',
+    'cityRequired'
+  ], []);
+
+  const { translations } = useMasterBatchTranslation(regionTexts);
+  
+  // Translation helper function with safe access
+  const t = (key: string): string => {
+    const index = regionTexts.indexOf(key);
+    return index !== -1 ? (translations?.[index] || key) : key;
+  };
   
   // React Query hooks for fetching data from API
   const { data: regions = [], isLoading: regionsLoading } = useQuery({

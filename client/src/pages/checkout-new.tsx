@@ -416,7 +416,7 @@ const CheckoutForm = ({ total, cartItems, shippingInfo, onOrderComplete, transla
       }
     } catch (error) {
       toast({
-        title: "Payment Error",
+        title: "Error",
         description: "An unexpected error occurred",
         variant: "destructive",
       });

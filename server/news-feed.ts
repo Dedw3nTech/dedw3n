@@ -9,13 +9,14 @@ import { db } from "./db";
 import { posts, users } from "@shared/schema";
 import { and, eq, like, desc, sql } from "drizzle-orm";
 import https from 'https';
+import { logger } from './logger';
 
 // News API configuration
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
 const NEWS_API_BASE_URL = 'https://newsapi.org/v2';
 
 if (!NEWS_API_KEY) {
-  console.error('NEWS_API_KEY is not defined in the environment variables');
+  logger.error('NEWS_API_KEY not configured', undefined, new Error('Missing environment variable'), 'startup');
 }
 
 // Helper function to make a GET request to the News API
@@ -191,7 +192,7 @@ export async function getTrendingNews(req: Request, res: Response) {
     });
     
     if (!response || !response.articles) {
-      console.error('Invalid response from NewsAPI:', response);
+      logger.error('Invalid response from NewsAPI', { endpoint: '/top-headlines', context: 'trending' }, new Error('Invalid response structure'), 'api');
       return res.status(500).json({ message: "Failed to fetch news from external API" });
     }
     
@@ -208,7 +209,7 @@ export async function getTrendingNews(req: Request, res: Response) {
       hasMore: (offset + limit) < response.totalResults
     });
   } catch (error: any) {
-    console.error("Error fetching trending news:", error);
+    logger.error('Error fetching trending news', undefined, error, 'api');
     return res.status(500).json({ 
       message: "Failed to fetch trending news", 
       details: error.message 
@@ -282,7 +283,7 @@ export async function getNewsByCategory(req: Request, res: Response) {
     });
     
     if (!response || !response.articles) {
-      console.error('Invalid response from NewsAPI:', response);
+      logger.error('Invalid response from NewsAPI', { endpoint: '/top-headlines', category: apiCategory }, new Error('Invalid response structure'), 'api');
       return res.status(500).json({ message: "Failed to fetch news from external API" });
     }
     
@@ -297,7 +298,7 @@ export async function getNewsByCategory(req: Request, res: Response) {
       hasMore: (offset + limit) < response.totalResults
     });
   } catch (error: any) {
-    console.error(`Error fetching ${req.params.category} news:`, error);
+    logger.error('Error fetching category news', { category: req.params.category }, error, 'api');
     return res.status(500).json({ 
       message: `Failed to fetch ${req.params.category} news`,
       details: error.message
@@ -312,7 +313,7 @@ export function getNewsSources(req: Request, res: Response) {
   try {
     return res.json(newsSources);
   } catch (error) {
-    console.error("Error fetching news sources:", error);
+    logger.error('Error fetching news sources', undefined, error as Error, 'api');
     return res.status(500).json({ message: "Failed to fetch news sources" });
   }
 }
@@ -324,7 +325,7 @@ export function getNewsCategories(req: Request, res: Response) {
   try {
     return res.json(newsCategories);
   } catch (error) {
-    console.error("Error fetching news categories:", error);
+    logger.error('Error fetching news categories', undefined, error as Error, 'api');
     return res.status(500).json({ message: "Failed to fetch news categories" });
   }
 }
@@ -348,7 +349,7 @@ export async function getSavedNews(req: Request, res: Response) {
       hasMore: false
     });
   } catch (error) {
-    console.error("Error fetching saved news:", error);
+    logger.error('Error fetching saved news', { userId: (req.user as any)?.id }, error as Error, 'api');
     return res.status(500).json({ message: "Failed to fetch saved news" });
   }
 }
@@ -370,7 +371,7 @@ export async function saveNewsItem(req: Request, res: Response) {
     // For now, we'll just return a success message
     return res.json({ message: "News item saved successfully" });
   } catch (error) {
-    console.error("Error saving news item:", error);
+    logger.error('Error saving news item', { userId: (req.user as any)?.id, newsId: req.params.newsId }, error as Error, 'api');
     return res.status(500).json({ message: "Failed to save news item" });
   }
 }
@@ -392,7 +393,7 @@ export async function removeSavedNewsItem(req: Request, res: Response) {
     // For now, we'll just return a success message
     return res.json({ message: "News item removed successfully" });
   } catch (error) {
-    console.error("Error removing saved news item:", error);
+    logger.error('Error removing saved news item', { userId: (req.user as any)?.id, newsId: req.params.newsId }, error as Error, 'api');
     return res.status(500).json({ message: "Failed to remove saved news item" });
   }
 }
@@ -436,7 +437,7 @@ export async function shareNewsAsPost(req: Request, res: Response) {
       // post: post[0] 
     });
   } catch (error) {
-    console.error("Error sharing news:", error);
+    logger.error('Error sharing news', { userId: (req.user as any)?.id }, error as Error, 'api');
     return res.status(500).json({ message: "Failed to share news" });
   }
 }

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, Crown, Gem, Lock, MessageCircle, Eye, Users, Star, Shield, Grid3X3, List, ChevronDown, RotateCcw, Plus } from "lucide-react";
+import { Heart, Crown, Gem, Lock, MessageCircle, Eye, Users, Star, Shield, Grid3X3, List, ChevronDown, RotateCcw, Plus, Filter } from "lucide-react";
 import { useLoginPrompt } from "@/hooks/use-login-prompt";
 import { useLocation } from "wouter";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -46,12 +46,12 @@ export default function DatingPage() {
   const [, setLocation] = useLocation();
   const { formatPrice, formatPriceFromGBP } = useCurrency();
 
-  // Dating Page Master Translation Mega-Batch (115 texts)
+  // Dating Page Master Translation Mega-Batch (116 texts)
   const datingTexts = useMemo(() => [
-    // Page Headers & Navigation (20 texts)
+    // Page Headers & Navigation (21 texts)
     "Dating Rooms", "Find Your Perfect Match", "Connect with like-minded people", "Welcome to Premium Dating",
     "Normal Room", "VIP Room", "VVIP Room", "Exclusive Dating Experience", "Premium Members Only", 
-    "Dating Profile", "Browse Profiles", "My Matches", "Clear All", "Create Dating Profile", "Show", "Sort by", "Newest", "Popular", "Online", "Nearby",
+    "Dating Profile", "Browse Profiles", "My Matches", "Filter", "Create Dating Profile", "Show", "Sort by", "Newest", "Popular", "Online", "Nearby",
     
     // Profile Card Elements (18 texts)
     "Message", "View", "Profile", "Age", "Location", "Interests", "Looking for", "Relationship Type",
@@ -102,10 +102,10 @@ export default function DatingPage() {
 
   // Destructure translations in order
   const [
-    // Page Headers & Navigation (20 texts)
+    // Page Headers & Navigation (21 texts)
     datingRoomsText, findMatchText, connectText, welcomePremiumText,
     normalRoomText, vipRoomText, vvipRoomText, exclusiveExpText, premiumOnlyText,
-    datingProfileText, browseProfilesText, myMatchesText, clearAllText, createDatingProfileNavText, showText, sortByText, newestText, popularText, onlineText, nearbyText,
+    datingProfileText, browseProfilesText, myMatchesText, filterText, createDatingProfileNavText, showText, sortByText, newestText, popularText, onlineText, nearbyText,
     
     // Profile Card Elements (18 texts)
     messageText, viewText, profileText, ageText, locationText, interestsText, lookingForText, relationshipTypeText,
@@ -604,31 +604,11 @@ export default function DatingPage() {
           {/* Navigation Controls */}
           <div className="bg-white border rounded-lg p-4 mb-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
-              {/* Results and Clear All */}
+              {/* Results */}
               <div className="flex items-center gap-4">
                 <span className="text-sm text-gray-600">
                   {totalProfiles} {totalProfiles === 1 ? 'profile' : 'profiles'} found
                 </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setSortBy("newest");
-                    setCurrentPage(1);
-                  }}
-                  className="text-sm"
-                >
-                  {clearAllText}
-                </Button>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => setLocation("/dating-profile")}
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  {createDatingProfileNavText}
-                </Button>
               </div>
 
               {/* View Controls */}
@@ -670,6 +650,12 @@ export default function DatingPage() {
                     <List className="h-4 w-4" />
                   </Button>
                 </div>
+
+                {/* Filter button */}
+                <Button variant="ghost" size="sm" className="flex items-center gap-2 border-0 hover:bg-transparent">
+                  <Filter className="h-4 w-4" />
+                  {filterText}
+                </Button>
 
                 {/* Sort dropdown */}
                 <div className="flex items-center gap-2">

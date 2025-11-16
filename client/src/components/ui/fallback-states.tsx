@@ -1,7 +1,8 @@
-import { AlertCircle, FileWarning, Loader2 } from "lucide-react";
+import { AlertCircle, FileWarning } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import loadingLogo from "@/assets/loading-logo.png";
 
 interface LoadingProps {
   message?: string;
@@ -10,9 +11,13 @@ interface LoadingProps {
 
 export function LoadingSpinner({ message = "Loading...", className = "" }: LoadingProps) {
   return (
-    <div className={`flex flex-col items-center justify-center p-6 ${className}`}>
-      <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
-      <p className="text-muted-foreground text-sm">{message}</p>
+    <div className={`flex flex-col items-center justify-center p-6 bg-white ${className}`}>
+      <img 
+        src={loadingLogo} 
+        alt="Loading" 
+        className="h-20 w-20 animate-bounce mb-6"
+      />
+      <p className="text-black text-lg font-medium">{message}</p>
     </div>
   );
 }

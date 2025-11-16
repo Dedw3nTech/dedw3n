@@ -3,8 +3,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X, Volume2, VolumeX, Play, Pause } from "lucide-react";
 const campaignVideo = "/attached_assets/Cafe.mp4";
-const carSellingVideo = "/attached_assets/car selling online  .mp4";
-const motivationalVideo = "/attached_assets/Phone finger _1749112701077.mp4";
+const carSellingVideo = "/attached_assets/car%20selling%20online%20%20_1749419270298.mp4";
+const motivationalVideo = "/attached_assets/Phone%20finger%20_1749112701077.mp4";
 
 interface VideoDisplayCardProps {
   videoSource?: string;

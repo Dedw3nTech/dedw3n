@@ -1,23 +1,20 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ArrowLeft, CheckCircle } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
-const logoImage = "/dedw3n-logo-black.png";
-// import { useTranslation } from "react-i18next";
+import { useMasterTranslation } from "@/hooks/use-master-translation";
 
 export default function ResetPassword() {
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [, setLocation] = useLocation();
   const { toast } = useToast();
-  // const { t } = useTranslation();
+  const { translateText } = useMasterTranslation();
 
   const resetMutation = useMutation({
     mutationFn: async (email: string) => {
@@ -30,15 +27,11 @@ export default function ResetPassword() {
     },
     onSuccess: () => {
       setIsSubmitted(true);
-      toast({
-        title: "Email sent",
-        description: "Check your email for password reset instructions",
-      });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error", 
-        description: error.message,
+        title: translateText("Error"), 
+        description: error.message || translateText("Failed to send reset email"),
         variant: "destructive",
       });
     },
@@ -48,8 +41,8 @@ export default function ResetPassword() {
     e.preventDefault();
     if (!email.trim()) {
       toast({
-        title: "Error",
-        description: "Please enter your email address",
+        title: translateText("Error"),
+        description: translateText("Please enter your email address"),
         variant: "destructive",
       });
       return;
@@ -59,42 +52,36 @@ export default function ResetPassword() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          <Card>
-            <CardHeader className="text-center">
-              <div className="mx-auto flex items-center justify-center h-16 w-16">
-                <img 
-                  src={logoImage} 
-                  alt="Dedw3n Logo" 
-                  className="h-12 w-12 object-contain"
-                />
-              </div>
-              <CardTitle className="text-2xl">
-                Check your email
+      <div className="min-h-screen flex items-center justify-center bg-white py-6 px-4">
+        <div className="max-w-xl w-full">
+          <Card className="bg-white text-black border-0 shadow-none">
+            <CardHeader className="text-center space-y-2 pb-4">
+              <CardTitle className="text-2xl text-black">
+                {translateText("Check your email")}
               </CardTitle>
-              <CardDescription>
-                We've sent password reset instructions to <strong>{email}</strong>
+              <CardDescription className="text-black">
+                {translateText("We've sent password reset instructions to")} <strong>{email}</strong>
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-sm text-gray-600 text-center">
-                <p>Didn't receive the email? Check your spam folder or</p>
+            <CardContent className="space-y-3 pt-0">
+              <div className="text-sm text-black text-center">
+                <p>{translateText("Didn't receive the email? Check your spam folder or")}</p>
                 <button
                   type="button"
-                  className="text-blue-600 hover:text-blue-500 font-medium"
+                  className="text-black hover:text-gray-700 font-medium"
                   onClick={() => {
                     setIsSubmitted(false);
                     resetMutation.reset();
                   }}
+                  data-testid="button-try-again"
                 >
-                  try again
+                  {translateText("try again")}
                 </button>
               </div>
               <div className="text-center">
-                <Link href="/auth" className="inline-flex items-center text-sm text-blue-600 hover:text-blue-500">
+                <Link href="/auth" className="inline-flex items-center text-sm text-blue-600 hover:text-blue-500" data-testid="link-back-auth-success">
                   <ArrowLeft className="mr-1 h-4 w-4" />
-                  Back to sign in
+                  {translateText("Back to sign in")}
                 </Link>
               </div>
             </CardContent>
@@ -105,59 +92,54 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <Card>
-          <CardHeader>
-            <div className="mx-auto flex items-center justify-center h-16 w-16 mb-4">
-              <img 
-                src={logoImage} 
-                alt="Dedw3n Logo" 
-                className="h-12 w-12 object-contain"
-              />
-            </div>
-            <CardTitle className="text-2xl text-center">
-              Reset your password
+    <div className="min-h-screen flex items-center justify-center bg-white py-6 px-4">
+      <div className="max-w-xl w-full">
+        <Card className="bg-white text-black border-0 shadow-none">
+          <CardHeader className="space-y-2 pb-4">
+            <CardTitle className="text-2xl text-center text-black">
+              {translateText("Reset your password")}
             </CardTitle>
-            <CardDescription className="text-center">
-              Enter your email address and we'll send you a link to reset your password
+            <CardDescription className="text-center text-xs text-black">
+              {translateText("Enter your email address and we'll send you a link to reset your password")}
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email address</Label>
+          <CardContent className="pt-0">
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-black">{translateText("Enter your email address below")}</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder={translateText("Email")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="h-12"
+                  className="bg-white text-black placeholder:text-black h-12"
+                  data-testid="input-email"
                 />
               </div>
               
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full bg-black hover:bg-gray-800 text-white"
                 disabled={resetMutation.isPending || !email.trim()}
+                data-testid="button-send-reset"
               >
                 {resetMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sending...
+                    {translateText("Sending")}
                   </>
                 ) : (
-                  "Send reset link"
+                  translateText("Send reset link")
                 )}
               </Button>
             </form>
 
-            <div className="mt-6 text-center">
-              <Link href="/auth" className="inline-flex items-center text-sm text-blue-600 hover:text-blue-500">
+            <div className="mt-4 text-center">
+              <Link href="/auth" className="inline-flex items-center text-sm text-blue-600 hover:text-blue-500" data-testid="link-back-auth">
                 <ArrowLeft className="mr-1 h-4 w-4" />
-                Back to sign in
+                {translateText("Back to sign in")}
               </Link>
             </div>
           </CardContent>

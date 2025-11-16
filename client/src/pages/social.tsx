@@ -226,7 +226,6 @@ export default function Social() {
                             className="w-full"
                             onClick={() => setActiveTab("profile")}
                           >
-                            <User className="h-4 w-4 mr-2" />
                             View Profile
                           </Button>
                         </CardContent>
@@ -279,7 +278,6 @@ export default function Social() {
                           className="w-full"
                           onClick={() => setLocation('/products')}
                         >
-                          <ShoppingBag className="h-4 w-4 mr-2" />
                           View All Products
                         </Button>
                       </CardFooter>
@@ -380,7 +378,6 @@ export default function Social() {
                       className="flex-1"
                     />
                     <Button type="submit">
-                      <Search className="h-4 w-4 mr-2" />
                       Search
                     </Button>
                   </form>
@@ -394,23 +391,18 @@ export default function Social() {
                         <h3 className="font-medium mb-3">Explore</h3>
                         <div className="space-y-1">
                           <Button variant="ghost" className="w-full justify-start">
-                            <Flame className="h-4 w-4 mr-2" />
                             Trending
                           </Button>
                           <Button variant="ghost" className="w-full justify-start">
-                            <Users className="h-4 w-4 mr-2" />
                             People
                           </Button>
                           <Button variant="ghost" className="w-full justify-start">
-                            <ImageIcon className="h-4 w-4 mr-2" />
                             Photos
                           </Button>
                           <Button variant="ghost" className="w-full justify-start">
-                            <Video className="h-4 w-4 mr-2" />
                             Videos
                           </Button>
                           <Button variant="ghost" className="w-full justify-start">
-                            <ShoppingBag className="h-4 w-4 mr-2" />
                             Products
                           </Button>
                         </div>
@@ -541,7 +533,6 @@ export default function Social() {
                             className="w-full justify-start"
                             onClick={() => setLocation('/videos/trending')}
                           >
-                            <Flame className="h-4 w-4 mr-2" />
                             Trending
                           </Button>
                           <Button 
@@ -549,7 +540,6 @@ export default function Social() {
                             className="w-full justify-start"
                             onClick={() => setLocation('/videos/shorts')}
                           >
-                            <Video className="h-4 w-4 mr-2" />
                             Shorts
                           </Button>
                           <Button 
@@ -557,7 +547,6 @@ export default function Social() {
                             className="w-full justify-start"
                             onClick={() => setLocation('/videos/stories')}
                           >
-                            <LayoutGrid className="h-4 w-4 mr-2" />
                             Stories
                           </Button>
                           <Button 
@@ -565,7 +554,6 @@ export default function Social() {
                             className="w-full justify-start"
                             onClick={() => setLocation('/videos/live')}
                           >
-                            <Video className="h-4 w-4 mr-2" />
                             Live
                           </Button>
                         </div>
@@ -677,7 +665,6 @@ export default function Social() {
                             className="w-full"
                             onClick={() => setLocation('/communities')}
                           >
-                            <Users className="h-4 w-4 mr-2" />
                             My Communities
                           </Button>
                           <Button 
@@ -685,7 +672,6 @@ export default function Social() {
                             className="w-full"
                             onClick={() => setLocation('/communities/create')}
                           >
-                            <PlusCircle className="h-4 w-4 mr-2" />
                             Create Community
                           </Button>
                           <Button 
@@ -693,7 +679,6 @@ export default function Social() {
                             className="w-full"
                             onClick={() => setLocation('/communities/discover')}
                           >
-                            <Compass className="h-4 w-4 mr-2" />
                             Discover Communities
                           </Button>
                         </div>

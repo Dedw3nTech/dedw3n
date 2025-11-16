@@ -131,15 +131,11 @@ export default function LikedProductsContent() {
   if (!likedProducts.length) {
     return (
       <Card className="text-center py-16">
-        <div className="mx-auto w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mb-6">
-          <Heart className="h-12 w-12 text-red-500" />
-        </div>
         <h3 className="text-xl font-semibold mb-2">{translatedLabels.noLikedProducts}</h3>
         <p className="text-gray-600 mb-6 max-w-md mx-auto">
           {translatedLabels.browseMessage}
         </p>
-        <Button onClick={() => setLocation('/products')} className="bg-black hover:bg-gray-800">
-          <ShoppingBag className="mr-2 h-4 w-4" />
+        <Button onClick={() => setLocation('/products')} variant="link" className="text-black hover:text-gray-800 font-normal">
           {translatedLabels.exploreProducts}
         </Button>
       </Card>
@@ -149,7 +145,11 @@ export default function LikedProductsContent() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {likedProducts.map((product) => (
-        <Card key={product.id} className="overflow-hidden group hover:shadow-lg transition-all duration-300">
+        <Card 
+          key={product.id} 
+          className="overflow-hidden group hover:shadow-lg transition-all duration-300 cursor-pointer"
+          onClick={() => setLocation(`/product/${product.id}`)}
+        >
           <div className="relative aspect-[2/3] overflow-hidden">
             {product.imageUrl ? (
               <img
@@ -190,7 +190,7 @@ export default function LikedProductsContent() {
               </p>
             )}
             
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {product.discountPrice ? (
                   <>
@@ -208,14 +208,6 @@ export default function LikedProductsContent() {
                 )}
               </div>
             </div>
-            
-            <Button
-              size="sm"
-              className="w-full bg-black hover:bg-gray-800"
-              onClick={() => handleAddToCart(product)}
-            >
-              {getButtonText()}
-            </Button>
           </div>
         </Card>
       ))}

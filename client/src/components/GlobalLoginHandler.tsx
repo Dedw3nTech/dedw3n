@@ -20,13 +20,33 @@ export function GlobalLoginHandler() {
     // Only add global click handler if user is not authenticated
     if (!user) {
       const handleGlobalClick = (event: MouseEvent) => {
+        // Skip if on auth page - users are already on the authentication page
+        if (location === '/auth' || location.startsWith('/auth?')) {
+          return;
+        }
+        
         // Skip if on password reset pages - these should work without authentication
         if (location === '/reset-password' || location === '/reset-password-confirm' || location.startsWith('/reset-password-confirm?')) {
           return;
         }
         
+        // Skip if on vidz page - allow unauthenticated users to browse demo videos
+        if (location === '/vidz') {
+          return;
+        }
+        
         // Prevent showing login popup if user clicked on existing modal/dialog elements
         const target = event.target as HTMLElement;
+        
+        // Check entire event propagation path for opt-out markers
+        const path = event.composedPath();
+        for (const element of path) {
+          if (element instanceof HTMLElement) {
+            if (element.hasAttribute('data-no-login') || element.hasAttribute('data-login-skip')) {
+              return;
+            }
+          }
+        }
         
         // Skip if clicking on login modal itself or its children
         if (target.closest('[role="dialog"]') || target.closest('.login-modal')) {
@@ -36,7 +56,6 @@ export function GlobalLoginHandler() {
         // Skip if clicking on certain UI elements that shouldn't trigger login
         if (
           target.closest('a[href^="/"]') || // Internal links
-          target.closest('button[data-no-login]') || // Buttons marked to skip login
           target.closest('.no-login-trigger') || // Elements marked to skip login
           target.closest('input') || // Form inputs
           target.closest('textarea') || // Text areas

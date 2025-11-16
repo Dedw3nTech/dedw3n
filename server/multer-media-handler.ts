@@ -121,7 +121,7 @@ export function registerMulterRoutes(app: any) {
   app.post('/api/upload/file', handleFormFileUpload);
   
   // Add an endpoint that matches the one used in the client
-  app.post('/api/media/upload', (req, res, next) => {
+  app.post('/api/media/upload', (req: any, res: any, next: any) => {
     console.log('[MULTER] Media upload request received');
     
     // Check if it's a JSON request with base64 data

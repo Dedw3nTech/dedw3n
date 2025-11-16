@@ -2,11 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0, user-scalable=yes" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0, user-scalable=yes, viewport-fit=cover" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="format-detection" content="telephone=no" />
+    <meta name="HandheldFriendly" content="true" />
+    <meta name="MobileOptimized" content="width" />
     <title>Dedw3n</title>
     <meta name="description" content="Dedw3n's innovative social marketplace platform. Buy and sell products, connect with a verified community, and discover meaningful relationships. B2B, B2C, and C2C marketplace with integrated social features and secure dating platform." />
     <meta name="keywords" content="social marketplace, online marketplace, community platform, dating platform, buy sell online, B2B marketplace, B2C marketplace, C2C marketplace, social commerce, verified community, online dating, secure marketplace, product marketplace, social network, creators marketplace, digital marketplace" />
@@ -35,8 +37,10 @@
     <meta name="twitter:description" content="Dedw3n's innovative social marketplace platform. Buy and sell products, connect with a verified community, and discover meaningful relationships. B2B, B2C, and C2C marketplace with integrated social features." />
     <meta name="twitter:site" content="@dedw3n" />
     <meta name="twitter:creator" content="@dedw3n" />
+    <!-- Resource Hints for Performance -->
     <link rel="dns-prefetch" href="//dedw3n.com" />
     <link rel="preconnect" href="https://dedw3n.com" crossorigin />
+    <link rel="preconnect" href="https://987df99e227c1b3cd8bbc12db0692cdf.r2.cloudflarestorage.com" crossorigin />
     
     <!-- Trust and Verification Meta Tags -->
     <meta name="google-site-verification" content="PLACEHOLDER_GOOGLE_VERIFICATION" />
@@ -45,9 +49,13 @@
     
     <!-- Security Headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-    <meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />
-    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+    
+    <!-- Minified Structured Data for SEO (kept in head for crawler compatibility) -->
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":["WebSite","Organization"],"name":"Dedw3n Ltd","alternateName":"Dedw3n","description":"Innovative social marketplace platform combining B2B, B2C, and C2C commerce with verified community features and secure dating platform for meaningful connections.","url":"https://dedw3n.com","logo":"https://dedw3n.com/logo-192.png","foundingDate":"2024","founder":{"@type":"Organization","name":"Dedw3n Ltd"},"contactPoint":{"@type":"ContactPoint","contactType":"customer service","availableLanguage":"English"},"sameAs":["https://dedw3n.com/products","https://dedw3n.com/wall","https://dedw3n.com/dating"],"potentialAction":{"@type":"SearchAction","target":"https://dedw3n.com/search?q={search_term_string}","query-input":"required name=search_term_string"},"mainEntity":[{"@type":"WebPage","@id":"https://dedw3n.com/products","name":"Marketplace","description":"Buy and sell products in our secure marketplace platform","url":"https://dedw3n.com/products","isPartOf":{"@id":"https://dedw3n.com"}},{"@type":"WebPage","@id":"https://dedw3n.com/wall","name":"Community","description":"Connect with creators and shoppers in our verified community","url":"https://dedw3n.com/wall","isPartOf":{"@id":"https://dedw3n.com"}},{"@type":"WebPage","@id":"https://dedw3n.com/dating","name":"Dating","description":"Meet and connect with people through our trusted dating platform","url":"https://dedw3n.com/dating","isPartOf":{"@id":"https://dedw3n.com"}}],"aggregateRating":{"@type":"AggregateRating","ratingValue":"4.8","ratingCount":"1250","bestRating":"5","worstRating":"1"},"offers":{"@type":"Offer","price":"0","priceCurrency":"USD","availability":"https://schema.org/InStock","description":"Free platform access with premium features available"},"keywords":["social marketplace","online marketplace","community platform","dating platform","B2B marketplace","B2C marketplace","C2C marketplace","social commerce","verified community","secure dating","product marketplace"],"applicationCategory":"SocialNetworkingApplication","operatingSystem":"Any","featureList":["Social Marketplace Platform","B2B/B2C/C2C Commerce","Verified Community Network","Secure Dating Platform","Real-time Messaging","Product Reviews & Ratings","Multi-currency Support","Mobile Optimized Interface"]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"OnlineStore","name":"Dedw3n Marketplace","description":"Secure B2B, B2C, and C2C marketplace with verified sellers and buyers","url":"https://dedw3n.com/products","parentOrganization":{"@type":"Organization","name":"Dedw3n Ltd"},"paymentAccepted":["Credit Card","Stripe","PayPal"],"currenciesAccepted":["USD","EUR","GBP"],"hasOfferCatalog":{"@type":"OfferCatalog","name":"Product Catalog","itemListElement":[{"@type":"Offer","price":"29.99","priceCurrency":"USD","availability":"https://schema.org/InStock","itemOffered":{"@type":"Product","name":"Various Products","category":"General Merchandise","offers":{"@type":"Offer","price":"29.99","priceCurrency":"USD","availability":"https://schema.org/InStock"},"aggregateRating":{"@type":"AggregateRating","ratingValue":"4.5","reviewCount":"127","bestRating":"5","worstRating":"1"}}}]}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"DiscussionForumPosting","headline":"Dedw3n Community","description":"Connect with verified creators, shoppers, and professionals in our secure community platform","url":"https://dedw3n.com/wall","datePublished":"2024-01-01T00:00:00Z","dateModified":"2024-12-01T00:00:00Z","author":{"@type":"Organization","name":"Dedw3n Ltd","url":"https://dedw3n.com"},"publisher":{"@type":"Organization","name":"Dedw3n Ltd"},"discussionUrl":"https://dedw3n.com/community","articleSection":"Community Discussions"}</script>
+    
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -57,228 +65,434 @@
     <link rel="apple-touch-icon" sizes="512x512" href="/logo-512.png">
     <meta name="msapplication-TileImage" content="/logo-192.png">
     <meta name="msapplication-TileColor" content="#1F2937">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Structured Data for SEO -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": ["WebSite", "Organization"],
-      "name": "Dedw3n Ltd",
-      "alternateName": "Dedw3n",
-      "description": "Innovative social marketplace platform combining B2B, B2C, and C2C commerce with verified community features and secure dating platform for meaningful connections.",
-      "url": "https://dedw3n.com",
-      "logo": "https://dedw3n.com/logo-192.png",
-      "foundingDate": "2024",
-      "founder": {
-        "@type": "Organization",
-        "name": "Dedw3n Ltd"
-      },
-      "contactPoint": {
-        "@type": "ContactPoint",
-        "contactType": "customer service",
-        "availableLanguage": "English"
-      },
-      "sameAs": [
-        "https://dedw3n.com/products",
-        "https://dedw3n.com/wall", 
-        "https://dedw3n.com/dating"
-      ],
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": "https://dedw3n.com/search?q={search_term_string}",
-        "query-input": "required name=search_term_string"
-      },
-      "mainEntity": [
-        {
-          "@type": "WebPage",
-          "@id": "https://dedw3n.com/products",
-          "name": "Marketplace",
-          "description": "Buy and sell products in our secure marketplace platform",
-          "url": "https://dedw3n.com/products",
-          "isPartOf": {
-            "@id": "https://dedw3n.com"
-          }
-        },
-        {
-          "@type": "WebPage", 
-          "@id": "https://dedw3n.com/wall",
-          "name": "Community",
-          "description": "Connect with creators and shoppers in our verified community",
-          "url": "https://dedw3n.com/wall",
-          "isPartOf": {
-            "@id": "https://dedw3n.com"
-          }
-        },
-        {
-          "@type": "WebPage",
-          "@id": "https://dedw3n.com/dating", 
-          "name": "Dating",
-          "description": "Meet and connect with people through our trusted dating platform",
-          "url": "https://dedw3n.com/dating",
-          "isPartOf": {
-            "@id": "https://dedw3n.com"
-          }
-        }
-      ],
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.8",
-        "ratingCount": "1250",
-        "bestRating": "5",
-        "worstRating": "1"
-      },
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD",
-        "availability": "https://schema.org/InStock",
-        "description": "Free platform access with premium features available"
-      },
-      "keywords": ["social marketplace", "online marketplace", "community platform", "dating platform", "B2B marketplace", "B2C marketplace", "C2C marketplace", "social commerce", "verified community", "secure dating", "product marketplace"],
-      "applicationCategory": "SocialNetworkingApplication",
-      "operatingSystem": "Any",
-      "featureList": [
-        "Social Marketplace Platform",
-        "B2B/B2C/C2C Commerce",
-        "Verified Community Network", 
-        "Secure Dating Platform",
-        "Real-time Messaging",
-        "Product Reviews & Ratings",
-        "Multi-currency Support",
-        "Mobile Optimized Interface"
-      ]
-    }
-    </script>
-    
-    <!-- Additional Schema for Marketplace -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "OnlineStore",
-      "name": "Dedw3n Marketplace",
-      "description": "Secure B2B, B2C, and C2C marketplace with verified sellers and buyers",
-      "url": "https://dedw3n.com/products",
-      "parentOrganization": {
-        "@type": "Organization",
-        "name": "Dedw3n Ltd"
-      },
-      "paymentAccepted": ["Credit Card", "Stripe", "PayPal"],
-      "currenciesAccepted": ["USD", "EUR", "GBP"],
-      "hasOfferCatalog": {
-        "@type": "OfferCatalog",
-        "name": "Product Catalog",
-        "itemListElement": [
-          {
-            "@type": "Offer",
-            "price": "29.99",
-            "priceCurrency": "USD",
-            "availability": "https://schema.org/InStock",
-            "itemOffered": {
-              "@type": "Product",
-              "name": "Various Products",
-              "category": "General Merchandise",
-              "offers": {
-                "@type": "Offer",
-                "price": "29.99",
-                "priceCurrency": "USD",
-                "availability": "https://schema.org/InStock"
-              },
-              "aggregateRating": {
-                "@type": "AggregateRating",
-                "ratingValue": "4.5",
-                "reviewCount": "127",
-                "bestRating": "5",
-                "worstRating": "1"
-              }
-            }
-          }
-        ]
-      }
-    }
-    </script>
-
-    <!-- Schema for Community Platform -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "DiscussionForumPosting",
-      "headline": "Dedw3n Community",
-      "description": "Connect with verified creators, shoppers, and professionals in our secure community platform",
-      "url": "https://dedw3n.com/wall",
-      "datePublished": "2024-01-01T00:00:00Z",
-      "dateModified": "2024-12-01T00:00:00Z",
-      "author": {
-        "@type": "Organization",
-        "name": "Dedw3n Ltd",
-        "url": "https://dedw3n.com"
-      },
-      "publisher": {
-        "@type": "Organization", 
-        "name": "Dedw3n Ltd"
-      },
-      "discussionUrl": "https://dedw3n.com/community",
-      "articleSection": "Community Discussions"
-    }
-    </script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-    
-    <!-- Service Worker Registration for Performance Optimization -->
+    <!-- Production Error Detection & Logging -->
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', async () => {
-          try {
-            const registration = await navigator.serviceWorker.register('/sw.js', {
-              scope: '/'
-            });
-            console.log('[SW] Registration successful:', registration.scope);
-            
-            // Performance optimization: preload critical resources
-            if (registration.active) {
-              // Schedule cache cleanup every 30 minutes
-              setInterval(() => {
-                registration.active.postMessage({ type: 'CLEANUP_CACHE' });
-              }, 30 * 60 * 1000);
+      (function() {
+        var errors = [];
+        var MAX_ERRORS = 20;
+        var errorShown = false;
+        var criticalErrorCount = 0;
+        var CRITICAL_ERROR_THRESHOLD = 3;
+        
+        function isCriticalError(message, source, error) {
+          var msg = String(message).toLowerCase();
+          var src = String(source || '').toLowerCase();
+          
+          var criticalPatterns = [
+            'syntaxerror',
+            'referenceerror',
+            'typeerror: cannot read',
+            'typeerror: undefined is not',
+            'typeerror: null is not',
+            'chunk',
+            'module not found',
+            'failed to fetch dynamically imported module',
+            'loading chunk',
+            'unexpected token',
+            'is not defined'
+          ];
+          
+          var nonCriticalPatterns = [
+            'failed to fetch',
+            'network',
+            'load failed',
+            'image',
+            'video',
+            'crypto',
+            'geolocation',
+            'api/',
+            '/api/',
+            'fetch error',
+            'offline',
+            'preload',
+            'modulepreload',
+            'unsupported `as` value',
+            'link rel=',
+            'uses an unsupported',
+            'cache',
+            'service worker',
+            'sw.js',
+            'partial response',
+            'status code 206'
+          ];
+          
+          for (var i = 0; i < nonCriticalPatterns.length; i++) {
+            if (msg.includes(nonCriticalPatterns[i]) || src.includes(nonCriticalPatterns[i])) {
+              return false;
             }
-          } catch (error) {
-            console.log('[SW] Registration failed:', error);
           }
-        });
-      }
-      
-      // Performance monitoring
-      if ('performance' in window) {
-        window.addEventListener('load', () => {
-          // Measure Core Web Vitals
-          const observer = new PerformanceObserver((list) => {
-            for (const entry of list.getEntries()) {
-              if (entry.entryType === 'largest-contentful-paint') {
-                console.log('[Perf] LCP:', entry.startTime);
-              }
-              if (entry.entryType === 'first-input') {
-                console.log('[Perf] FID:', entry.processingStart - entry.startTime);
-              }
-              if (entry.entryType === 'layout-shift' && !entry.hadRecentInput) {
-                console.log('[Perf] CLS:', entry.value);
-              }
+          
+          for (var i = 0; i < criticalPatterns.length; i++) {
+            if (msg.includes(criticalPatterns[i])) {
+              return true;
             }
-          });
+          }
+          
+          return false;
+        }
+        
+        function logProductionError(message, source, lineno, colno, error) {
+          var errorInfo = {
+            timestamp: new Date().toISOString(),
+            message: message,
+            source: source,
+            line: lineno,
+            column: colno,
+            stack: error && error.stack ? error.stack : 'No stack trace',
+            userAgent: navigator.userAgent,
+            url: window.location.href
+          };
+          
+          errors.push(errorInfo);
+          if (errors.length > MAX_ERRORS) {
+            errors.shift();
+          }
+          
+          // Log error with clear message formatting
+          console.error('[PRODUCTION-ERROR]', errorInfo);
+          console.error('[ERROR-MESSAGE]', String(message));
+          console.error('[ERROR-SOURCE]', String(source || 'Unknown'));
+          if (error && error.stack) {
+            console.error('[ERROR-STACK]', error.stack);
+          }
           
           try {
-            observer.observe({ entryTypes: ['largest-contentful-paint', 'first-input', 'layout-shift'] });
+            localStorage.setItem('production-errors', JSON.stringify(errors));
           } catch (e) {
-            // Fallback for older browsers
-            console.log('[Perf] Performance Observer not supported');
+            console.warn('[ERROR-LOGGER] Could not save to localStorage:', e);
           }
+          
+          if (isCriticalError(message, source, error)) {
+            criticalErrorCount++;
+            console.warn('[CRITICAL-ERROR-DETECTED] Count:', criticalErrorCount);
+            console.warn('[CRITICAL-ERROR-MESSAGE]', String(message));
+            
+            if (criticalErrorCount >= CRITICAL_ERROR_THRESHOLD && !errorShown) {
+              console.error('[CRITICAL] Multiple critical errors detected! Showing error screen.');
+              showErrorFallback();
+              errorShown = true;
+            }
+          }
+        }
+        
+        function showErrorFallback() {
+          var loader = document.getElementById('initial-loader');
+          if (loader) {
+            loader.className = '';
+            loader.style.display = 'flex';
+            loader.style.opacity = '1';
+            
+            loader.innerHTML = `
+              <div style="text-align: center; padding: 20px; max-width: 600px;">
+                <h2 style="color: #dc2626; margin-bottom: 16px;">Application Error</h2>
+                <p style="color: #374151; margin-bottom: 24px;">
+                  The application encountered critical errors while loading. Please try reloading the page.
+                </p>
+                <button onclick="window.location.reload()" style="
+                  background: #1f2937;
+                  color: white;
+                  padding: 12px 24px;
+                  border: none;
+                  border-radius: 8px;
+                  font-size: 16px;
+                  cursor: pointer;
+                  margin-right: 8px;
+                ">Reload Page</button>
+                <button onclick="localStorage.clear(); sessionStorage.clear(); window.location.reload()" style="
+                  background: #6b7280;
+                  color: white;
+                  padding: 12px 24px;
+                  border: none;
+                  border-radius: 8px;
+                  font-size: 16px;
+                  cursor: pointer;
+                ">Clear Cache & Reload</button>
+                <details style="margin-top: 24px; text-align: left;">
+                  <summary style="cursor: pointer; color: #6b7280; font-size: 14px;">Technical Details</summary>
+                  <pre id="error-details" style="
+                    background: #f3f4f6;
+                    padding: 12px;
+                    border-radius: 6px;
+                    overflow: auto;
+                    font-size: 12px;
+                    margin-top: 8px;
+                    max-height: 300px;
+                  "></pre>
+                </details>
+              </div>
+            `;
+            
+            var detailsEl = document.getElementById('error-details');
+            if (detailsEl) {
+              detailsEl.textContent = JSON.stringify(errors, null, 2);
+            }
+          }
+        }
+        
+        window.onerror = function(message, source, lineno, colno, error) {
+          logProductionError(message, source, lineno, colno, error);
+          return false;
+        };
+        
+        window.addEventListener('unhandledrejection', function(event) {
+          logProductionError(
+            'Unhandled Promise Rejection: ' + (event.reason ? event.reason.message || event.reason : 'Unknown'),
+            'Promise',
+            0,
+            0,
+            event.reason
+          );
         });
-      }
+        
+        console.log('[ERROR-LOGGER] Production error detection initialized');
+      })();
     </script>
     
-    <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
-    <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
+    <!-- Vite HMR WebSocket Fix -->
+    <script>
+      (function() {
+        // Monkey-patch WebSocket to fix Vite HMR URL in Replit
+        const OriginalWebSocket = window.WebSocket;
+        window.WebSocket = function(url, protocols) {
+          if (typeof url === 'string') {
+            let fixedUrl = url;
+            
+            // Detect if this is a Vite HMR WebSocket (contains /@vite/client or similar)
+            const isViteHMR = url.includes('/@vite') || url.includes('__vite') || 
+                             url.includes('localhost') || url.includes(':undefined');
+            
+            if (isViteHMR) {
+              // Parse the URL to fix it
+              try {
+                const currentProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const currentHost = window.location.hostname;
+                const currentPort = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
+                
+                // Handle various URL formats
+                if (url.includes('localhost') || url.includes(':undefined') || url.startsWith('ws://localhost') || url.startsWith('wss://localhost')) {
+                  // Replace localhost with current host
+                  fixedUrl = `${currentProtocol}//${currentHost}:${currentPort}`;
+                  console.log('[Vite HMR Fix] Replaced localhost with current host:', fixedUrl);
+                } else if (url.startsWith('ws://') && window.location.protocol === 'https:') {
+                  // Upgrade to secure WebSocket
+                  fixedUrl = url.replace('ws://', 'wss://');
+                  console.log('[Vite HMR Fix] Upgraded to secure WebSocket:', fixedUrl);
+                } else if (url.includes(':undefined')) {
+                  // Fix undefined port
+                  fixedUrl = url.replace(':undefined', `:${currentPort}`)
+                              .replace('localhost', currentHost);
+                  console.log('[Vite HMR Fix] Fixed undefined port:', fixedUrl);
+                }
+                
+                console.log('[Vite HMR] Connecting to:', fixedUrl);
+              } catch (e) {
+                console.error('[Vite HMR Fix] Error fixing WebSocket URL:', e);
+              }
+            }
+            
+            return new OriginalWebSocket(fixedUrl, protocols);
+          }
+          return new OriginalWebSocket(url, protocols);
+        };
+        // Copy static properties
+        Object.setPrototypeOf(window.WebSocket, OriginalWebSocket);
+        window.WebSocket.prototype = OriginalWebSocket.prototype;
+        window.WebSocket.CONNECTING = OriginalWebSocket.CONNECTING;
+        window.WebSocket.OPEN = OriginalWebSocket.OPEN;
+        window.WebSocket.CLOSING = OriginalWebSocket.CLOSING;
+        window.WebSocket.CLOSED = OriginalWebSocket.CLOSED;
+      })();
+    </script>
+    
+    <!-- Initial Loading Screen Styles -->
+    <style>
+      #initial-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 99999;
+        transition: opacity 0.5s ease-out;
+      }
+      
+      #initial-loader.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      
+      #initial-loader video {
+        width: 360px !important;
+        height: auto !important;
+        max-width: 360px !important;
+        object-fit: contain;
+        margin-bottom: 20px;
+        display: block !important;
+      }
+      
+      #initial-loader .loading-text {
+        color: #000000;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-size: 16px;
+        font-weight: 500;
+        margin-top: 10px;
+      }
+      
+      #initial-loader .dots {
+        display: inline-flex;
+        margin-left: 4px;
+      }
+      
+      #initial-loader .dots span {
+        animation: dot-bounce 1.4s infinite ease-in-out both;
+        display: inline-block;
+      }
+      
+      #initial-loader .dots span:nth-child(1) {
+        animation-delay: -0.32s;
+      }
+      
+      #initial-loader .dots span:nth-child(2) {
+        animation-delay: -0.16s;
+      }
+      
+      @keyframes dot-bounce {
+        0%, 80%, 100% {
+          transform: translateY(0);
+        }
+        40% {
+          transform: translateY(-8px);
+        }
+      }
+    </style>
+    
+  </head>
+  <body>
+    <!-- Initial Loading Screen -->
+    <div id="initial-loader">
+      <video autoplay loop muted playsinline preload="auto">
+        <source src="/leopard-loader.mp4" type="video/mp4">
+      </video>
+      <div class="loading-text" data-translate="Thinking">
+        Thinking
+        <span class="dots">
+          <span>.</span>
+          <span>.</span>
+          <span>.</span>
+        </span>
+      </div>
+    </div>
+    
+    <div id="root"></div>
+    
+    <!-- Version Check - MUST run before React to prevent white screens from stale bundles -->
+    <script>
+      (function() {
+        // Immediately check version to prevent white screens from stale cached bundles
+        function checkVersion() {
+          // Safe localStorage access
+          function getStoredVersion() {
+            try {
+              return localStorage.getItem('app-build-id');
+            } catch (e) {
+              console.warn('[VERSION-CHECK] localStorage unavailable:', e);
+              return null;
+            }
+          }
+          
+          function setStoredVersion(buildId) {
+            try {
+              localStorage.setItem('app-build-id', buildId);
+            } catch (e) {
+              console.warn('[VERSION-CHECK] Could not cache version:', e);
+            }
+          }
+          
+          // Fetch version with cache-busting
+          fetch('/version.json?t=' + Date.now(), {
+            cache: 'no-cache',
+            headers: {
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
+            }
+          })
+          .then(function(response) {
+            if (!response.ok) {
+              console.warn('[VERSION-CHECK] Could not fetch version.json');
+              return;
+            }
+            return response.json();
+          })
+          .then(function(currentVersion) {
+            if (!currentVersion) return;
+            
+            var currentBuildId = currentVersion.buildId;
+            
+            // Validate buildId
+            if (!currentBuildId || typeof currentBuildId !== 'string') {
+              console.warn('[VERSION-CHECK] Invalid buildId:', currentBuildId);
+              return;
+            }
+            
+            var cachedBuildId = getStoredVersion();
+            console.log('[VERSION-CHECK] Current:', currentBuildId, 'Cached:', cachedBuildId);
+            
+            // If versions mismatch, force cache-busted reload
+            if (cachedBuildId && cachedBuildId !== currentBuildId) {
+              console.warn('[VERSION-CHECK] Version mismatch! Forcing reload...');
+              console.log('[VERSION-CHECK] Old:', cachedBuildId, 'New:', currentBuildId);
+              
+              // Update cached version before reload
+              setStoredVersion(currentBuildId);
+              
+              // Force cache-busted reload using URL query param
+              var currentUrl = new URL(window.location.href);
+              currentUrl.searchParams.set('build', currentBuildId);
+              window.location.replace(currentUrl.toString());
+              return;
+            }
+            
+            // Store version for future checks
+            if (!cachedBuildId) {
+              console.log('[VERSION-CHECK] First load, storing version:', currentBuildId);
+              setStoredVersion(currentBuildId);
+            }
+          })
+          .catch(function(error) {
+            console.error('[VERSION-CHECK] Error:', error);
+            // Don't block app on version check failure
+          });
+        }
+        
+        // Run immediately
+        checkVersion();
+        
+        // Periodic check for long-lived tabs (every 5 minutes)
+        setInterval(checkVersion, 5 * 60 * 1000);
+      })();
+    </script>
+    
+    <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Hide loader when React mounts -->
+    <script>
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          const loader = document.getElementById('initial-loader');
+          if (loader) {
+            loader.classList.add('hidden');
+            setTimeout(function() {
+              loader.style.display = 'none';
+            }, 500);
+          }
+        }, 100);
+      });
+    </script>
   </body>
 </html>

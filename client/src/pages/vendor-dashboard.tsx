@@ -43,7 +43,7 @@ import VendorSettings from "@/components/vendor/VendorSettings";
 import { DeleteStoreModal } from "@/components/ui/delete-store-modal";
 
 export default function VendorDashboard() {
-  // Master Translation mega-batch for Vendor Dashboard (60+ texts)
+  // Master Translation mega-batch for Vendor Dashboard (90+ texts)
   const vendorTexts = useMemo(() => [
     // Dashboard Navigation (8 texts)
     "Dashboard", "Products", "Orders", "Customers", "Shipping", "Analytics", "Settings", "Marketing",
@@ -67,7 +67,7 @@ export default function VendorDashboard() {
     "Sales Reports", "Performance Analytics", "Revenue Charts", "Product Performance", "Customer Insights", "Traffic Analysis",
     "Export Data", "Monthly Report", "Yearly Report", "Real-time Data", "Dashboard Widgets", "Custom Reports",
     
-    // Store Management (4 texts)
+    // Store Management (5 texts)
     "Add Product", "Delete Store", "Deleting...", "Using Private Vendor account", "Using Business Vendor account",
     
     // Delete Store Modal (8 texts) 
@@ -76,7 +76,19 @@ export default function VendorDashboard() {
     "private", "business", "Cancel", "Delete Store",
     
     // Business Store Button (1 text)
-    "Open Business Store"
+    "Open Business Store",
+    
+    // Become a Vendor Section (17 texts)
+    "Become a Vendor", "Start selling your products on our marketplace",
+    "Private Vendor", "Perfect for individuals selling personal items",
+    "Business Vendor", "For businesses and professional sellers",
+    "Become Private Vendor", "Create Business Vendor", "Creating...",
+    "• Sell personal items", "• Simple setup process", "• Basic analytics", "• 10% commission",
+    "• Advanced store management", "• Bulk product uploads", "• Detailed analytics", "• Promotional tools",
+    
+    // Business Account Validation (3 texts)
+    "Business Account Required", "Only Business account holders can create a Business Vendor. Please upgrade your account to Business type first.",
+    "Upgrade Account"
   ], []);
 
   // All hooks must be called at the top level, before any conditional logic
@@ -127,6 +139,28 @@ export default function VendorDashboard() {
       return response.json();
     },
     enabled: !!vendorId,
+  });
+
+  // Create private vendor mutation
+  const createPrivateVendorMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/vendors/manage", {
+        action: "create-private"
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.redirectTo) {
+        setLocation(data.redirectTo);
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create private vendor account",
+        variant: "destructive"
+      });
+    }
   });
 
   // Create unified vendor management mutation
@@ -262,14 +296,23 @@ export default function VendorDashboard() {
     );
   }
 
-  // Handle becoming a vendor
+  // Handle becoming a private vendor
   const handleBecomeVendor = () => {
-    setLocation('/become-vendor');
+    setLocation('/become-vendor?type=private');
   };
 
   // Handle business vendor creation
   const handleCreateBusinessVendor = () => {
-    createBusinessVendorMutation.mutate();
+    // Check if user has business account type
+    if (user && user.accountType !== 'business') {
+      toast({
+        title: t("Business Account Required"),
+        description: t("Only Business account holders can create a Business Vendor. Please upgrade your account to Business type first."),
+        variant: "destructive"
+      });
+      return;
+    }
+    setLocation('/become-vendor?type=business');
   };
 
   // Show loading while vendor data is being fetched
@@ -278,7 +321,6 @@ export default function VendorDashboard() {
       <div className="container max-w-md mx-auto py-16 px-4 text-center">
         <Card>
           <CardHeader>
-            <Store className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <CardTitle>{t("Loading Vendor Dashboard")}</CardTitle>
           </CardHeader>
           <CardContent>
@@ -298,7 +340,6 @@ export default function VendorDashboard() {
       <div className="container max-w-md mx-auto py-16 px-4 text-center">
         <Card>
           <CardHeader>
-            <Store className="mx-auto h-12 w-12 text-destructive mb-4" />
             <CardTitle>Vendor Access Error</CardTitle>
             <CardDescription>
               Failed to verify your vendor status
@@ -322,67 +363,61 @@ export default function VendorDashboard() {
     return (
       <div className="container max-w-2xl mx-auto py-16 px-4">
         <div className="text-center mb-8">
-          <Store className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
-          <h1 className="text-3xl font-bold mb-2">Become a Vendor</h1>
+          <h1 className="text-3xl font-bold mb-2">{t("Become a Vendor")}</h1>
           <p className="text-lg text-muted-foreground">
-            Start selling your products on our marketplace
+            {t("Start selling your products on our marketplace")}
           </p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <Card>
+          <Card className="flex flex-col">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Private Vendor
+              <CardTitle>
+                {t("Private Vendor")}
               </CardTitle>
               <CardDescription>
-                Perfect for individuals selling personal items
+                {t("Perfect for individuals selling personal items")}
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm text-muted-foreground mb-6">
-                <li>• Sell personal items</li>
-                <li>• Simple setup process</li>
-                <li>• Basic analytics</li>
-                <li>• 10% commission</li>
+            <CardContent className="flex flex-col flex-1">
+              <ul className="space-y-2 text-sm text-muted-foreground mb-6 flex-1">
+                <li>{t("• Sell personal products/services")}</li>
+                <li>{t("• Simple setup process")}</li>
+                <li>{t("• Basic analytics")}</li>
+                <li>{t("• 15% commission")}</li>
               </ul>
-              <Button onClick={handleBecomeVendor} className="w-full">
-                Become Private Vendor
+              <Button 
+                onClick={handleBecomeVendor}
+                className="w-full bg-black text-white hover:bg-gray-800"
+                data-testid="button-become-private-vendor"
+              >
+                {t("Become Private Vendor")}
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="flex flex-col">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Store className="h-5 w-5" />
-                Business Vendor
+              <CardTitle>
+                {t("Business Vendor")}
               </CardTitle>
               <CardDescription>
-                For businesses and professional sellers
+                {t("For businesses and professional sellers")}
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm text-muted-foreground mb-6">
-                <li>• Advanced store management</li>
-                <li>• Bulk product uploads</li>
-                <li>• Detailed analytics</li>
-                <li>• Promotional tools</li>
+            <CardContent className="flex flex-col flex-1">
+              <ul className="space-y-2 text-sm text-muted-foreground mb-6 flex-1">
+                <li>{t("• Sell Business products/services")}</li>
+                <li>{t("• Bulk product uploads")}</li>
+                <li>{t("• Basic analytics")}</li>
+                <li>{t("• 15% commission")}</li>
               </ul>
               <Button 
                 onClick={handleCreateBusinessVendor}
-                disabled={createBusinessVendorMutation.isPending}
-                className="w-full"
+                className="w-full bg-black text-white hover:bg-gray-800"
+                data-testid="button-create-business-vendor"
               >
-                {createBusinessVendorMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  "Create Business Vendor"
-                )}
+                {t("Create Business Vendor")}
               </Button>
             </CardContent>
           </Card>
@@ -408,7 +443,6 @@ export default function VendorDashboard() {
               onClick={handleOpenBusinessStore}
               className="bg-black text-white hover:bg-gray-800 border-black"
             >
-              <Building className="mr-2 h-4 w-4" />
               {t("Open Business Store")}
             </Button>
           )}
@@ -422,7 +456,6 @@ export default function VendorDashboard() {
             <CardTitle className="text-sm font-medium">
               {t("Total Products")}
             </CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -436,7 +469,6 @@ export default function VendorDashboard() {
             <CardTitle className="text-sm font-medium">
               {t("Total Orders")}
             </CardTitle>
-            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -450,7 +482,6 @@ export default function VendorDashboard() {
             <CardTitle className="text-sm font-medium">
               {t("Total Revenue")}
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -464,7 +495,6 @@ export default function VendorDashboard() {
             <CardTitle className="text-sm font-medium">
               {t("Pending Orders")}
             </CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -478,19 +508,15 @@ export default function VendorDashboard() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="products">
-            <Package className="mr-2 h-4 w-4" />
             {productsText}
           </TabsTrigger>
           <TabsTrigger value="orders">
-            <Truck className="mr-2 h-4 w-4" />
             {t("Shipping & Orders")}
           </TabsTrigger>
           <TabsTrigger value="commission">
-            <DollarSign className="mr-2 h-4 w-4" />
             {t("Commission")}
           </TabsTrigger>
           <TabsTrigger value="settings">
-            <Settings className="mr-2 h-4 w-4" />
             {settingsText}
           </TabsTrigger>
         </TabsList>

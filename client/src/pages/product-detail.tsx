@@ -13,6 +13,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useMasterTranslation } from '@/hooks/use-master-translation';
 import { useWeightUnit } from '@/contexts/WeightUnitContext';
+import { SEOHead } from '@/components/seo/SEOHead';
+import { buildProductSchema, normalizeTitle, normalizeDescription, absolutizeImageUrl } from '@/lib/buildSeoStructuredData';
 
 import { 
   Loader2, 
@@ -29,8 +31,12 @@ import {
   Gift,
   Search,
   X,
-  Smartphone
+  Smartphone,
+  Phone,
+  CreditCard,
+  Tag
 } from 'lucide-react';
+import { FaWhatsapp } from 'react-icons/fa';
 
 import { 
   Select,
@@ -41,6 +47,12 @@ import {
 } from "@/components/ui/select";
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -79,6 +91,42 @@ export default function ProductDetail() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   };
 
+  // Calculate delivery date range (1-5 working days from today)
+  const getDeliveryDateRange = () => {
+    const today = new Date();
+    let workingDaysAdded = 0;
+    let currentDate = new Date(today);
+    
+    // Add 1 working day for minimum delivery
+    while (workingDaysAdded < 1) {
+      currentDate.setDate(currentDate.getDate() + 1);
+      const dayOfWeek = currentDate.getDay();
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        workingDaysAdded++;
+      }
+    }
+    const minDate = new Date(currentDate);
+    
+    // Add 4 more working days for maximum delivery (total 5)
+    workingDaysAdded = 0;
+    while (workingDaysAdded < 4) {
+      currentDate.setDate(currentDate.getDate() + 1);
+      const dayOfWeek = currentDate.getDay();
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        workingDaysAdded++;
+      }
+    }
+    const maxDate = new Date(currentDate);
+    
+    const formatDate = (date: Date) => {
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]}`;
+    };
+    
+    return `${formatDate(minDate)} - ${formatDate(maxDate)}`;
+  };
+
 
   
   // Review form state
@@ -99,14 +147,24 @@ export default function ProductDetail() {
   const [offerMessage, setOfferMessage] = useState('');
   
   // User search query for gift functionality
-  const { data: userSearchResults = [], isLoading: userSearchLoading } = useQuery({
+  const { data: userSearchResults = [], isLoading: userSearchLoading } = useQuery<any[]>({
     queryKey: ['/api/users/search', giftSearchQuery],
     queryFn: async () => {
-      if (giftSearchQuery.length >= 2) {
-        const response = await apiRequest('GET', `/api/users/search?q=${encodeURIComponent(giftSearchQuery)}`);
-        return response;
+      if (giftSearchQuery.length < 2) {
+        return [];
       }
-      return [];
+      
+      try {
+        const data = await apiRequest(`/api/users/search?q=${encodeURIComponent(giftSearchQuery)}`);
+        return data || [];
+      } catch (error: any) {
+        if (error?.status === 401) {
+          console.log('Authentication required for user search');
+          return [];
+        }
+        console.error('Error searching users:', error);
+        return [];
+      }
     },
     enabled: giftSearchQuery.length >= 2,
   });
@@ -294,15 +352,38 @@ export default function ProductDetail() {
     enabled: !!identifier,
   });
 
-  // Search users for gift functionality
-  const { data: searchResults = [], isLoading: searchLoading } = useQuery({
-    queryKey: ['/api/users/search', giftSearchQuery],
+  // Fetch vendor products (for "More from this vendor" section)
+  const {
+    data: vendorProducts = [],
+    isLoading: vendorProductsLoading,
+  } = useQuery({
+    queryKey: ['/api/vendors', product?.vendorId, 'products'],
     queryFn: async () => {
-      if (!giftSearchQuery || giftSearchQuery.length < 2) return [];
-      const response = await apiRequest('GET', `/api/users/search?q=${encodeURIComponent(giftSearchQuery)}`);
-      return response.json();
+      if (!product?.vendorId) return [];
+      const response = await apiRequest('GET', `/api/vendors/${product.vendorId}/products?limit=6`);
+      const data = await response.json();
+      // Filter out current product and limit to 5
+      return data.products?.filter((p: any) => p.id !== product.id).slice(0, 5) || [];
     },
-    enabled: giftSearchQuery.length >= 2,
+    enabled: !!product?.vendorId,
+  });
+
+  // Fetch similar products from the whole website (for "Continue your exploration!" section)
+  const {
+    data: similarProducts = [],
+    isLoading: similarProductsLoading,
+  } = useQuery({
+    queryKey: ['/api/products', 'similar', product?.category, product?.id],
+    queryFn: async () => {
+      if (!product?.id) return [];
+      // Fetch products from same category if available, otherwise fetch from all products
+      const categoryParam = product.category ? `category=${encodeURIComponent(product.category)}&` : '';
+      const response = await apiRequest('GET', `/api/products?${categoryParam}limit=20`);
+      const data = await response.json();
+      // Filter out current product and limit to 5
+      return data?.filter((p: any) => p.id !== product.id).slice(0, 5) || [];
+    },
+    enabled: !!product?.id,
   });
 
   // Add to cart mutation
@@ -316,10 +397,6 @@ export default function ProductDetail() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
-      toast({
-        title: 'Added to Cart',
-        description: `${product?.name} has been added to your cart.`,
-      });
     },
     onError: (error: any) => {
       toast({
@@ -490,13 +567,149 @@ export default function ProductDetail() {
       description: "Text messaging app should open with product details",
     });
   };
+
+  // WhatsApp order function
+  const handleWhatsAppOrder = () => {
+    if (!product) return;
+    
+    const productUrl = `${window.location.origin}/product/${product.slug || product.id}`;
+    const price = product.discountPrice && product.discountPrice < product.price 
+      ? formatPriceFromGBP(product.discountPrice)
+      : formatPriceFromGBP(product.price);
+    
+    // Create WhatsApp message with product details
+    const message = `Hi! I'm interested in ordering this product:\n\n` +
+      `*${product.name}*\n` +
+      `Price: ${price}\n` +
+      `Category: ${product.category}\n\n` +
+      `Product Link: ${productUrl}\n\n` +
+      `Please let me know the availability and how to proceed with the order.`;
+    
+    // Get vendor's WhatsApp number if available, otherwise use a default support number
+    const whatsappNumber = vendor?.phone || vendor?.whatsappNumber || '';
+    
+    // Create WhatsApp URL
+    const whatsappUrl = whatsappNumber 
+      ? `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`
+      : `https://wa.me/?text=${encodeURIComponent(message)}`;
+    
+    // Open WhatsApp
+    window.open(whatsappUrl, '_blank');
+    
+    toast({
+      title: "Opening WhatsApp",
+      description: "WhatsApp will open with product details ready to send",
+    });
+  };
+
+  // Email order function
+  const handleEmailOrder = () => {
+    if (!product) return;
+    
+    const productUrl = `${window.location.origin}/product/${product.slug || product.id}`;
+    const price = product.discountPrice && product.discountPrice < product.price 
+      ? formatPriceFromGBP(product.discountPrice)
+      : formatPriceFromGBP(product.price);
+    
+    // Create email subject and body
+    const subject = `Product Inquiry: ${product.name}`;
+    const body = `Hi,\n\n` +
+      `I'm interested in ordering the following product:\n\n` +
+      `Product: ${product.name}\n` +
+      `Price: ${price}\n` +
+      `Category: ${product.category}\n\n` +
+      `Product Link: ${productUrl}\n\n` +
+      `Please let me know the availability and how to proceed with the order.\n\n` +
+      `Thank you.`;
+    
+    // Get vendor's email if available, otherwise use a default support email
+    const vendorEmail = vendor?.email || 'support@dedw3n.com';
+    
+    // Create mailto URL
+    const mailtoUrl = `mailto:${vendorEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    
+    // Open email client
+    window.location.href = mailtoUrl;
+    
+    toast({
+      title: "Opening Email",
+      description: "Your email client will open with product details ready to send",
+    });
+  };
+
+  // Share product via email
+  const shareViaEmail = () => {
+    if (!product) return;
+    const productUrl = `${window.location.origin}/product/${product.slug || product.id}`;
+    const subject = `Check out this product: ${product.name}`;
+    const body = `I thought you might be interested in this product:\n\n${product.name}\n${formatPriceFromGBP(product.price)}\n\n${productUrl}`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    toast({
+      title: "Opening Email",
+      description: "Share this product via email",
+    });
+  };
+
+  // Copy product link
+  const copyProductLink = () => {
+    if (!product) return;
+    const productUrl = `${window.location.origin}/product/${product.slug || product.id}`;
+    navigator.clipboard.writeText(productUrl);
+    toast({
+      title: "Link Copied",
+      description: "Product link copied to clipboard",
+    });
+  };
+
+  // Repost function
+  const handleRepost = () => {
+    if (!user) {
+      toast({
+        title: 'Authentication Required',
+        description: 'Please log in to repost.',
+        variant: 'destructive',
+      });
+      setLocation('/auth');
+      return;
+    }
+    toast({
+      title: "Repost",
+      description: "Product reposted to your feed",
+    });
+  };
+
+  // Share with member function
+  const shareWithMember = () => {
+    if (!user) {
+      toast({
+        title: 'Authentication Required',
+        description: 'Please log in to share with members.',
+        variant: 'destructive',
+      });
+      setLocation('/auth');
+      return;
+    }
+    setIsGiftSearchOpen(true);
+  };
+
+  // Share via WhatsApp
+  const shareViaWhatsApp = () => {
+    if (!product) return;
+    const productUrl = `${window.location.origin}/product/${product.slug || product.id}`;
+    const message = `Check out this product: ${product.name}\n\n${formatPriceFromGBP(product.price)}\n\n${productUrl}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+    toast({
+      title: "Opening WhatsApp",
+      description: "Share this product via WhatsApp",
+    });
+  };
   
 
 
   // Loading state
   if (isLoading) {
     return (
-      <div className="container max-w-6xl mx-auto py-12 px-4 flex justify-center">
+      <div className="w-full py-12 px-4 flex justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -505,7 +718,7 @@ export default function ProductDetail() {
   // Error state
   if (error || !product) {
     return (
-      <div className="container max-w-6xl mx-auto py-12 px-4">
+      <div className="w-full py-12 px-4">
         <Card>
           <CardContent className="py-12">
             <div className="text-center">
@@ -521,37 +734,81 @@ export default function ProductDetail() {
     );
   }
 
-  return (
-    <div className="container max-w-6xl mx-auto py-12 px-4">
-      {/* Product overview */}
-      <div className="flex flex-col md:flex-row gap-8 mb-12">
-        {/* Product image */}
-        <div className="md:w-1/2">
-          <div className="bg-gray-100 rounded-lg overflow-hidden aspect-square flex items-center justify-center">
-            {product.imageUrl ? (
-              <img
-                src={product.imageUrl}
-                alt={product.name}
-                className="w-full h-full object-contain"
-              />
-            ) : (
-              <div className="text-gray-400">
-                <ShoppingCart className="h-24 w-24" />
-              </div>
-            )}
-          </div>
-        </div>
+  // Build SEO data with normalization
+  const seoTitle = normalizeTitle(product.name, 'Product - Dedw3n Marketplace');
+  const seoDescription = normalizeDescription(
+    product.description, 
+    `Buy ${product.name} on Dedw3n marketplace. High-quality products from verified vendors with secure payments and fast delivery.`
+  );
+  const seoKeywords = `${product.name}, ${product.category || 'marketplace'}, buy ${product.name}, ${vendor?.storeName || 'vendor'}, online shopping, e-commerce`;
+  const seoImage = product.imageUrl || '/assets/og-image.png';
+  
+  // Build structured data for rich search results
+  const productSchema = buildProductSchema(product);
 
-        {/* Product info */}
-        <div className="md:w-1/2">
-          <h1 className="text-3xl font-semibold text-gray-900 mb-2">{translateText(product.name)}</h1>
-          
+  return (
+    <div className="w-full py-12 px-4">
+      <SEOHead 
+        title={seoTitle}
+        description={seoDescription}
+        keywords={seoKeywords}
+        image={seoImage}
+        type="product"
+        structuredData={productSchema}
+      />
+      {/* Full-width Product Image */}
+      <div className="w-full mb-8">
+        <div className="bg-gray-100 rounded-lg overflow-hidden aspect-[2/1] flex items-center justify-center">
+          {product.imageUrl ? (
+            <img
+              src={product.imageUrl}
+              alt={product.name}
+              className="w-full h-full object-contain"
+            />
+          ) : (
+            <div className="text-gray-400">
+              <ShoppingCart className="h-24 w-24" />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Two Column Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+        {/* LEFT COLUMN - Product Title, Variations, Size, Details, Reviews */}
+        <div className="w-full">
+          {/* Product Title */}
+          <h1 className="text-xl font-semibold text-gray-900 mb-4">{translateText(product.name)}</h1>
+
+          {/* Price */}
+          <div className="mb-6">
+            <div className="flex items-center gap-2">
+              {product.discountPrice && product.discountPrice < product.price ? (
+                <>
+                  <span className="text-base font-bold text-black">
+                    {formatPriceFromGBP(product.discountPrice)}
+                  </span>
+                  <span className="text-sm text-gray-500 line-through">
+                    {formatPriceFromGBP(product.price)}
+                  </span>
+                  <Badge className="bg-black text-white">
+                    Save {Math.round(((product.price - product.discountPrice) / product.price) * 100)}%
+                  </Badge>
+                </>
+              ) : (
+                <span className="text-base font-bold text-black">
+                  {formatPriceFromGBP(product.price)}
+                </span>
+              )}
+            </div>
+          </div>
+
           {/* Vendor info */}
           {!vendorLoading && vendor && (
             <div className="mb-4">
               <p className="text-sm text-gray-500">
                 {translateText('Sold by')}{' '}
-                <Link href={`/vendor/${vendor.id}`} className="text-primary hover:underline">
+                <Link href={`/vendor/${vendor.id}`} className="text-black hover:underline">
                   {vendor.storeName}
                 </Link>
               </p>
@@ -560,482 +817,506 @@ export default function ProductDetail() {
 
           {/* Uploader location */}
           {!uploaderLoading && uploaderProfile?.location && (
-            <div className="mb-4">
+            <div className="mb-6">
               <p className="text-sm text-gray-600">
                 📍 {uploaderProfile.location}
               </p>
             </div>
           )}
 
-          {/* Price */}
+          {/* Product Description */}
           <div className="mb-6">
-            <div className="flex flex-col space-y-2">
-              <div>
-                <div className="flex items-center gap-2">
-                  {product.discountPrice && product.discountPrice < product.price ? (
-                    <>
-                      <span className="text-2xl font-bold text-primary">
-                        {formatPriceFromGBP(product.discountPrice)}
-                      </span>
-                      <span className="text-lg text-gray-500 line-through">
-                        {formatPriceFromGBP(product.price)}
-                      </span>
-                      <Badge className="bg-red-500">
-                        Save {Math.round(((product.price - product.discountPrice) / product.price) * 100)}%
-                      </Badge>
-                    </>
+            <h2 className="text-sm font-bold mb-2">{translateText('PRODUCT DESCRIPTION')}</h2>
+            <p className="text-sm text-gray-700 mb-4">{translateText(product.description)}</p>
+
+            {/* Collapsible Sections */}
+            <Accordion type="single" collapsible>
+              <AccordionItem value="details" className="border-b border-gray-200">
+                <AccordionTrigger className="text-sm hover:no-underline py-3">
+                  {translateText('Product Details')}
+                </AccordionTrigger>
+                <AccordionContent className="text-sm text-gray-700 pb-4">
+                  <p className="text-xs text-gray-500 mb-2">
+                    {translateText('Product ID')}: {product.productCode || product.id}
+                  </p>
+                  <div className="space-y-2">
+                    <p>{translateText('Category')}: {product.category}</p>
+                    <p>{translateText('Weight')}: {formatWeight(5)}</p>
+                    {product.inventory > 0 && (
+                      <p className="text-green-600 font-medium">{translateText('In Stock')}</p>
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="materials" className="border-b border-gray-200">
+                <AccordionTrigger className="text-sm hover:no-underline py-3">
+                  {translateText('Materials & Care')}
+                </AccordionTrigger>
+                <AccordionContent className="text-sm text-gray-700 pb-4">
+                  <p>{translateText('Please refer to product label for detailed care instructions.')}</p>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="commitment" className="border-b border-gray-200">
+                <AccordionTrigger className="text-sm hover:no-underline py-3">
+                  {translateText('Our Commitment')}
+                </AccordionTrigger>
+                <AccordionContent className="text-sm text-gray-700 pb-4">
+                  <p>{translateText('We are committed to quality, sustainability, and exceptional customer service.')}</p>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="add-review" className="border-b border-gray-200">
+                <AccordionTrigger className="text-sm hover:no-underline py-3">
+                  {translateText('Add Review')}
+                </AccordionTrigger>
+                <AccordionContent className="text-sm text-gray-700 pb-4">
+                  {user ? (
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="text-sm font-medium mb-2 block">{translateText('Rating')}</Label>
+                        <div className="flex gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() => setReviewRating(star)}
+                              className="focus:outline-none transition-colors"
+                              data-testid={`star-rating-${star}`}
+                            >
+                              <Star
+                                className={`h-6 w-6 ${
+                                  star <= reviewRating
+                                    ? 'fill-yellow-400 text-yellow-400'
+                                    : 'text-gray-300'
+                                }`}
+                              />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="review-content" className="text-sm font-medium mb-2 block">
+                          {translateText('Your Review')}
+                        </Label>
+                        <Textarea
+                          id="review-content"
+                          placeholder={translateText('Share your experience with this product...')}
+                          value={reviewContent}
+                          onChange={(e) => setReviewContent(e.target.value)}
+                          rows={4}
+                          className="w-full"
+                          data-testid="input-review-content"
+                        />
+                      </div>
+                      <Button
+                        onClick={handleSubmitReview}
+                        disabled={submitReviewMutation.isPending || !reviewRating || !reviewContent.trim()}
+                        className="w-full bg-black text-white hover:bg-gray-800"
+                        data-testid="button-submit-review"
+                      >
+                        {submitReviewMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            {translateText('Submitting...')}
+                          </>
+                        ) : (
+                          translateText('Submit Review')
+                        )}
+                      </Button>
+                    </div>
                   ) : (
-                    <span className="text-2xl font-bold text-gray-900">
-                      {formatPriceFromGBP(product.price)}
-                    </span>
+                    <p className="text-sm text-gray-600">
+                      {translateText('Please log in to leave a review.')}
+                    </p>
                   )}
-                  
-                  {/* Send Offer Button */}
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      if (user) {
-                        setIsOfferDialogOpen(true);
-                      } else {
-                        toast({
-                          title: "Login Required",
-                          description: "Please log in to send an offer",
-                          variant: "destructive"
-                        });
-                        setLocation('/auth');
-                      }
-                    }}
-                    className="p-2 hover:bg-gray-100 ml-1"
-                  >
-                    <span className="text-black font-normal">{translateText('Send Offer')}</span>
-                  </Button>
-                </div>
-              </div>
-              
-
-            </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
 
-          {/* Badges */}
-          <div className="flex flex-wrap gap-2 mb-6">
-            {product.isNew && (
-              <Badge variant="outline" className="bg-blue-100 hover:bg-blue-100 text-blue-800 border-blue-200">
-{translateText('New Arrival')}
-              </Badge>
-            )}
-            {product.isOnSale && (
-              <Badge variant="outline" className="bg-red-100 hover:bg-red-100 text-red-800 border-red-200">
-{translateText('On Sale')}
-              </Badge>
-            )}
-            <Badge variant="outline" className="bg-gray-100 hover:bg-gray-100 text-gray-800 border-gray-200">
-              {translateText(product.category)}
-            </Badge>
-          </div>
-
-          {/* Rating */}
-          <div className="flex items-center mb-6">
-            <div className="flex mr-2">
-              {renderStars(Math.round(averageRating))}
-            </div>
-            <span className="text-sm text-gray-500">
-              {reviews.length === 0
-                ? translateText('No reviews yet')
-                : `${reviews.length} ${reviews.length === 1 ? translateText('review') : translateText('reviews')}`}
-            </span>
-          </div>
-
-          {/* Add to cart */}
-          <div className="flex items-center mb-8">
-            <div className="flex items-center border rounded-md mr-4">
-              <button
-                type="button"
-                disabled={quantity <= 1}
-                onClick={() => handleQuantityChange(-1)}
-                className="px-3 py-2 text-gray-600 hover:text-primary disabled:text-gray-300"
-              >
-                -
-              </button>
-              <span className="px-3 py-2 text-center w-12">{quantity}</span>
-              <button
-                type="button"
-                disabled={quantity >= (product?.inventory || 1)}
-                onClick={() => handleQuantityChange(1)}
-                className="px-3 py-2 text-gray-600 hover:text-primary disabled:text-gray-300"
-              >
-                +
-              </button>
-            </div>
-            <Button
-              onClick={handleAddToCart}
-              disabled={addToCartMutation.isPending || product.inventory <= 0}
-              className="flex-1 bg-black hover:bg-gray-800 text-white"
-            >
-              {addToCartMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {translateText('Adding...')}
-                </>
-              ) : product.inventory <= 0 ? (
-                translateText('Out of Stock')
-              ) : (
-                <>
-                  <ShoppingCart className="mr-2 h-4 w-4" />
-                  {translateText('Add to Cart')}
-                </>
-              )}
-            </Button>
-          </div>
-
-          {/* Inventory */}
+          {/* Reviews Section */}
           <div className="mb-6">
-            <p className="text-sm text-gray-500">
-              {product.inventory > 0 ? (
-                <>
-                  <span className="text-green-600 font-medium">{translateText('In Stock')}</span>
-                  {product.inventory < 10 && (
-                    <span className="ml-2 text-orange-500">
-                      {translateText('Only')} {product.inventory} {translateText('left!')}
-                    </span>
-                  )}
-                </>
-              ) : (
-                <span className="text-red-600 font-medium">{translateText('Out of Stock')}</span>
-              )}
+            <h3 className="text-sm font-bold mb-2">{translateText('REVIEWS')}</h3>
+            <div className="flex items-center mb-4">
+              <div className="flex mr-2">
+                {renderStars(Math.round(averageRating))}
+              </div>
+              <span className="text-sm text-gray-500">
+                {reviews.length === 0
+                  ? translateText('No reviews yet')
+                  : `${averageRating.toFixed(1)} (${reviews.length} ${reviews.length === 1 ? translateText('review') : translateText('reviews')})`}
+              </span>
+            </div>
+            
+            {/* Individual Reviews */}
+            {reviews.length > 0 && (
+              <div className="space-y-4 mt-4 max-h-96 overflow-y-auto">
+                {reviews.map((review: any) => (
+                  <div key={review.id} className="border-b border-gray-200 pb-4 last:border-b-0">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                        {review.userName?.charAt(0).toUpperCase() || 'U'}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="font-medium text-sm">{review.userName || 'Anonymous'}</h4>
+                          <span className="text-xs text-gray-500">
+                            {new Date(review.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div className="flex mb-2">
+                          {renderStars(review.rating)}
+                        </div>
+                        <p className="text-sm text-gray-700">{review.content}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN - Add to Cart, Delivery, Services, Description */}
+        <div className="w-full">
+          {/* Add to Cart Button */}
+          <Button
+            onClick={handleAddToCart}
+            disabled={addToCartMutation.isPending || product.inventory <= 0}
+            className="w-full bg-black hover:bg-gray-800 text-white py-6 mb-4"
+            data-testid="button-add-to-cart"
+          >
+            {addToCartMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {translateText('Adding...')}
+              </>
+            ) : product.inventory <= 0 ? (
+              translateText('Out of Stock')
+            ) : (
+              <>
+                <CreditCard className="mr-2 h-4 w-4" />
+                {translateText('ADD TO CART')}
+              </>
+            )}
+          </Button>
+
+          {/* Delivery Information */}
+          <div className="mb-4 text-sm">
+            <p className="flex items-center text-gray-700">
+              <ShoppingCart className="h-4 w-4 mr-2" />
+              {translateText(`Estimated complimentary delivery: ${getDeliveryDateRange()}`)}
+            </p>
+            <p className="text-xs text-gray-500 mt-1 ml-6">
+              {translateText('Some regions may take up to 20+ working days')}
             </p>
           </div>
 
-          {/* Product Specifications */}
-          <div className="mb-6">
-            <h3 className="text-sm font-medium text-gray-900 mb-2">{translateText('Specifications')}</h3>
-            <div className="text-sm text-gray-600">
-              <div className="flex items-center">
-                <span className="font-medium">{translateText('Weight')}:</span>
-                <span className="ml-2">{formatWeight(5)}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-2 mb-6">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleLikeToggle(product.id)}
+          {/* Order via WhatsApp and Email + Action Icons */}
+          <div className="mb-6 text-sm flex gap-6 items-center border-t border-gray-200 pt-4">
+            <button 
+              onClick={handleWhatsAppOrder}
+              className="flex items-center text-black hover:underline"
+              data-testid="button-order-whatsapp"
+            >
+              <FaWhatsapp className="h-4 w-4 mr-2" />
+              {translateText('Order via Whatsapp')}
+            </button>
+            <button 
+              onClick={handleEmailOrder}
+              className="flex items-center text-black hover:underline"
+              data-testid="button-order-email"
+            >
+              <Mail className="h-4 w-4 mr-2" />
+              {translateText('Order via Mail')}
+            </button>
+            
+            <button
+              onClick={() => setIsOfferDialogOpen(true)}
+              className="text-gray-700 hover:text-black transition-colors"
+              data-testid="button-send-offer"
+              title="Send offer"
+            >
+              <Tag className="h-5 w-5" />
+            </button>
+            
+            <button
+              onClick={handleAddToCart}
+              disabled={addToCartMutation.isPending || product.inventory <= 0}
+              className="text-gray-700 hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              data-testid="button-add-to-cart-icon"
+              title="Add to cart"
+            >
+              <CreditCard className="h-5 w-5" />
+            </button>
+            
+            <button
+              onClick={() => product && handleLikeToggle(product.id)}
               disabled={likeMutation.isPending || unlikeMutation.isPending}
-              className="p-2 hover:bg-gray-100"
+              className={`transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                product && isProductLiked(product.id)
+                  ? 'text-black hover:text-gray-700'
+                  : 'text-gray-700 hover:text-black'
+              }`}
+              data-testid="button-add-favourite"
+              title={product && isProductLiked(product.id) ? "Remove from favourites" : "Add to favourites"}
             >
               <Heart 
-                className={`h-5 w-5 ${isProductLiked(product.id) ? 'fill-red-500 text-red-500' : 'fill-black text-black'}`} 
+                className={`h-5 w-5 ${product && isProductLiked(product.id) ? 'fill-black' : ''}`}
               />
-            </Button>
+            </button>
             
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                if (user) {
-                  setLocation('/dating');
-                  toast({
-                    title: translateText("Added to Dating Profile"),
-                    description: translateText("Product added to your dating wishlist!"),
-                  });
-                } else {
-                  toast({
-                    title: translateText("Login Required"),
-                    description: translateText("Please log in to add to dating profile"),
-                    variant: "destructive"
-                  });
-                  setLocation('/auth');
-                }
-              }}
-              className="p-2 hover:bg-gray-100"
-            >
-              <span className="text-black text-lg font-bold">+</span>
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                if (user) {
-                  setIsGiftSearchOpen(true);
-                } else {
-                  toast({
-                    title: translateText("Login Required"),
-                    description: translateText("Please log in to send gifts"),
-                    variant: "destructive"
-                  });
-                  setLocation('/auth');
-                }
-              }}
-              className="p-2 hover:bg-gray-100"
-            >
-              <Gift className="h-5 w-5 text-pink-600" />
-            </Button>
-
-          </div>
-        </div>
-      </div>
-      {/* Tabs for description and reviews */}
-      <Tabs defaultValue="description" className="mb-12">
-        <TabsList className="mb-6 border-b w-full justify-start rounded-none">
-          <TabsTrigger value="description">{translateText('Description')}</TabsTrigger>
-          <TabsTrigger value="reviews">
-            {translateText('Reviews')} ({reviews.length})
-          </TabsTrigger>
-          
-          <div className="ml-auto flex items-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="px-2">
-                  <Share2 className="h-4 w-4 mr-1" />
-                  <span className="hidden sm:inline">{translateText('Share')}</span>
-                </Button>
+                <button
+                  className="text-gray-700 hover:text-black transition-colors"
+                  data-testid="button-share-product"
+                  title="Share product"
+                >
+                  <Share2 className="h-5 w-5" />
+                </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => {
-                  window.open(`mailto:?subject=${encodeURIComponent(`Check out this product: ${product.name}`)}&body=${encodeURIComponent(`I thought you might be interested in this: ${window.location.href}`)}`, '_blank');
-                }}>
-                  <Mail className="h-4 w-4 mr-2 text-gray-600" />
-{translateText('Share via Email')}
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={shareViaEmail} className="cursor-pointer">
+                  <Mail className="mr-2 h-4 w-4" />
+                  <span>{translateText('Share via Email')}</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
-                  toast({
-                    title: translateText("Link Copied"),
-                    description: translateText("Product link copied to clipboard"),
-                  });
-                }}>
-                  <LinkIcon className="h-4 w-4 mr-2 text-gray-600" />
-{translateText('Copy Link')}
+                <DropdownMenuItem onClick={copyProductLink} className="cursor-pointer">
+                  <LinkIcon className="mr-2 h-4 w-4" />
+                  <span>{translateText('Copy Link')}</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => {
-                  if (user) {
-                    setLocation(`/social?share=${productId}`);
-                  } else {
-                    toast({
-                      title: translateText("Login Required"),
-                      description: translateText("Please log in to share via e-mail"),
-                      variant: "destructive"
-                    });
-                    setLocation('/auth');
-                  }
-                }}>
-                  <Share2 className="h-4 w-4 mr-2 text-blue-600" />
-{translateText('Share via E-mail')}
+                <DropdownMenuItem onClick={handleRepost} className="cursor-pointer">
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  <span>{translateText('Repost')}</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => {
-                  if (user) {
-                    setLocation(`/messages?share=${productId}`);
-                  } else {
-                    toast({
-                      title: translateText("Login Required"),
-                      description: translateText("Please log in to share via messages"),
-                      variant: "destructive"
-                    });
-                    setLocation('/auth');
-                  }
-                }}>
-                  <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
-{translateText('Send via Message')}
+                <DropdownMenuItem onClick={shareWithMember} className="cursor-pointer">
+                  <Users className="mr-2 h-4 w-4" />
+                  <span>{translateText('Share with Member')}</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => {
-                  if (user) {
-                    setLocation(`/members?share=${productId}`);
-                  } else {
-                    toast({
-                      title: translateText("Login Required"),
-                      description: translateText("Please log in to share with members"),
-                      variant: "destructive"
-                    });
-                    setLocation('/auth');
-                  }
-                }}>
-                  <Users className="h-4 w-4 mr-2 text-blue-600" />
-{translateText('Share with Member')}
+                <DropdownMenuItem onClick={shareViaWhatsApp} className="cursor-pointer">
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  <span>{translateText('Share via WhatsApp')}</span>
                 </DropdownMenuItem>
-                {isMobileDevice() && (
-                  <DropdownMenuItem onClick={shareViaSMS}>
-                    <Smartphone className="h-4 w-4 mr-2 text-green-600" />
-                    {translateText('Share via Text Message')}
-                  </DropdownMenuItem>
-                )}
+                <DropdownMenuItem onClick={shareViaSMS} className="cursor-pointer">
+                  <Smartphone className="mr-2 h-4 w-4" />
+                  <span>{translateText('Share via Text')}</span>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </TabsList>
-        <TabsContent value="description">
-          <div className="prose max-w-none">
-            <p className="whitespace-pre-line">{translateText(product.description)}</p>
-          </div>
-        </TabsContent>
-        <TabsContent value="reviews">
-          <div className="space-y-6">
-            {reviews.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-500">{translateText('This product has no reviews yet.')}</p>
-                {user && (
-                  <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" className="mt-4">
-{translateText('Write a Review')}
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                      <DialogHeader>
-                        <DialogTitle>{translateText('Write a Review')}</DialogTitle>
-                        <DialogDescription>
-                          {translateText('Share your experience with this product')}
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="grid gap-4 py-4">
-                        <div className="grid gap-2">
-                          <Label htmlFor="rating">{translateText('Rating')}</Label>
-                          <div className="flex gap-1">
-                            {renderInteractiveStars(reviewRating, setReviewRating)}
-                          </div>
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="title">{translateText('Title (optional)')}</Label>
-                          <Input
-                            id="title"
-                            value={reviewTitle}
-                            onChange={(e) => setReviewTitle(e.target.value)}
-                            placeholder={translateText("Brief summary of your review")}
-                          />
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="content">{translateText('Review')}</Label>
-                          <Textarea
-                            id="content"
-                            value={reviewContent}
-                            onChange={(e) => setReviewContent(e.target.value)}
-                            placeholder={translateText("Tell others about your experience with this product...")}
-                            rows={4}
-                          />
-                        </div>
-                      </div>
-                      <div className="flex justify-end gap-2">
-                        <Button 
-                          variant="outline" 
-                          onClick={() => setIsReviewDialogOpen(false)}
-                        >
-                          {translateText('Cancel')}
-                        </Button>
-                        <Button 
-                          onClick={handleSubmitReview}
-                          disabled={submitReviewMutation.isPending}
-                        >
-                          {submitReviewMutation.isPending ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              {translateText('Submitting...')}
-                            </>
-                          ) : (
-                            translateText('Submit Review')
-                          )}
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                )}
-              </div>
-            ) : (
-              <>
-                {reviewsLoading ? (
-                  <div className="flex justify-center py-6">
-                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                  </div>
-                ) : (
+
+          {/* Services Accordion */}
+          <Accordion type="single" collapsible className="mb-6">
+            <AccordionItem value="services" className="border-b border-gray-200">
+              <AccordionTrigger className="text-sm font-medium hover:no-underline py-3">
+                + {translateText('Dedw3n Support')}
+              </AccordionTrigger>
+              <AccordionContent className="text-sm text-gray-700 pb-4">
+                <div className="space-y-4">
                   <div>
-                    {reviews.map((review: any) => (
-                      <div key={review.id} className="border-b pb-6 mb-6 last:border-0">
-                        <div className="flex justify-between mb-2">
-                          <div className="flex items-center">
-                            <div className="font-medium">{review.user?.name || translateText('Anonymous')}</div>
-                            <span className="mx-2 text-gray-300">•</span>
-                            <div className="text-sm text-gray-500">
-                              {new Date(review.createdAt).toLocaleDateString()}
-                            </div>
-                          </div>
-                          <div className="flex">{renderStars(review.rating)}</div>
-                        </div>
-                        <p className="text-gray-700">{review.content}</p>
-                      </div>
-                    ))}
-                    {user && (
-                      <div className="mt-8 text-center">
-                        <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
-                          <DialogTrigger asChild>
-                            <Button>{translateText('Write a Review')}</Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-[425px]">
-                            <DialogHeader>
-                              <DialogTitle>{translateText('Write a Review')}</DialogTitle>
-                              <DialogDescription>
-                                {translateText('Share your experience with this product')}
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                              <div className="grid gap-2">
-                                <Label htmlFor="rating">{translateText('Rating')}</Label>
-                                <div className="flex gap-1">
-                                  {renderInteractiveStars(reviewRating, setReviewRating)}
-                                </div>
-                              </div>
-                              <div className="grid gap-2">
-                                <Label htmlFor="title">{translateText('Title (optional)')}</Label>
-                                <Input
-                                  id="title"
-                                  value={reviewTitle}
-                                  onChange={(e) => setReviewTitle(e.target.value)}
-                                  placeholder={translateText("Brief summary of your review")}
-                                />
-                              </div>
-                              <div className="grid gap-2">
-                                <Label htmlFor="content">{translateText('Review')}</Label>
-                                <Textarea
-                                  id="content"
-                                  value={reviewContent}
-                                  onChange={(e) => setReviewContent(e.target.value)}
-                                  placeholder={translateText("Tell others about your experience with this product...")}
-                                  rows={4}
-                                />
-                              </div>
-                            </div>
-                            <div className="flex justify-end gap-2">
-                              <Button 
-                                variant="outline" 
-                                onClick={() => setIsReviewDialogOpen(false)}
-                              >
-{translateText('Cancel')}
-                              </Button>
-                              <Button 
-                                onClick={handleSubmitReview}
-                                disabled={submitReviewMutation.isPending}
-                              >
-                                {submitReviewMutation.isPending ? (
-                                  <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    {translateText('Submitting...')}
-                                  </>
-                                ) : (
-                                  translateText('Submit Review')
-                                )}
-                              </Button>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                    <h4 className="font-semibold mb-2">{translateText('Shipping Options')}</h4>
+                    <p className="mb-1">{translateText('Delivery via Dedw3n Shipping')}</p>
+                    <p>
+                      {translateText('For detailed information on shipping methods, costs, and delivery times, please refer to our')}{' '}
+                      <Link href="/delivery-returns" className="underline hover:text-primary">
+                        {translateText('Delivery & Return options')}
+                      </Link>
+                    </p>
+                    <p className="mt-2">{translateText('Your invoice will be sent to you via email')}</p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold mb-2">{translateText('Payment Methods')}</h4>
+                    <p className="mb-1">
+                      <strong>{translateText('Card Payments:')}</strong> {translateText('Accepting Visa®, MasterCard®, Maestro®, American Express®, JCB®, Revolut® and Carte Bancaire®')}
+                    </p>
+                    <p className="mb-2">
+                      {translateText('Card payments are authenticated and secured with 3D Secure: Verified by Visa®, MasterCard® SecureCode, American Express SafeKey®')}
+                    </p>
+                    <p>
+                      {translateText('Additional options include PayPal®, Apple Pay®, Google Play®, Klarna®, African Mobile Money Providers, Bankwire')}
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold mb-2">{translateText('Returns and Exchanges')}</h4>
+                    <p className="mb-1">{translateText('Returns and exchanges are easy and complimentary within 30 days')}</p>
+                    <p className="mb-2">{translateText('We suggest reaching out to the vendor initially for additional details regarding return options.')}</p>
+                    <p>
+                      {translateText('For more information, see the conditions and procedures outlined in our')}{' '}
+                      <Link href="/delivery-returns" className="underline hover:text-primary">
+                        {translateText('Delivery & Return options')}
+                      </Link>.
+                    </p>
+                  </div>
+
+                  <div className="pt-2 border-t border-gray-200">
+                    <p>
+                      {translateText('Want to learn more? Reach out to')}{' '}
+                      <Link href="/contact" className="underline hover:text-primary">
+                        {translateText('Customer Relations')}
+                      </Link>.
+                    </p>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      </div>
+
+      {/* More from this vendor section */}
+      {vendor && vendorProducts.length > 0 && (
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-semibold text-gray-900">
+              {translateText('More from this vendor')}
+            </h2>
+            <Link href={`/vendor/${vendor.id}`}>
+              <Button variant="ghost" className="text-black hover:bg-gray-100 border-0">
+                {translateText('Visit vendor store for more')}
+              </Button>
+            </Link>
+          </div>
+          
+          {vendorProductsLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {vendorProducts.map((vendorProduct: any) => (
+                <Card 
+                  key={vendorProduct.id} 
+                  className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                  onClick={() => setLocation(`/product/${vendorProduct.slug || vendorProduct.id}`)}
+                  data-testid={`vendor-product-card-${vendorProduct.id}`}
+                >
+                  <div className="aspect-square bg-gray-100 relative">
+                    {vendorProduct.imageUrl ? (
+                      <img
+                        src={vendorProduct.imageUrl}
+                        alt={vendorProduct.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <ShoppingCart className="h-12 w-12 text-gray-400" />
                       </div>
                     )}
+                    {vendorProduct.isNew && (
+                      <Badge className="absolute top-2 left-2 bg-black text-white">
+                        {translateText('New')}
+                      </Badge>
+                    )}
+                    {vendorProduct.isOnSale && (
+                      <Badge className="absolute top-2 right-2 bg-black text-white">
+                        {translateText('Sale')}
+                      </Badge>
+                    )}
                   </div>
-                )}
-              </>
-            )}
+                  <CardContent className="p-3">
+                    <h3 className="font-medium text-sm mb-1 truncate" title={vendorProduct.name}>
+                      {translateText(vendorProduct.name)}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      {vendorProduct.discountPrice && vendorProduct.discountPrice < vendorProduct.price ? (
+                        <>
+                          <span className="font-bold text-black text-sm">
+                            {formatPriceFromGBP(vendorProduct.discountPrice)}
+                          </span>
+                          <span className="text-xs text-gray-500 line-through">
+                            {formatPriceFromGBP(vendorProduct.price)}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="font-bold text-black text-sm">
+                          {formatPriceFromGBP(vendorProduct.price)}
+                        </span>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Continue your exploration section */}
+      {similarProducts.length > 0 && (
+        <div className="mb-12">
+          <div className="mb-6">
+            <h2 className="text-2xl font-semibold text-gray-900">
+              {translateText('Continue your exploration')}
+            </h2>
           </div>
-        </TabsContent>
-      </Tabs>
+          
+          {similarProductsLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {similarProducts.map((similarProduct: any) => (
+                <Card 
+                  key={similarProduct.id} 
+                  className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                  onClick={() => setLocation(`/product/${similarProduct.slug || similarProduct.id}`)}
+                  data-testid={`similar-product-card-${similarProduct.id}`}
+                >
+                  <div className="aspect-square bg-gray-100 relative">
+                    {similarProduct.imageUrl ? (
+                      <img
+                        src={similarProduct.imageUrl}
+                        alt={similarProduct.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <ShoppingCart className="h-12 w-12 text-gray-400" />
+                      </div>
+                    )}
+                    {similarProduct.isNew && (
+                      <Badge className="absolute top-2 left-2 bg-black text-white">
+                        {translateText('New')}
+                      </Badge>
+                    )}
+                    {similarProduct.isOnSale && (
+                      <Badge className="absolute top-2 right-2 bg-black text-white">
+                        {translateText('Sale')}
+                      </Badge>
+                    )}
+                  </div>
+                  <CardContent className="p-3">
+                    <h3 className="font-medium text-sm mb-1 truncate" title={similarProduct.name}>
+                      {translateText(similarProduct.name)}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      {similarProduct.discountPrice && similarProduct.discountPrice < similarProduct.price ? (
+                        <>
+                          <span className="font-bold text-black text-sm">
+                            {formatPriceFromGBP(similarProduct.discountPrice)}
+                          </span>
+                          <span className="text-xs text-gray-500 line-through">
+                            {formatPriceFromGBP(similarProduct.price)}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="font-bold text-black text-sm">
+                          {formatPriceFromGBP(similarProduct.price)}
+                        </span>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       
       {/* Gift Search Dialog */}
       <Dialog open={isGiftSearchOpen} onOpenChange={setIsGiftSearchOpen}>
@@ -1096,7 +1377,10 @@ export default function ProductDetail() {
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
-                            e.currentTarget.nextElementSibling.style.display = 'flex';
+                            const nextElement = e.currentTarget.nextElementSibling as HTMLElement | null;
+                            if (nextElement) {
+                              nextElement.style.display = 'flex';
+                            }
                           }}
                         />
                       ) : null}

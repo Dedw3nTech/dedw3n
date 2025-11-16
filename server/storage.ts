@@ -2,8 +2,9 @@ import session from "express-session";
 import createMemoryStore from "memorystore";
 import { hashPassword } from "./auth";
 import connectPg from "connect-pg-simple";
+import { Pool } from "pg";
 import { db } from "./db";
-import { eq, like, and, or, desc, asc, sql, count, inArray, lte, ne } from "drizzle-orm";
+import { eq, like, ilike, and, or, desc, asc, sql, count, inArray, lte, gte, ne } from "drizzle-orm";
 import { generateProductCode } from "./product-code-generator";
 
 import {
@@ -13,12 +14,15 @@ import {
   communityMembers, membershipTiers, memberships, events as eventsTable,
   eventRegistrations, polls, pollVotes, creatorEarnings, subscriptions,
   videos, videoEngagements, videoAnalytics, videoPlaylists, playlistItems,
-  videoPurchases, videoProductOverlays, communityContents, authTokens, follows,
-  allowList, blockList, flaggedContent, flaggedImages, moderationReports,
+  videoPurchases, videoProductOverlays, communityContents, communityContentLikes, authTokens, follows,
+  allowList, blockList, flaggedContent, flaggedImages, moderationReports, userBlocks,
   callSessions, callMetadata, connections, userSessions, trafficAnalytics, savedPosts,
   likedProducts, friendRequests, giftPropositions, likedEvents,
   chatrooms, chatroomMessages, chatroomMembers, privateRoomInvitations, audioSessions, audioSessionParticipants,
   datingProfiles, datingLikes, datingMatches, storeUsers, affiliatePartners, vendorAffiliatePartners,
+  giftCards, giftCardTransactions, giftCardRedemptions, cryptoPayments, proxyAccounts, financialServices, governmentServices,
+  calendarEvents, calendarEventParticipants, calendarEventReminders, lifestyleServices, services,
+  tickets, ticketMessages, profileViews, postImpressions, searchAppearances,
   type User, type InsertUser, type Vendor, type InsertVendor,
   type Product, type InsertProduct, type Category, type InsertCategory,
   type Post, type InsertPost, type Comment, type InsertComment,
@@ -34,11 +38,24 @@ import {
   type Chatroom, type InsertChatroom, type PrivateRoomInvitation, type InsertPrivateRoomInvitation,
   type AudioSession, type InsertAudioSession, type AudioSessionParticipant, type InsertAudioSessionParticipant,
   type DatingProfile, type InsertDatingProfile, type DatingLike, type InsertDatingLike, type DatingMatch, type InsertDatingMatch, type StoreUser, type InsertStoreUser,
-  type AffiliatePartner, type InsertAffiliatePartner, type VendorAffiliatePartner, type InsertVendorAffiliatePartner
+  type AffiliatePartner, type InsertAffiliatePartner, type VendorAffiliatePartner, type InsertVendorAffiliatePartner,
+  type GiftCard, type InsertGiftCard, type GiftCardTransaction, type InsertGiftCardTransaction, type GiftCardRedemption, type InsertGiftCardRedemption,
+  type CryptoPayment, type InsertCryptoPayment, type ProxyAccount, type InsertProxyAccount,
+  type UserBlock, type InsertUserBlock, type ModerationReport, type InsertModerationReport,
+  type CalendarEvent, type InsertCalendarEvent, type CalendarEventParticipant, type InsertCalendarEventParticipant,
+  type CalendarEventReminder, type InsertCalendarEventReminder,
+  type CalendarEventAttachment,
+  type LifestyleService, type InsertLifestyleService,
+  type Service, type InsertService,
+  type Ticket, type InsertTicket, type TicketMessage, type InsertTicketMessage,
+  type CommunityContent, type InsertCommunityContent,
+  type CommunityContentLike, type InsertCommunityContentLike,
+  type MembershipTier, type Membership
 } from "@shared/schema";
 
 // Import the messages helpers from our separate module
 import * as messageHelpers from './messages';
+import { logger } from "./logger";
 
 // Interface for all storage operations
 export interface IStorage {
@@ -83,6 +100,9 @@ export interface IStorage {
   getNotificationSettings(userId: number): Promise<NotificationSettings[]>;
   updateNotificationSetting(userId: number, type: string, channel: string, enabled: boolean): Promise<NotificationSettings | undefined>;
   
+  // Calendar notification operations
+  getCalendarNotificationCount(userId: number): Promise<number>;
+  
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -110,6 +130,7 @@ export interface IStorage {
   getFollowersCount(userId: number): Promise<number>;
   getFollowingCount(userId: number): Promise<number>;
   getUserPosts(userId: number, limit?: number, offset?: number): Promise<Post[]>;
+  getUserDraftPosts(userId: number, limit?: number, offset?: number): Promise<Post[]>;
   getFollowers(userId: number, limit?: number, offset?: number): Promise<User[]>;
   getFollowing(userId: number, limit?: number, offset?: number): Promise<User[]>;
   getUserStats(userId: number): Promise<{ postCount: number, followerCount: number, followingCount: number }>;
@@ -147,6 +168,13 @@ export interface IStorage {
   getCartItem(id: number): Promise<(Cart & { product: Product }) | undefined>;
   updateCartItem(id: number, update: Partial<Cart>): Promise<(Cart & { product: Product }) | undefined>;
   removeCartItem(id: number): Promise<boolean>;
+
+  // Cryptocurrency payment operations
+  createCryptoPayment(payment: InsertCryptoPayment): Promise<CryptoPayment>;
+  getCryptoPayment(paymentId: string): Promise<CryptoPayment | undefined>;
+  updateCryptoPaymentStatus(paymentId: string, updates: Partial<CryptoPayment>): Promise<CryptoPayment | undefined>;
+  getCryptoPaymentsByOrder(orderId: number): Promise<CryptoPayment[]>;
+  getCryptoPaymentsByUser(userId: number): Promise<CryptoPayment[]>;
   
   // Post operations
   getPost(id: number): Promise<Post | undefined>;
@@ -158,7 +186,7 @@ export interface IStorage {
   getTrendingPosts(limit?: number): Promise<Post[]>;
   getPopularTags(limit?: number): Promise<{ tag: string, count: number }[]>;
   getSuggestedUsers(limit?: number, currentUserId?: number): Promise<User[]>;
-  getAllPostsPaginated(limit: number, offset: number): Promise<(Post & { user: { id: number; username: string; name: string; avatar: string | null }; _count: { likes: number; comments: number; shares: number }; isLiked: boolean; isShared: boolean })[]>;
+  getAllPostsPaginated(limit: number, offset: number, currentUserId?: number): Promise<(Post & { user: { id: number; username: string; name: string; avatar: string | null }; _count: { likes: number; comments: number; shares: number }; isLiked: boolean; isShared: boolean })[]>;
   getTotalPostsCount(): Promise<number>;
   getPostsByRegion(userId: number, limit: number, offset: number): Promise<Post[]>;
   getPostsByCountry(userId: number, limit: number, offset: number): Promise<Post[]>;
@@ -214,6 +242,23 @@ export interface IStorage {
   getUserCommunities(userId: number): Promise<any[]>;
   countPosts(options: any): Promise<number>;
   
+  // Exclusive content operations
+  getCommunityContent(contentId: number): Promise<any | undefined>;
+  canUserAccessContent(userId: number, contentId: number): Promise<boolean>;
+  listCommunityContent(communityId: number): Promise<any[]>;
+  getMembershipTier(tierId: number, communityId?: number): Promise<any | undefined>;
+  getAccessibleCommunityContent(communityId: number, userId: number): Promise<any[]>;
+  isUserCommunityAdminOrOwner(userId: number, communityId: number): Promise<boolean>;
+  createCommunityContent(contentData: any): Promise<any>;
+  updateCommunityContent(contentId: number, updates: any): Promise<any | undefined>;
+  deleteCommunityContent(contentId: number): Promise<boolean>;
+  incrementContentViewCount(contentId: number): Promise<boolean>;
+  likeContent(userId: number, contentId: number): Promise<any>;
+  unlikeContent(userId: number, contentId: number): Promise<boolean>;
+  getCommunityContentByTier(communityId: number, tier: number): Promise<any[]>;
+  getCommunityContentByType(communityId: number, contentType: string): Promise<any[]>;
+  getFeaturedCommunityContent(communityId: number): Promise<any[]>;
+  
   // Order analytics
   countOrders(options: any): Promise<number>;
   calculateTotalRevenue(): Promise<number>;
@@ -260,6 +305,48 @@ export interface IStorage {
   getUserSentGifts(userId: number): Promise<GiftProposition[]>;
   getUserReceivedGifts(userId: number): Promise<GiftProposition[]>;
   updateGiftStatus(id: number, status: string, paymentIntentId?: string): Promise<GiftProposition | undefined>;
+
+  // Calendar operations
+  createCalendarEvent(eventData: InsertCalendarEvent): Promise<CalendarEvent>;
+  getCalendarEvent(id: number): Promise<CalendarEvent | undefined>;
+  getUserCalendarEvents(userId: number, startDate?: Date, endDate?: Date): Promise<CalendarEvent[]>;
+  getEventsByCategory(userId: number, category: string): Promise<CalendarEvent[]>;
+  updateCalendarEvent(id: number, userId: number, updates: Partial<CalendarEvent>): Promise<CalendarEvent | undefined>;
+  deleteCalendarEvent(id: number, userId: number): Promise<boolean>;
+  getUpcomingEvents(userId: number, limit?: number): Promise<CalendarEvent[]>;
+  getEventReminders(userId: number): Promise<CalendarEventReminder[]>;
+  createEventReminder(reminderData: InsertCalendarEventReminder): Promise<CalendarEventReminder>;
+  updateEventReminder(id: number, updates: Partial<CalendarEventReminder>): Promise<CalendarEventReminder | undefined>;
+  getEventParticipants(eventId: number): Promise<Array<{ participant: CalendarEventParticipant; user: { id: number; username: string; name: string | null; avatar: string | null } }>>;
+  addEventParticipant(participantData: InsertCalendarEventParticipant): Promise<CalendarEventParticipant>;
+  updateParticipantStatus(eventId: number, userId: number, status: string): Promise<CalendarEventParticipant | undefined>;
+  searchCalendarEvents(userId: number, query: string): Promise<CalendarEvent[]>;
+  
+  // Calendar event file operations
+  addCalendarEventAttachment(eventId: number, userId: number, attachment: CalendarEventAttachment): Promise<CalendarEvent | undefined>;
+  getCalendarEventAttachments(eventId: number): Promise<CalendarEventAttachment[]>;
+  deleteCalendarEventAttachment(eventId: number, userId: number, attachmentId: string): Promise<CalendarEvent | undefined>;
+  checkEventParticipantAccess(eventId: number, userId: number): Promise<boolean>;
+  
+  // Lifestyle service operations
+  createLifestyleService(serviceData: InsertLifestyleService): Promise<LifestyleService>;
+  getLifestyleService(id: number): Promise<LifestyleService | undefined>;
+  getAllLifestyleServices(category?: string): Promise<LifestyleService[]>;
+  getUserLifestyleServices(userId: number, category?: string): Promise<LifestyleService[]>;
+  updateLifestyleService(id: number, userId: number, updates: Partial<LifestyleService>): Promise<LifestyleService | undefined>;
+  deleteLifestyleService(id: number, userId: number): Promise<boolean>;
+  searchLifestyleServices(query: string, category?: string): Promise<LifestyleService[]>;
+  getFeaturedLifestyleServices(category?: string, limit?: number): Promise<LifestyleService[]>;
+  
+  // Service operations
+  createService(serviceData: InsertService): Promise<Service>;
+  getService(id: number): Promise<Service | undefined>;
+  getAllServices(category?: string): Promise<Service[]>;
+  getUserServices(userId: number, category?: string): Promise<Service[]>;
+  updateService(id: number, userId: number, updates: Partial<Service>): Promise<Service | undefined>;
+  deleteService(id: number, userId: number): Promise<boolean>;
+  searchServices(query: string, category?: string): Promise<Service[]>;
+  getFeaturedServices(category?: string, limit?: number): Promise<Service[]>;
   
   // Platform users and gift system
   getPlatformUsers(excludeUserId: number): Promise<User[]>;
@@ -271,6 +358,17 @@ export interface IStorage {
   assignUserToStore(storeUserData: any): Promise<any>;
   updateStoreUser(id: number, vendorId: number, updates: any): Promise<any>;
   removeUserFromStore(id: number, vendorId: number): Promise<boolean>;
+
+  // Comprehensive search operations for community
+  searchPosts(query: string, limit?: number): Promise<any[]>;
+  searchMembers(query: string, limit?: number): Promise<any[]>;
+  searchDatingProfiles(query: string, currentUserId?: number, limit?: number): Promise<any[]>;
+  comprehensiveSearch(query: string, currentUserId?: number): Promise<{
+    posts: any[];
+    members: any[];
+    events: any[];
+    datingProfiles: any[];
+  }>;
 
   // Dating profile operations
   getDatingProfile(userId: number): Promise<DatingProfile | undefined>;
@@ -294,27 +392,231 @@ export interface IStorage {
   getAffiliateReferrals(affiliateId: number): Promise<any[]>;
   getAffiliateEarnings(affiliateId: number): Promise<any[]>;
   generateReferralLink(affiliateId: number): Promise<string>;
+
+  // Gift card operations
+  createGiftCard(giftCardData: InsertGiftCard): Promise<GiftCard>;
+  getGiftCard(id: number): Promise<GiftCard | undefined>;
+  getGiftCardByCode(code: string): Promise<GiftCard | undefined>;
+  getGiftCardByCardNumber(cardNumber: string): Promise<GiftCard | undefined>;
+  updateGiftCard(id: number, updates: Partial<GiftCard>): Promise<GiftCard | undefined>;
+  getUserGiftCards(userId: number): Promise<GiftCard[]>;
+  redeemGiftCard(code: string, userId: number, orderId: number, amount: number): Promise<{ success: boolean; remainingBalance: number; message: string }>;
+  createGiftCardTransaction(transactionData: InsertGiftCardTransaction): Promise<GiftCardTransaction>;
+  getGiftCardTransactions(giftCardId: number): Promise<GiftCardTransaction[]>;
+  createGiftCardRedemption(redemptionData: InsertGiftCardRedemption): Promise<GiftCardRedemption>;
+  getGiftCardBalance(code: string): Promise<{ balance: number; status: string } | null>;
+  getGiftCardBalanceByCardNumber(cardNumber: string, pin: string): Promise<{ balance: number; status: string; cardNumber: string } | null>;
+  generateGiftCardCode(): Promise<string>;
+  generateGiftCardNumber(): Promise<string>;
+  generateGiftCardPin(): Promise<{ plainPin: string; hashedPin: string }>;
+  sendGiftCardEmail(giftCard: GiftCard, recipientEmail: string): Promise<void>;
+  
+  // Proxy Accounts operations
+  createProxyAccount(accountData: InsertProxyAccount): Promise<ProxyAccount>;
+  getProxyAccount(id: number): Promise<ProxyAccount | undefined>;
+  getUserProxyAccounts(parentUserId: number): Promise<ProxyAccount[]>;
+  updateProxyAccount(id: number, updates: Partial<ProxyAccount>): Promise<ProxyAccount | undefined>;
+  deleteProxyAccount(id: number): Promise<boolean>;
+  updateProxyAccountStatus(id: number, status: string, notes?: string): Promise<ProxyAccount | undefined>;
+  updateProxyAccountKYCStatus(id: number, kycStatus: string, verifiedBy?: number): Promise<ProxyAccount | undefined>;
+
+  // User block operations
+  blockUser(blockerId: number, blockedId: number, reason?: string): Promise<boolean>;
+  unblockUser(blockerId: number, blockedId: number): Promise<boolean>;
+  checkUserBlocked(blockerId: number, blockedId: number): Promise<boolean>;
+  getBlockedUsers(userId: number): Promise<User[]>;
+  
+  // Moderation report operations
+  createModerationReport(reportData: { reporterId: number; subjectId: number; subjectType: string; reason: string; description?: string }): Promise<any>;
+  getUserModerationReports(userId: number): Promise<any[]>;
+  
+  // Financial Services operations
+  getFinancialServicesByUserId(userId: number): Promise<any[]>;
+  createFinancialService(serviceData: any): Promise<any>;
+  updateFinancialService(id: number, userId: number, updates: any): Promise<any | undefined>;
+  deleteFinancialService(id: number, userId: number): Promise<boolean>;
+  
+  // Government Services operations
+  getGovernmentServicesByUserId(userId: number): Promise<any[]>;
+  createGovernmentService(serviceData: any): Promise<any>;
+  updateGovernmentService(id: number, userId: number, updates: any): Promise<any | undefined>;
+  deleteGovernmentService(id: number, userId: number): Promise<boolean>;
+  
+  // Ticket operations
+  createTicket(ticketData: any): Promise<any>;
+  getTicket(id: number): Promise<any | undefined>;
+  getTickets(filters?: { status?: string; department?: string; assignedTo?: number; userId?: number; priority?: string }): Promise<any[]>;
+  getTicketByNumber(ticketNumber: string): Promise<any | undefined>;
+  getTicketsByUser(userId: number): Promise<any[]>;
+  getTicketsByEmail(email: string): Promise<any[]>;
+  getTicketsByDepartment(department: string): Promise<any[]>;
+  updateTicket(id: number, updates: any): Promise<any | undefined>;
+  assignTicket(id: number, assignedTo: number): Promise<any | undefined>;
+  resolveTicket(id: number, resolvedBy: number): Promise<any | undefined>;
+  closeTicket(id: number): Promise<any | undefined>;
+  deleteTicket(id: number): Promise<boolean>;
+  getTicketStats(): Promise<any>;
+  
+  // Ticket message operations
+  createTicketMessage(messageData: any): Promise<any>;
+  getTicketMessages(ticketId: number): Promise<any[]>;
+  getTicketMessage(id: number): Promise<any | undefined>;
+  
+  // Analytics tracking operations
+  trackProfileView(data: { profileUserId: number; viewerUserId: number | null; viewerIp: string | null; viewerUserAgent: string | null }): Promise<void>;
+  trackPostImpression(data: { postId: number; userId: number | null; impressionType: string; userIp: string | null; userAgent: string | null }): Promise<void>;
+  trackSearchAppearance(data: { userId: number; searchQuery: string; searchType: string; position: number | null; searcherUserId: number | null }): Promise<void>;
+  getUserAnalyticsStats(userId: number): Promise<{ profileViews: number; postImpressions: number; searchAppearances: number }>;
 }
 
-// Database storage implementation
+// Optimized Database storage implementation
 export class DatabaseStorage implements IStorage {
   // Session store for authentication
   sessionStore: any;
   
   constructor() {
-    // Use memory store to avoid DB session issues
-    const MemoryStore = createMemoryStore(session);
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000, // Prune expired entries every 24h
-      max: 10000, // Reduced max sessions to prevent memory issues
-      ttl: 86400000, // Session TTL
-      stale: false,
-      dispose: function(key: string, val: any) {
-        console.log(`[SESSION] Disposing session: ${key}`);
-      }
+    // Create DEDICATED PostgreSQL pool for session storage with extended timeouts
+    // Separate pool prevents session operations from competing with main database queries
+    const sessionPool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+      // Session store specific optimizations
+      max: 5,                        // Lower max connections (session store doesn't need many)
+      min: 1,                        // Keep 1 connection warm
+      idleTimeoutMillis: 30000,      // Close idle connections after 30s (Neon charges for idle time)
+      connectionTimeoutMillis: 20000, // EXTENDED timeout for session operations (20s instead of 5s)
+      statement_timeout: 30000,      // 30s query timeout (prevents long-running queries)
+      query_timeout: 30000,          // 30s query timeout
+      maxUses: 7500,                 // Prevent memory leaks
+      // Additional reliability settings
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10000,
     });
-    // Fix memory leak warning by increasing max listeners
-    this.sessionStore.setMaxListeners(0); // Unlimited listeners to prevent warnings
+    
+    // Production-optimized PostgreSQL session store with enhanced error logging
+    // Using 'session_store' table to avoid conflict with 'user_sessions' analytics table
+    const PostgresStore = connectPg(session);
+    this.sessionStore = new PostgresStore({
+      pool: sessionPool,
+      tableName: 'session_store',
+      createTableIfMissing: true,
+      pruneSessionInterval: 6 * 60 * 60, // Prune every 6 hours instead of 1 hour (reduced DB load)
+      ttl: 7 * 24 * 60 * 60,            // 7 days session TTL (in seconds)
+      errorLog: (...args: any[]) => {
+        logger.error('Session store error', { args }, 'server');
+      }
+    } as any);
+    
+    // Initialize session table with retry logic (prevents cold start failures)
+    this.initializeSessionStoreWithRetry(sessionPool).catch(err => {
+      logger.error('[SESSION-STORE] Failed to initialize after retries', undefined, err as Error, 'server');
+      // Don't crash the app - session store will retry on first use
+    });
+    
+    // Add graceful shutdown handler for connection cleanup
+    const gracefulShutdown = async (signal: string) => {
+      logger.lifecycle('Graceful shutdown initiated - closing pools', { signal }, 'server');
+      try {
+        // Close session pool
+        await sessionPool.end();
+        logger.debug('[SESSION-STORE] Session pool closed successfully', 'server');
+        
+        // Close session store
+        this.sessionStore.close();
+        logger.debug('[SESSION-STORE] Session store closed successfully', 'server');
+        
+        process.exit(0);
+      } catch (error) {
+        logger.error('[DATABASE] Error during shutdown', undefined, error as Error, 'server');
+        process.exit(1);
+      }
+    };
+    
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+    
+    // Track startup time to avoid false warnings during initialization
+    const startupTime = Date.now();
+    const STARTUP_GRACE_PERIOD = 60000; // 60 seconds
+    
+    // Add periodic health check with performance monitoring
+    setInterval(async () => {
+      try {
+        const start = Date.now();
+        await sessionPool.query('SELECT 1');
+        const duration = Date.now() - start;
+        
+        // Log pool statistics for monitoring
+        const poolStats = {
+          total: sessionPool.totalCount,
+          idle: sessionPool.idleCount,
+          waiting: sessionPool.waitingCount,
+        };
+        
+        // Log health check with pool statistics
+        logger.debug('Periodic health check OK', { durationMs: duration }, 'server');
+        
+        // Warn if database response is slow (but skip during startup grace period)
+        // Higher threshold (5s) to avoid false positives during background tasks
+        const isStartupPeriod = (Date.now() - startupTime) < STARTUP_GRACE_PERIOD;
+        if (duration > 5000 && !isStartupPeriod) {
+          logger.warn('Slow health check detected', { 
+            durationMs: duration,
+            poolStats,
+            note: 'Database may be under heavy load'
+          }, 'server');
+        }
+        
+        // Warn if connections are waiting
+        if (poolStats.waiting > 0) {
+          logger.warn('Connections waiting', { poolStats }, 'server');
+        }
+      } catch (error) {
+        logger.error('[SESSION-POOL] Health check failed', undefined, error as Error, 'server');
+      }
+    }, 30000); // Every 30 seconds
+  }
+  
+  /**
+   * Initialize session store table with retry logic to prevent cold start failures
+   * Uses exponential backoff to handle transient connection issues
+   */
+  private async initializeSessionStoreWithRetry(pool: Pool, maxRetries: number = 3): Promise<void> {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        logger.debug('Initializing session table', { attempt, maxRetries }, 'server');
+        
+        // Create session_store table if it doesn't exist
+        await pool.query(`
+          CREATE TABLE IF NOT EXISTS session_store (
+            sid VARCHAR NOT NULL COLLATE "default",
+            sess JSON NOT NULL,
+            expire TIMESTAMP(6) NOT NULL,
+            CONSTRAINT "session_pkey" PRIMARY KEY ("sid")
+          )
+        `);
+        
+        // Create index for expiration cleanup
+        await pool.query(`
+          CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON session_store ("expire")
+        `);
+        
+        logger.debug('[SESSION-STORE] Session table initialized successfully', 'server');
+        return; // Success
+        
+      } catch (error: any) {
+        logger.error('Session store initialization failed', { attempt, message: error.message }, error as Error, 'server');
+        
+        if (attempt === maxRetries) {
+          throw new Error(`Failed to initialize session store after ${maxRetries} attempts: ${error.message}`);
+        }
+        
+        // Exponential backoff: 1s, 2s, 4s
+        const delay = Math.pow(2, attempt - 1) * 1000;
+        logger.debug('Retrying session store initialization', { delayMs: delay }, 'server');
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
   }
   
   // Message methods - using our message helpers module
@@ -358,7 +660,7 @@ export class DatabaseStorage implements IStorage {
       const [newCallSession] = await db.insert(callSessions).values(callData).returning();
       return newCallSession;
     } catch (error) {
-      console.error('Error creating call session:', error);
+      logger.error('Error creating call session', undefined, error as Error, 'server');
       throw new Error('Failed to create call session');
     }
   }
@@ -372,7 +674,7 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return updatedCallSession;
     } catch (error) {
-      console.error('Error updating call session:', error);
+      logger.error('Error updating call session', undefined, error as Error, 'server');
       throw new Error('Failed to update call session');
     }
   }
@@ -410,7 +712,7 @@ export class DatabaseStorage implements IStorage {
       
       return callsWithUsers;
     } catch (error) {
-      console.error('Error getting user call history:', error);
+      logger.error('Error getting user call history', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -503,7 +805,7 @@ export class DatabaseStorage implements IStorage {
         audioCalls: audioResult.count || 0
       };
     } catch (error) {
-      console.error('Error getting user call stats:', error);
+      logger.error('Error getting user call stats', undefined, error as Error, 'server');
       return {
         totalCalls: 0,
         totalDuration: 0,
@@ -522,7 +824,7 @@ export class DatabaseStorage implements IStorage {
       const [newNotification] = await db.insert(notifications).values(notificationData).returning();
       return newNotification;
     } catch (error) {
-      console.error('Error creating notification:', error);
+      logger.error('Error creating notification', undefined, error as Error, 'server');
       throw new Error('Failed to create notification');
     }
   }
@@ -530,10 +832,24 @@ export class DatabaseStorage implements IStorage {
   async getNotifications(userId: number, limit: number = 20): Promise<Notification[]> {
     try {
       const result = await db.execute(
-        sql`SELECT id, user_id, type, title, content, is_read, source_id, source_type, actor_id, created_at 
-            FROM notifications 
-            WHERE user_id = ${userId} 
-            ORDER BY created_at DESC 
+        sql`SELECT 
+              n.id, 
+              n.user_id, 
+              n.type, 
+              n.title, 
+              n.content, 
+              n.is_read, 
+              n.source_id, 
+              n.source_type, 
+              n.actor_id, 
+              n.created_at,
+              u.username as actor_username,
+              u.name as actor_name,
+              u.avatar as actor_avatar
+            FROM notifications n
+            LEFT JOIN users u ON n.actor_id = u.id
+            WHERE n.user_id = ${userId} 
+            ORDER BY n.created_at DESC 
             LIMIT ${limit}`
       );
       
@@ -544,13 +860,19 @@ export class DatabaseStorage implements IStorage {
         title: row.title as string,
         content: row.content as string,
         isRead: row.is_read as boolean,
+        read: row.is_read as boolean,
         sourceId: row.source_id as number,
         sourceType: row.source_type as string,
         actorId: row.actor_id as number,
-        createdAt: row.created_at as Date
-      }));
+        createdAt: row.created_at as Date,
+        actor: row.actor_id ? {
+          username: row.actor_username as string,
+          name: row.actor_name as string,
+          avatar: row.actor_avatar as string | null
+        } : undefined
+      } as any));
     } catch (error) {
-      console.error('Error getting notifications:', error);
+      logger.error('Error getting notifications', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -569,7 +891,7 @@ export class DatabaseStorage implements IStorage {
       
       return result?.count || 0;
     } catch (error) {
-      console.error('Error getting unread notification count:', error);
+      logger.error('Error getting unread notification count', undefined, error as Error, 'server');
       return 0;
     }
   }
@@ -584,7 +906,7 @@ export class DatabaseStorage implements IStorage {
         
       return updatedNotification;
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      logger.error('Error marking notification as read', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -603,8 +925,45 @@ export class DatabaseStorage implements IStorage {
         
       return true;
     } catch (error) {
-      console.error('Error marking all notifications as read:', error);
+      logger.error('Error marking all notifications as read', undefined, error as Error, 'server');
       return false;
+    }
+  }
+  
+  async getCalendarNotificationCount(userId: number): Promise<number> {
+    try {
+      const now = new Date();
+      const futureWindow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days ahead
+      
+      const [result] = await db
+        .select({ count: count() })
+        .from(calendarEventReminders)
+        .where(
+          and(
+            eq(calendarEventReminders.userId, userId),
+            eq(calendarEventReminders.isSent, false),
+            gte(calendarEventReminders.reminderTime, now),
+            lte(calendarEventReminders.reminderTime, futureWindow)
+          )
+        );
+      
+      return result?.count || 0;
+    } catch (error: any) {
+      // Gracefully handle database errors without breaking the application
+      // Check for missing table (calendar feature not yet initialized)
+      if (error?.message?.includes('calendar_event_reminders') && error?.message?.includes('does not exist')) {
+        return 0;
+      }
+      
+      // Check for other common database errors
+      if (error?.code === '42P01' || error?.message?.includes('does not exist')) {
+        // Table or relation doesn't exist - return 0 silently
+        return 0;
+      }
+      
+      // Log unexpected errors only
+      logger.error('Error getting calendar notification count', undefined, error as Error, 'server');
+      return 0;
     }
   }
   
@@ -618,7 +977,7 @@ export class DatabaseStorage implements IStorage {
         
       return settings;
     } catch (error) {
-      console.error('Error getting notification settings:', error);
+      logger.error('Error getting notification settings', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -669,7 +1028,7 @@ export class DatabaseStorage implements IStorage {
         return newSetting;
       }
     } catch (error) {
-      console.error('Error updating notification setting:', error);
+      logger.error('Error updating notification setting', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -697,26 +1056,28 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getUserByUsername(username: string): Promise<User | undefined> {
-    // Use SQL LOWER function to perform case-insensitive username lookup
-    // This will help with login issues where username case doesn't match exactly
+    // Trim whitespace and use SQL LOWER function for case-insensitive username lookup
+    // This prevents login failures from trailing spaces (e.g., "admin " vs "admin")
+    const trimmedUsername = username.trim();
     try {
-      const [user] = await db.select().from(users).where(sql`LOWER(${users.username}) = LOWER(${username})`);
-      console.log(`[DEBUG] getUserByUsername for '${username}': ${user ? 'Found user' : 'User not found'}`);
+      const [user] = await db.select().from(users).where(sql`LOWER(${users.username}) = LOWER(${trimmedUsername})`);
+      logger.debug(`getUserByUsername for '${trimmedUsername}': ${user ? 'Found user' : 'User not found'}`, 'server');
       return user;
     } catch (error) {
-      console.error(`[ERROR] getUserByUsername error for '${username}':`, error);
+      logger.error(`getUserByUsername error for '${trimmedUsername}':`, undefined, error as Error, 'server');
       return undefined;
     }
   }
   
   async getUserByEmail(email: string): Promise<User | undefined> {
-    // Use SQL LOWER function to perform case-insensitive email lookup
+    // Trim whitespace and use SQL LOWER function for case-insensitive email lookup
+    const trimmedEmail = email.trim();
     try {
-      const [user] = await db.select().from(users).where(sql`LOWER(${users.email}) = LOWER(${email})`);
-      console.log(`[DEBUG] getUserByEmail for '${email}': ${user ? 'Found user' : 'User not found'}`);
+      const [user] = await db.select().from(users).where(sql`LOWER(${users.email}) = LOWER(${trimmedEmail})`);
+      logger.debug(`getUserByEmail for '${trimmedEmail}': ${user ? 'Found user' : 'User not found'}`, 'server');
       return user;
     } catch (error) {
-      console.error(`[ERROR] getUserByEmail error for '${email}':`, error);
+      logger.error(`getUserByEmail error for '${trimmedEmail}':`, undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -724,10 +1085,10 @@ export class DatabaseStorage implements IStorage {
   async getUserByVerificationToken(token: string): Promise<User | undefined> {
     try {
       const [user] = await db.select().from(users).where(eq(users.verificationToken, token));
-      console.log(`[DEBUG] getUserByVerificationToken: ${user ? 'Found user' : 'Token not found'}`);
+      logger.debug(`getUserByVerificationToken: ${user ? 'Found user' : 'Token not found'}`, 'server');
       return user;
     } catch (error) {
-      console.error(`[ERROR] getUserByVerificationToken error:`, error);
+      logger.error(`getUserByVerificationToken error:`, undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -735,10 +1096,10 @@ export class DatabaseStorage implements IStorage {
   async getUserByResetToken(token: string): Promise<User | undefined> {
     try {
       const [user] = await db.select().from(users).where(eq(users.passwordResetToken, token));
-      console.log(`[DEBUG] getUserByResetToken: ${user ? 'Found user' : 'Token not found'}`);
+      logger.debug(`getUserByResetToken: ${user ? 'Found user' : 'Token not found'}`, 'server');
       return user;
     } catch (error) {
-      console.error(`[ERROR] getUserByResetToken error:`, error);
+      logger.error(`getUserByResetToken error:`, undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -750,17 +1111,51 @@ export class DatabaseStorage implements IStorage {
   
   async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
     try {
+      const updateData: any = { ...userData, updatedAt: new Date() };
+
+      if (userData.username) {
+        const currentUser = await this.getUser(id);
+        if (currentUser && currentUser.username !== userData.username) {
+          const daysSinceLastChange = currentUser.lastUsernameChange
+            ? Math.floor((Date.now() - new Date(currentUser.lastUsernameChange).getTime()) / (1000 * 60 * 60 * 24))
+            : Infinity;
+
+          if (daysSinceLastChange >= 14) {
+            updateData.usernameChangeCount = 1;
+            updateData.lastUsernameChange = new Date();
+          } else {
+            updateData.usernameChangeCount = (currentUser.usernameChangeCount || 0) + 1;
+            updateData.lastUsernameChange = new Date();
+          }
+        }
+      }
+
+      if ('firstName' in userData && 'surname' in userData && userData.firstName && userData.surname) {
+        updateData.name = `${userData.firstName} ${userData.surname}`;
+      }
+
+      const enumFields = ['idDocumentType'];
+      for (const field of enumFields) {
+        if (field in updateData && updateData[field] === '') {
+          updateData[field] = null;
+        }
+      }
+
+      const dateFields = ['dateOfBirth', 'idDocumentExpiryDate', 'passwordResetExpires'];
+      for (const field of dateFields) {
+        if (field in updateData && updateData[field] === '') {
+          updateData[field] = null;
+        }
+      }
+
       const [updatedUser] = await db
         .update(users)
-        .set({
-          ...userData,
-          updatedAt: new Date()
-        })
+        .set(updateData)
         .where(eq(users.id, id))
         .returning();
       return updatedUser;
     } catch (error) {
-      console.error('Error updating user:', error);
+      logger.error('Error updating user', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -827,7 +1222,7 @@ export class DatabaseStorage implements IStorage {
       
       return usersForMessaging;
     } catch (error) {
-      console.error('Error getting users for messaging:', error);
+      logger.error('Error getting users for messaging', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -882,7 +1277,7 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return updatedVendor;
     } catch (error) {
-      console.error('Error updating vendor status:', error);
+      logger.error('Error updating vendor status', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -908,7 +1303,7 @@ export class DatabaseStorage implements IStorage {
         } as Vendor;
       });
     } catch (error) {
-      console.error('Error fetching vendors:', error);
+      logger.error('Error fetching vendors', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -939,7 +1334,7 @@ export class DatabaseStorage implements IStorage {
         user: safeUserData
       } as Vendor;
     } catch (error) {
-      console.error('Error fetching vendor:', error);
+      logger.error('Error fetching vendor', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -954,7 +1349,7 @@ export class DatabaseStorage implements IStorage {
       
       return result?.count || 0;
     } catch (error) {
-      console.error('Error counting cart items:', error);
+      logger.error('Error counting cart items', undefined, error as Error, 'server');
       return 0;
     }
   }
@@ -1009,7 +1404,7 @@ export class DatabaseStorage implements IStorage {
       
       return newCartItem;
     } catch (error) {
-      console.error('Error adding to cart:', error);
+      logger.error('Error adding to cart', undefined, error as Error, 'server');
       throw new Error('Failed to add to cart');
     }
   }
@@ -1031,7 +1426,7 @@ export class DatabaseStorage implements IStorage {
         product
       }));
     } catch (error) {
-      console.error('Error listing cart items:', error);
+      logger.error('Error listing cart items', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -1056,7 +1451,7 @@ export class DatabaseStorage implements IStorage {
         product: item.product
       };
     } catch (error) {
-      console.error('Error getting cart item:', error);
+      logger.error('Error getting cart item', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -1084,7 +1479,7 @@ export class DatabaseStorage implements IStorage {
         product
       };
     } catch (error) {
-      console.error('Error updating cart item:', error);
+      logger.error('Error updating cart item', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -1097,7 +1492,7 @@ export class DatabaseStorage implements IStorage {
       
       return true;
     } catch (error) {
-      console.error('Error removing cart item:', error);
+      logger.error('Error removing cart item', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -1140,7 +1535,7 @@ export class DatabaseStorage implements IStorage {
       
       return true;
     } catch (error) {
-      console.error('Error connecting users:', error);
+      logger.error('Error connecting users', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -1169,13 +1564,12 @@ export class DatabaseStorage implements IStorage {
         type: 'follow',
         content: 'started following you',
         actorId: followerId,
-        read: false,
-        createdAt: new Date()
+        isRead: false
       });
       
       return true;
     } catch (error) {
-      console.error('Error following user:', error);
+      logger.error('Error following user', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -1194,7 +1588,7 @@ export class DatabaseStorage implements IStorage {
       
       return true;
     } catch (error) {
-      console.error('Error unfollowing user:', error);
+      logger.error('Error unfollowing user', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -1213,7 +1607,7 @@ export class DatabaseStorage implements IStorage {
       
       return !!follow;
     } catch (error) {
-      console.error('Error checking follow status:', error);
+      logger.error('Error checking follow status', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -1228,7 +1622,7 @@ export class DatabaseStorage implements IStorage {
       
       return result?.count || 0;
     } catch (error) {
-      console.error('Error getting user post count:', error);
+      logger.error('Error getting user post count', undefined, error as Error, 'server');
       return 0;
     }
   }
@@ -1242,7 +1636,7 @@ export class DatabaseStorage implements IStorage {
       
       return result?.count || 0;
     } catch (error) {
-      console.error('Error getting followers count:', error);
+      logger.error('Error getting followers count', undefined, error as Error, 'server');
       return 0;
     }
   }
@@ -1256,7 +1650,7 @@ export class DatabaseStorage implements IStorage {
       
       return result?.count || 0;
     } catch (error) {
-      console.error('Error getting following count:', error);
+      logger.error('Error getting following count', undefined, error as Error, 'server');
       return 0;
     }
   }
@@ -1266,14 +1660,39 @@ export class DatabaseStorage implements IStorage {
       const userPosts = await db
         .select()
         .from(posts)
-        .where(eq(posts.userId, userId))
+        .where(
+          and(
+            eq(posts.userId, userId),
+            eq(posts.publishStatus, 'published') // Only show published posts in public profile
+          )
+        )
         .orderBy(desc(posts.createdAt))
         .limit(limit)
         .offset(offset);
       
       return userPosts;
     } catch (error) {
-      console.error('Error getting user posts:', error);
+      logger.error('Error getting user posts', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+  
+  async getUserDraftPosts(userId: number, limit: number = 20, offset: number = 0): Promise<Post[]> {
+    try {
+      const draftPosts = await db
+        .select()
+        .from(posts)
+        .where(and(
+          eq(posts.userId, userId),
+          eq(posts.publishStatus, 'draft')
+        ))
+        .orderBy(desc(posts.createdAt))
+        .limit(limit)
+        .offset(offset);
+      
+      return draftPosts;
+    } catch (error) {
+      logger.error('Error getting user draft posts', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -1296,7 +1715,7 @@ export class DatabaseStorage implements IStorage {
         return userData as User;
       });
     } catch (error) {
-      console.error('Error getting followers:', error);
+      logger.error('Error getting followers', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -1319,7 +1738,7 @@ export class DatabaseStorage implements IStorage {
         return userData as User;
       });
     } catch (error) {
-      console.error('Error getting following users:', error);
+      logger.error('Error getting following users', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -1341,7 +1760,7 @@ export class DatabaseStorage implements IStorage {
         followingCount
       };
     } catch (error) {
-      console.error('Error getting user stats:', error);
+      logger.error('Error getting user stats', undefined, error as Error, 'server');
       return {
         postCount: 0,
         followerCount: 0,
@@ -1374,7 +1793,7 @@ export class DatabaseStorage implements IStorage {
       
       return true;
     } catch (error) {
-      console.error('Error disconnecting users:', error);
+      logger.error('Error disconnecting users', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -1402,7 +1821,7 @@ export class DatabaseStorage implements IStorage {
       
       return !!connection;
     } catch (error) {
-      console.error('Error checking connection:', error);
+      logger.error('Error checking connection', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -1437,7 +1856,7 @@ export class DatabaseStorage implements IStorage {
       
       return subscription || null;
     } catch (error) {
-      console.error('Error getting user subscription:', error);
+      logger.error('Error getting user subscription', undefined, error as Error, 'server');
       return null;
     }
   }
@@ -1485,7 +1904,7 @@ export class DatabaseStorage implements IStorage {
         return newSubscription;
       }
     } catch (error) {
-      console.error('Error creating/updating subscription:', error);
+      logger.error('Error creating/updating subscription', undefined, error as Error, 'server');
       throw new Error('Failed to create or update subscription');
     }
   }
@@ -1524,7 +1943,7 @@ export class DatabaseStorage implements IStorage {
         .limit(1);
       return product;
     } catch (error) {
-      console.error('Error fetching product:', error);
+      logger.error('Error fetching product', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -1538,7 +1957,7 @@ export class DatabaseStorage implements IStorage {
         .limit(1);
       return product;
     } catch (error) {
-      console.error('Error fetching product by slug:', error);
+      logger.error('Error fetching product by slug', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -1573,7 +1992,7 @@ export class DatabaseStorage implements IStorage {
       
       return updatedProduct;
     } catch (error) {
-      console.error('Error updating product:', error);
+      logger.error('Error updating product', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -1591,15 +2010,15 @@ export class DatabaseStorage implements IStorage {
         await db.delete(giftPropositions).where(eq(giftPropositions.productId, id));
       } catch (error: any) {
         // Ignore if gift_propositions table doesn't exist or other issues
-        console.log('[DEBUG] Could not delete from gift_propositions:', error?.message || 'Unknown error');
+        logger.debug('Could not delete from gift_propositions', { error: error?.message || 'Unknown error' }, 'server');
       }
       
       // Now delete the product itself
       const result = await db.delete(products).where(eq(products.id, id));
-      console.log(`[DEBUG] Product ${id} deletion completed successfully`);
+      logger.debug(`Product ${id} deletion completed successfully`, 'server');
       return true;
     } catch (error) {
-      console.error('Error deleting product:', error);
+      logger.error('Error deleting product', undefined, error as Error, 'server');
       throw error; // Re-throw to let the API handle it properly
     }
   }
@@ -1650,7 +2069,7 @@ export class DatabaseStorage implements IStorage {
       
       return postData;
     } catch (error) {
-      console.error('Error getting post:', error);
+      logger.error('Error getting post', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -1677,18 +2096,18 @@ export class DatabaseStorage implements IStorage {
       
       return true;
     } catch (error) {
-      console.error('Error incrementing post view:', error);
+      logger.error('Error incrementing post view', undefined, error as Error, 'server');
       return false;
     }
   }
   
   async createPost(post: InsertPost): Promise<Post> {
     try {
-      console.log('Creating post with data:', post);
+      logger.debug('Creating post with data', { post }, 'server');
       const [newPost] = await db.insert(posts).values(post).returning();
       return newPost;
     } catch (error) {
-      console.error('Error creating post:', error);
+      logger.error('Error creating post', undefined, error as Error, 'server');
       throw new Error('Failed to create post');
     }
   }
@@ -1706,6 +2125,7 @@ export class DatabaseStorage implements IStorage {
           imageUrl: posts.imageUrl,
           videoUrl: posts.videoUrl,
           productId: posts.productId,
+          eventId: posts.eventId,
           likes: posts.likes,
           comments: posts.comments,
           shares: posts.shares,
@@ -1714,6 +2134,8 @@ export class DatabaseStorage implements IStorage {
           isPromoted: posts.isPromoted,
           promotionEndDate: posts.promotionEndDate,
           isPublished: posts.isPublished,
+          publishStatus: posts.publishStatus,
+          publishAt: posts.publishAt,
           isFlagged: posts.isFlagged,
           flagReason: posts.flagReason,
           reviewStatus: posts.reviewStatus,
@@ -1736,7 +2158,7 @@ export class DatabaseStorage implements IStorage {
             discountPrice: products.discountPrice,
             imageUrl: products.imageUrl,
             category: products.category,
-            stock: products.stock,
+            stock: products.inventory,
             vendorId: products.vendorId
           },
           vendor: {
@@ -1762,7 +2184,7 @@ export class DatabaseStorage implements IStorage {
         } : null
       };
     } catch (error) {
-      console.error('Error getting post by ID:', error);
+      logger.error('Error getting post by ID', undefined, error as Error, 'server');
       throw error;
     }
   }
@@ -1803,7 +2225,7 @@ export class DatabaseStorage implements IStorage {
 
       return commentWithUser;
     } catch (error) {
-      console.error('Error adding comment:', error);
+      logger.error('Error adding comment', undefined, error as Error, 'server');
       throw error;
     }
   }
@@ -1819,7 +2241,7 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(posts.id, postId));
     } catch (error) {
-      console.error('Error incrementing post comments:', error);
+      logger.error('Error incrementing post comments', undefined, error as Error, 'server');
       throw error;
     }
   }
@@ -1869,7 +2291,7 @@ export class DatabaseStorage implements IStorage {
         return { liked: true };
       }
     } catch (error) {
-      console.error('Error toggling post like:', error);
+      logger.error('Error toggling post like', undefined, error as Error, 'server');
       throw error;
     }
   }
@@ -1903,7 +2325,7 @@ export class DatabaseStorage implements IStorage {
         return { saved: true };
       }
     } catch (error) {
-      console.error('Error toggling post save:', error);
+      logger.error('Error toggling post save', undefined, error as Error, 'server');
       throw error;
     }
   }
@@ -1919,7 +2341,7 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(posts.id, postId));
     } catch (error) {
-      console.error('Error incrementing post shares:', error);
+      logger.error('Error incrementing post shares', undefined, error as Error, 'server');
       throw error;
     }
   }
@@ -1935,7 +2357,7 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(posts.id, postId));
     } catch (error) {
-      console.error('Error incrementing post views:', error);
+      logger.error('Error incrementing post views', undefined, error as Error, 'server');
       throw error;
     }
   }
@@ -1953,6 +2375,7 @@ export class DatabaseStorage implements IStorage {
           imageUrl: posts.imageUrl,
           videoUrl: posts.videoUrl,
           productId: posts.productId,
+          eventId: posts.eventId,
           likes: posts.likes,
           comments: posts.comments,
           shares: posts.shares,
@@ -1961,6 +2384,10 @@ export class DatabaseStorage implements IStorage {
           isPromoted: posts.isPromoted,
           promotionEndDate: posts.promotionEndDate,
           isPublished: posts.isPublished,
+          publishStatus: posts.publishStatus,
+          publishAt: posts.publishAt,
+          contentJson: posts.contentJson,
+          contentVersion: posts.contentVersion,
           isFlagged: posts.isFlagged,
           flagReason: posts.flagReason,
           reviewStatus: posts.reviewStatus,
@@ -1985,7 +2412,7 @@ export class DatabaseStorage implements IStorage {
           product_discountPrice: products.discountPrice,
           product_imageUrl: products.imageUrl,
           product_category: products.category,
-          product_stock: products.stock,
+          product_stock: products.inventory,
           product_vendorId: products.vendorId,
           // Vendor fields
           vendor_id: vendors.id,
@@ -2009,6 +2436,7 @@ export class DatabaseStorage implements IStorage {
         imageUrl: row.imageUrl,
         videoUrl: row.videoUrl,
         productId: row.productId,
+        eventId: row.eventId,
         likes: row.likes,
         comments: row.comments,
         shares: row.shares,
@@ -2017,6 +2445,10 @@ export class DatabaseStorage implements IStorage {
         isPromoted: row.isPromoted,
         promotionEndDate: row.promotionEndDate,
         isPublished: row.isPublished,
+        publishStatus: row.publishStatus,
+        publishAt: row.publishAt,
+        contentJson: row.contentJson,
+        contentVersion: row.contentVersion,
         isFlagged: row.isFlagged,
         flagReason: row.flagReason,
         reviewStatus: row.reviewStatus,
@@ -2049,7 +2481,7 @@ export class DatabaseStorage implements IStorage {
         } : null
       }));
     } catch (error) {
-      console.error('Error getting all posts:', error);
+      logger.error('Error getting all posts', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -2072,7 +2504,12 @@ export class DatabaseStorage implements IStorage {
         })
         .from(posts)
         .innerJoin(users, eq(posts.userId, users.id))
-        .where(eq(posts.isPublished, true))
+        .where(
+          and(
+            eq(posts.isPublished, true),
+            eq(posts.publishStatus, 'published') // Only show published posts
+          )
+        )
         .orderBy(desc(posts.createdAt))
         .limit(limit)
         .offset(offset);
@@ -2116,7 +2553,7 @@ export class DatabaseStorage implements IStorage {
                     vendorName = vendorResult.storeName || vendorResult.businessName || 'Unknown Vendor';
                   }
                 } catch (vendorError) {
-                  console.error(`Error fetching vendor:`, vendorError);
+                  logger.error('Error fetching vendor', undefined, vendorError as Error, 'server');
                 }
                 
                 product = {
@@ -2127,7 +2564,7 @@ export class DatabaseStorage implements IStorage {
               }
 
             } catch (error) {
-              console.error(`Error fetching product ${post.productId}:`, error);
+              logger.error('Error fetching product', { productId: post.productId }, error as Error, 'server');
             }
           }
           
@@ -2176,7 +2613,7 @@ export class DatabaseStorage implements IStorage {
         isSaved: savedPostIds.includes(post.id)
       }));
     } catch (error) {
-      console.error('Error getting paginated posts:', error);
+      logger.error('Error getting paginated posts', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -2190,7 +2627,7 @@ export class DatabaseStorage implements IStorage {
       
       return result[0]?.count || 0;
     } catch (error) {
-      console.error('Error getting total posts count:', error);
+      logger.error('Error getting total posts count', undefined, error as Error, 'server');
       return 0;
     }
   }
@@ -2207,7 +2644,7 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return updatedPost;
     } catch (error) {
-      console.error('Error updating post:', error);
+      logger.error('Error updating post', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -2216,7 +2653,21 @@ export class DatabaseStorage implements IStorage {
   
   async getFeedPosts(userId?: number, sortBy: string = 'recent', limit: number = 10, offset: number = 0): Promise<Post[]> {
     try {
-      let query = db
+      // Get user IDs to include if filtering by follows
+      let userIdsToInclude: number[] | undefined;
+      if (userId) {
+        const followingUserIds = await db
+          .select({ followingId: follows.followingId })
+          .from(follows)
+          .where(eq(follows.followerId, userId));
+        
+        if (followingUserIds.length > 0) {
+          userIdsToInclude = [userId, ...followingUserIds.map(f => f.followingId)];
+        }
+      }
+      
+      // Build the base query with product and vendor joins
+      let baseQuery = db
         .select({
           post: posts,
           user: {
@@ -2224,66 +2675,81 @@ export class DatabaseStorage implements IStorage {
             username: users.username,
             name: users.name,
             avatar: users.avatar
+          },
+          product: {
+            id: products.id,
+            name: products.name,
+            description: products.description,
+            price: products.price,
+            discountPrice: products.discountPrice,
+            imageUrl: products.imageUrl,
+            category: products.category,
+            stock: products.inventory,
+            vendorId: products.vendorId
+          },
+          vendor: {
+            id: vendors.id,
+            storeName: vendors.storeName,
+            businessName: vendors.businessName,
+            rating: vendors.rating
           }
         })
         .from(posts)
-        .innerJoin(users, eq(posts.userId, users.id));
+        .innerJoin(users, eq(posts.userId, users.id))
+        .leftJoin(products, eq(posts.productId, products.id))
+        .leftJoin(vendors, eq(products.vendorId, vendors.id))
+        .$dynamic();
       
-      // If userId is provided, filter to only show posts from users they follow
-      if (userId) {
-        const followingUserIds = await db
-          .select({ followingId: follows.followingId })
-          .from(follows)
-          .where(eq(follows.followerId, userId));
-        
-        // Only add the filter if they follow anyone
-        if (followingUserIds.length > 0) {
-          const userIdsToInclude = [userId, ...followingUserIds.map(f => f.followingId)];
-          query = db
-            .select({
-              post: posts,
-              user: {
-                id: users.id,
-                username: users.username,
-                name: users.name,
-                avatar: users.avatar
-              }
-            })
-            .from(posts)
-            .innerJoin(users, eq(posts.userId, users.id))
-            .where(inArray(posts.userId, userIdsToInclude));
-        }
+      // Apply user filter if needed
+      if (userIdsToInclude) {
+        baseQuery = baseQuery.where(
+          and(
+            eq(posts.publishStatus, 'published'), // Only show published posts
+            inArray(posts.userId, userIdsToInclude)
+          )
+        );
+      } else {
+        baseQuery = baseQuery.where(eq(posts.publishStatus, 'published')); // Only show published posts
       }
       
-      // Sort by the specified criteria
+      // Apply sorting
       if (sortBy === 'recent') {
-        query = query.orderBy(desc(posts.createdAt));
+        baseQuery = baseQuery.orderBy(desc(posts.createdAt));
       } else if (sortBy === 'popular') {
-        // Sort by a combination of likes, comments, and recency
-        query = query.orderBy(desc(sql`${posts.likes} + ${posts.comments}`));
+        baseQuery = baseQuery.orderBy(desc(sql`${posts.likes} + ${posts.comments}`));
       } else if (sortBy === 'trending') {
-        // For trending, prioritize recent posts with engagement
         const oneWeekAgo = new Date();
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        
-        query = query
+        baseQuery = baseQuery
           .where(sql`${posts.createdAt} > ${oneWeekAgo}`)
           .orderBy(desc(sql`${posts.likes} + ${posts.comments} * 2`));
       }
       
-      const results = await query.limit(limit).offset(offset);
+      const results = await baseQuery.limit(limit).offset(offset);
       
-      return results.map(({ post, user }) => ({
+      return results.map(({ post, user, product, vendor }) => ({
         ...post,
         user: {
           id: user.id,
           username: user.username,
           name: user.name,
           avatar: user.avatar
-        }
+        },
+        product: product && product.id ? {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          price: product.price,
+          discountPrice: product.discountPrice,
+          imageUrl: product.imageUrl,
+          category: product.category,
+          stock: product.stock,
+          vendorId: product.vendorId,
+          vendorName: vendor?.storeName || vendor?.businessName
+        } : null
       })) as Post[];
     } catch (error) {
-      console.error('Error getting feed posts:', error);
+      logger.error('Error getting feed posts', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -2302,25 +2768,61 @@ export class DatabaseStorage implements IStorage {
             username: users.username,
             name: users.name,
             avatar: users.avatar
+          },
+          product: {
+            id: products.id,
+            name: products.name,
+            description: products.description,
+            price: products.price,
+            discountPrice: products.discountPrice,
+            imageUrl: products.imageUrl,
+            category: products.category,
+            stock: products.inventory,
+            vendorId: products.vendorId
+          },
+          vendor: {
+            id: vendors.id,
+            storeName: vendors.storeName,
+            businessName: vendors.businessName,
+            rating: vendors.rating
           }
         })
         .from(posts)
         .innerJoin(users, eq(posts.userId, users.id))
-        .where(sql`${posts.createdAt} > ${oneWeekAgo}`)
+        .leftJoin(products, eq(posts.productId, products.id))
+        .leftJoin(vendors, eq(products.vendorId, vendors.id))
+        .where(
+          and(
+            eq(posts.publishStatus, 'published'), // Only show published posts
+            sql`${posts.createdAt} > ${oneWeekAgo}`
+          )
+        )
         .orderBy(desc(sql`(${posts.likes} * 1.0) + (${posts.comments} * 2.0)`))
         .limit(limit);
       
-      return trendingPosts.map(({ post, user }) => ({
+      return trendingPosts.map(({ post, user, product, vendor }) => ({
         ...post,
         user: {
           id: user.id,
           username: user.username,
           name: user.name,
           avatar: user.avatar
-        }
+        },
+        product: product && product.id ? {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          price: product.price,
+          discountPrice: product.discountPrice,
+          imageUrl: product.imageUrl,
+          category: product.category,
+          stock: product.stock,
+          vendorId: product.vendorId,
+          vendorName: vendor?.storeName || vendor?.businessName
+        } : null
       })) as Post[];
     } catch (error) {
-      console.error('Error getting trending posts:', error);
+      logger.error('Error getting trending posts', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -2346,7 +2848,7 @@ export class DatabaseStorage implements IStorage {
         count: Number(tc.count)
       }));
     } catch (error) {
-      console.error('Error getting popular tags:', error);
+      logger.error('Error getting popular tags', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -2371,7 +2873,7 @@ export class DatabaseStorage implements IStorage {
         return userData as User;
       });
     } catch (error) {
-      console.error('Error getting suggested users:', error);
+      logger.error('Error getting suggested users', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -2381,7 +2883,7 @@ export class DatabaseStorage implements IStorage {
       // First get the user's location information
       const [currentUser] = await db.select().from(users).where(eq(users.id, userId));
       if (!currentUser) {
-        console.log('[DEBUG] User not found for location filtering');
+        logger.debug('User not found for location filtering', 'server');
         return [];
       }
 
@@ -2393,11 +2895,11 @@ export class DatabaseStorage implements IStorage {
       } else if (locationType === 'region' && currentUser.region) {
         locationFilter = eq(users.region, currentUser.region);
       } else {
-        console.log(`[DEBUG] No ${locationType} data available for filtering`);
+        logger.debug(`No ${locationType} data available for filtering`, 'server');
         return [];
       }
 
-      console.log(`[DEBUG] Filtering posts by ${locationType}: ${locationType === 'city' ? currentUser.city : locationType === 'country' ? currentUser.country : currentUser.region}`);
+      logger.debug(`Filtering posts by ${locationType}: ${locationType === 'city' ? currentUser.city : locationType === 'country' ? currentUser.country : currentUser.region}`, 'server');
 
       const postsWithUsers = await db
         .select({
@@ -2410,6 +2912,7 @@ export class DatabaseStorage implements IStorage {
           imageUrl: posts.imageUrl,
           videoUrl: posts.videoUrl,
           productId: posts.productId,
+          eventId: posts.eventId,
           likes: posts.likes,
           comments: posts.comments,
           shares: posts.shares,
@@ -2418,6 +2921,10 @@ export class DatabaseStorage implements IStorage {
           isPromoted: posts.isPromoted,
           promotionEndDate: posts.promotionEndDate,
           isPublished: posts.isPublished,
+          publishStatus: posts.publishStatus,
+          publishAt: posts.publishAt,
+          contentJson: posts.contentJson,
+          contentVersion: posts.contentVersion,
           isFlagged: posts.isFlagged,
           flagReason: posts.flagReason,
           reviewStatus: posts.reviewStatus,
@@ -2454,6 +2961,7 @@ export class DatabaseStorage implements IStorage {
         imageUrl: row.imageUrl,
         videoUrl: row.videoUrl,
         productId: row.productId,
+        eventId: row.eventId,
         likes: row.likes,
         comments: row.comments,
         shares: row.shares,
@@ -2462,6 +2970,10 @@ export class DatabaseStorage implements IStorage {
         isPromoted: row.isPromoted,
         promotionEndDate: row.promotionEndDate,
         isPublished: row.isPublished,
+        publishStatus: row.publishStatus,
+        publishAt: row.publishAt,
+        contentJson: row.contentJson,
+        contentVersion: row.contentVersion,
         isFlagged: row.isFlagged,
         flagReason: row.flagReason,
         reviewStatus: row.reviewStatus,
@@ -2481,7 +2993,7 @@ export class DatabaseStorage implements IStorage {
         }
       }));
     } catch (error) {
-      console.error('Error getting posts by location:', error);
+      logger.error('Error getting posts by location', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -2522,7 +3034,7 @@ export class DatabaseStorage implements IStorage {
       
       return true;
     } catch (error) {
-      console.error('Error liking post:', error);
+      logger.error('Error liking post', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -2561,7 +3073,7 @@ export class DatabaseStorage implements IStorage {
       
       return true;
     } catch (error) {
-      console.error('Error unliking post:', error);
+      logger.error('Error unliking post', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -2580,7 +3092,7 @@ export class DatabaseStorage implements IStorage {
       
       return !!existingLike;
     } catch (error) {
-      console.error('Error checking if user liked post:', error);
+      logger.error('Error checking if user liked post', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -2605,15 +3117,15 @@ export class DatabaseStorage implements IStorage {
       
       return postLikes.map(({ like, user }) => ({
         id: like.id,
-        userId: user.id,
-        username: user.username,
-        name: user.name,
-        avatar: user.avatar,
-        isVendor: user.isVendor,
+        userId: user?.id || 0,
+        username: user?.username || '',
+        name: user?.name || '',
+        avatar: user?.avatar || null,
+        isVendor: user?.isVendor || false,
         createdAt: like.createdAt
       }));
     } catch (error) {
-      console.error('Error getting post likes:', error);
+      logger.error('Error getting post likes', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -2634,7 +3146,7 @@ export class DatabaseStorage implements IStorage {
       
       return newComment;
     } catch (error) {
-      console.error('Error creating comment:', error);
+      logger.error('Error creating comment', undefined, error as Error, 'server');
       throw new Error('Failed to create comment');
     }
   }
@@ -2661,14 +3173,14 @@ export class DatabaseStorage implements IStorage {
       return postComments.map(({ comment, user }) => ({
         ...comment,
         user: {
-          id: user.id,
-          username: user.username,
-          name: user.name,
-          avatar: user.avatar
+          id: user?.id || 0,
+          username: user?.username || '',
+          name: user?.name || '',
+          avatar: user?.avatar || null
         }
       })) as Comment[];
     } catch (error) {
-      console.error('Error getting post comments:', error);
+      logger.error('Error getting post comments', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -2699,7 +3211,7 @@ export class DatabaseStorage implements IStorage {
       
       return true;
     } catch (error) {
-      console.error('Error deleting comment:', error);
+      logger.error('Error deleting comment', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -2727,14 +3239,14 @@ export class DatabaseStorage implements IStorage {
       return {
         ...comment.comment,
         user: {
-          id: comment.user.id,
-          username: comment.user.username,
-          name: comment.user.name,
-          avatar: comment.user.avatar
+          id: comment.user?.id || 0,
+          username: comment.user?.username || '',
+          name: comment.user?.name || '',
+          avatar: comment.user?.avatar || null
         }
       } as Comment;
     } catch (error) {
-      console.error('Error getting comment:', error);
+      logger.error('Error getting comment', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -2770,7 +3282,7 @@ export class DatabaseStorage implements IStorage {
         user
       } as Comment;
     } catch (error) {
-      console.error('Error updating comment:', error);
+      logger.error('Error updating comment', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -2789,7 +3301,7 @@ export class DatabaseStorage implements IStorage {
       
       return like;
     } catch (error) {
-      console.error('Error getting post like:', error);
+      logger.error('Error getting post like', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -2810,7 +3322,7 @@ export class DatabaseStorage implements IStorage {
         userId
       });
     } catch (error) {
-      console.error('Error saving post:', error);
+      logger.error('Error saving post', undefined, error as Error, 'server');
       throw new Error('Failed to save post');
     }
   }
@@ -2830,7 +3342,7 @@ export class DatabaseStorage implements IStorage {
       // Return true if at least one record was deleted
       return result.rowCount > 0;
     } catch (error) {
-      console.error('Error unsaving post:', error);
+      logger.error('Error unsaving post', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -2849,7 +3361,7 @@ export class DatabaseStorage implements IStorage {
       
       return !!savedPost; // Return true if savedPost exists, false otherwise
     } catch (error) {
-      console.error('Error checking saved post:', error);
+      logger.error('Error checking saved post', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -2890,7 +3402,8 @@ export class DatabaseStorage implements IStorage {
         .where(
           and(
             inArray(posts.id, postIds),
-            eq(savedPosts.userId, userId)
+            eq(savedPosts.userId, userId),
+            eq(posts.publishStatus, 'published') // Only show published posts
           )
         )
         .orderBy(desc(savedPosts.createdAt));
@@ -2910,7 +3423,7 @@ export class DatabaseStorage implements IStorage {
         } as Post;
       });
     } catch (error) {
-      console.error('Error getting saved posts:', error);
+      logger.error('Error getting saved posts', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -2929,7 +3442,7 @@ export class DatabaseStorage implements IStorage {
       
       return promotedPost;
     } catch (error) {
-      console.error('Error promoting post:', error);
+      logger.error('Error promoting post', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -2948,7 +3461,7 @@ export class DatabaseStorage implements IStorage {
       
       return unpromoted;
     } catch (error) {
-      console.error('Error un-promoting post:', error);
+      logger.error('Error un-promoting post', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -2962,7 +3475,7 @@ export class DatabaseStorage implements IStorage {
       
       return result?.count || 0;
     } catch (error) {
-      console.error('Error getting user count:', error);
+      logger.error('Error getting user count', undefined, error as Error, 'server');
       return 0;
     }
   }
@@ -2975,7 +3488,7 @@ export class DatabaseStorage implements IStorage {
       
       return result?.count || 0;
     } catch (error) {
-      console.error('Error getting product count:', error);
+      logger.error('Error getting product count', undefined, error as Error, 'server');
       return 0;
     }
   }
@@ -2988,7 +3501,7 @@ export class DatabaseStorage implements IStorage {
       
       return result?.count || 0;
     } catch (error) {
-      console.error('Error getting order count:', error);
+      logger.error('Error getting order count', undefined, error as Error, 'server');
       return 0;
     }
   }
@@ -3001,7 +3514,7 @@ export class DatabaseStorage implements IStorage {
       
       return result?.count || 0;
     } catch (error) {
-      console.error('Error getting community count:', error);
+      logger.error('Error getting community count', undefined, error as Error, 'server');
       return 0;
     }
   }
@@ -3013,16 +3526,16 @@ export class DatabaseStorage implements IStorage {
         id: communities.id,
         name: communities.name,
         description: communities.description,
-        coverImage: communities.coverImage,
-        icon: communities.icon,
+        logo: communities.logo,
+        bannerImage: communities.bannerImage,
         memberCount: communities.memberCount,
-        creatorId: communities.creatorId,
+        ownerId: communities.ownerId,
         visibility: communities.visibility,
         isVerified: communities.isVerified,
         createdAt: communities.createdAt
       })
         .from(communities)
-        .where(eq(communities.creatorId, userId))
+        .where(eq(communities.ownerId, userId))
         .orderBy(desc(communities.createdAt));
       
       // Also get communities the user is a member of but didn't create
@@ -3030,10 +3543,10 @@ export class DatabaseStorage implements IStorage {
         id: communities.id,
         name: communities.name,
         description: communities.description,
-        coverImage: communities.coverImage,
-        icon: communities.icon,
+        logo: communities.logo,
+        bannerImage: communities.bannerImage,
         memberCount: communities.memberCount,
-        creatorId: communities.creatorId,
+        ownerId: communities.ownerId,
         visibility: communities.visibility,
         isVerified: communities.isVerified,
         createdAt: communities.createdAt
@@ -3043,7 +3556,7 @@ export class DatabaseStorage implements IStorage {
         .where(
           and(
             eq(communityMembers.userId, userId),
-            sql`${communities.creatorId} != ${userId}`
+            ne(communities.ownerId, userId)
           )
         )
         .orderBy(desc(communities.createdAt));
@@ -3051,14 +3564,14 @@ export class DatabaseStorage implements IStorage {
       // Combine the two sets
       return [...userCommunities, ...memberCommunities];
     } catch (error) {
-      console.error('Error getting user communities:', error);
+      logger.error('Error getting user communities', undefined, error as Error, 'server');
       return [];
     }
   }
   
   async countPosts(options: any): Promise<number> {
     try {
-      let query = db.select({ count: count() }).from(posts);
+      let query = db.select({ count: count() }).from(posts).$dynamic();
       
       if (options.isFlagged !== undefined) {
         query = query.where(eq(posts.isFlagged, options.isFlagged));
@@ -3071,15 +3584,308 @@ export class DatabaseStorage implements IStorage {
       const [result] = await query;
       return result?.count || 0;
     } catch (error) {
-      console.error('Error counting posts:', error);
+      logger.error('Error counting posts', undefined, error as Error, 'server');
       return 0;
+    }
+  }
+  
+  // Exclusive content operations
+  async getCommunityContent(contentId: number): Promise<CommunityContent | undefined> {
+    try {
+      const [content] = await db
+        .select()
+        .from(communityContents)
+        .where(eq(communityContents.id, contentId));
+      return content;
+    } catch (error) {
+      logger.error('Error getting community content', { contentId }, error as Error, 'storage');
+      return undefined;
+    }
+  }
+  
+  async canUserAccessContent(userId: number, contentId: number): Promise<boolean> {
+    try {
+      // Get the content to check which tier is required
+      const content = await this.getCommunityContent(contentId);
+      if (!content) return false;
+      
+      // Check if user is the creator
+      if (content.creatorId === userId) return true;
+      
+      // Check if user is admin or owner of the community
+      const isAdmin = await this.isUserCommunityAdminOrOwner(userId, content.communityId);
+      if (isAdmin) return true;
+      
+      // Check if user has an active membership for the required tier
+      const [membership] = await db
+        .select()
+        .from(memberships)
+        .where(
+          and(
+            eq(memberships.userId, userId),
+            eq(memberships.tierId, content.tierId),
+            eq(memberships.communityId, content.communityId),
+            eq(memberships.status, 'active')
+          )
+        );
+      
+      return !!membership;
+    } catch (error) {
+      logger.error('Error checking user content access', { userId, contentId }, error as Error, 'storage');
+      return false;
+    }
+  }
+  
+  async listCommunityContent(communityId: number): Promise<CommunityContent[]> {
+    try {
+      const content = await db
+        .select()
+        .from(communityContents)
+        .where(eq(communityContents.communityId, communityId))
+        .orderBy(desc(communityContents.createdAt));
+      return content;
+    } catch (error) {
+      logger.error('Error listing community content', { communityId }, error as Error, 'storage');
+      return [];
+    }
+  }
+  
+  async getMembershipTier(tierId: number, communityId?: number): Promise<MembershipTier | undefined> {
+    try {
+      const query = db
+        .select()
+        .from(membershipTiers)
+        .where(eq(membershipTiers.id, tierId));
+      
+      const [tier] = await query;
+      return tier;
+    } catch (error) {
+      logger.error('Error getting membership tier', { tierId, communityId }, error as Error, 'storage');
+      return undefined;
+    }
+  }
+  
+  async getAccessibleCommunityContent(communityId: number, userId: number): Promise<CommunityContent[]> {
+    try {
+      // Get all content for this community
+      const allContent = await this.listCommunityContent(communityId);
+      
+      // Filter to only content the user can access
+      const accessibleContent = [];
+      for (const content of allContent) {
+        const hasAccess = await this.canUserAccessContent(userId, content.id);
+        if (hasAccess) {
+          accessibleContent.push(content);
+        }
+      }
+      
+      return accessibleContent;
+    } catch (error) {
+      logger.error('Error getting accessible community content', { communityId, userId }, error as Error, 'storage');
+      return [];
+    }
+  }
+  
+  async isUserCommunityAdminOrOwner(userId: number, communityId: number): Promise<boolean> {
+    try {
+      // Check if user is the owner of the community
+      const [community] = await db
+        .select()
+        .from(communities)
+        .where(eq(communities.id, communityId));
+      
+      if (community && community.ownerId === userId) return true;
+      
+      // Check if user is an admin or moderator in the community
+      const [member] = await db
+        .select()
+        .from(communityMembers)
+        .where(
+          and(
+            eq(communityMembers.communityId, communityId),
+            eq(communityMembers.userId, userId),
+            inArray(communityMembers.role, ['owner', 'admin', 'moderator'])
+          )
+        );
+      
+      return !!member;
+    } catch (error) {
+      logger.error('Error checking if user is community admin/owner', { userId, communityId }, error as Error, 'storage');
+      return false;
+    }
+  }
+  
+  async createCommunityContent(contentData: InsertCommunityContent): Promise<CommunityContent> {
+    try {
+      const [newContent] = await db
+        .insert(communityContents)
+        .values(contentData)
+        .returning();
+      
+      logger.info('Community content created', { contentId: newContent.id, communityId: contentData.communityId }, 'storage');
+      return newContent;
+    } catch (error) {
+      logger.error('Error creating community content', { contentData }, error as Error, 'storage');
+      throw error;
+    }
+  }
+  
+  async updateCommunityContent(contentId: number, updates: Partial<CommunityContent>): Promise<CommunityContent | undefined> {
+    try {
+      const [updated] = await db
+        .update(communityContents)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(communityContents.id, contentId))
+        .returning();
+      
+      logger.info('Community content updated', { contentId }, 'storage');
+      return updated;
+    } catch (error) {
+      logger.error('Error updating community content', { contentId, updates }, error as Error, 'storage');
+      return undefined;
+    }
+  }
+  
+  async deleteCommunityContent(contentId: number): Promise<boolean> {
+    try {
+      await db
+        .delete(communityContents)
+        .where(eq(communityContents.id, contentId));
+      
+      logger.info('Community content deleted', { contentId }, 'storage');
+      return true;
+    } catch (error) {
+      logger.error('Error deleting community content', { contentId }, error as Error, 'storage');
+      return false;
+    }
+  }
+  
+  async incrementContentViewCount(contentId: number): Promise<boolean> {
+    try {
+      await db
+        .update(communityContents)
+        .set({ viewCount: sql`${communityContents.viewCount} + 1` })
+        .where(eq(communityContents.id, contentId));
+      
+      return true;
+    } catch (error) {
+      logger.error('Error incrementing content view count', { contentId }, error as Error, 'storage');
+      return false;
+    }
+  }
+  
+  async likeContent(userId: number, contentId: number): Promise<CommunityContentLike> {
+    try {
+      // Insert like record
+      const [like] = await db
+        .insert(communityContentLikes)
+        .values({ userId, contentId })
+        .returning();
+      
+      // Increment like count
+      await db
+        .update(communityContents)
+        .set({ likeCount: sql`${communityContents.likeCount} + 1` })
+        .where(eq(communityContents.id, contentId));
+      
+      logger.info('Content liked', { userId, contentId }, 'storage');
+      return like;
+    } catch (error) {
+      logger.error('Error liking content', { userId, contentId }, error as Error, 'storage');
+      throw error;
+    }
+  }
+  
+  async unlikeContent(userId: number, contentId: number): Promise<boolean> {
+    try {
+      // Delete like record
+      await db
+        .delete(communityContentLikes)
+        .where(
+          and(
+            eq(communityContentLikes.userId, userId),
+            eq(communityContentLikes.contentId, contentId)
+          )
+        );
+      
+      // Decrement like count
+      await db
+        .update(communityContents)
+        .set({ likeCount: sql`GREATEST(0, ${communityContents.likeCount} - 1)` })
+        .where(eq(communityContents.id, contentId));
+      
+      logger.info('Content unliked', { userId, contentId }, 'storage');
+      return true;
+    } catch (error) {
+      logger.error('Error unliking content', { userId, contentId }, error as Error, 'storage');
+      return false;
+    }
+  }
+  
+  async getCommunityContentByTier(communityId: number, tier: number): Promise<CommunityContent[]> {
+    try {
+      const content = await db
+        .select()
+        .from(communityContents)
+        .where(
+          and(
+            eq(communityContents.communityId, communityId),
+            eq(communityContents.tierId, tier)
+          )
+        )
+        .orderBy(desc(communityContents.createdAt));
+      
+      return content;
+    } catch (error) {
+      logger.error('Error getting content by tier', { communityId, tier }, error as Error, 'storage');
+      return [];
+    }
+  }
+  
+  async getCommunityContentByType(communityId: number, contentType: string): Promise<CommunityContent[]> {
+    try {
+      const content = await db
+        .select()
+        .from(communityContents)
+        .where(
+          and(
+            eq(communityContents.communityId, communityId),
+            eq(communityContents.contentType, contentType as any)
+          )
+        )
+        .orderBy(desc(communityContents.createdAt));
+      
+      return content;
+    } catch (error) {
+      logger.error('Error getting content by type', { communityId, contentType }, error as Error, 'storage');
+      return [];
+    }
+  }
+  
+  async getFeaturedCommunityContent(communityId: number): Promise<CommunityContent[]> {
+    try {
+      const content = await db
+        .select()
+        .from(communityContents)
+        .where(
+          and(
+            eq(communityContents.communityId, communityId),
+            eq(communityContents.isFeatured, true)
+          )
+        )
+        .orderBy(desc(communityContents.createdAt));
+      
+      return content;
+    } catch (error) {
+      logger.error('Error getting featured content', { communityId }, error as Error, 'storage');
+      return [];
     }
   }
   
   // Order analytics
   async countOrders(options: any): Promise<number> {
     try {
-      let query = db.select({ count: count() }).from(orders);
+      let query = db.select({ count: count() }).from(orders).$dynamic();
       
       if (options.status) {
         query = query.where(eq(orders.status, options.status));
@@ -3088,7 +3894,7 @@ export class DatabaseStorage implements IStorage {
       const [result] = await query;
       return result?.count || 0;
     } catch (error) {
-      console.error('Error counting orders:', error);
+      logger.error('Error counting orders', undefined, error as Error, 'server');
       return 0;
     }
   }
@@ -3100,9 +3906,9 @@ export class DatabaseStorage implements IStorage {
         .from(orders)
         .where(eq(orders.paymentStatus, 'completed'));
       
-      return result?.total || 0;
+      return (result?.total as number) || 0;
     } catch (error) {
-      console.error('Error calculating total revenue:', error);
+      logger.error('Error calculating total revenue', undefined, error as Error, 'server');
       return 0;
     }
   }
@@ -3114,9 +3920,9 @@ export class DatabaseStorage implements IStorage {
         .from(orders)
         .where(eq(orders.paymentStatus, 'completed'));
       
-      return result?.avg || 0;
+      return (result?.avg as number) || 0;
     } catch (error) {
-      console.error('Error calculating average order value:', error);
+      logger.error('Error calculating average order value', undefined, error as Error, 'server');
       return 0;
     }
   }
@@ -3128,7 +3934,7 @@ export class DatabaseStorage implements IStorage {
       // This prevents the app from crashing
       return [];
     } catch (error) {
-      console.error('Error getting top selling products:', error);
+      logger.error('Error getting top selling products', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -3166,7 +3972,7 @@ export class DatabaseStorage implements IStorage {
       
       const totalRevenue = await db
         .select({
-          revenue: sql`SUM(${orderItems.price} * ${orderItems.quantity})`,
+          revenue: sql`SUM(${orderItems.unitPrice} * ${orderItems.quantity})`,
         })
         .from(orderItems)
         .innerJoin(orders, eq(orderItems.orderId, orders.id))
@@ -3185,8 +3991,8 @@ export class DatabaseStorage implements IStorage {
       
       const previousPeriod = await db
         .select({
-          count: sql`SUM(${orderItems.quantity})`,
-          revenue: sql`SUM(${orderItems.price} * ${orderItems.quantity})`,
+          count: sql<number>`SUM(${orderItems.quantity})`,
+          revenue: sql<number>`SUM(${orderItems.unitPrice} * ${orderItems.quantity})`,
         })
         .from(orderItems)
         .innerJoin(orders, eq(orderItems.orderId, orders.id))
@@ -3199,12 +4005,17 @@ export class DatabaseStorage implements IStorage {
         );
       
       // Calculate growth percentages
-      const salesGrowth = previousPeriod[0]?.count > 0 
-        ? ((totalSold[0]?.count || 0) - (previousPeriod[0]?.count || 0)) / (previousPeriod[0]?.count || 1) * 100 
+      const prevCount = Number(previousPeriod[0]?.count) || 0;
+      const prevRevenue = Number(previousPeriod[0]?.revenue) || 0;
+      const currentCount = Number(totalSold[0]?.count) || 0;
+      const currentRevenue = Number(totalRevenue[0]?.revenue) || 0;
+      
+      const salesGrowth = prevCount > 0 
+        ? ((currentCount - prevCount) / prevCount) * 100 
         : 0;
       
-      const revenueGrowth = previousPeriod[0]?.revenue > 0 
-        ? ((totalRevenue[0]?.revenue || 0) - (previousPeriod[0]?.revenue || 0)) / (previousPeriod[0]?.revenue || 1) * 100 
+      const revenueGrowth = prevRevenue > 0 
+        ? ((currentRevenue - prevRevenue) / prevRevenue) * 100 
         : 0;
       
       return {
@@ -3215,7 +4026,7 @@ export class DatabaseStorage implements IStorage {
         timeRange: timeRange
       };
     } catch (error) {
-      console.error('Error getting product performance metrics:', error);
+      logger.error('Error getting product performance metrics', undefined, error as Error, 'server');
       return {
         totalSold: 0,
         totalRevenue: 0,
@@ -3268,7 +4079,7 @@ export class DatabaseStorage implements IStorage {
       
       return combinedData;
     } catch (error) {
-      console.error('Error getting category trends data:', error);
+      logger.error('Error getting category trends data', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -3316,7 +4127,7 @@ export class DatabaseStorage implements IStorage {
         timeRange: timeRange
       };
     } catch (error) {
-      console.error('Error getting revenue by category:', error);
+      logger.error('Error getting revenue by category', undefined, error as Error, 'server');
       return {
         categories: [],
         data: [],
@@ -3332,20 +4143,20 @@ export class DatabaseStorage implements IStorage {
         .select({
           id: products.id,
           name: products.name,
-          stock: products.quantity, // Using quantity field instead of stock
+          stock: products.inventory,
           category: categories.name,
           price: products.price,
-          thumbnail: products.thumbnail // Using thumbnail field instead of image
+          thumbnail: products.thumbnail
         })
         .from(products)
         .leftJoin(categories, eq(products.category, categories.name))
         .where(
           or(
-            lte(products.quantity, 5), // Low stock threshold
-            eq(products.quantity, 0)   // Out of stock
+            lte(products.inventory, 5), // Low stock threshold
+            eq(products.inventory, 0)   // Out of stock
           )
         )
-        .orderBy(asc(products.quantity))
+        .orderBy(asc(products.inventory))
         .limit(20);
       
       return lowInventory.map(product => ({
@@ -3354,7 +4165,7 @@ export class DatabaseStorage implements IStorage {
         alertLevel: product.stock === 0 ? 'high' : 'medium'
       }));
     } catch (error) {
-      console.error('Error getting inventory alerts:', error);
+      logger.error('Error getting inventory alerts', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -3384,7 +4195,7 @@ export class DatabaseStorage implements IStorage {
       // Get user registration counts by interval
       const registrations = await db
         .select({
-          date: sql`date_trunc(${interval}, ${users.createdAt})`,
+          date: sql<Date>`date_trunc(${interval}, ${users.createdAt})`,
           count: count()
         })
         .from(users)
@@ -3398,12 +4209,12 @@ export class DatabaseStorage implements IStorage {
         .orderBy(sql`date_trunc(${interval}, ${users.createdAt})`);
       
       return {
-        labels: registrations.map(r => r.date.toISOString().split('T')[0]),
+        labels: registrations.map(r => new Date(r.date).toISOString().split('T')[0]),
         data: registrations.map(r => r.count),
         timeRange: timeRange
       };
     } catch (error) {
-      console.error('Error getting user registration trends:', error);
+      logger.error('Error getting user registration trends', undefined, error as Error, 'server');
       return {
         labels: [],
         data: [],
@@ -3467,7 +4278,7 @@ export class DatabaseStorage implements IStorage {
         timeRange: timeRange
       };
     } catch (error) {
-      console.error('Error getting active user stats:', error);
+      logger.error('Error getting active user stats', undefined, error as Error, 'server');
       return {
         activeUsers: 0,
         activePosters: 0,
@@ -3502,9 +4313,9 @@ export class DatabaseStorage implements IStorage {
       // Get sales data by interval
       const salesData = await db
         .select({
-          date: sql`date_trunc(${interval}, ${orders.createdAt})`,
+          date: sql<Date>`date_trunc(${interval}, ${orders.createdAt})`,
           orderCount: count(),
-          revenue: sql`SUM(${orders.totalAmount})`
+          revenue: sql<number>`SUM(${orders.totalAmount})`
         })
         .from(orders)
         .where(
@@ -3518,13 +4329,13 @@ export class DatabaseStorage implements IStorage {
         .orderBy(sql`date_trunc(${interval}, ${orders.createdAt})`);
       
       return {
-        labels: salesData.map(d => d.date.toISOString().split('T')[0]),
+        labels: salesData.map(d => new Date(d.date).toISOString().split('T')[0]),
         orderCounts: salesData.map(d => d.orderCount),
         revenue: salesData.map(d => d.revenue),
         timeRange: timeRange
       };
     } catch (error) {
-      console.error('Error getting sales data:', error);
+      logger.error('Error getting sales data', undefined, error as Error, 'server');
       return {
         labels: [],
         orderCounts: [],
@@ -3563,7 +4374,7 @@ export class DatabaseStorage implements IStorage {
         percentages: distribution.map(d => d.percentage)
       };
     } catch (error) {
-      console.error('Error getting product category distribution:', error);
+      logger.error('Error getting product category distribution', undefined, error as Error, 'server');
       return {
         labels: [],
         data: [],
@@ -3614,7 +4425,7 @@ export class DatabaseStorage implements IStorage {
         timeRange: timeRange
       };
     } catch (error) {
-      console.error('Error getting traffic sources data:', error);
+      logger.error('Error getting traffic sources data', undefined, error as Error, 'server');
       return {
         sources: ['Direct', 'Social', 'Search', 'Referral'],
         sessions: [0, 0, 0, 0],
@@ -3638,13 +4449,13 @@ export class DatabaseStorage implements IStorage {
       }
       
       // Get order items
-      const orderItems = await db
+      const orderItemsData = await db
         .select({
           item: orderItems,
           product: {
             id: products.id,
             name: products.name,
-            image: products.image
+            image: products.imageUrl
           }
         })
         .from(orderItems)
@@ -3656,7 +4467,7 @@ export class DatabaseStorage implements IStorage {
       
       return {
         ...order,
-        items: orderItems.map(item => ({
+        items: orderItemsData.map((item: any) => ({
           ...item.item,
           product: item.product
         })),
@@ -3668,7 +4479,7 @@ export class DatabaseStorage implements IStorage {
         } : null
       };
     } catch (error) {
-      console.error('Error getting order:', error);
+      logger.error('Error getting order', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -3683,7 +4494,7 @@ export class DatabaseStorage implements IStorage {
       
       return updatedOrder;
     } catch (error) {
-      console.error('Error updating order:', error);
+      logger.error('Error updating order', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -3697,7 +4508,7 @@ export class DatabaseStorage implements IStorage {
       
       return true;
     } catch (error) {
-      console.error('Error updating order items status:', error);
+      logger.error('Error updating order items status', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -3707,7 +4518,7 @@ export class DatabaseStorage implements IStorage {
       await db.delete(users).where(eq(users.id, userId));
       return true;
     } catch (error) {
-      console.error('Error deleting user:', error);
+      logger.error('Error deleting user', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -3728,7 +4539,7 @@ export class DatabaseStorage implements IStorage {
       
       return true;
     } catch (error) {
-      console.error('Error resetting user password:', error);
+      logger.error('Error resetting user password', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -3745,7 +4556,8 @@ export class DatabaseStorage implements IStorage {
         }
       })
       .from(posts)
-      .leftJoin(users, eq(posts.userId, users.id));
+      .leftJoin(users, eq(posts.userId, users.id))
+      .$dynamic();
       
       // Apply filters
       if (options.isFlagged !== undefined) {
@@ -3785,7 +4597,7 @@ export class DatabaseStorage implements IStorage {
         user: item.user
       }));
     } catch (error) {
-      console.error('Error listing posts:', error);
+      logger.error('Error listing posts', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -3796,7 +4608,7 @@ export class DatabaseStorage implements IStorage {
       const [authToken] = await db.select().from(authTokens).where(eq(authTokens.token, token));
       return authToken;
     } catch (error) {
-      console.error('Error getting auth token:', error);
+      logger.error('Error getting auth token', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -3806,7 +4618,7 @@ export class DatabaseStorage implements IStorage {
       const [newToken] = await db.insert(authTokens).values(tokenData).returning();
       return newToken;
     } catch (error) {
-      console.error('Error creating auth token:', error);
+      logger.error('Error creating auth token', undefined, error as Error, 'server');
       throw new Error('Failed to create auth token');
     }
   }
@@ -3817,14 +4629,13 @@ export class DatabaseStorage implements IStorage {
         .update(authTokens)
         .set({ 
           isRevoked: true, 
-          revokedAt: new Date(),
-          revocationReason: reason,
-          updatedAt: new Date()
+          revokedReason: reason,
+          lastActiveAt: new Date()
         })
         .where(eq(authTokens.id, id));
       return true;
     } catch (error) {
-      console.error('Error revoking auth token:', error);
+      logger.error('Error revoking auth token', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -3834,13 +4645,12 @@ export class DatabaseStorage implements IStorage {
       await db
         .update(authTokens)
         .set({ 
-          lastActiveAt: new Date(),
-          updatedAt: new Date()
+          lastActiveAt: new Date()
         })
         .where(eq(authTokens.id, id));
       return true;
     } catch (error) {
-      console.error('Error updating token last active:', error);
+      logger.error('Error updating token last active', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -3851,9 +4661,8 @@ export class DatabaseStorage implements IStorage {
         .update(authTokens)
         .set({ 
           isRevoked: true, 
-          revokedAt: new Date(),
-          revocationReason: reason,
-          updatedAt: new Date()
+          revokedReason: reason,
+          lastActiveAt: new Date()
         })
         .where(
           and(
@@ -3863,7 +4672,7 @@ export class DatabaseStorage implements IStorage {
         );
       return true;
     } catch (error) {
-      console.error('Error revoking all user tokens:', error);
+      logger.error('Error revoking all user tokens', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -3874,9 +4683,8 @@ export class DatabaseStorage implements IStorage {
         .update(authTokens)
         .set({ 
           isRevoked: true, 
-          revokedAt: new Date(),
-          revocationReason: 'Revoked by user (logout from all other devices)',
-          updatedAt: new Date()
+          revokedReason: 'Revoked by user (logout from all other devices)',
+          lastActiveAt: new Date()
         })
         .where(
           and(
@@ -3887,7 +4695,7 @@ export class DatabaseStorage implements IStorage {
         );
       return true;
     } catch (error) {
-      console.error('Error revoking all user tokens except current:', error);
+      logger.error('Error revoking all user tokens except current', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -3910,7 +4718,7 @@ export class DatabaseStorage implements IStorage {
       
       return await this.revokeAuthToken(tokenId, 'Revoked by user');
     } catch (error) {
-      console.error('Error revoking specific token:', error);
+      logger.error('Error revoking specific token', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -3922,9 +4730,8 @@ export class DatabaseStorage implements IStorage {
         .update(authTokens)
         .set({ 
           isRevoked: true, 
-          revokedAt: new Date(),
-          revocationReason: 'Token expired',
-          updatedAt: new Date()
+          revokedReason: 'Token expired',
+          lastActiveAt: new Date()
         })
         .where(
           and(
@@ -3938,7 +4745,7 @@ export class DatabaseStorage implements IStorage {
         .delete(authTokens)
         .where(sql`${authTokens.expiresAt} < CURRENT_TIMESTAMP - INTERVAL '30 days'`);
     } catch (error) {
-      console.error('Error cleaning up expired tokens:', error);
+      logger.error('Error cleaning up expired tokens', undefined, error as Error, 'server');
     }
   }
 
@@ -3946,13 +4753,13 @@ export class DatabaseStorage implements IStorage {
     try {
       await db
         .update(users)
-        .set((user) => ({ 
-          failedLoginAttempts: sql`COALESCE(${user.failedLoginAttempts}, 0) + 1`,
+        .set({ 
+          failedLoginAttempts: sql`COALESCE(${users.failedLoginAttempts}, 0) + 1`,
           updatedAt: new Date()
-        }))
+        })
         .where(eq(users.id, userId));
     } catch (error) {
-      console.error('Error incrementing login attempts:', error);
+      logger.error('Error incrementing login attempts', undefined, error as Error, 'server');
     }
   }
 
@@ -3966,7 +4773,7 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(users.id, userId));
     } catch (error) {
-      console.error('Error resetting login attempts:', error);
+      logger.error('Error resetting login attempts', undefined, error as Error, 'server');
     }
   }
 
@@ -3980,7 +4787,7 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(users.id, userId));
     } catch (error) {
-      console.error('Error locking/unlocking user account:', error);
+      logger.error('Error locking/unlocking user account', undefined, error as Error, 'server');
     }
   }
 
@@ -4002,7 +4809,7 @@ export class DatabaseStorage implements IStorage {
           )
         );
     } catch (error) {
-      console.error('Error marking messages as read:', error);
+      logger.error('Error marking messages as read', undefined, error as Error, 'server');
       throw error;
     }
   }
@@ -4024,14 +4831,25 @@ export class DatabaseStorage implements IStorage {
       await db.delete(messages).where(eq(messages.id, id));
       return true;
     } catch (error) {
-      console.error('Error deleting message:', error);
+      logger.error('Error deleting message', undefined, error as Error, 'server');
       return false;
     }
   }
 
   // Missing methods from interface
   async checkPostLike(postId: number, userId: number): Promise<boolean> {
-    return this.hasUserLikedPost(userId, postId);
+    try {
+      const [existingLike] = await db
+        .select()
+        .from(likes)
+        .where(and(eq(likes.postId, postId), eq(likes.userId, userId)))
+        .limit(1);
+      
+      return !!existingLike;
+    } catch (error) {
+      logger.error('Error checking if user liked post', undefined, error as Error, 'server');
+      return false;
+    }
   }
 
   async checkPostSave(postId: number, userId: number): Promise<boolean> {
@@ -4043,14 +4861,14 @@ export class DatabaseStorage implements IStorage {
       
       return !!existingSave;
     } catch (error) {
-      console.error('Error checking if user saved post:', error);
+      logger.error('Error checking if user saved post', undefined, error as Error, 'server');
       return false;
     }
   }
 
   async getUserFeed(userId: number, limit: number = 10, offset: number = 0): Promise<Post[]> {
     try {
-      console.log(`[DEBUG] getUserFeed called for user ${userId}`);
+      logger.debug(`getUserFeed called for user ${userId}`, 'server');
       const userFeed = await db
         .select({
           post: posts,
@@ -4072,7 +4890,7 @@ export class DatabaseStorage implements IStorage {
             discountPrice: products.discountPrice,
             imageUrl: products.imageUrl,
             category: products.category,
-            stock: products.stock,
+            stock: products.inventory,
             vendorId: products.vendorId
           },
           vendor: {
@@ -4088,20 +4906,23 @@ export class DatabaseStorage implements IStorage {
         .leftJoin(products, eq(posts.productId, products.id))
         .leftJoin(vendors, eq(products.vendorId, vendors.id))
         .where(
-          or(
-            eq(posts.userId, userId), // User's own posts
-            eq(follows.followerId, userId) // Posts from followed users
+          and(
+            eq(posts.publishStatus, 'published'), // Only show published posts
+            or(
+              eq(posts.userId, userId), // User's own posts
+              eq(follows.followerId, userId) // Posts from followed users
+            )
           )
         )
         .orderBy(desc(posts.createdAt))
         .limit(limit)
         .offset(offset);
 
-      console.log(`[DEBUG] Found ${userFeed.length} posts, first user data:`, userFeed[0]?.user);
+      logger.debug('Found posts for user feed', { count: userFeed.length, firstUser: userFeed[0]?.user }, 'server');
       
       const result = userFeed.map(({ post, user, product, vendor }) => ({
         ...post,
-        user: {
+        user: user ? {
           id: user.id,
           username: user.username,
           name: user.name,
@@ -4110,6 +4931,15 @@ export class DatabaseStorage implements IStorage {
           city: user.city,
           country: user.country,
           region: user.region
+        } : {
+          id: 0,
+          username: 'Unknown',
+          name: 'Unknown User',
+          avatar: null,
+          isVendor: false,
+          city: null,
+          country: null,
+          region: null
         },
         // Add complete product information if post has a productId
         product: product ? {
@@ -4126,10 +4956,9 @@ export class DatabaseStorage implements IStorage {
         } : null
       })) as Post[];
       
-      console.log(`[DEBUG] Returning post with user and product:`, result[0]?.user, result[0]?.product);
       return result;
     } catch (error) {
-      console.error('Error getting user feed:', error);
+      logger.error('Error getting user feed', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -4147,7 +4976,7 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return likedProduct;
     } catch (error) {
-      console.error('Error liking product:', error);
+      logger.error('Error liking product', undefined, error as Error, 'server');
       throw error;
     }
   }
@@ -4159,7 +4988,7 @@ export class DatabaseStorage implements IStorage {
         .where(and(eq(likedProducts.userId, userId), eq(likedProducts.productId, productId)));
       return true;
     } catch (error) {
-      console.error('Error unliking product:', error);
+      logger.error('Error unliking product', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -4173,7 +5002,7 @@ export class DatabaseStorage implements IStorage {
         .limit(1);
       return !!liked;
     } catch (error) {
-      console.error('Error checking if product is liked:', error);
+      logger.error('Error checking if product is liked', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -4193,14 +5022,10 @@ export class DatabaseStorage implements IStorage {
 
       return likedProductsData.map(({ product, vendor }) => ({
         ...product,
-        vendor: {
-          id: vendor.id,
-          storeName: vendor.storeName,
-          rating: vendor.rating
-        }
+        vendor: vendor.storeName
       })) as Product[];
     } catch (error) {
-      console.error('Error getting user liked products:', error);
+      logger.error('Error getting user liked products', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -4214,7 +5039,7 @@ export class DatabaseStorage implements IStorage {
       
       return result?.count || 0;
     } catch (error) {
-      console.error('Error getting user liked products count:', error);
+      logger.error('Error getting user liked products count', undefined, error as Error, 'server');
       return 0;
     }
   }
@@ -4233,7 +5058,7 @@ export class DatabaseStorage implements IStorage {
         return [];
       }
 
-      // Get posts from users in the same region
+      // Get posts from users in the same region with product and vendor joins
       const regionPosts = await db
         .select({
           post: posts,
@@ -4243,11 +5068,35 @@ export class DatabaseStorage implements IStorage {
             name: users.name,
             avatar: users.avatar,
             isVendor: users.isVendor
+          },
+          product: {
+            id: products.id,
+            name: products.name,
+            description: products.description,
+            price: products.price,
+            discountPrice: products.discountPrice,
+            imageUrl: products.imageUrl,
+            category: products.category,
+            stock: products.inventory,
+            vendorId: products.vendorId
+          },
+          vendor: {
+            id: vendors.id,
+            storeName: vendors.storeName,
+            businessName: vendors.businessName,
+            rating: vendors.rating
           }
         })
         .from(posts)
         .leftJoin(users, eq(posts.userId, users.id))
-        .where(eq(users.region, currentUser.region))
+        .leftJoin(products, eq(posts.productId, products.id))
+        .leftJoin(vendors, eq(products.vendorId, vendors.id))
+        .where(
+          and(
+            eq(posts.publishStatus, 'published'), // Only show published posts
+            eq(users.region, currentUser.region)
+          )
+        )
         .orderBy(desc(posts.createdAt))
         .limit(limit)
         .offset(offset);
@@ -4261,10 +5110,22 @@ export class DatabaseStorage implements IStorage {
           name: 'Unknown User',
           avatar: null,
           isVendor: false
-        }
+        },
+        product: row.product && row.product.id ? {
+          id: row.product.id,
+          name: row.product.name,
+          description: row.product.description,
+          price: row.product.price,
+          discountPrice: row.product.discountPrice,
+          imageUrl: row.product.imageUrl,
+          category: row.product.category,
+          stock: row.product.stock,
+          vendorId: row.product.vendorId,
+          vendorName: row.vendor?.storeName || row.vendor?.businessName
+        } : null
       })) as Post[];
     } catch (error) {
-      console.error('Error getting posts by region:', error);
+      logger.error('Error getting posts by region', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -4279,7 +5140,7 @@ export class DatabaseStorage implements IStorage {
         return [];
       }
 
-      // Get posts from users in the same country
+      // Get posts from users in the same country with product and vendor joins
       const countryPosts = await db
         .select({
           post: posts,
@@ -4289,11 +5150,35 @@ export class DatabaseStorage implements IStorage {
             name: users.name,
             avatar: users.avatar,
             isVendor: users.isVendor
+          },
+          product: {
+            id: products.id,
+            name: products.name,
+            description: products.description,
+            price: products.price,
+            discountPrice: products.discountPrice,
+            imageUrl: products.imageUrl,
+            category: products.category,
+            stock: products.inventory,
+            vendorId: products.vendorId
+          },
+          vendor: {
+            id: vendors.id,
+            storeName: vendors.storeName,
+            businessName: vendors.businessName,
+            rating: vendors.rating
           }
         })
         .from(posts)
         .leftJoin(users, eq(posts.userId, users.id))
-        .where(eq(users.country, currentUser.country))
+        .leftJoin(products, eq(posts.productId, products.id))
+        .leftJoin(vendors, eq(products.vendorId, vendors.id))
+        .where(
+          and(
+            eq(posts.publishStatus, 'published'), // Only show published posts
+            eq(users.country, currentUser.country)
+          )
+        )
         .orderBy(desc(posts.createdAt))
         .limit(limit)
         .offset(offset);
@@ -4307,10 +5192,22 @@ export class DatabaseStorage implements IStorage {
           name: 'Unknown User',
           avatar: null,
           isVendor: false
-        }
+        },
+        product: row.product && row.product.id ? {
+          id: row.product.id,
+          name: row.product.name,
+          description: row.product.description,
+          price: row.product.price,
+          discountPrice: row.product.discountPrice,
+          imageUrl: row.product.imageUrl,
+          category: row.product.category,
+          stock: row.product.stock,
+          vendorId: row.product.vendorId,
+          vendorName: row.vendor?.storeName || row.vendor?.businessName
+        } : null
       })) as Post[];
     } catch (error) {
-      console.error('Error getting posts by country:', error);
+      logger.error('Error getting posts by country', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -4320,7 +5217,7 @@ export class DatabaseStorage implements IStorage {
     try {
       return await db.select().from(products).orderBy(desc(products.createdAt));
     } catch (error) {
-      console.error('Error getting products:', error);
+      logger.error('Error getting products', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -4332,7 +5229,7 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(products.createdAt))
         .limit(10);
     } catch (error) {
-      console.error('Error getting popular products:', error);
+      logger.error('Error getting popular products', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -4350,7 +5247,7 @@ export class DatabaseStorage implements IStorage {
       await db.delete(posts).where(eq(posts.id, id));
       return true;
     } catch (error) {
-      console.error('Error deleting post:', error);
+      logger.error('Error deleting post', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -4369,7 +5266,7 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return friendRequest;
     } catch (error) {
-      console.error('Error creating friend request:', error);
+      logger.error('Error creating friend request', undefined, error as Error, 'server');
       throw error;
     }
   }
@@ -4387,7 +5284,7 @@ export class DatabaseStorage implements IStorage {
         .limit(1);
       return friendRequest;
     } catch (error) {
-      console.error('Error getting friend request:', error);
+      logger.error('Error getting friend request', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -4418,7 +5315,7 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(friendRequests.createdAt));
       return requests;
     } catch (error) {
-      console.error('Error getting friend requests:', error);
+      logger.error('Error getting friend requests', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -4447,18 +5344,20 @@ export class DatabaseStorage implements IStorage {
 
       // Create mutual connections
       await db.insert(connections).values({
-        userId1: request.senderId,
-        userId2: request.recipientId,
+        userId: request.senderId,
+        connectedUserId: request.recipientId,
+        initiatedBy: request.senderId,
         status: 'active'
       });
 
       await db.insert(connections).values({
-        userId1: request.recipientId,
-        userId2: request.senderId,
+        userId: request.recipientId,
+        connectedUserId: request.senderId,
+        initiatedBy: request.senderId,
         status: 'active'
       });
     } catch (error) {
-      console.error('Error accepting friend request:', error);
+      logger.error('Error accepting friend request', undefined, error as Error, 'server');
       throw error;
     }
   }
@@ -4474,7 +5373,7 @@ export class DatabaseStorage implements IStorage {
           eq(friendRequests.status, 'pending')
         ));
     } catch (error) {
-      console.error('Error rejecting friend request:', error);
+      logger.error('Error rejecting friend request', undefined, error as Error, 'server');
       throw error;
     }
   }
@@ -4511,7 +5410,7 @@ export class DatabaseStorage implements IStorage {
       
       return results;
     } catch (error) {
-      console.error(`Error getting ${category} messages:`, error);
+      logger.error('Error getting messages', { category }, error as Error, 'server');
       return [];
     }
   }
@@ -4570,7 +5469,7 @@ export class DatabaseStorage implements IStorage {
       
       return Array.from(conversationMap.values());
     } catch (error) {
-      console.error(`Error getting ${category} conversations:`, error);
+      logger.error('Error getting conversations', { category }, error as Error, 'server');
       return [];
     }
   }
@@ -4588,7 +5487,7 @@ export class DatabaseStorage implements IStorage {
       
       return result?.count || 0;
     } catch (error) {
-      console.error(`Error getting ${category} unread count:`, error);
+      logger.error('Error getting unread count', { category }, error as Error, 'server');
       return 0;
     }
   }
@@ -4607,7 +5506,7 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return newGift;
     } catch (error) {
-      console.error('Error creating gift proposition:', error);
+      logger.error('Error creating gift proposition', undefined, error as Error, 'server');
       throw new Error('Failed to create gift proposition');
     }
   }
@@ -4620,7 +5519,7 @@ export class DatabaseStorage implements IStorage {
         .where(eq(giftPropositions.id, id));
       return gift;
     } catch (error) {
-      console.error('Error getting gift proposition:', error);
+      logger.error('Error getting gift proposition', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -4639,7 +5538,7 @@ export class DatabaseStorage implements IStorage {
           product: {
             id: products.id,
             name: products.name,
-            image: products.image,
+            image: products.imageUrl,
             price: products.price
           }
         })
@@ -4655,7 +5554,7 @@ export class DatabaseStorage implements IStorage {
         product: item.product
       })) as GiftProposition[];
     } catch (error) {
-      console.error('Error getting user sent gifts:', error);
+      logger.error('Error getting user sent gifts', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -4674,7 +5573,7 @@ export class DatabaseStorage implements IStorage {
           product: {
             id: products.id,
             name: products.name,
-            image: products.image,
+            image: products.imageUrl,
             price: products.price
           }
         })
@@ -4690,7 +5589,7 @@ export class DatabaseStorage implements IStorage {
         product: item.product
       })) as GiftProposition[];
     } catch (error) {
-      console.error('Error getting user received gifts:', error);
+      logger.error('Error getting user received gifts', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -4719,8 +5618,655 @@ export class DatabaseStorage implements IStorage {
 
       return updatedGift;
     } catch (error) {
-      console.error('Error updating gift status:', error);
+      logger.error('Error updating gift status', undefined, error as Error, 'server');
       return undefined;
+    }
+  }
+
+  // Calendar operations
+  async createCalendarEvent(eventData: InsertCalendarEvent): Promise<CalendarEvent> {
+    try {
+      const [newEvent] = await db
+        .insert(calendarEvents)
+        .values(eventData)
+        .returning();
+      return newEvent;
+    } catch (error) {
+      logger.error('Error creating calendar event', undefined, error as Error, 'server');
+      throw new Error('Failed to create calendar event');
+    }
+  }
+
+  async getCalendarEvent(id: number): Promise<CalendarEvent | undefined> {
+    try {
+      const [event] = await db
+        .select()
+        .from(calendarEvents)
+        .where(eq(calendarEvents.id, id));
+      return event;
+    } catch (error) {
+      logger.error('Error getting calendar event', undefined, error as Error, 'server');
+      return undefined;
+    }
+  }
+
+  async getUserCalendarEvents(userId: number, startDate?: Date, endDate?: Date): Promise<CalendarEvent[]> {
+    try {
+      let query = db
+        .select()
+        .from(calendarEvents)
+        .$dynamic();
+
+      if (startDate && endDate) {
+        query = query.where(and(
+          eq(calendarEvents.userId, userId),
+          lte(calendarEvents.startDate, endDate),
+          gte(calendarEvents.endDate, startDate)
+        ));
+      } else {
+        query = query.where(eq(calendarEvents.userId, userId));
+      }
+
+      const events = await query.orderBy(asc(calendarEvents.startDate));
+      return events;
+    } catch (error) {
+      logger.error('Error getting user calendar events', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async getEventsByCategory(userId: number, category: string): Promise<CalendarEvent[]> {
+    try {
+      const events = await db
+        .select()
+        .from(calendarEvents)
+        .where(and(
+          eq(calendarEvents.userId, userId),
+          eq(calendarEvents.category, category as any)
+        ))
+        .orderBy(asc(calendarEvents.startDate));
+      return events;
+    } catch (error) {
+      logger.error('Error getting events by category', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async updateCalendarEvent(id: number, userId: number, updates: Partial<CalendarEvent>): Promise<CalendarEvent | undefined> {
+    try {
+      const [updatedEvent] = await db
+        .update(calendarEvents)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(and(
+          eq(calendarEvents.id, id),
+          eq(calendarEvents.userId, userId)
+        ))
+        .returning();
+      return updatedEvent;
+    } catch (error) {
+      logger.error('Error updating calendar event', undefined, error as Error, 'server');
+      return undefined;
+    }
+  }
+
+  async deleteCalendarEvent(id: number, userId: number): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(calendarEvents)
+        .where(and(
+          eq(calendarEvents.id, id),
+          eq(calendarEvents.userId, userId)
+        ));
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      logger.error('Error deleting calendar event', undefined, error as Error, 'server');
+      return false;
+    }
+  }
+
+  async getUpcomingEvents(userId: number, limit: number = 10): Promise<CalendarEvent[]> {
+    try {
+      const now = new Date();
+      const events = await db
+        .select()
+        .from(calendarEvents)
+        .where(and(
+          eq(calendarEvents.userId, userId),
+          gte(calendarEvents.startDate, now),
+          eq(calendarEvents.isCancelled, false)
+        ))
+        .orderBy(asc(calendarEvents.startDate))
+        .limit(limit);
+      return events;
+    } catch (error) {
+      logger.error('Error getting upcoming events', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async getEventReminders(userId: number): Promise<CalendarEventReminder[]> {
+    try {
+      const reminders = await db
+        .select()
+        .from(calendarEventReminders)
+        .where(and(
+          eq(calendarEventReminders.userId, userId),
+          eq(calendarEventReminders.isSent, false)
+        ))
+        .orderBy(asc(calendarEventReminders.reminderTime));
+      return reminders;
+    } catch (error) {
+      logger.error('Error getting event reminders', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async createEventReminder(reminderData: InsertCalendarEventReminder): Promise<CalendarEventReminder> {
+    try {
+      const [newReminder] = await db
+        .insert(calendarEventReminders)
+        .values(reminderData)
+        .returning();
+      return newReminder;
+    } catch (error) {
+      logger.error('Error creating event reminder', undefined, error as Error, 'server');
+      throw new Error('Failed to create event reminder');
+    }
+  }
+
+  async updateEventReminder(id: number, updates: Partial<CalendarEventReminder>): Promise<CalendarEventReminder | undefined> {
+    try {
+      const [updatedReminder] = await db
+        .update(calendarEventReminders)
+        .set(updates)
+        .where(eq(calendarEventReminders.id, id))
+        .returning();
+      return updatedReminder;
+    } catch (error) {
+      logger.error('Error updating event reminder', undefined, error as Error, 'server');
+      return undefined;
+    }
+  }
+
+  async getEventParticipants(eventId: number): Promise<Array<{ participant: CalendarEventParticipant; user: { id: number; username: string; name: string | null; avatar: string | null } }>> {
+    try {
+      const participants = await db
+        .select({
+          participant: calendarEventParticipants,
+          user: {
+            id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar
+          }
+        })
+        .from(calendarEventParticipants)
+        .leftJoin(users, eq(calendarEventParticipants.userId, users.id))
+        .where(eq(calendarEventParticipants.eventId, eventId));
+      
+      return participants.filter(p => p.user !== null) as Array<{ participant: CalendarEventParticipant; user: { id: number; username: string; name: string | null; avatar: string | null } }>;
+    } catch (error) {
+      logger.error('Error getting event participants', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async addEventParticipant(participantData: InsertCalendarEventParticipant): Promise<CalendarEventParticipant> {
+    try {
+      const [newParticipant] = await db
+        .insert(calendarEventParticipants)
+        .values(participantData)
+        .returning();
+      return newParticipant;
+    } catch (error) {
+      logger.error('Error adding event participant', undefined, error as Error, 'server');
+      throw new Error('Failed to add event participant');
+    }
+  }
+
+  async updateParticipantStatus(eventId: number, userId: number, status: string): Promise<CalendarEventParticipant | undefined> {
+    try {
+      const [updatedParticipant] = await db
+        .update(calendarEventParticipants)
+        .set({ status, responseAt: new Date() })
+        .where(and(
+          eq(calendarEventParticipants.eventId, eventId),
+          eq(calendarEventParticipants.userId, userId)
+        ))
+        .returning();
+      return updatedParticipant;
+    } catch (error) {
+      logger.error('Error updating participant status', undefined, error as Error, 'server');
+      return undefined;
+    }
+  }
+
+  async searchCalendarEvents(userId: number, query: string): Promise<CalendarEvent[]> {
+    try {
+      const searchPattern = `%${query.toLowerCase()}%`;
+      const events = await db
+        .select()
+        .from(calendarEvents)
+        .where(and(
+          eq(calendarEvents.userId, userId),
+          or(
+            ilike(calendarEvents.title, searchPattern),
+            ilike(calendarEvents.description, searchPattern),
+            ilike(calendarEvents.location, searchPattern),
+            ilike(calendarEvents.people, searchPattern),
+            ilike(calendarEvents.notes, searchPattern)
+          )
+        ))
+        .orderBy(desc(calendarEvents.startDate));
+      return events;
+    } catch (error) {
+      logger.error('Error searching calendar events', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  // Calendar event file operations
+  async addCalendarEventAttachment(eventId: number, userId: number, attachment: CalendarEventAttachment): Promise<CalendarEvent | undefined> {
+    try {
+      const hasAccess = await this.checkEventParticipantAccess(eventId, userId);
+      if (!hasAccess) {
+        throw new Error('User does not have access to this event');
+      }
+
+      const event = await this.getCalendarEvent(eventId);
+      if (!event) {
+        throw new Error('Event not found');
+      }
+
+      const currentAttachments = (event.attachments as CalendarEventAttachment[]) || [];
+      const updatedAttachments = [...currentAttachments, attachment];
+
+      const [updatedEvent] = await db
+        .update(calendarEvents)
+        .set({ attachments: updatedAttachments })
+        .where(eq(calendarEvents.id, eventId))
+        .returning();
+
+      return updatedEvent;
+    } catch (error) {
+      logger.error('Error adding calendar event attachment', undefined, error as Error, 'server');
+      throw error;
+    }
+  }
+
+  async getCalendarEventAttachments(eventId: number): Promise<CalendarEventAttachment[]> {
+    try {
+      const event = await this.getCalendarEvent(eventId);
+      if (!event) {
+        return [];
+      }
+      return (event.attachments as CalendarEventAttachment[]) || [];
+    } catch (error) {
+      logger.error('Error getting calendar event attachments', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async deleteCalendarEventAttachment(eventId: number, userId: number, attachmentId: string): Promise<CalendarEvent | undefined> {
+    try {
+      const hasAccess = await this.checkEventParticipantAccess(eventId, userId);
+      if (!hasAccess) {
+        throw new Error('User does not have access to this event');
+      }
+
+      const event = await this.getCalendarEvent(eventId);
+      if (!event) {
+        throw new Error('Event not found');
+      }
+
+      const currentAttachments = (event.attachments as CalendarEventAttachment[]) || [];
+      const updatedAttachments = currentAttachments.filter((att) => att.id !== attachmentId);
+
+      const [updatedEvent] = await db
+        .update(calendarEvents)
+        .set({ attachments: updatedAttachments })
+        .where(eq(calendarEvents.id, eventId))
+        .returning();
+
+      return updatedEvent;
+    } catch (error) {
+      logger.error('Error deleting calendar event attachment', undefined, error as Error, 'server');
+      throw error;
+    }
+  }
+
+  async checkEventParticipantAccess(eventId: number, userId: number): Promise<boolean> {
+    try {
+      const event = await this.getCalendarEvent(eventId);
+      if (!event) {
+        return false;
+      }
+
+      if (event.userId === userId) {
+        return true;
+      }
+
+      const [participant] = await db
+        .select()
+        .from(calendarEventParticipants)
+        .where(and(
+          eq(calendarEventParticipants.eventId, eventId),
+          eq(calendarEventParticipants.userId, userId)
+        ));
+
+      return !!participant;
+    } catch (error) {
+      logger.error('Error checking event participant access', undefined, error as Error, 'server');
+      return false;
+    }
+  }
+
+  // Lifestyle service operations
+  async createLifestyleService(serviceData: InsertLifestyleService): Promise<LifestyleService> {
+    try {
+      const [newService] = await db
+        .insert(lifestyleServices)
+        .values(serviceData)
+        .returning();
+      return newService;
+    } catch (error) {
+      logger.error('Error creating lifestyle service', undefined, error as Error, 'server');
+      throw new Error('Failed to create lifestyle service');
+    }
+  }
+
+  async getLifestyleService(id: number): Promise<LifestyleService | undefined> {
+    try {
+      const [service] = await db
+        .select()
+        .from(lifestyleServices)
+        .where(eq(lifestyleServices.id, id));
+      return service;
+    } catch (error) {
+      logger.error('Error getting lifestyle service', undefined, error as Error, 'server');
+      return undefined;
+    }
+  }
+
+  async getAllLifestyleServices(category?: string): Promise<LifestyleService[]> {
+    try {
+      let query = db
+        .select()
+        .from(lifestyleServices)
+        .$dynamic();
+
+      if (category) {
+        query = query.where(and(
+          eq(lifestyleServices.isActive, true),
+          eq(lifestyleServices.category, category)
+        ));
+      } else {
+        query = query.where(eq(lifestyleServices.isActive, true));
+      }
+
+      const services = await query.orderBy(desc(lifestyleServices.isFeatured), desc(lifestyleServices.createdAt));
+      return services;
+    } catch (error) {
+      logger.error('Error getting all lifestyle services', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async getUserLifestyleServices(userId: number, category?: string): Promise<LifestyleService[]> {
+    try {
+      let query = db
+        .select()
+        .from(lifestyleServices)
+        .$dynamic();
+
+      if (category) {
+        query = query.where(and(
+          eq(lifestyleServices.userId, userId),
+          eq(lifestyleServices.category, category)
+        ));
+      } else {
+        query = query.where(eq(lifestyleServices.userId, userId));
+      }
+
+      const services = await query.orderBy(desc(lifestyleServices.createdAt));
+      return services;
+    } catch (error) {
+      logger.error('Error getting user lifestyle services', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async updateLifestyleService(id: number, userId: number, updates: Partial<LifestyleService>): Promise<LifestyleService | undefined> {
+    try {
+      const [updatedService] = await db
+        .update(lifestyleServices)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(and(
+          eq(lifestyleServices.id, id),
+          eq(lifestyleServices.userId, userId)
+        ))
+        .returning();
+      return updatedService;
+    } catch (error) {
+      logger.error('Error updating lifestyle service', undefined, error as Error, 'server');
+      return undefined;
+    }
+  }
+
+  async deleteLifestyleService(id: number, userId: number): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(lifestyleServices)
+        .where(and(
+          eq(lifestyleServices.id, id),
+          eq(lifestyleServices.userId, userId)
+        ));
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      logger.error('Error deleting lifestyle service', undefined, error as Error, 'server');
+      return false;
+    }
+  }
+
+  async searchLifestyleServices(query: string, category?: string): Promise<LifestyleService[]> {
+    try {
+      const lowerQuery = query.toLowerCase();
+      const conditions = [
+        eq(lifestyleServices.isActive, true),
+        or(
+          sql`LOWER(${lifestyleServices.title}) LIKE ${`%${lowerQuery}%`}`,
+          sql`LOWER(${lifestyleServices.description}) LIKE ${`%${lowerQuery}%`}`,
+          sql`LOWER(${lifestyleServices.location}) LIKE ${`%${lowerQuery}%`}`,
+          sql`LOWER(${lifestyleServices.city}) LIKE ${`%${lowerQuery}%`}`
+        )
+      ];
+
+      if (category) {
+        conditions.push(eq(lifestyleServices.category, category));
+      }
+
+      const services = await db
+        .select()
+        .from(lifestyleServices)
+        .where(and(...conditions))
+        .orderBy(desc(lifestyleServices.isFeatured), desc(lifestyleServices.createdAt))
+        .limit(50);
+      return services;
+    } catch (error) {
+      logger.error('Error searching lifestyle services', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async getFeaturedLifestyleServices(category?: string, limit: number = 10): Promise<LifestyleService[]> {
+    try {
+      const conditions = [
+        eq(lifestyleServices.isActive, true),
+        eq(lifestyleServices.isFeatured, true)
+      ];
+
+      if (category) {
+        conditions.push(eq(lifestyleServices.category, category));
+      }
+
+      const services = await db
+        .select()
+        .from(lifestyleServices)
+        .where(and(...conditions))
+        .orderBy(desc(lifestyleServices.createdAt))
+        .limit(limit);
+      return services;
+    } catch (error) {
+      logger.error('Error getting featured lifestyle services', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async createService(serviceData: InsertService): Promise<Service> {
+    try {
+      const [newService] = await db
+        .insert(services)
+        .values(serviceData)
+        .returning();
+      return newService;
+    } catch (error) {
+      logger.error('Error creating service', undefined, error as Error, 'server');
+      throw error;
+    }
+  }
+
+  async getService(id: number): Promise<Service | undefined> {
+    try {
+      const [service] = await db
+        .select()
+        .from(services)
+        .where(eq(services.id, id));
+      return service;
+    } catch (error) {
+      logger.error('Error getting service', undefined, error as Error, 'server');
+      return undefined;
+    }
+  }
+
+  async getAllServices(category?: string): Promise<Service[]> {
+    try {
+      const conditions = [eq(services.isActive, true)];
+
+      if (category) {
+        conditions.push(eq(services.category, category));
+      }
+
+      return await db
+        .select()
+        .from(services)
+        .where(and(...conditions))
+        .orderBy(desc(services.createdAt));
+    } catch (error) {
+      logger.error('Error getting all services', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async getUserServices(userId: number, category?: string): Promise<Service[]> {
+    try {
+      const conditions = [eq(services.userId, userId)];
+
+      if (category) {
+        conditions.push(eq(services.category, category));
+      }
+
+      return await db
+        .select()
+        .from(services)
+        .where(and(...conditions))
+        .orderBy(desc(services.createdAt));
+    } catch (error) {
+      logger.error('Error getting user services', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async updateService(id: number, userId: number, updates: Partial<Service>): Promise<Service | undefined> {
+    try {
+      const [updatedService] = await db
+        .update(services)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(and(
+          eq(services.id, id),
+          eq(services.userId, userId)
+        ))
+        .returning();
+      return updatedService;
+    } catch (error) {
+      logger.error('Error updating service', undefined, error as Error, 'server');
+      return undefined;
+    }
+  }
+
+  async deleteService(id: number, userId: number): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(services)
+        .where(and(
+          eq(services.id, id),
+          eq(services.userId, userId)
+        ))
+        .returning();
+      return result.length > 0;
+    } catch (error) {
+      logger.error('Error deleting service', undefined, error as Error, 'server');
+      return false;
+    }
+  }
+
+  async searchServices(query: string, category?: string): Promise<Service[]> {
+    try {
+      const searchTerm = `%${query.toLowerCase()}%`;
+      const conditions = [
+        eq(services.isActive, true),
+        or(
+          sql`LOWER(${services.title}) LIKE ${searchTerm}`,
+          sql`LOWER(${services.description}) LIKE ${searchTerm}`,
+          sql`LOWER(${services.location}) LIKE ${searchTerm}`
+        )
+      ];
+
+      if (category) {
+        conditions.push(eq(services.category, category));
+      }
+
+      return await db
+        .select()
+        .from(services)
+        .where(and(...conditions))
+        .orderBy(desc(services.createdAt));
+    } catch (error) {
+      logger.error('Error searching services', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async getFeaturedServices(category?: string, limit: number = 10): Promise<Service[]> {
+    try {
+      const conditions = [
+        eq(services.isActive, true),
+        eq(services.isFeatured, true)
+      ];
+
+      if (category) {
+        conditions.push(eq(services.category, category));
+      }
+
+      const servicesData = await db
+        .select()
+        .from(services)
+        .where(and(...conditions))
+        .orderBy(desc(services.createdAt))
+        .limit(limit);
+      return servicesData;
+    } catch (error) {
+      logger.error('Error getting featured services', undefined, error as Error, 'server');
+      return [];
     }
   }
 
@@ -4733,7 +6279,7 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return newLike;
     } catch (error) {
-      console.error('Error liking event:', error);
+      logger.error('Error liking event', undefined, error as Error, 'server');
       throw new Error('Failed to like event');
     }
   }
@@ -4745,7 +6291,7 @@ export class DatabaseStorage implements IStorage {
         .where(and(eq(likedEvents.userId, userId), eq(likedEvents.eventId, eventId)));
       return result.rowCount !== null && result.rowCount > 0;
     } catch (error) {
-      console.error('Error unliking event:', error);
+      logger.error('Error unliking event', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -4759,7 +6305,7 @@ export class DatabaseStorage implements IStorage {
         .limit(1);
       return !!like;
     } catch (error) {
-      console.error('Error checking if event is liked:', error);
+      logger.error('Error checking if event is liked', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -4769,39 +6315,39 @@ export class DatabaseStorage implements IStorage {
       const events = await db
         .select({
           id: eventsTable.id,
+          communityId: eventsTable.communityId,
           title: eventsTable.title,
           description: eventsTable.description,
-          date: eventsTable.date,
-          time: eventsTable.time,
+          eventType: eventsTable.eventType,
+          coverImage: eventsTable.coverImage,
+          startTime: eventsTable.startTime,
+          endTime: eventsTable.endTime,
+          timezone: eventsTable.timezone,
           location: eventsTable.location,
-          category: eventsTable.category,
-          attendeeCount: eventsTable.attendeeCount,
+          price: eventsTable.price,
+          currency: eventsTable.currency,
           maxAttendees: eventsTable.maxAttendees,
-          organizer: {
+          isPublished: eventsTable.isPublished,
+          requiredTierId: eventsTable.requiredTierId,
+          hostId: eventsTable.hostId,
+          createdAt: eventsTable.createdAt,
+          updatedAt: eventsTable.updatedAt,
+          host: {
             id: users.id,
             name: users.name,
             username: users.username,
             avatar: users.avatar
-          },
-          image: eventsTable.image,
-          price: eventsTable.price,
-          currency: eventsTable.currency,
-          isFree: eventsTable.isFree,
-          createdAt: eventsTable.createdAt,
-          updatedAt: eventsTable.updatedAt
+          }
         })
         .from(likedEvents)
         .innerJoin(eventsTable, eq(likedEvents.eventId, eventsTable.id))
-        .innerJoin(users, eq(eventsTable.organizerId, users.id))
+        .innerJoin(users, eq(eventsTable.hostId, users.id))
         .where(eq(likedEvents.userId, userId))
         .orderBy(desc(likedEvents.createdAt));
 
-      return events.map(event => ({
-        ...event,
-        organizer: event.organizer
-      }));
+      return events as any;
     } catch (error) {
-      console.error('Error getting user liked events:', error);
+      logger.error('Error getting user liked events', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -4829,7 +6375,7 @@ export class DatabaseStorage implements IStorage {
       
       return searchResults as User[];
     } catch (error) {
-      console.error('Error searching users for store:', error);
+      logger.error('Error searching users for store', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -4863,7 +6409,7 @@ export class DatabaseStorage implements IStorage {
       
       return storeUsersList;
     } catch (error) {
-      console.error('Error getting store users:', error);
+      logger.error('Error getting store users', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -4877,7 +6423,7 @@ export class DatabaseStorage implements IStorage {
       
       return newStoreUser;
     } catch (error) {
-      console.error('Error assigning user to store:', error);
+      logger.error('Error assigning user to store', undefined, error as Error, 'server');
       throw new Error('Failed to assign user to store');
     }
   }
@@ -4895,7 +6441,7 @@ export class DatabaseStorage implements IStorage {
       
       return updatedStoreUser;
     } catch (error) {
-      console.error('Error updating store user:', error);
+      logger.error('Error updating store user', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -4908,7 +6454,7 @@ export class DatabaseStorage implements IStorage {
       
       return true;
     } catch (error) {
-      console.error('Error removing user from store:', error);
+      logger.error('Error removing user from store', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -4924,7 +6470,7 @@ export class DatabaseStorage implements IStorage {
       
       return profile;
     } catch (error) {
-      console.error('Error getting dating profile:', error);
+      logger.error('Error getting dating profile', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -4939,7 +6485,7 @@ export class DatabaseStorage implements IStorage {
       
       return profile;
     } catch (error) {
-      console.error('Error getting dating profile by ID:', error);
+      logger.error('Error getting dating profile by ID', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -4953,7 +6499,7 @@ export class DatabaseStorage implements IStorage {
       
       return profile;
     } catch (error) {
-      console.error('Error creating dating profile:', error);
+      logger.error('Error creating dating profile', undefined, error as Error, 'server');
       throw error;
     }
   }
@@ -4971,7 +6517,7 @@ export class DatabaseStorage implements IStorage {
       
       return profile;
     } catch (error) {
-      console.error('Error updating dating profile:', error);
+      logger.error('Error updating dating profile', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -5015,7 +6561,7 @@ export class DatabaseStorage implements IStorage {
         return true;
       }
     } catch (error) {
-      console.error('Error adding gift to dating profile:', error);
+      logger.error('Error adding gift to dating profile', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -5034,7 +6580,7 @@ export class DatabaseStorage implements IStorage {
       await this.updateDatingProfile(userId, { selectedGifts: updatedGifts });
       return true;
     } catch (error) {
-      console.error('Error removing gift from dating profile:', error);
+      logger.error('Error removing gift from dating profile', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -5066,12 +6612,9 @@ export class DatabaseStorage implements IStorage {
         .innerJoin(vendors, eq(products.vendorId, vendors.id))
         .where(inArray(products.id, profile.selectedGifts));
       
-      return giftProducts.map(item => ({
-        ...item,
-        vendor: item.vendor
-      })) as Product[];
+      return giftProducts as any as Product[];
     } catch (error) {
-      console.error('Error getting dating profile gifts:', error);
+      logger.error('Error getting dating profile gifts', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -5090,7 +6633,7 @@ export class DatabaseStorage implements IStorage {
       
       return existingLike;
     } catch (error) {
-      console.error('Error checking existing like:', error);
+      logger.error('Error checking existing like', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -5127,7 +6670,7 @@ export class DatabaseStorage implements IStorage {
 
       return { liked: true, matched };
     } catch (error) {
-      console.error('Error liking dating profile:', error);
+      logger.error('Error liking dating profile', undefined, error as Error, 'server');
       return { liked: false, matched: false };
     }
   }
@@ -5154,7 +6697,7 @@ export class DatabaseStorage implements IStorage {
 
       return true;
     } catch (error) {
-      console.error('Error passing dating profile:', error);
+      logger.error('Error passing dating profile', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -5172,7 +6715,7 @@ export class DatabaseStorage implements IStorage {
 
       return match;
     } catch (error) {
-      console.error('Error creating match:', error);
+      logger.error('Error creating match', undefined, error as Error, 'server');
       throw error;
     }
   }
@@ -5229,19 +6772,222 @@ export class DatabaseStorage implements IStorage {
         matchedProfile: match.otherProfile
       }));
     } catch (error) {
-      console.error('Error getting user matches:', error);
+      logger.error('Error getting user matches', undefined, error as Error, 'server');
       return [];
     }
   }
 
   async searchEvents(searchTerm: string, limit: number = 10): Promise<any[]> {
     try {
-      // Return empty array for now since events table may not exist
-      console.log(`Event search requested for: ${searchTerm} (limit: ${limit})`);
-      return [];
+      if (!searchTerm || searchTerm.trim().length === 0) {
+        return [];
+      }
+
+      const query = `%${searchTerm.toLowerCase()}%`;
+      
+      const eventResults = await db
+        .select({
+          id: eventsTable.id,
+          title: eventsTable.title,
+          description: eventsTable.description,
+          eventType: eventsTable.eventType,
+          coverImage: eventsTable.coverImage,
+          startTime: eventsTable.startTime,
+          endTime: eventsTable.endTime,
+          location: eventsTable.location,
+          price: eventsTable.price,
+          communityId: eventsTable.communityId,
+          hostId: eventsTable.hostId,
+          hostName: users.name,
+          hostUsername: users.username,
+          hostAvatar: users.avatar
+        })
+        .from(eventsTable)
+        .leftJoin(users, eq(eventsTable.hostId, users.id))
+        .where(
+          and(
+            or(
+              sql`LOWER(${eventsTable.title}) LIKE ${query}`,
+              sql`LOWER(${eventsTable.description}) LIKE ${query}`
+            ),
+            eq(eventsTable.isPublished, true)
+          )
+        )
+        .orderBy(desc(eventsTable.startTime))
+        .limit(limit);
+
+      return eventResults;
     } catch (error) {
-      console.error('Error searching events:', error);
+      logger.error('Error searching events', undefined, error as Error, 'server');
       return [];
+    }
+  }
+
+  async searchPosts(query: string, limit: number = 10): Promise<any[]> {
+    try {
+      if (!query || query.trim().length === 0) {
+        return [];
+      }
+
+      const searchQuery = `%${query.toLowerCase()}%`;
+      
+      const postResults = await db
+        .select({
+          id: posts.id,
+          userId: posts.userId,
+          content: posts.content,
+          title: posts.title,
+          contentType: posts.contentType,
+          imageUrl: posts.imageUrl,
+          videoUrl: posts.videoUrl,
+          likes: posts.likes,
+          comments: posts.comments,
+          views: posts.views,
+          createdAt: posts.createdAt,
+          userName: users.name,
+          username: users.username,
+          userAvatar: users.avatar
+        })
+        .from(posts)
+        .leftJoin(users, eq(posts.userId, users.id))
+        .where(
+          and(
+            or(
+              sql`LOWER(${posts.content}) LIKE ${searchQuery}`,
+              sql`LOWER(${posts.title}) LIKE ${searchQuery}`
+            ),
+            eq(posts.isPublished, true)
+          )
+        )
+        .orderBy(desc(posts.createdAt))
+        .limit(limit);
+
+      return postResults;
+    } catch (error) {
+      logger.error('Error searching posts', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async searchMembers(query: string, limit: number = 10): Promise<any[]> {
+    try {
+      if (!query || query.trim().length === 0) {
+        return [];
+      }
+
+      const searchQuery = `%${query.toLowerCase()}%`;
+      
+      const memberResults = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          bio: users.bio,
+          avatar: users.avatar,
+          city: users.city,
+          country: users.country,
+          isVendor: users.isVendor
+        })
+        .from(users)
+        .where(
+          or(
+            sql`LOWER(${users.username}) LIKE ${searchQuery}`,
+            sql`LOWER(${users.name}) LIKE ${searchQuery}`,
+            sql`LOWER(${users.bio}) LIKE ${searchQuery}`
+          )
+        )
+        .orderBy(users.name)
+        .limit(limit);
+
+      return memberResults;
+    } catch (error) {
+      logger.error('Error searching members', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+
+  async searchDatingProfiles(query: string, currentUserId?: number, limit: number = 10): Promise<any[]> {
+    try {
+      if (!query || query.trim().length === 0) {
+        return [];
+      }
+
+      const searchQuery = `%${query.toLowerCase()}%`;
+      
+      let whereConditions = and(
+        or(
+          sql`LOWER(${datingProfiles.displayName}) LIKE ${searchQuery}`,
+          sql`LOWER(${datingProfiles.bio}) LIKE ${searchQuery}`,
+          sql`LOWER(${datingProfiles.location}) LIKE ${searchQuery}`
+        ),
+        eq(datingProfiles.isActive, true)
+      );
+
+      // Exclude current user if provided
+      if (currentUserId) {
+        whereConditions = and(
+          whereConditions,
+          ne(datingProfiles.userId, currentUserId)
+        );
+      }
+      
+      const profileResults = await db
+        .select({
+          id: datingProfiles.id,
+          userId: datingProfiles.userId,
+          displayName: datingProfiles.displayName,
+          age: datingProfiles.age,
+          bio: datingProfiles.bio,
+          location: datingProfiles.location,
+          interests: datingProfiles.interests,
+          profileImages: datingProfiles.profileImages,
+          datingRoomTier: datingProfiles.datingRoomTier,
+          userName: users.name,
+          username: users.username
+        })
+        .from(datingProfiles)
+        .leftJoin(users, eq(datingProfiles.userId, users.id))
+        .where(whereConditions)
+        .orderBy(desc(datingProfiles.createdAt))
+        .limit(limit);
+
+      return profileResults;
+    } catch (error) {
+      logger.error('Error searching dating profiles', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async comprehensiveSearch(query: string, currentUserId?: number): Promise<{
+    posts: any[];
+    members: any[];
+    events: any[];
+    datingProfiles: any[];
+  }> {
+    try {
+      // Run all searches in parallel for better performance
+      const [posts, members, events, datingProfiles] = await Promise.all([
+        this.searchPosts(query, 10),
+        this.searchMembers(query, 10),
+        this.searchEvents(query, 10),
+        this.searchDatingProfiles(query, currentUserId, 10)
+      ]);
+
+      return {
+        posts,
+        members,
+        events,
+        datingProfiles
+      };
+    } catch (error) {
+      logger.error('Error in comprehensive search', undefined, error as Error, 'server');
+      return {
+        posts: [],
+        members: [],
+        events: [],
+        datingProfiles: []
+      };
     }
   }
 
@@ -5257,17 +7003,12 @@ export class DatabaseStorage implements IStorage {
           country: users.country
         })
         .from(users)
-        .where(
-          and(
-            ne(users.id, excludeUserId),
-            eq(users.isActive, true)
-          )
-        )
+        .where(ne(users.id, excludeUserId))
         .orderBy(users.name, users.username);
       
       return platformUsers as User[];
     } catch (error) {
-      console.error('Error getting platform users:', error);
+      logger.error('Error getting platform users', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -5281,18 +7022,16 @@ export class DatabaseStorage implements IStorage {
           senderId: giftData.senderId,
           recipientId: giftData.recipientId,
           productId: giftData.cartItems[0]?.productId || 0, // Use first item's product ID
-          quantity: giftData.cartItems.reduce((sum: number, item: any) => sum + item.quantity, 0),
-          proposedPrice: giftData.total,
+          amount: giftData.total,
+          currency: giftData.currency || 'GBP',
           message: giftData.message,
-          status: giftData.status || 'sent',
-          shippingType: giftData.shippingType,
-          shippingCost: giftData.shippingCost
+          status: giftData.status || 'pending'
         })
         .returning();
       
       return gift[0];
     } catch (error) {
-      console.error('Error creating gift:', error);
+      logger.error('Error creating gift', undefined, error as Error, 'server');
       throw new Error('Failed to create gift');
     }
   }
@@ -5319,7 +7058,7 @@ export class DatabaseStorage implements IStorage {
       
       return undefined;
     } catch (error) {
-      console.error('Error getting affiliate partner:', error);
+      logger.error('Error getting affiliate partner', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -5354,7 +7093,7 @@ export class DatabaseStorage implements IStorage {
         userId: partnerData.userId
       };
     } catch (error) {
-      console.error('Error creating affiliate partner:', error);
+      logger.error('Error creating affiliate partner', undefined, error as Error, 'server');
       throw new Error('Failed to create affiliate partner');
     }
   }
@@ -5367,7 +7106,7 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(affiliatePartners.createdAt));
       return partners;
     } catch (error) {
-      console.error('Error getting all affiliate partners:', error);
+      logger.error('Error getting all affiliate partners', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -5381,7 +7120,7 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(affiliatePartners.createdAt));
       return partners;
     } catch (error) {
-      console.error('Error getting pending affiliate partners:', error);
+      logger.error('Error getting pending affiliate partners', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -5399,7 +7138,7 @@ export class DatabaseStorage implements IStorage {
         .where(eq(affiliatePartners.id, partnerId));
       return true;
     } catch (error) {
-      console.error('Error updating affiliate partner status:', error);
+      logger.error('Error updating affiliate partner status', undefined, error as Error, 'server');
       return false;
     }
   }
@@ -5412,7 +7151,7 @@ export class DatabaseStorage implements IStorage {
         .where(eq(affiliatePartners.id, partnerId));
       return partner || null;
     } catch (error) {
-      console.error('Error getting affiliate partner by ID:', error);
+      logger.error('Error getting affiliate partner by ID', undefined, error as Error, 'server');
       return null;
     }
   }
@@ -5426,7 +7165,7 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return updatedPartner;
     } catch (error) {
-      console.error('Error updating affiliate partner:', error);
+      logger.error('Error updating affiliate partner', undefined, error as Error, 'server');
       return undefined;
     }
   }
@@ -5448,7 +7187,7 @@ export class DatabaseStorage implements IStorage {
       
       return assignments;
     } catch (error) {
-      console.error('Error getting affiliate referrals:', error);
+      logger.error('Error getting affiliate referrals', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -5472,7 +7211,7 @@ export class DatabaseStorage implements IStorage {
         createdAt: new Date()
       }];
     } catch (error) {
-      console.error('Error getting affiliate earnings:', error);
+      logger.error('Error getting affiliate earnings', undefined, error as Error, 'server');
       return [];
     }
   }
@@ -5488,14 +7227,1217 @@ export class DatabaseStorage implements IStorage {
         throw new Error('Affiliate partner not found');
       }
       
-      const domain = process.env.REPLIT_DOMAINS?.split(',')[0] || 'localhost:3000';
+      const domain = process.env.REPLIT_DOMAINS?.split(',')[0] || 'localhost:5000';
       return `https://${domain}?ref=${partner[0].partnerCode}`;
     } catch (error) {
-      console.error('Error generating referral link:', error);
+      logger.error('Error generating referral link', undefined, error as Error, 'server');
       throw new Error('Failed to generate referral link');
     }
   }
 
+  // Gift card operations implementation
+  async createGiftCard(giftCardData: InsertGiftCard): Promise<GiftCard> {
+    try {
+      // Generate unique gift card code, card number, and PIN
+      const code = await this.generateGiftCardCode();
+      const cardNumber = await this.generateGiftCardNumber();
+      const { plainPin, hashedPin } = await this.generateGiftCardPin();
+      
+      const [giftCard] = await db
+        .insert(giftCards)
+        .values({
+          ...giftCardData,
+          code,
+          cardNumber,
+          pin: hashedPin
+        })
+        .returning();
+      
+      // Create purchase transaction
+      if (giftCard.purchasedBy) {
+        await this.createGiftCardTransaction({
+          giftCardId: giftCard.id,
+          type: 'purchase',
+          amount: giftCard.amount,
+          currency: giftCard.currency,
+          userId: giftCard.purchasedBy,
+          orderId: giftCardData.purchaseOrderId,
+          stripePaymentIntentId: giftCardData.stripePaymentIntentId,
+          description: `Gift card purchase - £${giftCard.amount}`
+        });
+      }
+      
+      // Send gift card email if recipient email is provided
+      if (giftCard.recipientEmail) {
+        // Create a temporary object with plaintext PIN for email
+        const giftCardForEmail = { ...giftCard, pin: plainPin };
+        await this.sendGiftCardEmail(giftCardForEmail, giftCard.recipientEmail);
+      }
+
+      // Return gift card with plaintext PIN for immediate use
+      return { ...giftCard, pin: plainPin };
+    } catch (error) {
+      logger.error('Error creating gift card', undefined, error as Error, 'server');
+      throw new Error('Failed to create gift card');
+    }
+  }
+
+  async getGiftCard(id: number): Promise<GiftCard | undefined> {
+    try {
+      const [giftCard] = await db
+        .select()
+        .from(giftCards)
+        .where(eq(giftCards.id, id));
+      
+      return giftCard;
+    } catch (error) {
+      logger.error('Error getting gift card', undefined, error as Error, 'server');
+      return undefined;
+    }
+  }
+
+  async getGiftCardByCode(code: string): Promise<GiftCard | undefined> {
+    try {
+      const [giftCard] = await db
+        .select()
+        .from(giftCards)
+        .where(eq(giftCards.code, code));
+      
+      return giftCard;
+    } catch (error) {
+      logger.error('Error getting gift card by code', undefined, error as Error, 'server');
+      return undefined;
+    }
+  }
+
+  async updateGiftCard(id: number, updates: Partial<GiftCard>): Promise<GiftCard | undefined> {
+    try {
+      const [updatedGiftCard] = await db
+        .update(giftCards)
+        .set({
+          ...updates,
+          updatedAt: new Date()
+        })
+        .where(eq(giftCards.id, id))
+        .returning();
+      
+      return updatedGiftCard;
+    } catch (error) {
+      logger.error('Error updating gift card', undefined, error as Error, 'server');
+      return undefined;
+    }
+  }
+
+  async getUserGiftCards(userId: number): Promise<GiftCard[]> {
+    try {
+      const userGiftCards = await db
+        .select()
+        .from(giftCards)
+        .where(
+          or(
+            eq(giftCards.purchasedBy, userId),
+            eq(giftCards.redeemedBy, userId)
+          )
+        )
+        .orderBy(desc(giftCards.createdAt));
+      
+      return userGiftCards;
+    } catch (error) {
+      logger.error('Error getting user gift cards', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async redeemGiftCard(code: string, userId: number, orderId: number, amount: number): Promise<{ success: boolean; remainingBalance: number; message: string }> {
+    try {
+      const giftCard = await this.getGiftCardByCode(code);
+      
+      if (!giftCard) {
+        return { success: false, remainingBalance: 0, message: 'Invalid gift card code' };
+      }
+      
+      if (giftCard.status !== 'active') {
+        return { success: false, remainingBalance: 0, message: 'Gift card is not active' };
+      }
+      
+      if (giftCard.expiresAt && new Date() > giftCard.expiresAt) {
+        await this.updateGiftCard(giftCard.id, { status: 'expired' });
+        return { success: false, remainingBalance: 0, message: 'Gift card has expired' };
+      }
+      
+      const currentBalance = giftCard.amount - (giftCard.redeemedAmount || 0);
+      
+      if (currentBalance <= 0) {
+        await this.updateGiftCard(giftCard.id, { status: 'redeemed' });
+        return { success: false, remainingBalance: 0, message: 'Gift card has already been fully redeemed' };
+      }
+      
+      if (amount > currentBalance) {
+        return { success: false, remainingBalance: currentBalance, message: `Insufficient balance. Available: £${currentBalance.toFixed(2)}` };
+      }
+      
+      const newRedeemedAmount = (giftCard.redeemedAmount || 0) + amount;
+      const remainingBalance = giftCard.amount - newRedeemedAmount;
+      
+      // Update gift card
+      await this.updateGiftCard(giftCard.id, {
+        redeemedAmount: newRedeemedAmount,
+        redeemedBy: userId,
+        redeemedAt: new Date(),
+        status: remainingBalance <= 0 ? 'redeemed' : 'active'
+      });
+      
+      // Create redemption transaction
+      await this.createGiftCardTransaction({
+        giftCardId: giftCard.id,
+        type: 'redemption',
+        amount: amount,
+        currency: giftCard.currency,
+        userId: userId,
+        orderId: orderId,
+        description: `Gift card redemption - £${amount}`
+      });
+      
+      // Create redemption record
+      await this.createGiftCardRedemption({
+        giftCardId: giftCard.id,
+        orderId: orderId,
+        redeemedAmount: amount,
+        remainingBalance: remainingBalance,
+        redeemedBy: userId
+      });
+      
+      return { 
+        success: true, 
+        remainingBalance: remainingBalance, 
+        message: `Successfully redeemed £${amount}. Remaining balance: £${remainingBalance.toFixed(2)}` 
+      };
+    } catch (error) {
+      logger.error('Error redeeming gift card', undefined, error as Error, 'server');
+      return { success: false, remainingBalance: 0, message: 'Failed to redeem gift card' };
+    }
+  }
+
+  async createGiftCardTransaction(transactionData: InsertGiftCardTransaction): Promise<GiftCardTransaction> {
+    try {
+      const [transaction] = await db
+        .insert(giftCardTransactions)
+        .values(transactionData)
+        .returning();
+      
+      return transaction;
+    } catch (error) {
+      logger.error('Error creating gift card transaction', undefined, error as Error, 'server');
+      throw new Error('Failed to create gift card transaction');
+    }
+  }
+
+  async getGiftCardTransactions(giftCardId: number): Promise<GiftCardTransaction[]> {
+    try {
+      const transactions = await db
+        .select()
+        .from(giftCardTransactions)
+        .where(eq(giftCardTransactions.giftCardId, giftCardId))
+        .orderBy(desc(giftCardTransactions.createdAt));
+      
+      return transactions;
+    } catch (error) {
+      logger.error('Error getting gift card transactions', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async createGiftCardRedemption(redemptionData: InsertGiftCardRedemption): Promise<GiftCardRedemption> {
+    try {
+      const [redemption] = await db
+        .insert(giftCardRedemptions)
+        .values(redemptionData)
+        .returning();
+      
+      return redemption;
+    } catch (error) {
+      logger.error('Error creating gift card redemption', undefined, error as Error, 'server');
+      throw new Error('Failed to create gift card redemption');
+    }
+  }
+
+  async getGiftCardBalance(code: string): Promise<{ balance: number; status: string } | null> {
+    try {
+      const giftCard = await this.getGiftCardByCode(code);
+      
+      if (!giftCard) {
+        return null;
+      }
+      
+      const balance = giftCard.amount - (giftCard.redeemedAmount || 0);
+      
+      return {
+        balance: Math.max(0, balance),
+        status: giftCard.status
+      };
+    } catch (error) {
+      logger.error('Error getting gift card balance', undefined, error as Error, 'server');
+      return null;
+    }
+  }
+
+  async generateGiftCardCode(): Promise<string> {
+    try {
+      let code: string;
+      let isUnique = false;
+      let attempts = 0;
+      const maxAttempts = 10;
+      
+      while (!isUnique && attempts < maxAttempts) {
+        // Generate a 16-character alphanumeric code
+        code = Array.from(
+          { length: 16 }, 
+          () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 36)]
+        ).join('');
+        
+        // Format as XXXX-XXXX-XXXX-XXXX
+        code = code.match(/.{1,4}/g)?.join('-') || code;
+        
+        // Check if code is unique
+        const existing = await this.getGiftCardByCode(code);
+        isUnique = !existing;
+        attempts++;
+      }
+      
+      if (!isUnique) {
+        throw new Error('Failed to generate unique gift card code');
+      }
+      
+      return code!;
+    } catch (error) {
+      logger.error('Error generating gift card code', undefined, error as Error, 'server');
+      throw new Error('Failed to generate gift card code');
+    }
+  }
+
+  async generateGiftCardNumber(): Promise<string> {
+    try {
+      let cardNumber: string;
+      let isUnique = false;
+      let attempts = 0;
+      const maxAttempts = 10;
+      
+      while (!isUnique && attempts < maxAttempts) {
+        // Generate a 16-digit number
+        cardNumber = Array.from(
+          { length: 16 }, 
+          () => Math.floor(Math.random() * 10).toString()
+        ).join('');
+        
+        // Check if card number is unique
+        const existing = await this.getGiftCardByCardNumber(cardNumber);
+        isUnique = !existing;
+        attempts++;
+      }
+      
+      if (!isUnique) {
+        throw new Error('Failed to generate unique gift card number');
+      }
+      
+      return cardNumber!;
+    } catch (error) {
+      logger.error('Error generating gift card number', undefined, error as Error, 'server');
+      throw new Error('Failed to generate gift card number');
+    }
+  }
+
+  async generateGiftCardPin(): Promise<{ plainPin: string; hashedPin: string }> {
+    // Generate a 4-digit PIN
+    const plainPin = Array.from(
+      { length: 4 }, 
+      () => Math.floor(Math.random() * 10).toString()
+    ).join('');
+    
+    // Hash the PIN for storage
+    const bcrypt = require('bcryptjs');
+    const hashedPin = await bcrypt.hash(plainPin, 10);
+    
+    // Return both for different uses
+    return { plainPin, hashedPin };
+  }
+
+  async getGiftCardByCardNumber(cardNumber: string): Promise<GiftCard | undefined> {
+    try {
+      const [giftCard] = await db
+        .select()
+        .from(giftCards)
+        .where(eq(giftCards.cardNumber, cardNumber));
+      
+      return giftCard;
+    } catch (error) {
+      logger.error('Error getting gift card by card number', undefined, error as Error, 'server');
+      return undefined;
+    }
+  }
+
+  async getGiftCardBalanceByCardNumber(cardNumber: string, pin: string): Promise<{ balance: number; status: string; cardNumber: string } | null> {
+    try {
+      const giftCard = await this.getGiftCardByCardNumber(cardNumber);
+      
+      if (!giftCard) {
+        return null;
+      }
+      
+      // Verify PIN using bcrypt comparison
+      const bcrypt = require('bcryptjs');
+      const pinMatches = await bcrypt.compare(pin, giftCard.pin);
+      
+      if (!pinMatches) {
+        return null;
+      }
+      
+      const balance = giftCard.amount - (giftCard.redeemedAmount || 0);
+      
+      return {
+        balance: Math.max(0, balance),
+        status: giftCard.status,
+        cardNumber: giftCard.cardNumber
+      };
+    } catch (error) {
+      logger.error('Error getting gift card balance by card number', undefined, error as Error, 'server');
+      return null;
+    }
+  }
+
+  async sendGiftCardEmail(giftCard: GiftCard, recipientEmail: string): Promise<void> {
+    try {
+      const { sendEmail } = await import('./email-service');
+      
+      const emailBody = `
+        <h2>Your Dedw3n Gift Card</h2>
+        <p>Dear ${giftCard.recipientName || 'Valued Customer'},</p>
+        <p>You have received a Dedw3n gift card!</p>
+        <p><strong>Card Number:</strong> ${giftCard.cardNumber}</p>
+        <p><strong>PIN:</strong> ${giftCard.pin}</p>
+        <p><strong>Amount:</strong> ${giftCard.amount} ${giftCard.currency}</p>
+        ${giftCard.giftMessage ? `<p><strong>Message:</strong> ${giftCard.giftMessage}</p>` : ''}
+        <p><strong>Expires:</strong> ${giftCard.expiresAt ? new Date(giftCard.expiresAt).toLocaleDateString() : 'Never'}</p>
+        <p>Thank you for using Dedw3n!</p>
+      `;
+
+      await sendEmail({
+        to: recipientEmail,
+        from: 'noreply@dedw3n.com',
+        subject: 'Your Dedw3n Gift Card',
+        html: emailBody
+      });
+      
+      logger.info('Gift card email sent successfully', { email: recipientEmail }, 'server');
+    } catch (error) {
+      logger.error('Error sending gift card email', undefined, error as Error, 'server');
+      // Don't throw error here as gift card creation should succeed even if email fails
+    }
+  }
+
+  // Proxy Accounts operations
+  async createProxyAccount(accountData: InsertProxyAccount): Promise<ProxyAccount> {
+    try {
+      const result = await db.insert(proxyAccounts).values({
+        ...accountData,
+        updatedAt: new Date()
+      }).returning();
+      return result[0];
+    } catch (error) {
+      logger.error('Error creating proxy account', undefined, error as Error, 'server');
+      throw error;
+    }
+  }
+
+  async getProxyAccount(id: number): Promise<ProxyAccount | undefined> {
+    try {
+      const result = await db.select().from(proxyAccounts).where(eq(proxyAccounts.id, id));
+      return result[0];
+    } catch (error) {
+      logger.error('Error getting proxy account', undefined, error as Error, 'server');
+      throw error;
+    }
+  }
+
+  async getUserProxyAccounts(parentUserId: number): Promise<ProxyAccount[]> {
+    try {
+      const result = await db.select()
+        .from(proxyAccounts)
+        .where(eq(proxyAccounts.parentUserId, parentUserId))
+        .orderBy(desc(proxyAccounts.createdAt));
+      return result;
+    } catch (error) {
+      logger.error('Error getting user proxy accounts', undefined, error as Error, 'server');
+      throw error;
+    }
+  }
+
+  async updateProxyAccount(id: number, updates: Partial<ProxyAccount>): Promise<ProxyAccount | undefined> {
+    try {
+      const result = await db.update(proxyAccounts)
+        .set({
+          ...updates,
+          updatedAt: new Date()
+        })
+        .where(eq(proxyAccounts.id, id))
+        .returning();
+      return result[0];
+    } catch (error) {
+      logger.error('Error updating proxy account', undefined, error as Error, 'server');
+      throw error;
+    }
+  }
+
+  async deleteProxyAccount(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(proxyAccounts).where(eq(proxyAccounts.id, id));
+      return true;
+    } catch (error) {
+      logger.error('Error deleting proxy account', undefined, error as Error, 'server');
+      return false;
+    }
+  }
+
+  async updateProxyAccountStatus(id: number, status: string, notes?: string): Promise<ProxyAccount | undefined> {
+    try {
+      const updateData: any = {
+        status,
+        updatedAt: new Date()
+      };
+      
+      if (status === 'verified') {
+        updateData.verifiedAt = new Date();
+      } else if (status === 'suspended') {
+        updateData.suspendedAt = new Date();
+      }
+      
+      if (notes) {
+        if (status === 'rejected') {
+          updateData.rejectionReason = notes;
+        } else if (status === 'suspended') {
+          updateData.suspensionReason = notes;
+        } else {
+          updateData.verificationNotes = notes;
+        }
+      }
+
+      const result = await db.update(proxyAccounts)
+        .set(updateData)
+        .where(eq(proxyAccounts.id, id))
+        .returning();
+      return result[0];
+    } catch (error) {
+      logger.error('Error updating proxy account status', undefined, error as Error, 'server');
+      throw error;
+    }
+  }
+
+  async updateProxyAccountKYCStatus(id: number, kycStatus: string, verifiedBy?: number): Promise<ProxyAccount | undefined> {
+    try {
+      const updateData: any = {
+        kycStatus,
+        updatedAt: new Date()
+      };
+      
+      if (kycStatus === 'approved') {
+        updateData.kycVerifiedAt = new Date();
+        if (verifiedBy) {
+          updateData.kycVerifiedBy = verifiedBy;
+        }
+      }
+
+      const result = await db.update(proxyAccounts)
+        .set(updateData)
+        .where(eq(proxyAccounts.id, id))
+        .returning();
+      return result[0];
+    } catch (error) {
+      logger.error('Error updating proxy account KYC status', undefined, error as Error, 'server');
+      throw error;
+    }
+  }
+
+  // Cryptocurrency payment operations
+  async createCryptoPayment(payment: InsertCryptoPayment): Promise<CryptoPayment> {
+    try {
+      const result = await db.insert(cryptoPayments).values(payment).returning();
+      return result[0];
+    } catch (error) {
+      logger.error('Error creating crypto payment', undefined, error as Error, 'server');
+      throw error;
+    }
+  }
+
+  async getCryptoPayment(paymentId: string): Promise<CryptoPayment | undefined> {
+    try {
+      const result = await db.select().from(cryptoPayments).where(eq(cryptoPayments.paymentId, paymentId));
+      return result[0];
+    } catch (error) {
+      logger.error('Error getting crypto payment', undefined, error as Error, 'server');
+      throw error;
+    }
+  }
+
+  async updateCryptoPaymentStatus(paymentId: string, updates: Partial<CryptoPayment>): Promise<CryptoPayment | undefined> {
+    try {
+      const result = await db.update(cryptoPayments)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(cryptoPayments.paymentId, paymentId))
+        .returning();
+      return result[0];
+    } catch (error) {
+      logger.error('Error updating crypto payment status', undefined, error as Error, 'server');
+      throw error;
+    }
+  }
+
+  async getCryptoPaymentsByOrder(orderId: number): Promise<CryptoPayment[]> {
+    try {
+      const result = await db.select().from(cryptoPayments).where(eq(cryptoPayments.orderId, orderId));
+      return result;
+    } catch (error) {
+      logger.error('Error getting crypto payments by order', undefined, error as Error, 'server');
+      throw error;
+    }
+  }
+
+  async getCryptoPaymentsByUser(userId: number): Promise<CryptoPayment[]> {
+    try {
+      const result = await db.select().from(cryptoPayments).where(eq(cryptoPayments.userId, userId));
+      return result;
+    } catch (error) {
+      logger.error('Error getting crypto payments by user', undefined, error as Error, 'server');
+      throw error;
+    }
+  }
+
+  async blockUser(blockerId: number, blockedId: number, reason?: string): Promise<boolean> {
+    try {
+      if (blockerId === blockedId) {
+        throw new Error('Cannot block yourself');
+      }
+
+      const blockData: InsertUserBlock = {
+        blockerId,
+        blockedId,
+        reason: reason || null
+      };
+
+      await db.insert(userBlocks).values(blockData);
+      return true;
+    } catch (error) {
+      logger.error('Error blocking user', undefined, error as Error, 'server');
+      throw error;
+    }
+  }
+
+  async unblockUser(blockerId: number, blockedId: number): Promise<boolean> {
+    try {
+      const result = await db.delete(userBlocks)
+        .where(
+          and(
+            eq(userBlocks.blockerId, blockerId),
+            eq(userBlocks.blockedId, blockedId)
+          )
+        )
+        .returning();
+      
+      return result.length > 0;
+    } catch (error) {
+      logger.error('Error unblocking user', undefined, error as Error, 'server');
+      throw error;
+    }
+  }
+
+  async checkUserBlocked(blockerId: number, blockedId: number): Promise<boolean> {
+    try {
+      const result = await db.select()
+        .from(userBlocks)
+        .where(
+          and(
+            eq(userBlocks.blockerId, blockerId),
+            eq(userBlocks.blockedId, blockedId)
+          )
+        );
+      
+      return result.length > 0;
+    } catch (error) {
+      logger.error('Error checking user blocked', undefined, error as Error, 'server');
+      return false;
+    }
+  }
+
+  async getBlockedUsers(userId: number): Promise<User[]> {
+    try {
+      const blocks = await db.select()
+        .from(userBlocks)
+        .where(eq(userBlocks.blockerId, userId));
+      
+      if (blocks.length === 0) {
+        return [];
+      }
+
+      const blockedUserIds = blocks.map(b => b.blockedId);
+      const blockedUsers = await db.select()
+        .from(users)
+        .where(inArray(users.id, blockedUserIds));
+      
+      return blockedUsers;
+    } catch (error) {
+      logger.error('Error getting blocked users', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async createModerationReport(reportData: { reporterId: number; subjectId: number; subjectType: string; reason: string; description?: string }): Promise<any> {
+    try {
+      const reportRecord: InsertModerationReport = {
+        reportType: reportData.subjectType,
+        reporterId: reportData.reporterId,
+        subjectId: reportData.subjectId,
+        subjectType: reportData.subjectType,
+        reason: reportData.reason,
+        description: reportData.description || null,
+        status: 'pending'
+      };
+
+      const result = await db.insert(moderationReports).values(reportRecord).returning();
+      return result[0];
+    } catch (error) {
+      logger.error('Error creating moderation report', undefined, error as Error, 'server');
+      throw error;
+    }
+  }
+
+  async getUserModerationReports(userId: number): Promise<any[]> {
+    try {
+      const reports = await db.select()
+        .from(moderationReports)
+        .where(eq(moderationReports.reporterId, userId))
+        .orderBy(desc(moderationReports.createdAt));
+      
+      return reports;
+    } catch (error) {
+      logger.error('Error getting user moderation reports', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async getFinancialServicesByUserId(userId: number): Promise<any[]> {
+    try {
+      const services = await db.select()
+        .from(financialServices)
+        .where(eq(financialServices.userId, userId))
+        .orderBy(desc(financialServices.createdAt));
+      
+      return services;
+    } catch (error) {
+      logger.error('Error fetching financial services', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async createFinancialService(serviceData: any): Promise<any> {
+    try {
+      const result = await db.insert(financialServices)
+        .values(serviceData)
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      logger.error('Error creating financial service', undefined, error as Error, 'server');
+      throw error;
+    }
+  }
+
+  async updateFinancialService(id: number, userId: number, updates: any): Promise<any | undefined> {
+    try {
+      const result = await db.update(financialServices)
+        .set({
+          ...updates,
+          updatedAt: new Date()
+        })
+        .where(
+          and(
+            eq(financialServices.id, id),
+            eq(financialServices.userId, userId)
+          )
+        )
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      logger.error('Error updating financial service', undefined, error as Error, 'server');
+      return undefined;
+    }
+  }
+
+  async deleteFinancialService(id: number, userId: number): Promise<boolean> {
+    try {
+      const result = await db.delete(financialServices)
+        .where(
+          and(
+            eq(financialServices.id, id),
+            eq(financialServices.userId, userId)
+          )
+        )
+        .returning();
+      
+      return result.length > 0;
+    } catch (error) {
+      logger.error('Error deleting financial service', undefined, error as Error, 'server');
+      return false;
+    }
+  }
+
+  async getGovernmentServicesByUserId(userId: number): Promise<any[]> {
+    try {
+      const services = await db.select()
+        .from(governmentServices)
+        .where(eq(governmentServices.userId, userId))
+        .orderBy(desc(governmentServices.createdAt));
+      
+      return services;
+    } catch (error) {
+      logger.error('Error fetching government services', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async createGovernmentService(serviceData: any): Promise<any> {
+    try {
+      const result = await db.insert(governmentServices)
+        .values(serviceData)
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      logger.error('Error creating government service', undefined, error as Error, 'server');
+      throw error;
+    }
+  }
+
+  async updateGovernmentService(id: number, userId: number, updates: any): Promise<any | undefined> {
+    try {
+      const result = await db.update(governmentServices)
+        .set({
+          ...updates,
+          updatedAt: new Date()
+        })
+        .where(
+          and(
+            eq(governmentServices.id, id),
+            eq(governmentServices.userId, userId)
+          )
+        )
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      logger.error('Error updating government service', undefined, error as Error, 'server');
+      return undefined;
+    }
+  }
+
+  async deleteGovernmentService(id: number, userId: number): Promise<boolean> {
+    try {
+      const result = await db.delete(governmentServices)
+        .where(
+          and(
+            eq(governmentServices.id, id),
+            eq(governmentServices.userId, userId)
+          )
+        )
+        .returning();
+      
+      return result.length > 0;
+    } catch (error) {
+      logger.error('Error deleting government service', undefined, error as Error, 'server');
+      return false;
+    }
+  }
+
+  async createTicket(ticketData: any): Promise<any> {
+    try {
+      const ticketNumber = `TKT-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      
+      const result = await db.insert(tickets)
+        .values({
+          ...ticketData,
+          ticketNumber,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      logger.error('Error creating ticket', undefined, error as Error, 'server');
+      throw error;
+    }
+  }
+
+  async getTicket(id: number): Promise<any | undefined> {
+    try {
+      const result = await db.select()
+        .from(tickets)
+        .where(eq(tickets.id, id))
+        .limit(1);
+      
+      return result[0];
+    } catch (error) {
+      logger.error('Error fetching ticket', undefined, error as Error, 'server');
+      return undefined;
+    }
+  }
+
+  async getTickets(filters?: { status?: string; department?: string; assignedTo?: number; userId?: number; priority?: string }): Promise<any[]> {
+    try {
+      let query = db.select()
+        .from(tickets)
+        .orderBy(desc(tickets.createdAt));
+
+      const conditions = [];
+      
+      if (filters?.status) {
+        conditions.push(eq(tickets.status, filters.status as any));
+      }
+      if (filters?.department) {
+        conditions.push(eq(tickets.department, filters.department as any));
+      }
+      if (filters?.assignedTo) {
+        conditions.push(eq(tickets.assignedTo, filters.assignedTo));
+      }
+      if (filters?.userId) {
+        conditions.push(eq(tickets.userId, filters.userId));
+      }
+      if (filters?.priority) {
+        conditions.push(eq(tickets.priority, filters.priority as any));
+      }
+
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions)) as any;
+      }
+
+      const result = await query;
+      return result;
+    } catch (error) {
+      logger.error('Error fetching tickets', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async getTicketByNumber(ticketNumber: string): Promise<any | undefined> {
+    try {
+      const result = await db.select()
+        .from(tickets)
+        .where(eq(tickets.ticketNumber, ticketNumber))
+        .limit(1);
+      
+      return result[0];
+    } catch (error) {
+      logger.error('Error fetching ticket by number', undefined, error as Error, 'server');
+      return undefined;
+    }
+  }
+
+  async getTicketsByUser(userId: number): Promise<any[]> {
+    try {
+      const result = await db.select()
+        .from(tickets)
+        .where(eq(tickets.userId, userId))
+        .orderBy(desc(tickets.createdAt));
+      
+      return result;
+    } catch (error) {
+      logger.error('Error fetching tickets by user', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async getTicketsByEmail(email: string): Promise<any[]> {
+    try {
+      const result = await db.select()
+        .from(tickets)
+        .where(eq(tickets.email, email))
+        .orderBy(desc(tickets.createdAt));
+      
+      return result;
+    } catch (error) {
+      logger.error('Error fetching tickets by email', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async getTicketsByDepartment(department: string): Promise<any[]> {
+    try {
+      const result = await db.select()
+        .from(tickets)
+        .where(eq(tickets.department, department as any))
+        .orderBy(desc(tickets.createdAt));
+      
+      return result;
+    } catch (error) {
+      logger.error('Error fetching tickets by department', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async updateTicket(id: number, updates: any): Promise<any | undefined> {
+    try {
+      const result = await db.update(tickets)
+        .set({
+          ...updates,
+          updatedAt: new Date()
+        })
+        .where(eq(tickets.id, id))
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      logger.error('Error updating ticket', undefined, error as Error, 'server');
+      return undefined;
+    }
+  }
+
+  async assignTicket(id: number, assignedTo: number): Promise<any | undefined> {
+    try {
+      const result = await db.update(tickets)
+        .set({
+          assignedTo,
+          status: 'in_progress',
+          updatedAt: new Date()
+        })
+        .where(eq(tickets.id, id))
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      logger.error('Error assigning ticket', undefined, error as Error, 'server');
+      return undefined;
+    }
+  }
+
+  async resolveTicket(id: number, resolvedBy: number): Promise<any | undefined> {
+    try {
+      const result = await db.update(tickets)
+        .set({
+          status: 'resolved',
+          resolvedBy,
+          resolvedAt: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(tickets.id, id))
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      logger.error('Error resolving ticket', undefined, error as Error, 'server');
+      return undefined;
+    }
+  }
+
+  async closeTicket(id: number): Promise<any | undefined> {
+    try {
+      const result = await db.update(tickets)
+        .set({
+          status: 'closed',
+          closedAt: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(tickets.id, id))
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      logger.error('Error closing ticket', undefined, error as Error, 'server');
+      return undefined;
+    }
+  }
+
+  async deleteTicket(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(tickets)
+        .where(eq(tickets.id, id))
+        .returning();
+      
+      return result.length > 0;
+    } catch (error) {
+      logger.error('Error deleting ticket', undefined, error as Error, 'server');
+      return false;
+    }
+  }
+
+  async getTicketStats(): Promise<any> {
+    try {
+      const allTickets = await db.select().from(tickets);
+      
+      const stats = {
+        total: allTickets.length,
+        open: allTickets.filter(t => t.status === 'open').length,
+        inProgress: allTickets.filter(t => t.status === 'in_progress').length,
+        resolved: allTickets.filter(t => t.status === 'resolved').length,
+        closed: allTickets.filter(t => t.status === 'closed').length,
+        byDepartment: {
+          operations: allTickets.filter(t => t.department === 'operations').length,
+          tech: allTickets.filter(t => t.department === 'tech').length,
+          legal: allTickets.filter(t => t.department === 'legal').length,
+          marketing: allTickets.filter(t => t.department === 'marketing').length,
+          sales: allTickets.filter(t => t.department === 'sales').length,
+          finance: allTickets.filter(t => t.department === 'finance').length,
+          hr: allTickets.filter(t => t.department === 'hr').length,
+        },
+        byPriority: {
+          low: allTickets.filter(t => t.priority === 'low').length,
+          medium: allTickets.filter(t => t.priority === 'medium').length,
+          high: allTickets.filter(t => t.priority === 'high').length,
+          urgent: allTickets.filter(t => t.priority === 'urgent').length,
+        }
+      };
+      
+      return stats;
+    } catch (error) {
+      logger.error('Error fetching ticket stats', undefined, error as Error, 'server');
+      return { total: 0, open: 0, inProgress: 0, resolved: 0, closed: 0, byDepartment: {}, byPriority: {} };
+    }
+  }
+
+  async createTicketMessage(messageData: any): Promise<any> {
+    try {
+      const result = await db.insert(ticketMessages)
+        .values({
+          ...messageData,
+          createdAt: new Date()
+        })
+        .returning();
+      
+      await db.update(tickets)
+        .set({ updatedAt: new Date() })
+        .where(eq(tickets.id, messageData.ticketId));
+      
+      return result[0];
+    } catch (error) {
+      logger.error('Error creating ticket message', undefined, error as Error, 'server');
+      throw error;
+    }
+  }
+
+  async getTicketMessages(ticketId: number): Promise<any[]> {
+    try {
+      const result = await db.select()
+        .from(ticketMessages)
+        .where(eq(ticketMessages.ticketId, ticketId))
+        .orderBy(asc(ticketMessages.createdAt));
+      
+      return result;
+    } catch (error) {
+      logger.error('Error fetching ticket messages', undefined, error as Error, 'server');
+      return [];
+    }
+  }
+
+  async getTicketMessage(id: number): Promise<any | undefined> {
+    try {
+      const result = await db.select()
+        .from(ticketMessages)
+        .where(eq(ticketMessages.id, id))
+        .limit(1);
+      
+      return result[0];
+    } catch (error) {
+      logger.error('Error fetching ticket message', undefined, error as Error, 'server');
+      return undefined;
+    }
+  }
+
+  // =====================================
+  // Analytics Tracking Methods
+  // =====================================
+
+  async trackProfileView(data: { profileUserId: number; viewerUserId: number | null; viewerIp: string | null; viewerUserAgent: string | null }): Promise<void> {
+    try {
+      await db.insert(profileViews).values({
+        profileUserId: data.profileUserId,
+        viewerUserId: data.viewerUserId,
+        viewerIp: data.viewerIp,
+        viewerUserAgent: data.viewerUserAgent,
+      });
+      logger.info('Profile view tracked', { profileUserId: data.profileUserId, viewerUserId: data.viewerUserId }, 'server');
+    } catch (error) {
+      logger.error('Error tracking profile view', undefined, error as Error, 'server');
+    }
+  }
+
+  async trackPostImpression(data: { postId: number; userId: number | null; impressionType: string; userIp: string | null; userAgent: string | null }): Promise<void> {
+    try {
+      await db.insert(postImpressions).values({
+        postId: data.postId,
+        userId: data.userId,
+        impressionType: data.impressionType,
+        userIp: data.userIp,
+        userAgent: data.userAgent,
+      });
+      logger.info('Post impression tracked', { postId: data.postId, userId: data.userId, impressionType: data.impressionType }, 'server');
+    } catch (error) {
+      logger.error('Error tracking post impression', undefined, error as Error, 'server');
+    }
+  }
+
+  async trackSearchAppearance(data: { userId: number; searchQuery: string; searchType: string; position: number | null; searcherUserId: number | null }): Promise<void> {
+    try {
+      await db.insert(searchAppearances).values({
+        userId: data.userId,
+        searchQuery: data.searchQuery,
+        searchType: data.searchType,
+        position: data.position,
+        searcherUserId: data.searcherUserId,
+      });
+      logger.info('Search appearance tracked', { userId: data.userId, searchQuery: data.searchQuery, searchType: data.searchType }, 'server');
+    } catch (error) {
+      logger.error('Error tracking search appearance', undefined, error as Error, 'server');
+    }
+  }
+
+  async getUserAnalyticsStats(userId: number): Promise<{ profileViews: number; postImpressions: number; searchAppearances: number }> {
+    try {
+      // Get profile views count
+      const profileViewsResult = await db.select({ count: count() })
+        .from(profileViews)
+        .where(eq(profileViews.profileUserId, userId));
+      
+      // Get post impressions count (sum all impressions for user's posts)
+      const userPosts = await db.select({ id: posts.id })
+        .from(posts)
+        .where(eq(posts.userId, userId));
+      
+      const postIds = userPosts.map(p => p.id);
+      let postImpressionsCount = 0;
+      
+      if (postIds.length > 0) {
+        const postImpressionsResult = await db.select({ count: count() })
+          .from(postImpressions)
+          .where(inArray(postImpressions.postId, postIds));
+        
+        postImpressionsCount = Number(postImpressionsResult[0]?.count || 0);
+      }
+      
+      // Get search appearances count
+      const searchAppearancesResult = await db.select({ count: count() })
+        .from(searchAppearances)
+        .where(eq(searchAppearances.userId, userId));
+      
+      const stats = {
+        profileViews: Number(profileViewsResult[0]?.count || 0),
+        postImpressions: postImpressionsCount,
+        searchAppearances: Number(searchAppearancesResult[0]?.count || 0),
+      };
+      
+      logger.info('User analytics stats retrieved', { userId, stats }, 'server');
+      return stats;
+    } catch (error) {
+      logger.error('Error getting user analytics stats', undefined, error as Error, 'server');
+      return { profileViews: 0, postImpressions: 0, searchAppearances: 0 };
+    }
+  }
 
 }
 

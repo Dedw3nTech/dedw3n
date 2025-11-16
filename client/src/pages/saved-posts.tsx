@@ -5,15 +5,25 @@ import { useToast } from "@/hooks/use-toast";
 import EnhancedPostCard from "@/components/social/EnhancedPostCard";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
+import { useMasterTranslation } from "@/hooks/use-master-translation";
 
 export default function SavedPosts() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
+  const { translateText } = useMasterTranslation();
   const [page, setPage] = useState(1);
   const limit = 10;
   const offset = (page - 1) * limit;
   const [, setLocation] = useLocation();
   const [hasRedirected, setHasRedirected] = useState(false);
+
+  const savedPostsTitle = translateText("Saved Posts");
+  const noSavedPostsYet = translateText("No saved posts yet");
+  const failedToLoadSavedPosts = translateText("Failed to load saved posts");
+  const errorTitle = translateText("Error");
+  const previousText = translateText("Previous");
+  const nextText = translateText("Next");
+  const pageText = translateText("Page");
 
   // Handle auth redirect using useEffect to prevent render loop
   useEffect(() => {
@@ -39,7 +49,7 @@ export default function SavedPosts() {
         }
       });
       if (!response.ok) {
-        throw new Error("Failed to load saved posts");
+        throw new Error(failedToLoadSavedPosts);
       }
       return response.json();
     },
@@ -60,17 +70,16 @@ export default function SavedPosts() {
 
   if (isError) {
     toast({
-      title: "Error",
-      description: error?.message || "Failed to load saved posts",
+      title: errorTitle,
+      description: error?.message || failedToLoadSavedPosts,
       variant: "destructive",
     });
   }
 
   return (
     <div className="container max-w-4xl mx-auto py-8 px-4">
-      <div className="flex items-center space-x-2 mb-6">
-        <BookmarkIcon className="h-6 w-6 text-yellow-500" />
-        <h1 className="text-2xl font-bold">Saved Posts</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">{savedPostsTitle}</h1>
       </div>
 
       {isLoading ? (
@@ -79,11 +88,7 @@ export default function SavedPosts() {
         </div>
       ) : savedPosts?.length === 0 ? (
         <div className="text-center py-12 bg-muted/30 rounded-lg">
-          <BookmarkIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-xl font-medium mb-2">No saved posts yet</h3>
-          <p className="text-muted-foreground">
-            When you save posts, they will appear here for you to find later.
-          </p>
+          <h3 className="text-xl font-medium mb-2">{noSavedPostsYet}</h3>
         </div>
       ) : (
         <div className="space-y-6">
@@ -103,17 +108,17 @@ export default function SavedPosts() {
                 disabled={page === 1}
                 onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
               >
-                Previous
+                {previousText}
               </button>
               <span className="px-4 py-2 bg-muted rounded">
-                Page {page}
+                {pageText} {page}
               </span>
               <button
                 className="px-4 py-2 bg-primary text-primary-foreground rounded disabled:opacity-50"
                 disabled={savedPosts?.length < limit}
                 onClick={() => setPage((prev) => prev + 1)}
               >
-                Next
+                {nextText}
               </button>
             </div>
           )}

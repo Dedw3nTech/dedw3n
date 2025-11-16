@@ -97,7 +97,7 @@ const StripePaymentForm = ({ tier, communityId, onSuccess }: PaymentProps) => {
       }
     } catch (error: any) {
       toast({
-        title: "Payment Error",
+        title: "Error",
         description: error.message || "An error occurred during payment processing",
         variant: "destructive",
       });

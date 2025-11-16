@@ -6,7 +6,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { Link, useLocation } from "wouter";
-import { useTranslation } from "react-i18next";
+import { useMasterTranslation, useSingleTranslation } from "@/hooks/use-master-translation";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { 
   Heart, 
   MessageSquare, 
@@ -17,14 +19,10 @@ import {
   BadgeCheck,
   ImageOff,
   Send,
-  ShoppingCart,
-  Bookmark,
-  Zap,
-  Flag,
-  Mail,
-  Users
+  Flag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,6 +44,7 @@ import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { UserDisplayName } from "@/components/ui/user-display-name";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 
 interface EnhancedPostCardProps {
   post: Post;
@@ -81,7 +80,9 @@ export default function EnhancedPostCard({
   showActions = true, 
   showBookmarkButton = true 
 }: EnhancedPostCardProps) {
-  const { t } = useTranslation();
+  const { translateText } = useMasterTranslation();
+  const { currentLanguage } = useLanguage();
+  const { formatPrice } = useCurrency();
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -93,12 +94,32 @@ export default function EnhancedPostCard({
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   
+  // Inline editing state
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState(post.content || "");
+  const [editedTitle, setEditedTitle] = useState(post.title || "");
+  
+  // Translation state - manual translation approach
+  const [isTranslated, setIsTranslated] = useState(false);
+  const [translatedContent, setTranslatedContent] = useState("");
+  
   // Reset image error state when post changes (using post.id as dependency)
   const [imageError, setImageError] = useState(false);
+  
+  // Promise-based translation hook for manual translation
+  const { translateTextAsync } = useMasterTranslation();
   
   // Reset image error when post id changes
   useEffect(() => {
     setImageError(false);
+    
+    // Track post impression when post is displayed
+    fetch('/api/analytics/post-impression', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ postId: post.id, impressionType: 'view' })
+    }).catch(err => console.error('Failed to track post impression:', err));
     
     if (user) {
       // Check if the post is already liked by the current user
@@ -135,6 +156,7 @@ export default function EnhancedPostCard({
   });
   
   const isOwner = user?.id === post.userId;
+  const isDraft = post.publishStatus === 'draft';
   
   // Format date
   const formattedDate = post.createdAt 
@@ -165,8 +187,8 @@ export default function EnhancedPostCard({
       setIsLiked(false);
       setLikeCount(prev => prev - 1);
       toast({
-        title: t("errors.error"),
-        description: t("social.like_error"),
+        title: translateText("Error"),
+        description: translateText("Failed to like post"),
         variant: "destructive",
       });
     },
@@ -188,13 +210,75 @@ export default function EnhancedPostCard({
       setIsLiked(true);
       setLikeCount(prev => prev + 1);
       toast({
-        title: t("errors.error"),
-        description: t("social.unlike_error"),
+        title: translateText("Error"),
+        description: translateText("Failed to unlike post"),
         variant: "destructive",
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
+    },
+  });
+  
+  // Update post content mutation (inline editing)
+  const updatePostMutation = useMutation({
+    mutationFn: async (data: { content: string; title?: string }) => {
+      const response = await apiRequest("PUT", `/api/posts/${post.id}`, {
+        ...data,
+        publishStatus: post.publishStatus || 'draft' // Preserve the publish status
+      });
+      return response;
+    },
+    onSuccess: () => {
+      setIsEditing(false);
+      toast({
+        title: translateText("Success"),
+        description: translateText("Post updated successfully!"),
+      });
+      // Invalidate post-related queries
+      queryClient.invalidateQueries({ queryKey: ["/api/posts"], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ["/api/draft-posts"], refetchType: 'all' });
+    },
+    onError: (error: any) => {
+      toast({
+        title: translateText("Error"),
+        description: error.message || translateText("Failed to update post"),
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Publish draft post mutation
+  const publishPostMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("PATCH", `/api/posts/${post.id}/publish`, {});
+      return response;
+    },
+    onSuccess: async () => {
+      toast({
+        title: translateText("Success"),
+        description: translateText("Post published successfully!"),
+      });
+      
+      // Invalidate and refetch all feed queries immediately for instant visibility
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["/api/posts"], refetchType: 'all' }),
+        queryClient.invalidateQueries({ queryKey: ["/api/draft-posts"], refetchType: 'all' }),
+        queryClient.invalidateQueries({ queryKey: ["/api/feed/personal"], refetchType: 'all' }),
+        queryClient.invalidateQueries({ queryKey: ["/api/feed/communities"], refetchType: 'all' }),
+        queryClient.invalidateQueries({ queryKey: ["/api/feed/recommended"], refetchType: 'all' }),
+        queryClient.invalidateQueries({ queryKey: ["/api/feed/community"], refetchType: 'all' }),
+      ]);
+      
+      // Redirect to social feed
+      setLocation('/social');
+    },
+    onError: (error: any) => {
+      toast({
+        title: translateText("Error"),
+        description: error.message || translateText("Failed to publish post"),
+        variant: "destructive",
+      });
     },
   });
   
@@ -221,14 +305,14 @@ export default function EnhancedPostCard({
       console.log("Post creation successful - refreshing feeds");
       
       toast({
-        title: t("social.post_deleted"),
-        description: t("social.post_delete_success"),
+        title: translateText("Post Deleted"),
+        description: translateText("Your post has been successfully deleted"),
       });
     },
     onError: () => {
       toast({
-        title: t("errors.error"),
-        description: t("social.delete_error"),
+        title: translateText("Error"),
+        description: translateText("Failed to delete post"),
         variant: "destructive",
       });
     },
@@ -245,14 +329,14 @@ export default function EnhancedPostCard({
       refetchComments(); // Refetch comments to show the new one
       queryClient.invalidateQueries({ queryKey: ["/api/posts"] }); // Update post count
       toast({
-        title: t("social.comment_added"),
-        description: t("social.comment_success"),
+        title: translateText("Comment Added"),
+        description: translateText("Your comment has been posted successfully"),
       });
     },
     onError: () => {
       toast({
-        title: t("errors.error"),
-        description: t("social.comment_error"),
+        title: translateText("Error"),
+        description: translateText("Failed to add comment"),
         variant: "destructive",
       });
     },
@@ -261,8 +345,8 @@ export default function EnhancedPostCard({
   const handleLike = () => {
     if (!user) {
       toast({
-        title: t("errors.error"),
-        description: t("errors.unauthorized"),
+        title: translateText("Error"),
+        description: translateText("You must be logged in to like posts"),
         variant: "destructive",
       });
       return;
@@ -278,8 +362,8 @@ export default function EnhancedPostCard({
   const handleComment = () => {
     if (!user) {
       toast({
-        title: t("errors.error"),
-        description: t("errors.unauthorized"),
+        title: translateText("Error"),
+        description: translateText("You must be logged in to comment"),
         variant: "destructive",
       });
       return;
@@ -294,14 +378,14 @@ export default function EnhancedPostCard({
     navigator.clipboard.writeText(postUrl)
       .then(() => {
         toast({
-          title: t("social.link_copied"),
-          description: t("social.copied_to_clipboard"),
+          title: translateText("Link Copied"),
+          description: translateText("Post link copied to clipboard"),
         });
       })
       .catch(() => {
         toast({
-          title: t("errors.error"),
-          description: t("social.copy_error"),
+          title: translateText("Error"),
+          description: translateText("Failed to copy link"),
           variant: "destructive",
         });
       });
@@ -309,13 +393,13 @@ export default function EnhancedPostCard({
   
   const shareViaEmail = () => {
     const postUrl = `${window.location.origin}/posts/${post.id}`;
-    const subject = encodeURIComponent("Check out this post");
-    const body = encodeURIComponent(`I thought you might like this: ${postUrl}`);
+    const subject = encodeURIComponent(translateText("Check out this post"));
+    const body = encodeURIComponent(`${translateText("I thought you might like this")}: ${postUrl}`);
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
     
     toast({
-      title: "Email Client Opened",
-      description: "Share this post via email",
+      title: translateText("Email Client Opened"),
+      description: translateText("Share this post via email"),
     });
   };
   
@@ -323,8 +407,8 @@ export default function EnhancedPostCard({
     // In a real app, this would navigate to a messaging interface
     // With the post pre-filled
     toast({
-      title: "Send via Message",
-      description: "Post will be shared via message",
+      title: translateText("Send via Message"),
+      description: translateText("Post will be shared via message"),
     });
     
     // Navigate to messages page
@@ -334,8 +418,8 @@ export default function EnhancedPostCard({
   const shareWithMember = () => {
     // In a real app, this would open a dialog to select a member
     toast({
-      title: "Share with Member",
-      description: "Select a member to share with",
+      title: translateText("Share with Member"),
+      description: translateText("Select a member to share with"),
     });
     
     // Navigate to members page with share parameter
@@ -345,48 +429,28 @@ export default function EnhancedPostCard({
   const handleShare = () => {
     if (!user) {
       toast({
-        title: t("errors.error"),
-        description: t("errors.unauthorized"),
+        title: translateText("Error"),
+        description: translateText("You must be logged in to share posts"),
         variant: "destructive",
       });
       return;
     }
-  };
-  
-  const handleBoost = () => {
-    if (!user) {
-      toast({
-        title: t("errors.error"),
-        description: t("errors.unauthorized"),
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Show a success message for now
-    toast({
-      title: "Post Boosted",
-      description: "Your post has been boosted and will reach more users",
-    });
-    
-    // In a real implementation, we would call an API to boost the post
-    console.log('Boosting post', post.id);
   };
   
   const handleReport = () => {
     if (!user) {
       toast({
-        title: t("errors.error"),
-        description: t("errors.unauthorized"),
+        title: translateText("Error"),
+        description: translateText("You must be logged in to report posts"),
         variant: "destructive",
       });
       return;
     }
     
-    // Show a success message for now
+    // Show a success message message for now
     toast({
-      title: "Post Reported",
-      description: "Thank you for helping keep our community safe. Our team will review this content.",
+      title: translateText("Post Reported"),
+      description: translateText("Thank you for helping keep our community safe. Our team will review this content."),
     });
     
     // In a real implementation, we would call an API to report the post
@@ -405,16 +469,16 @@ export default function EnhancedPostCard({
     onError: () => {
       setIsSaved(false);
       toast({
-        title: t("errors.error"),
-        description: t("social.save_error") || "Failed to save post",
+        title: translateText("Error"),
+        description: translateText("Failed to save post"),
         variant: "destructive",
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/saved-posts"] });
       toast({
-        title: t("social.post_saved") || "Post Saved",
-        description: t("social.save_success") || "Post saved to your collection",
+        title: translateText("Post Saved"),
+        description: translateText("Post saved to your collection"),
       });
     },
   });
@@ -431,16 +495,16 @@ export default function EnhancedPostCard({
     onError: () => {
       setIsSaved(true);
       toast({
-        title: t("errors.error"),
-        description: t("social.unsave_error") || "Failed to remove saved post",
+        title: translateText("Error"),
+        description: translateText("Failed to remove saved post"),
         variant: "destructive",
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/saved-posts"] });
       toast({
-        title: t("social.post_removed") || "Post Removed",
-        description: t("social.unsave_success") || "Post removed from your saved items",
+        title: translateText("Post Removed"),
+        description: translateText("Post removed from your saved items"),
       });
     },
   });
@@ -449,8 +513,8 @@ export default function EnhancedPostCard({
   const handleSave = () => {
     if (!user) {
       toast({
-        title: t("errors.error"),
-        description: t("errors.unauthorized"),
+        title: translateText("Error"),
+        description: translateText("You must be logged in to save posts"),
         variant: "destructive",
       });
       return;
@@ -479,8 +543,8 @@ export default function EnhancedPostCard({
   const handleBuy = () => {
     if (!user) {
       toast({
-        title: t("errors.error"),
-        description: t("errors.unauthorized"),
+        title: translateText("Error"),
+        description: translateText("You must be logged in to purchase"),
         variant: "destructive",
       });
       return;
@@ -488,8 +552,8 @@ export default function EnhancedPostCard({
     
     if (!linkedProduct) {
       toast({
-        title: t("errors.error"),
-        description: t("social.product_not_found"),
+        title: translateText("Error"),
+        description: translateText("Product not found"),
         variant: "destructive",
       });
       return;
@@ -509,7 +573,7 @@ export default function EnhancedPostCard({
               <div className="w-full rounded-md overflow-hidden">
                 <img 
                   src={post.imageUrl} 
-                  alt={post.title || t("social.post_image")} 
+                  alt={post.title || translateText("Post image")} 
                   className="w-full h-auto rounded-md object-contain cursor-pointer"
                   onClick={() => setLocation(`/posts/${post.id}`)}
                   onError={() => setImageError(true)}
@@ -524,11 +588,27 @@ export default function EnhancedPostCard({
               <div className="w-full rounded-md bg-gray-100 flex items-center justify-center h-[300px] p-8">
                 <div className="text-center text-gray-500">
                   <ImageOff className="h-16 w-16 mx-auto mb-2" />
-                  <p>{t("social.image_unavailable")}</p>
+                  <p>{translateText("Image unavailable")}</p>
                 </div>
               </div>
             ) : null}
-            <p className="mt-3 text-gray-700">{post.content}</p>
+            <p className="mt-3 text-gray-700">{isTranslated ? translatedContent : post.content}</p>
+            {currentLanguage !== 'EN' && post.content && (
+              <button
+                onClick={async () => {
+                  if (!isTranslated) {
+                    const translated = await translateTextAsync(post.content, 'instant');
+                    setTranslatedContent(translated);
+                    setIsTranslated(true);
+                  } else {
+                    setIsTranslated(false);
+                  }
+                }}
+                className="text-sm text-gray-500 hover:text-gray-700 mt-2 transition-colors"
+              >
+                {isTranslated ? translateText("Show Original") : translateText("Translate")}
+              </button>
+            )}
           </div>
         );
         
@@ -552,7 +632,23 @@ export default function EnhancedPostCard({
                 </div>
               </div>
             )}
-            <p className="mt-3 text-gray-700">{post.content}</p>
+            <p className="mt-3 text-gray-700">{isTranslated ? translatedContent : post.content}</p>
+            {currentLanguage !== 'EN' && post.content && (
+              <button
+                onClick={async () => {
+                  if (!isTranslated) {
+                    const translated = await translateTextAsync(post.content, 'instant');
+                    setTranslatedContent(translated);
+                    setIsTranslated(true);
+                  } else {
+                    setIsTranslated(false);
+                  }
+                }}
+                className="text-sm text-gray-500 hover:text-gray-700 mt-2 transition-colors"
+              >
+                {isTranslated ? translateText("Show Original") : translateText("Translate")}
+              </button>
+            )}
           </div>
         );
         
@@ -563,13 +659,29 @@ export default function EnhancedPostCard({
               <h2 className="text-xl font-bold mb-2">{post.title}</h2>
             )}
             <div className="prose max-w-none">
-              <p className="text-gray-700">{post.content}</p>
+              <p className="text-gray-700">{isTranslated ? translatedContent : post.content}</p>
+              {currentLanguage !== 'EN' && post.content && (
+                <button
+                  onClick={async () => {
+                    if (!isTranslated) {
+                      const translated = await translateTextAsync(post.content, 'instant');
+                      setTranslatedContent(translated);
+                      setIsTranslated(true);
+                    } else {
+                      setIsTranslated(false);
+                    }
+                  }}
+                  className="text-sm text-gray-500 hover:text-gray-700 mt-2 transition-colors"
+                >
+                  {isTranslated ? translateText("Show Original") : translateText("Translate")}
+                </button>
+              )}
             </div>
             {post.imageUrl && isValidImageUrl(post.imageUrl) && !imageError ? (
               <div className="w-full rounded-md overflow-hidden mt-4">
                 <img 
                   src={post.imageUrl} 
-                  alt={post.title || t("social.article_image")} 
+                  alt={post.title || translateText("Article image")} 
                   className="w-full h-auto rounded-md object-contain cursor-pointer"
                   onClick={() => setLocation(`/posts/${post.id}`)}
                   onError={() => setImageError(true)}
@@ -584,7 +696,7 @@ export default function EnhancedPostCard({
               <div className="w-full rounded-md bg-gray-100 flex items-center justify-center h-[300px] mt-4 p-8">
                 <div className="text-center text-gray-500">
                   <ImageOff className="h-16 w-16 mx-auto mb-2" />
-                  <p>{t("social.image_unavailable")}</p>
+                  <p>{translateText("Image unavailable")}</p>
                 </div>
               </div>
             ) : null}
@@ -595,17 +707,33 @@ export default function EnhancedPostCard({
         return (
           <div className="mb-4 relative">
             <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-bl-md z-10">
-              {t("social.sponsored")}
+              {translateText("Sponsored")}
             </div>
             {post.title && (
               <h2 className="text-xl font-bold mb-2">{post.title}</h2>
             )}
-            <p className="text-gray-700">{post.content}</p>
+            <p className="text-gray-700">{isTranslated ? translatedContent : post.content}</p>
+            {currentLanguage !== 'EN' && post.content && (
+              <button
+                onClick={async () => {
+                  if (!isTranslated) {
+                    const translated = await translateTextAsync(post.content, 'instant');
+                    setTranslatedContent(translated);
+                    setIsTranslated(true);
+                  } else {
+                    setIsTranslated(false);
+                  }
+                }}
+                className="text-sm text-gray-500 hover:text-gray-700 mt-2 transition-colors"
+              >
+                {isTranslated ? translateText("Show Original") : translateText("Translate")}
+              </button>
+            )}
             {post.imageUrl && isValidImageUrl(post.imageUrl) && !imageError ? (
               <div className="w-full rounded-md overflow-hidden mt-4">
                 <img 
                   src={post.imageUrl} 
-                  alt={post.title || t("social.ad_image")} 
+                  alt={post.title || translateText("Advertisement image")} 
                   className="w-full h-auto rounded-md object-contain cursor-pointer"
                   onClick={() => setLocation(`/posts/${post.id}`)}
                   onError={() => setImageError(true)}
@@ -620,13 +748,13 @@ export default function EnhancedPostCard({
               <div className="w-full rounded-md bg-gray-100 flex items-center justify-center h-[300px] mt-4 p-8">
                 <div className="text-center text-gray-500">
                   <ImageOff className="h-16 w-16 mx-auto mb-2" />
-                  <p>{t("social.image_unavailable")}</p>
+                  <p>{translateText("Image unavailable")}</p>
                 </div>
               </div>
             ) : null}
             <div className="mt-4">
               <Button size="sm" className="bg-primary hover:bg-primary/90">
-                {t("social.learn_more")}
+                {translateText("Learn More")}
               </Button>
             </div>
           </div>
@@ -636,16 +764,33 @@ export default function EnhancedPostCard({
       default:
         return (
           <div className="mb-4">
-            <p className="text-gray-700">{post.content}</p>
+            <p className="text-gray-700">{isTranslated ? translatedContent : post.content}</p>
+            {currentLanguage !== 'EN' && post.content && (
+              <button
+                onClick={async () => {
+                  if (!isTranslated) {
+                    const translated = await translateTextAsync(post.content, 'instant');
+                    setTranslatedContent(translated);
+                    setIsTranslated(true);
+                  } else {
+                    setIsTranslated(false);
+                  }
+                }}
+                className="text-sm text-gray-500 hover:text-gray-700 mt-2 transition-colors"
+                data-testid="button-translate-post"
+              >
+                {isTranslated ? translateText("Show Original") : translateText("Translate")}
+              </button>
+            )}
           </div>
         );
     }
   };
   
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
-      {/* Post Header */}
-      <div className="flex items-center justify-between mb-4">
+    <Card className="overflow-hidden mb-4">
+      <CardHeader className="pb-0">
+        <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <Link href={`/members/${post.userId}`} className="block">
             <UserAvatar userId={post.userId} />
@@ -661,21 +806,27 @@ export default function EnhancedPostCard({
             </div>
             <div className="flex items-center text-sm text-gray-500">
               <span>{formattedDate}</span>
-              <span className="mx-1">•</span>
-              <span className="capitalize">{post.contentType}</span>
+              {post.contentType && post.contentType !== 'standard' && (
+                <>
+                  <span className="mx-1">•</span>
+                  <span className="capitalize">{post.contentType.replace(/_/g, ' ')}</span>
+                </>
+              )}
             </div>
           </div>
         </div>
         
         <div className="flex items-center">
-          {/* Report Button */}
-          <span 
-            className="flex items-center cursor-pointer text-red-500 hover:text-red-600 text-xs mr-2 bg-red-50 p-1 rounded-md"
-            onClick={handleReport}
-          >
-            <Flag className="w-4 h-4 mr-1 fill-red-200" />
-            Report
-          </span>
+          {/* Report Button - Only show for posts not owned by user */}
+          {!isOwner && (
+            <span 
+              className="flex items-center cursor-pointer text-red-500 hover:text-red-600 text-xs mr-2 bg-red-50 p-1 rounded-md"
+              onClick={handleReport}
+            >
+              <Flag className="w-4 h-4 mr-1 fill-red-200" />
+              Report
+            </span>
+          )}
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -686,54 +837,114 @@ export default function EnhancedPostCard({
             <DropdownMenuContent align="end">
               {isOwner ? (
                 <>
-                  <DropdownMenuItem disabled>{t("social.edit")}</DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleDelete}>{t("social.delete")}</DropdownMenuItem>
+                  <DropdownMenuItem 
+                    disabled={!isDraft}
+                    onClick={() => {
+                      if (isDraft) {
+                        setIsEditing(true);
+                        setEditedContent(post.content || "");
+                      }
+                    }}
+                  >
+                    {translateText("Edit")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleDelete}>{translateText("Delete")}</DropdownMenuItem>
                 </>
               ) : (
                 <>
-                  <DropdownMenuItem disabled>{t("social.report")}</DropdownMenuItem>
-                  <DropdownMenuItem disabled>{t("social.hide")}</DropdownMenuItem>
+                  <DropdownMenuItem disabled>{translateText("Report")}</DropdownMenuItem>
+                  <DropdownMenuItem disabled>{translateText("Hide")}</DropdownMenuItem>
                 </>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
+      </CardHeader>
       
+      <CardContent className="pt-4">
       {/* Post Content */}
-      {renderContent()}
+      {isEditing && isDraft ? (
+        <div className="mb-4 space-y-3">
+          {/* Content textarea */}
+          <Textarea
+            value={editedContent}
+            onChange={(e) => setEditedContent(e.target.value)}
+            placeholder={translateText("Edit your post content...")}
+            className="w-full min-h-[200px] p-3 bg-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+            data-testid="textarea-edit-content"
+          />
+          {/* Edit action buttons */}
+          <div className="flex justify-end space-x-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsEditing(false);
+                setEditedContent(post.content || "");
+              }}
+              disabled={updatePostMutation.isPending}
+              data-testid="button-cancel-edit"
+            >
+              {translateText("Cancel")}
+            </Button>
+            <Button
+              onClick={() => {
+                updatePostMutation.mutate({
+                  content: editedContent
+                });
+              }}
+              disabled={updatePostMutation.isPending || !editedContent.trim()}
+              className="bg-black hover:bg-gray-800 text-white"
+              data-testid="button-confirm-edit"
+            >
+              {updatePostMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {translateText("Updating...")}
+                </>
+              ) : (
+                <>{translateText("Confirm Edit")}</>
+              )}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        renderContent()
+      )}
       
       {/* Linked Product */}
       {post.productId && linkedProduct && !isLoadingProduct && (
-        <div className="mb-4 mt-2 p-3 border border-gray-200 rounded-md bg-gray-50">
-          <div className="flex items-center">
-            <div className="flex-shrink-0 mr-3">
-              {linkedProduct.imageUrl && (
-                <img 
-                  src={linkedProduct.imageUrl} 
-                  alt={linkedProduct.name} 
-                  className="w-16 h-16 object-cover rounded-md"
-                  onError={(e) => { 
-                    (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNOCAxMEMxMC4yMDkxIDEwIDEyIDguMjA5MTQgMTIgNkMxMiAzLjc5MDg2IDEwLjIwOTEgMiA4IDJDNS43OTA4NiAyIDQgMy43OTA4NiA0IDZDNCA4LjIwOTE0IDUuNzkwODYgMTAgOCAxMFoiIGZpbGw9IiM5Q0EzQUYiLz48cGF0aCBkPSJNMTIuNSAxMi43NUMxMi41IDE0Ljk2NDEgMTAuNjk0MSAxNi43NSA4LjUgMTYuNzVINy41QzUuMzA1ODYgMTYuNzUgMy41IDE0Ljk2NDEgMy41IDEyLjc1VjEyLjVDMy41IDExLjEyMTMgNC42MjEzIDEwIDYgMTBIMTBDMTEuMzc4NyAxMCAxMi41IDExLjEyMTMgMTIuNSAxMi41VjEyLjc1WiIgZmlsbD0iIzlDQTNBRiIvPjwvc3ZnPg==' 
-                  }}
-                />
-              )}
-            </div>
-            <div className="flex-1">
-              <h4 className="font-medium">{linkedProduct.name}</h4>
-              <div className="flex justify-between items-center mt-1">
-                <div className="text-green-600 font-semibold">
-                  ${linkedProduct.price?.toFixed(2)}
-                </div>
-                {linkedProduct.discountPrice && (
-                  <div className="text-gray-500 line-through text-sm">
-                    ${linkedProduct.discountPrice.toFixed(2)}
-                  </div>
+        <Link href={`/marketplace/products/${linkedProduct.id}`}>
+          <div className="mb-4 mt-2 p-3 border border-gray-200 rounded-md bg-gray-50 cursor-pointer hover:bg-gray-100 hover:border-gray-300 transition-colors">
+            <div className="flex items-center">
+              <div className="flex-shrink-0 mr-3">
+                {linkedProduct.imageUrl && (
+                  <img 
+                    src={linkedProduct.imageUrl} 
+                    alt={linkedProduct.name} 
+                    className="w-16 h-16 object-cover rounded-md"
+                    onError={(e) => { 
+                      (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNOCAxMEMxMC4yMDkxIDEwIDEyIDguMjA5MTQgMTIgNkMxMiAzLjc5MDg2IDEwLjIwOTEgMiA4IDJDNS43OTA4NiAyIDQgMy43OTA4NiA0IDZDNCA4LjIwOTE0IDUuNzkwODYgMTAgOCAxMFoiIGZpbGw9IiM5Q0EzQUYiLz48cGF0aCBkPSJNMTIuNSAxMi43NUMxMi41IDE0Ljk2NDEgMTAuNjk0MSAxNi43NSA4LjUgMTYuNzVINy41QzUuMzA1ODYgMTYuNzUgMy41IDE0Ljk2NDEgMy41IDEyLjc1VjEyLjVDMy41IDExLjEyMTMgNC42MjEzIDEwIDYgMTBIMTBDMTEuMzc4NyAxMCAxMi41IDExLjEyMTMgMTIuNSAxMi41VjEyLjc1WiIgZmlsbD0iIzlDQTNBRiIvPjwvc3ZnPg==' 
+                    }}
+                  />
                 )}
+              </div>
+              <div className="flex-1">
+                <h4 className="font-medium">{linkedProduct.name}</h4>
+                <div className="flex justify-between items-center mt-1">
+                  <div className="text-green-600 font-semibold">
+                    {formatPrice(linkedProduct.price || 0)}
+                  </div>
+                  {linkedProduct.discountPrice && (
+                    <div className="text-gray-500 line-through text-sm">
+                      {formatPrice(linkedProduct.discountPrice)}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </Link>
       )}
       
       {/* Tags */}
@@ -747,70 +958,53 @@ export default function EnhancedPostCard({
         </div>
       )}
       
-      {/* Post Stats */}
-      <div className="flex items-center justify-between text-sm text-gray-500 py-2 border-t border-b">
-        <div className="flex items-center space-x-3">
-          {likeCount > 0 && (
-            <span className="flex items-center">
-              <ThumbsUp className="w-4 h-4 text-blue-500 mr-1" />
-              {likeCount}
-            </span>
-          )}
-          <span 
-            className="flex items-center cursor-pointer text-orange-500 hover:text-orange-600"
-            onClick={handleBoost}
+      {/* Publish Draft Button - Only show for draft posts owned by user */}
+      {isDraft && isOwner && (
+        <div className="flex justify-end pt-3 pb-2 border-t">
+          <Button
+            onClick={() => publishPostMutation.mutate()}
+            disabled={publishPostMutation.isPending}
+            className="bg-black hover:bg-gray-800 text-white px-6 py-2"
+            data-testid="button-publish-post"
           >
-            <Zap className="w-4 h-4 mr-1" />
-            Boost
-          </span>
+            {publishPostMutation.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                {translateText("Publishing...")}
+              </>
+            ) : (
+              <>{translateText("Post")}</>
+            )}
+          </Button>
         </div>
-        <div className="flex space-x-4">
-          <span className="flex items-center">
-            {(post.comments && post.comments > 0) 
-              ? `${post.comments} ${t("social.comments")}` 
-              : t("social.no_comments")}
-          </span>
-          {(post.shares && post.shares > 0) && (
-            <span>{post.shares} {t("social.shares")}</span>
-          )}
-          {(post.views && post.views > 0) && (
-            <span>{post.views} {t("social.views")}</span>
-          )}
-        </div>
-      </div>
+      )}
       
-      {/* Post Actions */}
-      {showActions && (
-        <div className="flex justify-between pt-2">
-          {/* Buy Now Button - Positioned BEFORE Like button */}
-          {post.productId ? (
-            <Link href={`/checkout?product=${post.productId}`} className="inline-block mr-2">
-              <button
-                className="flex items-center py-1 px-3 bg-green-600 hover:bg-green-700 text-white rounded-md"
-              >
-                <ShoppingCart className="w-5 h-5 mr-1" />
-                <span>Purchase</span>
-              </button>
-            </Link>
-          ) : (
-            <Link href="/checkout" className="inline-block mr-2">
-              <button
-                className="flex items-center py-1 px-3 bg-green-600 hover:bg-green-700 text-white rounded-md"
-              >
-                <ShoppingCart className="w-5 h-5 mr-1" />
-                <span>Purchase</span>
-              </button>
-            </Link>
-          )}
-          
+      {/* Post Stats - Only show for published posts */}
+      {!isDraft && (
+        <div className="flex items-center gap-6 text-sm text-gray-500 py-2 border-t border-b">
+          <span className="flex items-center gap-1">
+            {likeCount} Ded
+          </span>
+          <span className="flex items-center gap-1">
+            {post.comments || 0} {translateText("Comment")}
+          </span>
+          <span className="flex items-center gap-1">
+            {post.shares || 0} {translateText("Share")}
+          </span>
+        </div>
+      )}
+      
+      {/* Post Actions - Only show for published posts */}
+      {!isDraft && showActions && (
+        <div className="flex justify-end gap-1 pt-2">
           <button
             onClick={handleLike}
             className={`flex items-center py-1 px-2 rounded-md ${
-              isLiked ? "text-blue-500" : "text-gray-500 hover:bg-gray-100"
+              isLiked ? "text-black" : "text-gray-500 hover:bg-gray-100"
             }`}
           >
             <Heart className={`w-5 h-5 mr-1 ${isLiked ? "fill-current" : ""}`} />
-            <span>{t("social.like")}</span>
+            <span>{translateText("Ded")}</span>
           </button>
           
           <button
@@ -818,7 +1012,7 @@ export default function EnhancedPostCard({
             className="flex items-center py-1 px-2 text-gray-500 hover:bg-gray-100 rounded-md"
           >
             <MessageSquare className="w-5 h-5 mr-1" />
-            <span>{t("social.comment")}</span>
+            <span>{translateText("Comment")}</span>
           </button>
           
           <DropdownMenu>
@@ -828,53 +1022,29 @@ export default function EnhancedPostCard({
                 className="flex items-center py-1 px-2 text-gray-500 hover:bg-gray-100 rounded-md"
               >
                 <Share2 className="w-5 h-5 mr-1" />
-                <span>{t("social.share")}</span>
+                <span>{translateText("Share")}</span>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={copyLink}>
-                <span className="flex items-center">
-                  <Share2 className="w-4 h-4 mr-2 text-blue-500 stroke-blue-500" />
-                  Copy Link
-                </span>
+                {translateText("Copy Link")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={shareViaEmail}>
-                <span className="flex items-center">
-                  <Mail className="w-4 h-4 mr-2 text-purple-500 stroke-purple-500" />
-                  Share via Email
-                </span>
+                {translateText("Share via Email")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={sendViaMessage}>
-                <span className="flex items-center">
-                  <MessageSquare className="w-4 h-4 mr-2 text-green-500 stroke-green-500" />
-                  Send via Message
-                </span>
+                {translateText("Send via Message")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={shareWithMember}>
-                <span className="flex items-center">
-                  <Users className="w-4 h-4 mr-2 text-orange-500 stroke-orange-500" />
-                  Share with Member
-                </span>
+                {translateText("Share with Member")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          
-          {showBookmarkButton && (
-            <button
-              onClick={handleSave}
-              className={`flex items-center py-1 px-2 rounded-md ${
-                isSaved ? "text-yellow-500" : "text-gray-500 hover:bg-gray-100"
-              }`}
-            >
-              <Bookmark className={`w-5 h-5 mr-1 ${isSaved ? "fill-current" : ""}`} />
-              <span>{isSaved ? "Saved" : "Save"}</span>
-            </button>
-          )}
         </div>
       )}
       
-      {/* Comments Section */}
-      {showComments && (
+      {/* Comments Section - Only show for published posts */}
+      {!isDraft && showComments && (
         <div className="mt-4 pt-3 border-t">
           {/* Comment Input */}
           <div className="flex items-start space-x-3 mb-4">
@@ -883,13 +1053,12 @@ export default function EnhancedPostCard({
               <Textarea
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
-                placeholder={t("social.write_comment")}
+                placeholder={translateText("Write a comment...")}
                 className="w-full min-h-[60px] p-2 pr-10 bg-gray-50 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white resize-none"
               />
               <Button 
                 size="sm" 
-                variant="ghost" 
-                className="absolute right-2 bottom-2 p-1 h-auto text-primary"
+                className="absolute right-2 bottom-2 p-1 h-auto bg-black hover:bg-gray-800 text-white"
                 onClick={() => {
                   if (commentText.trim()) {
                     addCommentMutation.mutate({ content: commentText.trim() });
@@ -906,7 +1075,7 @@ export default function EnhancedPostCard({
           <div className="space-y-4">
             {isLoadingComments ? (
               <div className="text-center text-gray-500 text-sm py-4">
-                {t("social.loading_comments")}
+                {translateText("Loading comments...")}
               </div>
             ) : comments.length > 0 ? (
               comments.map((comment: any) => (
@@ -927,7 +1096,7 @@ export default function EnhancedPostCard({
               ))
             ) : (
               <div className="text-center text-gray-500 text-sm py-4">
-                {t("social.no_comments")}
+                {translateText("No comments yet")}
               </div>
             )}
           </div>
@@ -938,14 +1107,14 @@ export default function EnhancedPostCard({
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("social.confirm_delete_title") || "Delete Post"}</AlertDialogTitle>
+            <AlertDialogTitle>{translateText("Delete Post")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("social.confirm_delete") || "Are you sure you want to delete this post? This action cannot be undone."}
+              {translateText("Are you sure you want to delete this post? This action cannot be undone.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deletePostMutation.isPending}>
-              {t("common.cancel") || "Cancel"}
+              {translateText("Cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
@@ -955,11 +1124,12 @@ export default function EnhancedPostCard({
               {deletePostMutation.isPending ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : null}
-              {t("social.delete") || "Delete"}
+              {translateText("Delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

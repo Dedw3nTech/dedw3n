@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
+import { CommunityNav } from '@/components/layout/CommunityNav';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,10 +17,6 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 import { useCurrency } from '@/contexts/CurrencyContext';
-
-// Use server-served static asset paths for production compatibility
-const eventsHeaderPromo = '/attached_assets/Dedw3n Business commHeader.png';
-const eventsFooterPromo = '/attached_assets/Dedw3n comm Footer_1749108826266.png';
 
 interface Event {
   id: number;
@@ -331,37 +328,13 @@ export default function EventsPage() {
     { value: 'dating', label: 'Dating' }
   ];
 
-  // Events Header Advertisement Component
-  function EventsHeaderPromoSection() {
-    return (
-      <div className="w-full mb-6">
-        <img 
-          src={eventsHeaderPromo}
-          alt="Dedwen Events & Meetups - Connect and Network"
-          className="w-full h-[200px] sm:h-[250px] md:h-[300px] object-cover rounded-lg"
-        />
-      </div>
-    );
-  }
-
-  // Events Footer Advertisement Component
-  function EventsFooterPromoSection() {
-    return (
-      <div className="w-full mt-8">
-        <img 
-          src={eventsFooterPromo}
-          alt="Join Dedwen Events Community - Network and Connect"
-          className="w-full h-[200px] sm:h-[250px] md:h-[300px] object-cover rounded-lg"
-        />
-      </div>
-    );
-  }
-
   return (
-    <div className="container max-w-6xl mx-auto py-8 px-4">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+    <>
+      <CommunityNav />
+      <div className="container max-w-6xl mx-auto py-8 px-4">
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Events & Meetups</h1>
             <p className="text-gray-600">Discover and join local events in your community</p>
@@ -538,9 +511,6 @@ export default function EventsPage() {
             </Dialog>
           </div>
         </div>
-
-        {/* Events Header Advertisement */}
-        <EventsHeaderPromoSection />
 
         {/* Search and Filters */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -996,10 +966,8 @@ export default function EventsPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Events Footer Advertisement */}
-        <EventsFooterPromoSection />
-
+        </div>
       </div>
-    </div>
+    </>
   );
 }

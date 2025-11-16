@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTypedTranslation } from './use-master-translation';
 
 interface UsernameVerificationState {
   isVerifying: boolean;

@@ -9,6 +9,11 @@ interface OptimizedImageProps {
   sizes?: string;
   onLoad?: () => void;
   onError?: () => void;
+  avifSrc?: string;
+  webpSrc?: string;
+  srcSet?: string;
+  responsive?: boolean;
+  aspectRatio?: string;
 }
 
 export function OptimizedImage({
@@ -19,7 +24,12 @@ export function OptimizedImage({
   priority = false,
   sizes = '100vw',
   onLoad,
-  onError
+  onError,
+  avifSrc,
+  webpSrc,
+  srcSet,
+  responsive = false,
+  aspectRatio
 }: OptimizedImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -51,19 +61,21 @@ export function OptimizedImage({
     return () => observer.disconnect();
   }, [priority]);
 
-  // Generate responsive image sources
-  const generateSrcSet = (baseSrc: string) => {
-    // Extract file extension and base path
-    const extension = baseSrc.split('.').pop()?.toLowerCase();
-    const basePath = baseSrc.replace(/\.[^/.]+$/, '');
+  // Generate responsive image sources for modern formats
+  const generateResponsiveSrcSet = (baseSrc: string, format?: 'avif' | 'webp'): string | undefined => {
+    if (!responsive) return undefined;
     
-    // For attached assets, try to generate multiple resolutions
-    if (baseSrc.includes('/attached_assets/')) {
-      const resolutions = [480, 768, 1024, 1440, 1920];
-      return resolutions.map(width => `${basePath}_${width}w.${extension} ${width}w`).join(', ');
-    }
+    // Skip responsive generation for attached_assets to prevent 404s
+    if (baseSrc.includes('/attached_assets/')) return undefined;
     
-    return baseSrc;
+    // Extract original extension or use specified format
+    const originalExt = baseSrc.match(/\.(jpg|jpeg|png|webp|avif)$/i)?.[0] || '';
+    const targetExt = format ? `.${format}` : originalExt;
+    const baseWithoutExt = baseSrc.replace(/\.(jpg|jpeg|png|webp|avif)$/i, '');
+    
+    // Generate common responsive sizes for luxury e-commerce (Nike, Hermes, Gucci standards)
+    const widths = [640, 768, 1024, 1280, 1536, 1920];
+    return widths.map(w => `${baseWithoutExt}-${w}w${targetExt} ${w}w`).join(', ');
   };
 
   const handleLoad = () => {
@@ -87,6 +99,8 @@ export function OptimizedImage({
     );
   }
 
+  const hasModernFormats = avifSrc || webpSrc;
+
   return (
     <div className={`relative overflow-hidden ${className}`} ref={placeholderRef}>
       {/* Placeholder while loading */}
@@ -96,22 +110,68 @@ export function OptimizedImage({
         </div>
       )}
       
-      {/* Actual image */}
-      {isInView && (
+      {/* Modern format support using picture element */}
+      {isInView && hasModernFormats && (
+        <picture>
+          {/* AVIF - modern format with best compression */}
+          {avifSrc && (
+            <source
+              type="image/avif"
+              srcSet={responsive ? generateResponsiveSrcSet(avifSrc, 'avif') || avifSrc : avifSrc}
+              sizes={sizes}
+            />
+          )}
+          
+          {/* WebP - modern format with wide browser support */}
+          {webpSrc && (
+            <source
+              type="image/webp"
+              srcSet={responsive ? generateResponsiveSrcSet(webpSrc, 'webp') || webpSrc : webpSrc}
+              sizes={sizes}
+            />
+          )}
+          
+          {/* Fallback to original format */}
+          <img
+            ref={imgRef}
+            src={src}
+            srcSet={srcSet || (responsive ? generateResponsiveSrcSet(src) : undefined)}
+            sizes={sizes}
+            alt={alt}
+            loading={loading}
+            decoding="async"
+            fetchPriority={priority ? 'high' : 'auto'}
+            className={`w-full h-full object-cover transition-opacity duration-300 ${
+              isLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+            onLoad={handleLoad}
+            onError={handleError}
+            style={{
+              aspectRatio: aspectRatio || 'auto',
+            }}
+            {...(priority && { 'data-priority': 'high' })}
+          />
+        </picture>
+      )}
+      
+      {/* Standard image without modern formats */}
+      {isInView && !hasModernFormats && (
         <img
           ref={imgRef}
           src={src}
-          srcSet={generateSrcSet(src)}
+          srcSet={srcSet || (responsive ? generateResponsiveSrcSet(src) : undefined)}
           sizes={sizes}
           alt={alt}
           loading={loading}
+          decoding="async"
+          fetchPriority={priority ? 'high' : 'auto'}
           className={`w-full h-full object-cover transition-opacity duration-300 ${
             isLoaded ? 'opacity-100' : 'opacity-0'
           }`}
           onLoad={handleLoad}
           onError={handleError}
           style={{
-            aspectRatio: 'auto',
+            aspectRatio: aspectRatio || 'auto',
           }}
           {...(priority && { 'data-priority': 'high' })}
         />

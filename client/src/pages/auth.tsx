@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
 import { useLocation, Link } from "wouter";
-const dedw3nLogo = "/dedw3n-logo-black.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,8 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import RegionSelector from "@/components/RegionSelector";
 import { useTypedTranslation, useMasterBatchTranslation } from "@/hooks/use-master-translation";
+import { queryClient } from "@/lib/queryClient";
 import { PasswordStrengthValidator } from "@/components/PasswordStrengthValidator";
 
 import { useEmailValidation } from "@/hooks/use-email-validation";
@@ -20,6 +19,8 @@ import { useAffiliateVerification } from "@/hooks/use-affiliate-verification";
 import { usePasswordStrength } from "@/hooks/use-password-strength";
 
 import { ReportButton } from "@/components/ui/report-button";
+import { processError } from "@/lib/error-handler";
+import { InlineErrorDisplay } from "@/components/ui/error-display";
 // Remove usePageTitle import as it's not needed
 import { 
   Eye, 
@@ -65,7 +66,7 @@ export default function AuthPage() {
     resetValidation: resetNameValidation
   } = useNameValidation();
 
-  const [authError, setAuthError] = useState<{type: string, message: string, show: boolean} | null>(null);
+  const [authError, setAuthError] = useState<Error | string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     username: "",
@@ -79,6 +80,13 @@ export default function AuthPage() {
     gender: "",
     affiliatePartnerCode: ""
   });
+
+  // State for inline MFA
+  const [showMFA, setShowMFA] = useState(false);
+  const [mfaCode, setMfaCode] = useState("");
+  const [mfaEmail, setMfaEmail] = useState("");
+  const [mfaMethod, setMfaMethod] = useState<'email' | 'whatsapp' | null>(null);
+  const [isVerifyingMFA, setIsVerifyingMFA] = useState(false);
 
   // Password strength validation (only for registration)
   const { result: passwordStrength, isValidating: isValidatingPassword } = usePasswordStrength(!isLogin ? formData.password : '');
@@ -99,7 +107,6 @@ export default function AuthPage() {
     verifyPartnerCode,
     clearVerification: clearAffiliateVerification
   } = useAffiliateVerification();
-  // No longer need captcha state for Google reCAPTCHA v3 (invisible)
 
   // Translation using typed hook
   const t = useTypedTranslation();
@@ -197,10 +204,6 @@ export default function AuthPage() {
         formData.email &&
         formData.password &&
         formData.dateOfBirth &&
-        formData.gender &&
-        formData.region &&
-        formData.country &&
-        formData.city &&
         formData.language &&
         !ageError &&
         emailIsValid === true &&
@@ -234,6 +237,58 @@ export default function AuthPage() {
     }
   }, [formData.name, isLogin, nameTouched, validateName, resetNameValidation]);
 
+  const handleVerifyMFA = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (mfaCode.length !== 6) {
+      toast({
+        title: t["Invalid Code"] || "Invalid Code",
+        description: t["Please enter a 6-digit verification code"] || "Please enter a 6-digit verification code",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsVerifyingMFA(true);
+
+    try {
+      const response = await fetch('/api/auth/verify-mfa-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: mfaEmail, code: mfaCode }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Verification failed');
+      }
+
+      toast({
+        title: t["Success!"] || "Success!",
+        description: t["Login successful"] || "Login successful",
+      });
+
+      // Invalidate queries to refresh user data
+      await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      
+      // Reset MFA state
+      setShowMFA(false);
+      setMfaCode("");
+      
+      // Navigation handled by useEffect when user state updates
+    } catch (error: any) {
+      console.error('MFA verification failed:', error);
+      toast({
+        title: t["Verification Failed"] || "Verification Failed",
+        description: error.message || t["Invalid verification code. Please try again."] || "Invalid verification code. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsVerifyingMFA(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -245,10 +300,7 @@ export default function AuthPage() {
         if (!formData.name) missing.push(t["Full Name"] || "Full Name");
         if (!formData.email) missing.push(t["Email"] || "Email");
         if (!formData.dateOfBirth) missing.push(t["Date of Birth"] || "Date of Birth");
-        if (!formData.gender) missing.push(t["Gender"] || "Gender");
-        if (!formData.region) missing.push(t["Region"] || "Region");
-        if (!formData.country) missing.push(t["Country"] || "Country");
-        if (!formData.city) missing.push(t["City"] || "City");
+        if (!formData.language) missing.push(t["Language"] || "Language");
       }
       
       toast({
@@ -273,14 +325,25 @@ export default function AuthPage() {
 
     try {
       if (isLogin) {
-        await loginMutation.mutateAsync({
+        const result = await loginMutation.mutateAsync({
           username: formData.username,
           password: formData.password
-        });
+        }) as any;
+        
+        // Check if MFA is required
+        if (result?.requiresMFA || result?.requires2FA) {
+          setShowMFA(true);
+          setMfaEmail(result.email);
+          setMfaMethod(result.method || 'email');
+          toast({
+            title: t["Verification Code Sent"] || "Verification Code Sent",
+            description: result.message || (t["Please check your"] || "Please check your") + " " + (result.method === 'whatsapp' ? 'WhatsApp' : (t["email"] || "email")),
+          });
+          return;
+        }
         
         // Handle remember password functionality
         if (rememberPassword) {
-          // Save credentials to localStorage
           const credentialsToSave = {
             username: formData.username,
             password: formData.password,
@@ -288,14 +351,10 @@ export default function AuthPage() {
           };
           localStorage.setItem('dedwen_remembered_credentials', JSON.stringify(credentialsToSave));
         } else {
-          // Clear remembered credentials if checkbox is unchecked
           localStorage.removeItem('dedwen_remembered_credentials');
         }
         
-        toast({
-          title: t["Welcome back!"] || "Welcome back!",
-          description: t["You've successfully logged in."] || "You've successfully logged in.",
-        });
+        // Navigation handled by useEffect when user state updates
       } else {
         await registerMutation.mutateAsync({
           username: formData.username,
@@ -303,31 +362,18 @@ export default function AuthPage() {
           password: formData.password,
           name: formData.name,
           dateOfBirth: formData.dateOfBirth,
-          gender: formData.gender as "male" | "female" | "other" | null,
-          region: formData.region as "Africa" | "South Asia" | "East Asia" | "Oceania" | "North America" | "Central America" | "South America" | "Middle East" | "Europe" | "Central Asia" | null,
-          country: formData.country,
-          city: formData.city,
+          gender: null,
+          region: null,
+          country: "",
+          city: "",
           preferredLanguage: formData.language,
           affiliatePartner: formData.affiliatePartnerCode
         });
-        toast({
-          title: t["Account created!"] || "Account created!",
-          description: t["Welcome to Dedw3n! You can now enjoy all features."] || "Welcome to Dedw3n! You can now enjoy all features.",
-        });
+        setLocation(`/verify-email-pending?email=${encodeURIComponent(formData.email)}`);
+        return;
       }
-      setLocation('/');
     } catch (error: any) {
-      const errorMessage = error.message || "Something went wrong. Please try again.";
-      setAuthError({
-        type: isLogin ? "Login Error" : "Registration Error",
-        message: errorMessage,
-        show: true
-      });
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      setAuthError(error);
     }
   };
 
@@ -337,36 +383,18 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Back to Home Button */}
         <div className="mb-6">
-          <Button 
-            variant="ghost" 
-            asChild
-            className="text-gray-600 hover:text-gray-900"
-          >
-            <Link href="/">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Home
-            </Link>
-          </Button>
+          <Link href="/" className="inline-flex items-center text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            {t["Back to Home"] || "Back to Home"}
+          </Link>
         </div>
 
-        <Card className="shadow-xl border-0">
+        <Card className="border-0 shadow-none bg-white" style={{"--foreground":"0 0% 0%","--muted-foreground":"0 0% 0%","--input":"0 0% 100%","--popover":"0 0% 100%","--popover-foreground":"0 0% 0%"} as React.CSSProperties}>
           <CardHeader className="text-center pb-4">
-            {/* Logo */}
-            <div className="flex justify-center mb-4">
-              <img 
-                src={dedw3nLogo} 
-                alt="Dedw3n Logo" 
-                className="h-12 w-auto"
-              />
-            </div>
-            
-            <CardTitle className="text-2xl font-bold text-gray-900">
-              {isLogin ? (t["Welcome Back"] || "Welcome Back") : (t["Dedw3n"] || "Dedw3n")}
-            </CardTitle>
             <p className="text-sm text-gray-600">
               {isLogin ? 
                 (t["Sign in to your account to continue"] || "Sign in to your account to continue") : 
@@ -382,7 +410,7 @@ export default function AuthPage() {
                     {t["Don't have an account?"] || "Don't have an account?"}{" "}
                     <button
                       type="button"
-                      className="text-blue-600 hover:text-blue-500 font-medium underline"
+                      className="text-blue-600 font-medium underline"
                       onClick={() => setIsLogin(false)}
                     >
                       {t["Sign up"] || "Sign up"}
@@ -393,7 +421,7 @@ export default function AuthPage() {
                     {t["Already have an account?"] || "Already have an account?"}{" "}
                     <button
                       type="button"
-                      className="text-blue-600 hover:text-blue-500 font-medium underline"
+                      className="text-blue-600 font-medium underline"
                       onClick={() => setIsLogin(true)}
                     >
                       {t["Sign in"] || "Sign in"}
@@ -412,7 +440,7 @@ export default function AuthPage() {
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                   isLogin 
                     ? "bg-white text-gray-900 shadow-sm" 
-                    : "text-gray-500 hover:text-gray-700"
+                    : "text-gray-500"
                 }`}
                 onClick={() => setIsLogin(true)}
               >
@@ -423,7 +451,7 @@ export default function AuthPage() {
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                   !isLogin 
                     ? "bg-white text-gray-900 shadow-sm" 
-                    : "text-gray-500 hover:text-gray-700"
+                    : "text-gray-500"
                 }`}
                 onClick={() => setIsLogin(false)}
               >
@@ -434,7 +462,7 @@ export default function AuthPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {!isLogin && (
                 <div className="space-y-2">
-                  <Label htmlFor="name">{t["Full Name"] || "Full Name"}</Label>
+                  <Label htmlFor="name" className="text-black">{t["Full Name"] || "Full Name"}</Label>
                   <div className="relative">
                     <Input
                       id="name"
@@ -479,7 +507,7 @@ export default function AuthPage() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="username">{t["Username"] || "Username"}</Label>
+                <Label htmlFor="username" className="text-black">{t["Username"] || "Username"}</Label>
                 <Input
                   id="username"
                   type="text"
@@ -491,7 +519,7 @@ export default function AuthPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">{t["Password"] || "Password"}</Label>
+                <Label htmlFor="password" className="text-black">{t["Password"] || "Password"}</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -510,7 +538,7 @@ export default function AuthPage() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    className="absolute right-0 top-0 h-full px-3 py-2"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
@@ -524,7 +552,7 @@ export default function AuthPage() {
                 {!isLogin && formData.password && passwordStrength && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Password Strength:</span>
+                      <span className="text-sm font-medium">{t["Password Strength:"] || "Password Strength:"}</span>
                       <span className={`text-sm font-semibold ${passwordStrength.color}`}>
                         {passwordStrength.strengthLabel}
                       </span>
@@ -556,7 +584,7 @@ export default function AuthPage() {
                       ))}
                       {passwordStrength.isWeak && passwordStrength.suggestions.length > 0 && (
                         <div className="mt-2 pt-2 border-t border-gray-100">
-                          <p className="text-gray-600 font-medium">Suggestions:</p>
+                          <p className="text-gray-600 font-medium">{t["Suggestions:"] || "Suggestions:"}</p>
                           {passwordStrength.suggestions.slice(0, 3).map((suggestion, index) => (
                             <div key={index} className="flex items-start text-gray-600 mt-1">
                               <span className="w-1 h-1 bg-gray-400 rounded-full mr-2 mt-2 flex-shrink-0"></span>
@@ -567,30 +595,18 @@ export default function AuthPage() {
                       )}
                       {passwordStrength.estimatedCrackTime !== 'Unknown' && (
                         <div className="flex items-center justify-between pt-1 text-gray-500">
-                          <span>Estimated crack time:</span>
+                          <span>{t["Estimated crack time:"] || "Estimated crack time:"}</span>
                           <span className="font-medium">{passwordStrength.estimatedCrackTime}</span>
                         </div>
                       )}
                     </div>
                   </div>
                 )}
-                
-                {/* Forgot Password Link - Show only on login */}
-                {isLogin && (
-                  <div className="text-right">
-                    <Link 
-                      href="/reset-password" 
-                      className="text-sm text-blue-600 hover:text-blue-500 hover:underline"
-                    >
-                      Forgot password? Click here to reset
-                    </Link>
-                  </div>
-                )}
               </div>
 
               {!isLogin && (
                 <div className="space-y-2">
-                  <Label htmlFor="email">
+                  <Label htmlFor="email" className="text-black">
                     {t["Email"] || "Email"}
                   </Label>
                   <div className="relative">
@@ -650,8 +666,8 @@ export default function AuthPage() {
 
               {!isLogin && (
                 <div className="space-y-2">
-                  <Label htmlFor="dateOfBirth">
-                    {t["Date of Birth"] || "Date of Birth"} <span className="text-red-500 ml-1">(18+ required)</span>
+                  <Label htmlFor="dateOfBirth" className="text-black">
+                    {t["Date of Birth"] || "Date of Birth"} <span className="text-red-500 ml-1">{t["(18+ required)"] || "(18+ required)"}</span>
                   </Label>
                   <div className="relative">
                     <Input
@@ -685,44 +701,12 @@ export default function AuthPage() {
 
               {!isLogin && (
                 <div className="space-y-2">
-                  <Label htmlFor="gender">{t["Gender"] || "Gender"}</Label>
-                  <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t["Select your gender"] || "Select your gender"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="female">{t["Female"] || "Female"}</SelectItem>
-                      <SelectItem value="male">{t["Male"] || "Male"}</SelectItem>
-                      <SelectItem value="other">{t["Other"] || "Other"}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              {!isLogin && (
-                <div className="space-y-2">
-                  <Label>
-                    {t["Location"] || "Location"}
-                  </Label>
-                  <RegionSelector
-                    currentRegion={formData.region}
-                    currentCountry={formData.country}
-                    currentCity={formData.city}
-                    onRegionChange={(region) => setFormData({ ...formData, region, country: "", city: "" })}
-                    onCountryChange={(country) => setFormData({ ...formData, country, city: "" })}
-                    onCityChange={(city) => setFormData({ ...formData, city })}
-                  />
-                </div>
-              )}
-
-              {!isLogin && (
-                <div className="space-y-2">
-                  <Label htmlFor="language">{t["Language"] || "Language"}</Label>
+                  <Label htmlFor="language" className="text-black">{t["Language"] || "Language"}</Label>
                   <Select value={formData.language} onValueChange={(value) => setFormData({ ...formData, language: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder={t["Select your language"] || "Select your language"} />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white text-black [&>*]:text-black">
                       <SelectItem value="en">{t["English"] || "English"}</SelectItem>
                       <SelectItem value="es">{t["Spanish"] || "Spanish"}</SelectItem>
                       <SelectItem value="fr">{t["French"] || "French"}</SelectItem>
@@ -791,7 +775,7 @@ export default function AuthPage() {
 
               {!isLogin && (
                 <div className="space-y-2">
-                  <Label htmlFor="affiliatePartnerCode">
+                  <Label htmlFor="affiliatePartnerCode" className="text-black">
                     {t["Affiliate Partner"] || "Affiliate Partner"}
                   </Label>
                   <div className="relative">
@@ -852,7 +836,7 @@ export default function AuthPage() {
                 </div>
               )}
 
-              {isLogin && (
+              {isLogin && !showMFA && (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -864,70 +848,116 @@ export default function AuthPage() {
                       {t["Remember my login details"] || "Remember my login details"}
                     </Label>
                   </div>
-                  <Link href="/reset-password" className="text-sm text-blue-600 hover:text-blue-500">
+                  <Link href="/reset-password" className="text-sm text-blue-600">
                     {t["Forgot password?"] || "Forgot password?"}
                   </Link>
                 </div>
               )}
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={Boolean(
-                  !isFormValid || 
-                  loginMutation.isPending || 
-                  registerMutation.isPending ||
-                  (!isLogin && (isValidating || isValidatingName)) ||
-                  (!isLogin && passwordStrength?.isWeak && formData.password.length > 0)
-                )}
-              >
-                {loginMutation.isPending || registerMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {isLogin ? (t["Signing in..."] || "Signing in...") : (t["Creating account..."] || "Creating account...")}
-                  </>
-                ) : (
-                  isLogin ? (t["Sign In"] || "Sign In") : (t["Create Account"] || "Create Account")
-                )}
-              </Button>
+              {/* Inline MFA Verification */}
+              {isLogin && showMFA ? (
+                <div className="space-y-4 border-t pt-4">
+                  <div className="text-center space-y-2">
+                    <div className="flex justify-center">
+                      <div className="h-12 w-12 bg-black rounded-full flex items-center justify-center">
+                        <CheckCircle className="h-6 w-6 text-white" />
+                      </div>
+                    </div>
+                    <h3 className="font-semibold text-lg">{t["Multi-Factor Authentication"] || "Multi-Factor Authentication"}</h3>
+                    <p className="text-sm text-gray-600">
+                      {t["A verification code has been sent to"] || "A verification code has been sent to"} {mfaMethod === 'whatsapp' ? 'WhatsApp' : (t["your email"] || "your email")}
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="mfaCode" className="text-black">{t["Verification Code"] || "Verification Code"}</Label>
+                    <Input
+                      id="mfaCode"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={6}
+                      placeholder="000000"
+                      value={mfaCode}
+                      onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ''))}
+                      className="text-center text-2xl tracking-widest font-mono"
+                      autoFocus
+                      data-testid="input-mfa-code"
+                    />
+                    <p className="text-xs text-gray-500 text-center">
+                      {t["Enter the 6-digit code"] || "Enter the 6-digit code"}
+                    </p>
+                  </div>
+
+                  <Button
+                    onClick={handleVerifyMFA}
+                    className="w-full bg-black text-white"
+                    disabled={isVerifyingMFA || mfaCode.length !== 6}
+                    data-testid="button-verify-mfa"
+                  >
+                    {isVerifyingMFA ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {t["Verifying..."] || "Verifying..."}
+                      </>
+                    ) : (
+                      t["Verify & Login"] || "Verify & Login"
+                    )}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => {
+                      setShowMFA(false);
+                      setMfaCode("");
+                    }}
+                    data-testid="button-back-to-login"
+                  >
+                    {t["Back to Login"] || "Back to Login"}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="submit"
+                  className="w-full bg-black text-white"
+                  disabled={Boolean(
+                    !isFormValid || 
+                    loginMutation.isPending || 
+                    registerMutation.isPending ||
+                    (!isLogin && (isValidating || isValidatingName)) ||
+                    (!isLogin && passwordStrength?.isWeak && formData.password.length > 0)
+                  )}
+                >
+                  {loginMutation.isPending || registerMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {isLogin ? (t["Signing in..."] || "Signing in...") : (t["Creating account..."] || "Creating account...")}
+                    </>
+                  ) : (
+                    isLogin ? (t["Sign In"] || "Sign In") : (t["Create Account"] || "Create Account")
+                  )}
+                </Button>
+              )}
             </form>
 
             {/* Authentication Error Report Section */}
-            {authError?.show && (
-              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h4 className="text-sm font-medium text-red-800 mb-1">
-                      {authError.type}
-                    </h4>
-                    <p className="text-sm text-red-700 mb-3">
-                      {authError.message}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setAuthError(null)}
-                        className="text-xs"
-                      >
-                        Dismiss
-                      </Button>
-                      <ReportButton 
-                        errorType={authError.type}
-                        errorMessage={authError.message}
-                        variant="outline"
-                        size="sm"
-                        className="text-xs"
-                      />
-                    </div>
-                  </div>
+            {authError && (
+              <div className="mt-4">
+                <InlineErrorDisplay 
+                  error={authError} 
+                  className="mb-2"
+                />
+                <div className="flex justify-end">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setAuthError(null)}
-                    className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                    className="text-xs"
+                    data-testid="button-dismiss-error"
                   >
-                    <XCircle className="h-4 w-4" />
+                    Dismiss
                   </Button>
                 </div>
               </div>
@@ -940,11 +970,11 @@ export default function AuthPage() {
         <div className="mt-6 text-center text-xs text-gray-500">
           <p>
             {t["By creating an account, you agree to our"] || "By creating an account, you agree to our"}{" "}
-            <Link href="/terms" className="text-blue-600 hover:text-blue-500">
+            <Link href="/terms" className="text-blue-600">
               {t["Terms of Service"] || "Terms of Service"}
             </Link>{" "}
             {t["and"] || "and"}{" "}
-            <Link href="/privacy" className="text-blue-600 hover:text-blue-500">
+            <Link href="/privacy" className="text-blue-600">
               {t["Privacy Policy"] || "Privacy Policy"}
             </Link>
           </p>

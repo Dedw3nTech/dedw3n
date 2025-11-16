@@ -241,7 +241,7 @@ export default function OrdersReturnsContent() {
                           {getStatusIcon(order.status)}
                           {order.status}
                         </Badge>
-                        <span className="font-semibold">£{order.totalAmount.toFixed(2)}</span>
+                        <span className="font-semibold">£{(order.totalAmount || 0).toFixed(2)}</span>
                       </div>
                     </div>
                   </CardHeader>
@@ -315,7 +315,7 @@ export default function OrdersReturnsContent() {
                           {getStatusIcon(returnItem.status)}
                           {returnItem.status}
                         </Badge>
-                        <span className="font-semibold">£{returnItem.refundAmount.toFixed(2)}</span>
+                        <span className="font-semibold">£{(returnItem.refundAmount || 0).toFixed(2)}</span>
                       </div>
                     </div>
                   </CardHeader>

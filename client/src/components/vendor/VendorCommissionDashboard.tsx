@@ -155,7 +155,8 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
   
   // Safe translation access helper
   const t = (key: string, fallback: string = key) => {
-    return translations?.[key] || fallback;
+    const index = commissionTexts.indexOf(key);
+    return index !== -1 ? (translations?.[index] || fallback) : fallback;
   };
 
   const { data, isLoading, error } = useQuery({
@@ -231,10 +232,10 @@ export default function VendorCommissionDashboard({ vendorId }: VendorCommission
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            {translations?.["Commission Tier System"] || "Commission Tier System"}
+            {t("Commission Tier System")}
           </CardTitle>
           <CardDescription className="text-xs">
-            {translations?.["Your commission rate is determined by your monthly sales volume"] || "Your commission rate is determined by your monthly sales volume"}
+            {t("Your commission rate is determined by your monthly sales volume")}
           </CardDescription>
         </CardHeader>
         <CardContent>

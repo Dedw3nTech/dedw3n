@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'wouter';
+import { absolutizeImageUrl } from '@/lib/buildSeoStructuredData';
 
 interface SEOHeadProps {
   title?: string;
@@ -9,6 +10,7 @@ interface SEOHeadProps {
   url?: string;
   type?: string;
   siteName?: string;
+  structuredData?: any | any[];
 }
 
 export function SEOHead({
@@ -18,7 +20,8 @@ export function SEOHead({
   image = "/assets/og-image.png",
   url,
   type = "website",
-  siteName = "Dedw3n"
+  siteName = "Dedw3n",
+  structuredData
 }: SEOHeadProps) {
   const [location] = useLocation();
   
@@ -65,10 +68,13 @@ export function SEOHead({
     updateMetaTag('robots', 'index, follow');
     updateMetaTag('viewport', 'width=device-width, initial-scale=1');
     
+    // Absolutize image URL (handles both relative and absolute URLs)
+    const absoluteImageUrl = absolutizeImageUrl(image);
+    
     // Open Graph tags
     updateMetaTag('og:title', title, true);
     updateMetaTag('og:description', description, true);
-    updateMetaTag('og:image', `${window.location.origin}${image}`, true);
+    updateMetaTag('og:image', absoluteImageUrl, true);
     updateMetaTag('og:url', currentUrl, true);
     updateMetaTag('og:type', type, true);
     updateMetaTag('og:site_name', siteName, true);
@@ -77,14 +83,30 @@ export function SEOHead({
     updateMetaTag('twitter:card', 'summary_large_image');
     updateMetaTag('twitter:title', title);
     updateMetaTag('twitter:description', description);
-    updateMetaTag('twitter:image', `${window.location.origin}${image}`);
+    updateMetaTag('twitter:image', absoluteImageUrl);
     
     // Additional SEO tags
     updateMetaTag('author', siteName);
     updateMetaTag('language', 'en');
     updateMetaTag('rating', 'general');
     
-  }, [title, description, keywords, image, currentUrl, type, siteName, location]);
+    // Inject structured data (JSON-LD) if provided
+    // Remove any existing page-specific structured data first
+    const existingPageSchemas = document.querySelectorAll('script[type="application/ld+json"][data-page-schema="true"]');
+    existingPageSchemas.forEach(script => script.remove());
+    
+    if (structuredData) {
+      const schemas = Array.isArray(structuredData) ? structuredData : [structuredData];
+      schemas.forEach((schema) => {
+        const script = document.createElement('script');
+        script.type = 'application/ld+json';
+        script.setAttribute('data-page-schema', 'true');
+        script.textContent = JSON.stringify(schema);
+        document.head.appendChild(script);
+      });
+    }
+    
+  }, [title, description, keywords, image, currentUrl, type, siteName, location, structuredData]);
 
   return null;
 }

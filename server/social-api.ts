@@ -6,11 +6,12 @@
  */
 
 import { Post } from '@shared/schema';
+import { logger } from './logger';
 
 /**
  * Convert API response to our application's Post format
  */
-function convertToAppPost(apiPost: any): Partial<Post> {
+function convertToAppPost(apiPost: any): Partial<Post> & { user?: any } {
   return {
     id: apiPost.id,
     userId: apiPost.userId,
@@ -88,7 +89,7 @@ export async function fetchPosts(options: {
     // Construct API URL
     const apiUrl = 'https://jsonplaceholder.typicode.com/posts';
     const url = buildUrl(apiUrl, apiParams);
-    console.log(`Fetching posts from API with URL: ${url}`);
+    logger.debug('Fetching posts from external API', { url, params: apiParams }, 'api');
     
     // Use fetch instead of XMLHttpRequest
     try {
@@ -99,16 +100,16 @@ export async function fetchPosts(options: {
       }
       
       const apiPosts = await response.json();
-      console.log(`Received ${apiPosts.length} posts from API`);
+      logger.debug('Received posts from external API', { count: apiPosts.length }, 'api');
       
       // Convert API posts to our app format and return
       return apiPosts.map(convertToAppPost);
     } catch (fetchError) {
-      console.error("Fetch error:", fetchError);
+      logger.error('External API fetch error', { url }, fetchError as Error, 'api');
       throw fetchError;
     }
   } catch (error) {
-    console.error('Error fetching posts:', error);
+    logger.error('Error fetching posts from external API', { options }, error as Error, 'api');
     throw error;
   }
 }
@@ -119,7 +120,7 @@ export async function fetchPosts(options: {
 export async function fetchPostById(id: number): Promise<Partial<Post> | null> {
   try {
     const apiUrl = `https://jsonplaceholder.typicode.com/posts/${id}`;
-    console.log(`Fetching post from API: ${apiUrl}`);
+    logger.debug('Fetching post by ID from external API', { id, apiUrl }, 'api');
     
     // Use fetch instead of XMLHttpRequest
     try {
@@ -134,15 +135,15 @@ export async function fetchPostById(id: number): Promise<Partial<Post> | null> {
       }
       
       const apiPost = await response.json();
-      console.log(`Successfully retrieved post from API:`, apiPost);
+      logger.debug('Successfully retrieved post from external API', { id, postId: apiPost.id }, 'api');
       
       return convertToAppPost(apiPost);
     } catch (fetchError) {
-      console.error("Fetch error:", fetchError);
+      logger.error('External API fetch error for post', { id }, fetchError as Error, 'api');
       throw fetchError;
     }
   } catch (error) {
-    console.error("Error fetching post by ID:", error);
+    logger.error('Error fetching post by ID from external API', { id }, error as Error, 'api');
     throw error;
   }
 }
@@ -160,7 +161,7 @@ export async function createApiPost(postData: any): Promise<Partial<Post> | null
     };
     
     const apiUrl = 'https://jsonplaceholder.typicode.com/posts';
-    console.log("Creating post via API with data:", apiRequestData);
+    logger.debug('Creating post via external API', { userId: postData.userId, contentType: postData.contentType }, 'api');
     
     // Using node-fetch instead of XMLHttpRequest (which is not available in Node.js)
     try {
@@ -177,7 +178,7 @@ export async function createApiPost(postData: any): Promise<Partial<Post> | null
       }
       
       const apiPost = await response.json();
-      console.log("Post created successfully via API:", apiPost);
+      logger.debug('Post created successfully via external API', { postId: apiPost.id, userId: postData.userId }, 'api');
       
       // Convert response to our format and add additional fields
       const formattedPost = convertToAppPost(apiPost);
@@ -193,11 +194,11 @@ export async function createApiPost(postData: any): Promise<Partial<Post> | null
       
       return formattedPost;
     } catch (fetchError) {
-      console.error("Fetch error:", fetchError);
+      logger.error('External API fetch error during post creation', { userId: postData.userId }, fetchError as Error, 'api');
       throw fetchError;
     }
   } catch (error) {
-    console.error("Error creating post via API:", error);
+    logger.error('Error creating post via external API', { userId: postData.userId }, error as Error, 'api');
     throw error;
   }
 }

@@ -6,7 +6,7 @@ import { highRiskActionMiddleware } from "./fraud-prevention";
 // Initialize Stripe with the secret key
 // We'll use a placeholder configuration for now
 const stripe = process.env.STRIPE_SECRET_KEY 
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-05-28.basil" })
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-08-27.basil" })
   : null;
 
 /**

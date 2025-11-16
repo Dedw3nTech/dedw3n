@@ -170,9 +170,9 @@ export default function WallPage() {
       />
 
       <div className="container max-w-screen-xl py-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-[minmax(320px,380px)_1fr] gap-6">
           {/* Left sidebar */}
-          <div className="md:col-span-1 space-y-6">
+          <div className="space-y-6">
             {/* User profile card */}
             <Card className="p-6">
               <div className="flex flex-col items-center text-center">
@@ -304,7 +304,7 @@ export default function WallPage() {
           </div>
           
           {/* Main content */}
-          <div className="md:col-span-2 space-y-6">
+          <div className="space-y-6">
             {/* Create post component */}
             <CreatePost onSuccess={handlePostSuccess} />
             

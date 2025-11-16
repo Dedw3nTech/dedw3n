@@ -1,339 +1,197 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, Plus, FileText, Users, Heart } from "lucide-react";
+import { useMasterTranslation } from "@/hooks/use-master-translation";
+import { SEOHead } from "@/components/seo/SEOHead";
 
-const GovernmentPage = () => {
-  const [selectedService, setSelectedService] = useState<string | null>(null);
-  
-  const serviceOptions = [
-    { id: "business", label: "Start a Business", 
-      description: "Register a new business entity, obtain licenses and permits" },
-    { id: "certificates", label: "Certificates", 
-      description: "Apply for birth, marriage, death or other official certificates" },
-    { id: "identification", label: "Apply for Passport / ID", 
-      description: "Apply for new passport, ID card or renew existing documents" },
-    { id: "country", label: "Country Information", 
-      description: "Access country-specific information, laws, and regulations" },
-  ];
-  
-  const formSchema = z.object({
-    service: z.string(),
-    fullName: z.string().min(2, { message: "Name is required" }),
-    email: z.string().email({ message: "Invalid email address" }),
-    country: z.string().min(1, { message: "Country is required" }),
-    details: z.string().optional(),
+import documentsImage from "@assets/stock_images/passport_identificat_84d90351.jpg";
+import publicServicesImage from "@assets/stock_images/professional_busines_7f598002.jpg";
+import youthCentresImage from "@assets/stock_images/diverse_young_people_e35c35b1.jpg";
+import heroImage from "@assets/stock_images/government_official__39d60ff1.jpg";
+
+type ServiceCategory = "documents" | "public_services" | "youth_centres";
+
+const services = [
+  {
+    id: "documents",
+    title: "Documents",
+    image: documentsImage,
+    icon: FileText,
+    description: "Apply for passports, ID cards, and official documents",
+  },
+  {
+    id: "public_services",
+    title: "Public Services",
+    image: publicServicesImage,
+    icon: Users,
+    description: "Access government services and support programs",
+  },
+  {
+    id: "youth_centres",
+    title: "Youth Centres",
+    image: youthCentresImage,
+    icon: Heart,
+    description: "Explore youth programs and community centers",
+  },
+];
+
+export default function GovernmentPage() {
+  const { translateText } = useMasterTranslation();
+  const [activeTab, setActiveTab] = useState<ServiceCategory | "all">("all");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredServices = services.filter((service) => {
+    const matchesTab = activeTab === "all" || service.id === activeTab;
+    const matchesSearch =
+      searchQuery === "" ||
+      service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      service.description.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesTab && matchesSearch;
   });
-  
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      service: "",
-      fullName: "",
-      email: "",
-      country: "",
-      details: "",
-    },
-  });
-  
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log(values);
-    // In a real app, this would submit the form to the server
-    alert("Your application has been submitted. You will receive further instructions via email.");
-    form.reset();
-    setSelectedService(null);
-  };
-  
+
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent">
-        Government Services
-      </h1>
-      
-      <div className="mb-8">
-        <p className="text-gray-600 mb-4">
-          Access government services and applications in one convenient place. 
-          Select the service you need to get started.
-        </p>
-        
-        <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-6">
-          <p className="text-amber-800 font-medium">
-            This service is only available for the DR CONGO momentarily, please come back later for other countries.
-          </p>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {serviceOptions.map((service) => (
-            <Card key={service.id} className={`cursor-pointer transition-all hover:shadow-md ${selectedService === service.id ? 'border-blue-500 shadow-md' : ''}`} 
-              onClick={() => {
-                setSelectedService(service.id);
-                form.setValue("service", service.id);
-              }}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">{service.label}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>{service.description}</CardDescription>
-              </CardContent>
-            </Card>
-          ))}
+    <>
+      <SEOHead
+        title="Government Services | Dedw3n"
+        description="Arrange your government affairs with grace and flair. Access documents, public services, and youth centres."
+        keywords="government services, documents, passports, public services, youth centres, government affairs"
+      />
+
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
+          {/* Header with Add Service Button and Search */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+            <Button
+              className="bg-black hover:bg-gray-800 text-white"
+              data-testid="button-add-service"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {translateText("Add A Service")}
+            </Button>
+
+            <div className="relative w-full sm:w-auto">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                type="text"
+                placeholder={translateText("Search")}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 w-full sm:w-64"
+                data-testid="input-search"
+              />
+            </div>
+          </div>
+
+          {/* Navigation Tabs */}
+          <div className="flex gap-6 mb-8 border-b border-gray-200">
+            <button
+              onClick={() => setActiveTab("documents")}
+              className={`pb-3 px-2 font-medium transition-colors ${
+                activeTab === "documents"
+                  ? "border-b-2 border-black text-black"
+                  : "text-gray-500 hover:text-black"
+              }`}
+              data-testid="tab-documents"
+            >
+              {translateText("Documents")}
+            </button>
+            <button
+              onClick={() => setActiveTab("public_services")}
+              className={`pb-3 px-2 font-medium transition-colors ${
+                activeTab === "public_services"
+                  ? "border-b-2 border-black text-black"
+                  : "text-gray-500 hover:text-black"
+              }`}
+              data-testid="tab-public-services"
+            >
+              {translateText("Public Services")}
+            </button>
+            <button
+              onClick={() => setActiveTab("youth_centres")}
+              className={`pb-3 px-2 font-medium transition-colors ${
+                activeTab === "youth_centres"
+                  ? "border-b-2 border-black text-black"
+                  : "text-gray-500 hover:text-black"
+              }`}
+              data-testid="tab-youth-centres"
+            >
+              {translateText("Youth Centres")}
+            </button>
+          </div>
+
+          {/* Hero Section */}
+          <div className="mb-12 text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              {translateText("Arrange your Government affairs with grace and flair.")}
+            </h1>
+            <p className="text-lg text-gray-600 mb-8">
+              {translateText("Effortlessly Orchestrate the Symphony of Your Governmental Affairs")}
+            </p>
+            <div className="rounded-2xl overflow-hidden shadow-2xl max-w-4xl mx-auto">
+              <img
+                src={heroImage}
+                alt="Government Services"
+                className="w-full h-auto object-cover"
+                data-testid="img-hero"
+              />
+            </div>
+          </div>
+
+          {/* Service Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredServices.map((service) => {
+              const Icon = service.icon;
+              return (
+                <Card
+                  key={service.id}
+                  className="group hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
+                  data-testid={`card-service-${service.id}`}
+                >
+                  <CardContent className="p-0">
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={service.image}
+                        alt={service.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        data-testid={`img-service-${service.id}`}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      <div className="absolute bottom-4 left-4 right-4">
+                        <div className="flex items-center gap-2 text-white">
+                          <Icon className="w-5 h-5" />
+                          <h3 className="text-xl font-bold">{translateText(service.title)}</h3>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <p className="text-gray-600">
+                        {translateText(service.description)}
+                      </p>
+                      <Button
+                        className="w-full mt-4 bg-black hover:bg-gray-800 text-white"
+                        data-testid={`button-request-${service.id}`}
+                      >
+                        {translateText("Request Service")}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {filteredServices.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">
+                {translateText("No services found matching your search.")}
+              </p>
+            </div>
+          )}
         </div>
       </div>
-      
-      {selectedService && (
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle>
-              Apply for {serviceOptions.find(s => s.id === selectedService)?.label}
-            </CardTitle>
-            <CardDescription>
-              Please fill out the required information to proceed with your application
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="service"
-                  render={({ field }) => (
-                    <FormItem className="hidden">
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="fullName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter your full name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email Address</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter your email address" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="country"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Country</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select your country" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="cd">DR Congo</SelectItem>
-                          <SelectItem value="us" disabled>United States</SelectItem>
-                          <SelectItem value="uk" disabled>United Kingdom</SelectItem>
-                          <SelectItem value="ca" disabled>Canada</SelectItem>
-                          <SelectItem value="au" disabled>Australia</SelectItem>
-                          <SelectItem value="fr" disabled>France</SelectItem>
-                          <SelectItem value="de" disabled>Germany</SelectItem>
-                          <SelectItem value="jp" disabled>Japan</SelectItem>
-                          <SelectItem value="cn" disabled>China</SelectItem>
-                          <SelectItem value="in" disabled>India</SelectItem>
-                          <SelectItem value="br" disabled>Brazil</SelectItem>
-                          <SelectItem value="ng" disabled>Nigeria</SelectItem>
-                          <SelectItem value="za" disabled>South Africa</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                {selectedService === 'business' && (
-                  <FormField
-                    control={form.control}
-                    name="details"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Business Details</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Describe the type of business you want to register"
-                            className="min-h-[100px]"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-                
-                {selectedService === 'certificates' && (
-                  <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="details"
-                      render={({ field }) => (
-                        <FormItem className="space-y-3">
-                          <FormLabel>Certificate Type</FormLabel>
-                          <FormControl>
-                            <RadioGroup 
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                              className="flex flex-col space-y-1"
-                            >
-                              <FormItem className="flex items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value="birth" />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  Birth Certificate
-                                </FormLabel>
-                              </FormItem>
-                              <FormItem className="flex items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value="marriage" />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  Marriage Certificate
-                                </FormLabel>
-                              </FormItem>
-                              <FormItem className="flex items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value="death" />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  Death Certificate
-                                </FormLabel>
-                              </FormItem>
-                              <FormItem className="flex items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value="other" />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  Other Certificate
-                                </FormLabel>
-                              </FormItem>
-                            </RadioGroup>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                )}
-                
-                {selectedService === 'identification' && (
-                  <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="details"
-                      render={({ field }) => (
-                        <FormItem className="space-y-3">
-                          <FormLabel>Document Type</FormLabel>
-                          <FormControl>
-                            <RadioGroup 
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                              className="flex flex-col space-y-1"
-                            >
-                              <FormItem className="flex items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value="passport-new" />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  New Passport
-                                </FormLabel>
-                              </FormItem>
-                              <FormItem className="flex items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value="passport-renew" />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  Passport Renewal
-                                </FormLabel>
-                              </FormItem>
-                              <FormItem className="flex items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value="id-new" />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  New ID Card
-                                </FormLabel>
-                              </FormItem>
-                              <FormItem className="flex items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value="id-renew" />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  ID Card Renewal
-                                </FormLabel>
-                              </FormItem>
-                            </RadioGroup>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                )}
-                
-                {selectedService === 'country' && (
-                  <FormField
-                    control={form.control}
-                    name="details"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Information Request</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Describe what country information you're looking for"
-                            className="min-h-[100px]"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-                
-                <Button type="submit" className="w-full">Submit Application</Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+    </>
   );
-};
-
-export default GovernmentPage;
+}

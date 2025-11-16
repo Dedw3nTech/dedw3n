@@ -1,0 +1,1316 @@
+import { useState, useEffect, useMemo } from 'react';
+import { useLocation } from 'wouter';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { 
+  Card, 
+  CardHeader, 
+  CardTitle, 
+  CardDescription, 
+  CardContent, 
+  CardFooter 
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Loader2, Trash2, MinusCircle, PlusCircle, ShoppingCart, ShoppingBag, AlertTriangle, Shield, Check, MapPin, Weight, Package, Truck, Plane, Ship, FileText, Calculator, Gift, Users, Search, CreditCard } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { calculatePricing, amountNeededForFreeShipping } from '@/lib/pricing';
+import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
+import { useWeightUnit } from '@/contexts/WeightUnitContext';
+import { addDays, format } from 'date-fns';
+
+
+export default function Cart() {
+  const [, setLocation] = useLocation();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { formatPriceFromGBP } = useCurrency();
+  const { formatWeight } = useWeightUnit();
+  
+  // Master Translation System - Batch Translation for Cart Page
+  const cartStrings = useMemo(() => [
+    "Shopping Cart",
+    "Please log in to view your shopping cart",
+    "You need to be signed in to manage your cart and make purchases.",
+    "Go to Home",
+    "There was an error loading your cart",
+    "Continue Shopping",
+    "YOUR CART is EMPTY",
+    "Looks like you haven't added any items to your cart yet.",
+    "Browse Products",
+    "YOU ARE CHECKING OUT AS",
+    "SHIPPING ADDRESS",
+    "Where should we deliver to?",
+    "Home Delivery",
+    "1 - 2 business days",
+    "Collect In-Store",
+    "FIRST NAME",
+    "SURNAME",
+    "ADDRESS LINE 1",
+    "Enter address line 2",
+    "COUNTRY/REGION",
+    "Belgium",
+    "United Kingdom",
+    "France",
+    "Germany",
+    "CITY",
+    "POSTAL CODE",
+    "This is a business address.",
+    "MOBILE",
+    "SMS delivery updates will be sent to this number.",
+    "+32 Belgium",
+    "+44 UK",
+    "+33 France",
+    "Add additional contact number.",
+    "Save shipping address information to address book.",
+    "DELIVERY METHOD",
+    "Enter your postal code above to see shipping options.",
+    "CONTINUE TO PACKAGING",
+    "PACKAGING OPTIONS & GIFTING",
+    "Signature Box, Signature box and Boutique Shopping bag",
+    "PAYMENT",
+    "Credit Card, PayPal, Klarna, Wire Transfer",
+    "ORDER SUMMARY",
+    "ITEM",
+    "Your cart is empty",
+    "Style",
+    "Variation",
+    "Standard",
+    "QTY",
+    "Subtotal",
+    "Shipping",
+    "€ 0 (DHL Express Worldwide)",
+    "TOTAL",
+    "VAT (Included)",
+    "VIEW DETAILS",
+    "You will be charged only at the time of shipment except for DIY orders where the full amount is charged at the time of the purchase.",
+    "Send Cart as Gift",
+    "Choose a recipient from the platform and add a personal message",
+    "Gift Summary",
+    "Items",
+    "item",
+    "items",
+    "Total Value",
+    "Shipping Cost",
+    "Free",
+    "Gift Total",
+    "Select Recipient",
+    "Search platform users...",
+    "No users found",
+    "No users available",
+    "Personal Message",
+    "Add a personal message (optional)...",
+    "Cancel",
+    "Sending Gift...",
+    "Send Gift",
+    "Error",
+    "Failed to update quantity",
+    "Item Removed",
+    "The item was removed from your cart.",
+    "Failed to remove item",
+    "Gift Sent Successfully",
+    "Your gift has been sent to the recipient",
+    "Gift Send Failed",
+    "Failed to send gift",
+    "No Recipient Selected",
+    "Please select a recipient for the gift",
+    "Escrow Transaction Created",
+    "Your secure payment has been initialized",
+    "Failed to create escrow transaction",
+  ], []);
+
+  const { translations } = useMasterBatchTranslation(cartStrings, 'high');
+  
+  // Create mapping object for clean code access
+  const ts = useMemo(() => ({
+    shoppingCart: translations[0] || "Shopping Cart",
+    pleaseLogIn: translations[1] || "Please log in to view your shopping cart",
+    signedInRequired: translations[2] || "You need to be signed in to manage your cart and make purchases.",
+    goToHome: translations[3] || "Go to Home",
+    errorLoading: translations[4] || "There was an error loading your cart",
+    continueShopping: translations[5] || "Continue Shopping",
+    yourCartIsEmpty: translations[6] || "YOUR CART is EMPTY",
+    noItemsAdded: translations[7] || "Looks like you haven't added any items to your cart yet.",
+    browseProducts: translations[8] || "Browse Products",
+    checkingOutAs: translations[9] || "YOU ARE CHECKING OUT AS",
+    shippingAddress: translations[10] || "SHIPPING ADDRESS",
+    deliverTo: translations[11] || "Where should we deliver to?",
+    homeDelivery: translations[12] || "Home Delivery",
+    businessDays: translations[13] || "1 - 2 business days",
+    collectInStore: translations[14] || "Collect In-Store",
+    firstName: translations[15] || "FIRST NAME",
+    surname: translations[16] || "SURNAME",
+    addressLine1: translations[17] || "ADDRESS LINE 1",
+    addressLine2: translations[18] || "Enter address line 2",
+    countryRegion: translations[19] || "COUNTRY/REGION",
+    belgium: translations[20] || "Belgium",
+    unitedKingdom: translations[21] || "United Kingdom",
+    france: translations[22] || "France",
+    germany: translations[23] || "Germany",
+    city: translations[24] || "CITY",
+    postalCode: translations[25] || "POSTAL CODE",
+    businessAddress: translations[26] || "This is a business address.",
+    mobile: translations[27] || "MOBILE",
+    smsUpdates: translations[28] || "SMS delivery updates will be sent to this number.",
+    phoneBelgium: translations[29] || "+32 Belgium",
+    phoneUK: translations[30] || "+44 UK",
+    phoneFrance: translations[31] || "+33 France",
+    additionalContact: translations[32] || "Add additional contact number.",
+    saveAddress: translations[33] || "Save shipping address information to address book.",
+    deliveryMethod: translations[34] || "DELIVERY METHOD",
+    enterPostalCode: translations[35] || "Enter your postal code above to see shipping options.",
+    continueToPackaging: translations[36] || "CONTINUE TO PACKAGING",
+    packagingOptions: translations[37] || "PACKAGING OPTIONS & GIFTING",
+    signatureBox: translations[38] || "Signature Box, Signature box and Boutique Shopping bag",
+    payment: translations[39] || "PAYMENT",
+    paymentMethods: translations[40] || "Credit Card, PayPal, Klarna, Wire Transfer",
+    orderSummary: translations[41] || "ORDER SUMMARY",
+    item: translations[42] || "ITEM",
+    cartEmpty: translations[43] || "Your cart is empty",
+    style: translations[44] || "Style",
+    variation: translations[45] || "Variation",
+    standard: translations[46] || "Standard",
+    qty: translations[47] || "QTY",
+    subtotal: translations[48] || "Subtotal",
+    shipping: translations[49] || "Shipping",
+    freeShipping: translations[50] || "€ 0 (DHL Express Worldwide)",
+    total: translations[51] || "TOTAL",
+    vatIncluded: translations[52] || "VAT (Included)",
+    viewDetails: translations[53] || "VIEW DETAILS",
+    chargeNotice: translations[54] || "You will be charged only at the time of shipment except for DIY orders where the full amount is charged at the time of the purchase.",
+    sendGift: translations[55] || "Send Cart as Gift",
+    chooseRecipient: translations[56] || "Choose a recipient from the platform and add a personal message",
+    giftSummary: translations[57] || "Gift Summary",
+    items: translations[58] || "Items",
+    itemSingular: translations[59] || "item",
+    itemsPlural: translations[60] || "items",
+    totalValue: translations[61] || "Total Value",
+    shippingCost: translations[62] || "Shipping Cost",
+    free: translations[63] || "Free",
+    giftTotal: translations[64] || "Gift Total",
+    selectRecipient: translations[65] || "Select Recipient",
+    searchUsers: translations[66] || "Search platform users...",
+    noUsersFound: translations[67] || "No users found",
+    noUsersAvailable: translations[68] || "No users available",
+    personalMessage: translations[69] || "Personal Message",
+    addMessage: translations[70] || "Add a personal message (optional)...",
+    cancel: translations[71] || "Cancel",
+    sendingGift: translations[72] || "Sending Gift...",
+    sendGiftButton: translations[73] || "Send Gift",
+    error: translations[74] || "Error",
+    failedUpdateQty: translations[75] || "Failed to update quantity",
+    itemRemoved: translations[76] || "Item Removed",
+    itemRemovedDesc: translations[77] || "The item was removed from your cart.",
+    failedRemove: translations[78] || "Failed to remove item",
+    giftSentSuccess: translations[79] || "Gift Sent Successfully",
+    giftSentDesc: translations[80] || "Your gift has been sent to the recipient",
+    giftSendFailed: translations[81] || "Gift Send Failed",
+    failedSendGift: translations[82] || "Failed to send gift",
+    noRecipient: translations[83] || "No Recipient Selected",
+    selectRecipientMsg: translations[84] || "Please select a recipient for the gift",
+    escrowCreated: translations[85] || "Escrow Transaction Created",
+    escrowInitialized: translations[86] || "Your secure payment has been initialized",
+    failedEscrow: translations[87] || "Failed to create escrow transaction",
+  }), [translations]);
+  
+  // Calculate delivery date range (2-5 working days from today)
+  const deliveryEstimate = useMemo(() => {
+    const addWorkingDays = (startDate: Date, days: number) => {
+      let currentDate = new Date(startDate);
+      let addedDays = 0;
+      
+      while (addedDays < days) {
+        currentDate = addDays(currentDate, 1);
+        const dayOfWeek = currentDate.getDay();
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+          addedDays++;
+        }
+      }
+      
+      return currentDate;
+    };
+    
+    const today = new Date();
+    const startDate = addWorkingDays(today, 2);
+    const endDate = addWorkingDays(today, 5);
+    
+    const formattedStart = format(startDate, 'EEE, d MMM');
+    const formattedEnd = format(endDate, 'EEE, d MMM');
+    
+    return `Estimated complimentary delivery: ${formattedStart} - ${formattedEnd}. Some regions may take up to 20+ working days.`;
+  }, []);
+  
+  // Escrow state management
+  const [useEscrow, setUseEscrow] = useState(false);
+  const [escrowTransaction, setEscrowTransaction] = useState<any>(null);
+  const [escrowLoading, setEscrowLoading] = useState(false);
+  
+  // Shipping type selection
+  const [selectedShippingType, setSelectedShippingType] = useState<string>('normal-freight');
+  
+  // Location editing state
+  const [isEditingLocation, setIsEditingLocation] = useState(false);
+  const [editCity, setEditCity] = useState('');
+  const [editCountry, setEditCountry] = useState('');
+  
+  // Gift functionality state
+  const [giftDialogOpen, setGiftDialogOpen] = useState(false);
+  const [selectedRecipient, setSelectedRecipient] = useState<any>(null);
+  const [giftMessage, setGiftMessage] = useState('');
+  const [recipientSearch, setRecipientSearch] = useState('');
+  
+  // Checkout step state management
+  const [checkoutStep, setCheckoutStep] = useState(1);
+  
+  // Shipping address form state
+  const [shippingForm, setShippingForm] = useState({
+    firstName: user?.firstName || '',
+    surname: user?.surname || '',
+    addressLine1: user?.shippingAddress || '',
+    addressLine2: '',
+    country: user?.country || 'Belgium',
+    city: user?.city || '',
+    postalCode: user?.shippingZipCode || '',
+    isBusinessAddress: false,
+    phoneCode: '+32',
+    phone: user?.phone || '',
+    saveToAddressBook: false,
+  });
+  
+  // Packaging options state
+  const [packagingOption, setPackagingOption] = useState<'signature-box' | 'signature-with-bag' | 'standard'>('signature-box');
+  
+  // Navigation helper
+  const handleProductClick = (productId: number) => {
+    setLocation(`/product/${productId}`);
+  };
+  
+  // Query for platform users (for gift recipients)
+  const { data: platformUsers, isLoading: usersLoading } = useQuery({
+    queryKey: ['/api/users/platform-users'],
+    enabled: giftDialogOpen,
+  });
+  
+  // Filtered users based on search
+  const filteredUsers = useMemo(() => {
+    if (!platformUsers) return [] as any[];
+    
+    // Handle both array and object wrapper responses
+    const usersArray = Array.isArray(platformUsers) 
+      ? platformUsers 
+      : (platformUsers as any).users || [];
+    
+    if (!recipientSearch) return usersArray as any[];
+    
+    return usersArray.filter((user: any) => 
+      user.name?.toLowerCase().includes(recipientSearch.toLowerCase()) ||
+      user.username?.toLowerCase().includes(recipientSearch.toLowerCase())
+    );
+  }, [platformUsers, recipientSearch]);
+  
+  // Show authentication message if not logged in
+  if (!user) {
+    return (
+      <div className="container max-w-md mx-auto py-16 px-4 text-center">
+        <Card>
+          <CardHeader>
+            <ShoppingCart className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <CardTitle>{ts.shoppingCart}</CardTitle>
+            <CardDescription>
+              {ts.pleaseLogIn}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-6">
+              {ts.signedInRequired}
+            </p>
+            <Button onClick={() => setLocation('/')}>
+              {ts.goToHome}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
+  // Fetch cart items with proper authentication
+  const { 
+    data: cartItems = [], 
+    isLoading, 
+    error 
+  } = useQuery({
+    queryKey: ['/api/cart'],
+    queryFn: async () => {
+      if (!user?.id) {
+        throw new Error('User authentication required');
+      }
+
+      // Get auth token for authentication
+      const authToken = localStorage.getItem('dedwen_auth_token');
+      
+      const response = await fetch('/api/cart', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
+          'X-Use-Session': 'true',
+          'X-Client-Auth': 'true',
+          'X-Client-User-ID': user.id.toString(),
+          'Accept': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to fetch cart: ${response.status}`);
+      }
+
+      return response.json();
+    },
+    enabled: !!user,
+  });
+
+  // Fetch vendor details for shipping info
+  const { data: vendorDetails = {} } = useQuery({
+    queryKey: ['/api/vendors/details'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/vendors/details');
+      return response.json();
+    },
+    enabled: !!cartItems.length,
+  });
+
+  // Auto-calculate shipping costs - ensure cartItems is available
+  const cartTotalWeight = useMemo(() => {
+    if (!cartItems || cartItems.length === 0) return 0;
+    return cartItems.reduce((total: number, item: any) => 
+      total + ((item.product?.weight || 0) * item.quantity), 0
+    );
+  }, [cartItems]);
+  
+  // Determine predominant offering type from cart items
+  const cartOfferingType = useMemo(() => {
+    if (!cartItems || cartItems.length === 0) return 'Product';
+    
+    // Get all offering types from cart items
+    const offeringTypes = cartItems.map((item: any) => item.product?.offeringType || 'product');
+    
+    // Find the most common offering type
+    const typeCounts = offeringTypes.reduce((acc: Record<string, number>, type: string) => {
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {});
+    
+    // Return the most common type, capitalized
+    const predominantType = Object.entries(typeCounts).reduce((a, b) => 
+      typeCounts[a[0]] > typeCounts[b[0]] ? a : b
+    )[0];
+    
+    return predominantType.charAt(0).toUpperCase() + predominantType.slice(1);
+  }, [cartItems]);
+
+  // Get available shipping methods for destination and offering type
+  const { data: availableShippingMethods } = useQuery({
+    queryKey: ['/api/shipping/methods/available', {
+      destinationCountry: user?.country || 'United Kingdom',
+      offeringType: cartOfferingType
+    }],
+    enabled: !isLoading && cartItems && cartItems.length > 0
+  });
+
+  // Get shipping calculation automatically
+  const { data: autoShippingCalculation } = useQuery({
+    queryKey: ['/api/shipping/calculate', {
+      shippingType: selectedShippingType,
+      weight: cartTotalWeight,
+      originCountry: 'DR Congo',
+      destinationCountry: user?.country || 'United Kingdom',
+      originCity: 'Kinshasa',
+      destinationCity: user?.city || 'London',
+      offeringType: cartOfferingType
+    }],
+    enabled: !isLoading && cartItems && cartItems.length > 0 && cartTotalWeight > 0
+  });
+  
+  // Update quantity mutation
+  const updateQuantityMutation = useMutation({
+    mutationFn: async ({ id, quantity }: { id: number; quantity: number }) => {
+      return apiRequest('PUT', `/api/cart/${id}`, { quantity });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: ts.error,
+        description: `${ts.failedUpdateQty}: ${error.message}`,
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  // Remove from cart mutation
+  const removeFromCartMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest('DELETE', `/api/cart/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
+      toast({
+        title: ts.itemRemoved,
+        description: ts.itemRemovedDesc,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: ts.error,
+        description: `${ts.failedRemove}: ${error.message}`,
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  // Send gift mutation
+  const sendGiftMutation = useMutation({
+    mutationFn: async (giftData: any) => {
+      return apiRequest('POST', '/api/gifts/send', giftData);
+    },
+    onSuccess: () => {
+      toast({
+        title: ts.giftSentSuccess,
+        description: ts.giftSentDesc,
+      });
+      setGiftDialogOpen(false);
+      setSelectedRecipient(null);
+      setGiftMessage('');
+      setRecipientSearch('');
+      // Clear cart after successful gift
+      queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: ts.giftSendFailed,
+        description: error.message || ts.failedSendGift,
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  // Save shipping address mutation
+  const saveShippingAddressMutation = useMutation({
+    mutationFn: async (addressData: typeof shippingForm) => {
+      const response = await apiRequest('POST', '/api/checkout/shipping-address', addressData);
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to save shipping address');
+      }
+      
+      return data;
+    },
+    onSuccess: (data) => {
+      // Only proceed to next step if backend confirms successful save
+      if (data.success) {
+        setCheckoutStep(2);
+        toast({
+          title: 'Shipping Address Saved',
+          description: 'Your shipping address has been saved successfully.',
+        });
+      } else {
+        throw new Error('Address save confirmation failed');
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: `Failed to save shipping address: ${error.message}`,
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  // Handle gift sending
+  const handleSendGift = () => {
+    if (!selectedRecipient) {
+      toast({
+        title: ts.noRecipient,
+        description: ts.selectRecipientMsg,
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    const giftData = {
+      recipientId: selectedRecipient.id,
+      cartItems: cartItems,
+      message: giftMessage,
+      total: total,
+      shippingCost: finalShippingCost,
+      shippingType: selectedShippingType
+    };
+    
+    sendGiftMutation.mutate(giftData);
+  };
+  
+  // Handle continue to packaging
+  const handleContinueToPackaging = () => {
+    // Validate required fields
+    if (!shippingForm.firstName.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'First name is required',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (!shippingForm.surname.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Surname is required',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (!shippingForm.addressLine1.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Address is required',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (!shippingForm.city.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'City is required',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (!shippingForm.postalCode.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Postal code is required',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (!shippingForm.phone.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Phone number is required',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Save shipping address
+    saveShippingAddressMutation.mutate(shippingForm);
+  };
+  
+  // Update quantity handler
+  const handleUpdateQuantity = (id: number, currentQuantity: number, change: number) => {
+    const newQuantity = currentQuantity + change;
+    if (newQuantity < 1) return;
+    
+    updateQuantityMutation.mutate({ id, quantity: newQuantity });
+  };
+  
+  // Remove from cart handler
+  const handleRemoveFromCart = (id: number) => {
+    removeFromCartMutation.mutate(id);
+  };
+  
+
+
+  // Escrow transaction handler
+  const handleEscrowTransaction = async () => {
+    if (escrowLoading) return;
+    
+    setEscrowLoading(true);
+    try {
+      const escrowData = {
+        amount: total,
+        currency: 'GBP',
+        description: `Marketplace purchase - ${cartItems.length} item(s)`,
+        buyerEmail: user?.email,
+        items: cartItems.map((item: any) => ({
+          name: item.product?.name || 'Product',
+          price: item.product?.price || 0,
+          quantity: item.quantity
+        }))
+      };
+
+      const response = await apiRequest('/api/escrow/create-transaction', 'POST', escrowData);
+
+      setEscrowTransaction(response);
+      toast({
+        title: ts.escrowCreated,
+        description: ts.escrowInitialized,
+      });
+    } catch (error: any) {
+      toast({
+        title: ts.error,
+        description: error.message || ts.failedEscrow,
+        variant: 'destructive',
+      });
+    } finally {
+      setEscrowLoading(false);
+    }
+  };
+
+  // Proceed to checkout handler
+  const handleCheckout = () => {
+    // If escrow is selected but no transaction created yet, create it first
+    if (useEscrow && !escrowTransaction) {
+      handleEscrowTransaction();
+    }
+    // Always proceed to checkout regardless of escrow status
+    setLocation('/checkout-new');
+  };
+  
+  // Continue shopping handler
+  const handleContinueShopping = () => {
+    setLocation('/');
+  };
+  
+  // TODO: Get vendor-specific pricing config from product data
+  // For now using default configuration, but this should be dynamic based on vendor/product
+  const pricingConfig = {
+    // Example: Different vendors could have different thresholds/rates
+    // freeShippingThreshold: vendor?.freeShippingThreshold || 50,
+    // shippingCost: vendor?.shippingCost || 5.99,
+    // taxRate: vendor?.taxRate || 0.2
+  };
+  
+
+  
+  // Calculate pricing using centralized system with auto-calculated shipping
+  const pricing = calculatePricing(cartItems, pricingConfig);
+  const { subtotal, tax } = pricing;
+  
+  // Use auto-calculated shipping cost if available, otherwise fallback to basic calculation
+  const finalShippingCost = useMemo(() => {
+    return (autoShippingCalculation as any)?.totalCost || pricing.shippingCost;
+  }, [autoShippingCalculation, pricing.shippingCost]);
+  
+  // Calculate 1.5% transaction commission on subtotal with £2 minimum
+  const calculatedCommission = subtotal * 0.015;
+  const transactionCommission = subtotal > 0 ? Math.max(calculatedCommission, 2) : 0;
+  
+  // Recalculate total with commission using final shipping cost
+  const total = subtotal + finalShippingCost + tax + transactionCommission;
+  
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="container max-w-4xl mx-auto py-12 px-4 flex justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  // Error state
+  if (error) {
+    return (
+      <div className="container max-w-4xl mx-auto py-12 px-4">
+        <Card className="border-none">
+          <CardHeader>
+            <CardTitle>{ts.shoppingCart}</CardTitle>
+            <CardDescription>{ts.errorLoading}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-red-50 text-red-800 p-4 rounded-md">
+              {(error as Error).message}
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={handleContinueShopping}>{ts.continueShopping}</Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="container max-w-7xl mx-auto py-6 px-4 sm:py-8">
+      {/* Checkout Header */}
+      <div className="mb-6 border-b pb-4">
+        <p className="text-xs text-gray-600 uppercase tracking-wide mb-1">{ts.checkingOutAs}:</p>
+        <p className="text-sm font-medium">{user?.firstName} {user?.surname}</p>
+      </div>
+
+      {/* Order Summary - Mobile Only (Above All Steps) */}
+      <div className="mb-8 lg:hidden">
+        <div className="border rounded-lg">
+          <div className="border-b px-6 py-4 bg-gray-50">
+            <h2 className="text-lg font-semibold uppercase tracking-wide text-center">{ts.orderSummary}</h2>
+            <p className="text-sm text-center mt-1">
+              {cartItems.length} {ts.item}
+            </p>
+          </div>
+          
+          {/* Cart Items */}
+          <div className="p-6 space-y-4 max-h-96 overflow-y-auto">
+            {cartItems.length === 0 ? (
+              <div className="text-center py-8">
+                <CreditCard className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-sm text-gray-500 mb-2">{ts.cartEmpty}</p>
+              </div>
+            ) : (
+              cartItems.map((item: any) => (
+                <div key={item.id} className="flex gap-4 pb-4 border-b last:border-b-0">
+                  <div className="w-20 h-20 bg-gray-100 rounded flex-shrink-0 overflow-hidden">
+                    {item.product?.imageUrl ? (
+                      <img src={item.product.imageUrl} alt={item.product.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center"><Package className="h-8 w-8 text-gray-400" /></div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-medium text-gray-900 mb-1">{item.product?.name}</h3>
+                    <p className="text-xs text-gray-500 mb-1">{ts.style} #{item.product?.id}</p>
+                    <p className="text-xs text-gray-500 mb-2">{ts.variation}: {item.product?.variant || ts.standard}</p>
+                    <p className="text-xs text-gray-500 mb-1">{ts.qty}: {item.quantity}</p>
+                    <p className="text-sm font-semibold">{formatPriceFromGBP(item.product?.price || 0)}</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Pricing Summary */}
+          <div className="px-6 py-4 border-t bg-gray-50">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>{ts.subtotal}</span>
+                <span className="font-medium">{formatPriceFromGBP(subtotal)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>{ts.shipping}</span>
+                <span className="font-medium">{finalShippingCost === 0 ? ts.freeShipping : formatPriceFromGBP(finalShippingCost)}</span>
+              </div>
+              <div className="flex justify-between text-sm font-semibold pt-2 border-t">
+                <span>{ts.total}</span>
+                <span>{formatPriceFromGBP(total)}</span>
+              </div>
+              <div className="text-xs text-gray-600">
+                {ts.vatIncluded}: {formatPriceFromGBP(tax)}
+              </div>
+            </div>
+          </div>
+
+          {/* View Details Button */}
+          <div className="px-6 pb-4">
+            <button className="w-full flex items-center justify-between text-sm font-medium py-2 border-t pt-4">
+              <span>{ts.viewDetails}</span>
+              <span>+</span>
+            </button>
+            <p className="text-xs text-gray-600 mt-2">
+              {ts.chargeNotice}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Two Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column - Checkout Sections */}
+        <div className="lg:col-span-2 space-y-6">
+          
+          {/* Section 1: SHIPPING ADDRESS */}
+          <div className="border rounded-lg">
+            <div className="border-b px-6 py-4 bg-gray-50">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white text-sm font-semibold">
+                  1
+                </div>
+                <h2 className="text-lg font-semibold uppercase tracking-wide">{ts.shippingAddress}</h2>
+              </div>
+              <p className="text-sm text-gray-600 mt-1 ml-11">{ts.deliverTo}</p>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Delivery Method */}
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="delivery" className="w-4 h-4" defaultChecked />
+                  <div>
+                    <span className="font-medium text-sm">Delivery</span>
+                    <p className="text-xs text-gray-500">{deliveryEstimate}</p>
+                  </div>
+                </label>
+              </div>
+
+              {/* Name Fields */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-medium text-gray-700 uppercase block mb-1">{ts.firstName}*</label>
+                  <Input 
+                    value={shippingForm.firstName} 
+                    onChange={(e) => setShippingForm({...shippingForm, firstName: e.target.value})}
+                    className="bg-white" 
+                    data-testid="input-firstname" 
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-700 uppercase block mb-1">{ts.surname}*</label>
+                  <Input 
+                    value={shippingForm.surname} 
+                    onChange={(e) => setShippingForm({...shippingForm, surname: e.target.value})}
+                    className="bg-white" 
+                    data-testid="input-surname" 
+                  />
+                </div>
+              </div>
+
+              {/* Address Line 1 */}
+              <div>
+                <label className="text-xs font-medium text-gray-700 uppercase block mb-1">{ts.addressLine1}*</label>
+                <Input 
+                  value={shippingForm.addressLine1} 
+                  onChange={(e) => setShippingForm({...shippingForm, addressLine1: e.target.value})}
+                  className="bg-white" 
+                  data-testid="input-address" 
+                />
+              </div>
+
+              {/* Address Line 2 */}
+              <button className="text-sm underline text-gray-700">{ts.addressLine2}</button>
+
+              {/* Country, City, Postal Code */}
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="text-xs font-medium text-gray-700 uppercase block mb-1">{ts.countryRegion}</label>
+                  <Select 
+                    value={shippingForm.country} 
+                    onValueChange={(value) => setShippingForm({...shippingForm, country: value})}
+                  >
+                    <SelectTrigger data-testid="select-country">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Belgium">🇧🇪 {ts.belgium}</SelectItem>
+                      <SelectItem value="UK">🇬🇧 {ts.unitedKingdom}</SelectItem>
+                      <SelectItem value="France">🇫🇷 {ts.france}</SelectItem>
+                      <SelectItem value="Germany">🇩🇪 {ts.germany}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-700 uppercase block mb-1">{ts.city}*</label>
+                  <Input 
+                    value={shippingForm.city} 
+                    onChange={(e) => setShippingForm({...shippingForm, city: e.target.value})}
+                    className="bg-white" 
+                    data-testid="input-city" 
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-700 uppercase block mb-1">{ts.postalCode}*</label>
+                  <Input 
+                    value={shippingForm.postalCode} 
+                    onChange={(e) => setShippingForm({...shippingForm, postalCode: e.target.value})}
+                    className="bg-white" 
+                    data-testid="input-postal" 
+                  />
+                </div>
+              </div>
+
+              {/* Business Address Checkbox */}
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" className="w-4 h-4" />
+                <span>{ts.businessAddress}</span>
+              </label>
+
+              {/* Mobile Number */}
+              <div>
+                <label className="text-xs font-medium text-gray-700 uppercase block mb-1">{ts.mobile}*</label>
+                <p className="text-xs text-gray-500 mb-2">{ts.smsUpdates}</p>
+                <div className="flex gap-2">
+                  <Select 
+                    value={shippingForm.phoneCode} 
+                    onValueChange={(value) => setShippingForm({...shippingForm, phoneCode: value})}
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="+32">{ts.phoneBelgium}</SelectItem>
+                      <SelectItem value="+44">{ts.phoneUK}</SelectItem>
+                      <SelectItem value="+33">{ts.phoneFrance}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input 
+                    value={shippingForm.phone} 
+                    onChange={(e) => setShippingForm({...shippingForm, phone: e.target.value})}
+                    className="flex-1 bg-white" 
+                    data-testid="input-phone" 
+                  />
+                </div>
+              </div>
+
+              {/* Additional Options */}
+              <div className="space-y-2 text-sm">
+                <p className="underline cursor-pointer">{ts.additionalContact}</p>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" className="w-4 h-4" />
+                  <span>{ts.saveAddress}</span>
+                </label>
+              </div>
+
+              {/* Delivery Method Section */}
+              <div className="mt-6 pt-6 border-t">
+                <h3 className="font-semibold text-sm mb-3 uppercase">{ts.deliveryMethod}</h3>
+                <div className="bg-gray-100 p-4 rounded text-center text-sm text-gray-600">
+                  {ts.enterPostalCode}
+                </div>
+              </div>
+
+              {/* Continue Button */}
+              <Button 
+                className="w-full bg-black hover:bg-gray-800 text-white font-semibold uppercase" 
+                data-testid="button-continue-packaging"
+                onClick={handleContinueToPackaging}
+                disabled={saveShippingAddressMutation.isPending}
+              >
+                {saveShippingAddressMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  ts.continueToPackaging
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {/* Section 2: PACKAGING OPTIONS & GIFTING */}
+          <div className={`border rounded-lg ${checkoutStep < 2 ? 'opacity-60' : ''}`}>
+            <div className="border-b px-6 py-4 bg-gray-50">
+              <div className="flex items-center gap-3">
+                <div className={`flex items-center justify-center w-8 h-8 rounded-full text-white text-sm font-semibold ${checkoutStep >= 2 ? 'bg-black' : 'bg-gray-300'}`}>
+                  2
+                </div>
+                <h2 className="text-lg font-semibold uppercase tracking-wide">{ts.packagingOptions}</h2>
+              </div>
+              <p className="text-sm text-gray-600 mt-1 ml-11">{ts.signatureBox}</p>
+            </div>
+            
+            {checkoutStep >= 2 && (
+              <div className="p-6 space-y-4">
+                {/* Packaging Options */}
+                <div className="space-y-3">
+                  <label className="flex items-start gap-3 cursor-pointer p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <input 
+                      type="radio" 
+                      name="packaging" 
+                      value="signature-box"
+                      checked={packagingOption === 'signature-box'}
+                      onChange={(e) => setPackagingOption(e.target.value as any)}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium">Signature Box</div>
+                      <div className="text-sm text-gray-600">Premium packaging with signature box</div>
+                      <div className="text-sm font-semibold mt-1">Free</div>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-start gap-3 cursor-pointer p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <input 
+                      type="radio" 
+                      name="packaging" 
+                      value="signature-with-bag"
+                      checked={packagingOption === 'signature-with-bag'}
+                      onChange={(e) => setPackagingOption(e.target.value as any)}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium">Signature Box + Boutique Shopping Bag</div>
+                      <div className="text-sm text-gray-600">Premium packaging with signature box and boutique shopping bag</div>
+                      <div className="text-sm font-semibold mt-1">Free</div>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-start gap-3 cursor-pointer p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <input 
+                      type="radio" 
+                      name="packaging" 
+                      value="standard"
+                      checked={packagingOption === 'standard'}
+                      onChange={(e) => setPackagingOption(e.target.value as any)}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium">Standard Packaging</div>
+                      <div className="text-sm text-gray-600">Standard secure packaging</div>
+                      <div className="text-sm font-semibold mt-1">Free</div>
+                    </div>
+                  </label>
+                </div>
+                
+                {/* Continue to Payment Button */}
+                <Button 
+                  className="w-full bg-black hover:bg-gray-800 text-white font-semibold uppercase" 
+                  data-testid="button-continue-payment"
+                  onClick={() => setCheckoutStep(3)}
+                >
+                  Continue to Payment
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Section 3: PAYMENT */}
+          <div className="border rounded-lg opacity-60">
+            <div className="border-b px-6 py-4 bg-gray-50">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-300 text-white text-sm font-semibold">
+                  3
+                </div>
+                <h2 className="text-lg font-semibold uppercase tracking-wide">{ts.payment}</h2>
+              </div>
+              <p className="text-sm text-gray-600 mt-1 ml-11">{ts.paymentMethods}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column - Order Summary (Desktop Only) */}
+        <div className="hidden lg:block lg:col-span-1">
+          <div className="border rounded-lg sticky top-4">
+            <div className="border-b px-6 py-4 bg-gray-50">
+              <h2 className="text-lg font-semibold uppercase tracking-wide text-center">{ts.orderSummary}</h2>
+              <p className="text-sm text-center mt-1">
+                {cartItems.length} {ts.item}
+              </p>
+            </div>
+            
+            {/* Cart Items */}
+            <div className="p-6 space-y-4 max-h-96 overflow-y-auto">
+              {cartItems.length === 0 ? (
+                <div className="text-center py-8">
+                  <CreditCard className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-sm text-gray-500 mb-2">{ts.cartEmpty}</p>
+                </div>
+              ) : (
+                cartItems.map((item: any) => (
+                  <div key={item.id} className="flex gap-4 pb-4 border-b last:border-b-0">
+                    <div className="w-20 h-20 bg-gray-100 rounded flex-shrink-0 overflow-hidden">
+                      {item.product?.imageUrl ? (
+                        <img src={item.product.imageUrl} alt={item.product.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center"><Package className="h-8 w-8 text-gray-400" /></div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-medium text-gray-900 mb-1">{item.product?.name}</h3>
+                      <p className="text-xs text-gray-500 mb-1">{ts.style} #{item.product?.id}</p>
+                      <p className="text-xs text-gray-500 mb-2">{ts.variation}: {item.product?.variant || ts.standard}</p>
+                      <p className="text-xs text-gray-500 mb-1">{ts.qty}: {item.quantity}</p>
+                      <p className="text-sm font-semibold">{formatPriceFromGBP(item.product?.price || 0)}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Pricing Summary */}
+            <div className="px-6 py-4 border-t space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>{ts.subtotal}</span>
+                <span className="font-medium">{formatPriceFromGBP(subtotal)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>{ts.shipping}</span>
+                <span className="font-medium">{finalShippingCost === 0 ? ts.freeShipping : formatPriceFromGBP(finalShippingCost)}</span>
+              </div>
+              <div className="flex justify-between text-sm font-semibold pt-2 border-t">
+                <span>{ts.total}</span>
+                <span>{formatPriceFromGBP(total)}</span>
+              </div>
+              <div className="text-xs text-gray-600">
+                {ts.vatIncluded}: {formatPriceFromGBP(tax)}
+              </div>
+            </div>
+
+            {/* View Details Button */}
+            <div className="px-6 pb-4">
+              <button className="w-full flex items-center justify-between text-sm font-medium py-2 border-t pt-4">
+                <span>{ts.viewDetails}</span>
+                <span>+</span>
+              </button>
+              <p className="text-xs text-gray-600 mt-2">
+                {ts.chargeNotice}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Gift Dialog */}
+      <Dialog open={giftDialogOpen} onOpenChange={setGiftDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Gift className="h-5 w-5 text-blue-600" />
+              {ts.sendGift}
+            </DialogTitle>
+            <DialogDescription>
+              {ts.chooseRecipient}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* Gift Summary */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h4 className="font-medium text-gray-900 mb-3">{ts.giftSummary}</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>{ts.items}:</span>
+                  <span>{cartItems.length} {cartItems.length === 1 ? ts.itemSingular : ts.itemsPlural}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>{ts.totalValue}:</span>
+                  <span className="font-medium">{formatPriceFromGBP(total)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>{ts.shippingCost}:</span>
+                  <span className="font-medium">
+                    {finalShippingCost === 0 ? ts.free : formatPriceFromGBP(finalShippingCost)}
+                  </span>
+                </div>
+                <div className="flex justify-between font-medium text-base pt-2 border-t">
+                  <span>{ts.giftTotal}:</span>
+                  <span>{formatPriceFromGBP(total + finalShippingCost)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Recipient Selection */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">{ts.selectRecipient}</h4>
+              
+              {/* Search Input */}
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  type="text"
+                  placeholder={ts.searchUsers}
+                  value={recipientSearch}
+                  onChange={(e) => setRecipientSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
+              {/* Recipients List */}
+              <div className="max-h-60 overflow-y-auto border rounded-lg">
+                {usersLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                  </div>
+                ) : filteredUsers.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Users className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                    {recipientSearch ? ts.noUsersFound : ts.noUsersAvailable}
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {filteredUsers.map((user: any) => (
+                      <div
+                        key={user.id}
+                        className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
+                          selectedRecipient?.id === user.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                        }`}
+                        onClick={() => setSelectedRecipient(user)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+                            {user.avatar ? (
+                              <img
+                                src={user.avatar}
+                                alt={user.name || user.username}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <Users className="h-5 w-5 text-gray-400" />
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900">
+                              {user.name || user.username}
+                            </div>
+                            {user.name && user.username && (
+                              <div className="text-sm text-gray-500">@{user.username}</div>
+                            )}
+                          </div>
+                          {selectedRecipient?.id === user.id && (
+                            <Check className="h-5 w-5 text-blue-600" />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Gift Message */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">{ts.personalMessage}</h4>
+              <Input
+                type="text"
+                placeholder={ts.addMessage}
+                value={giftMessage}
+                onChange={(e) => setGiftMessage(e.target.value)}
+                className="w-full"
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setGiftDialogOpen(false);
+                  setSelectedRecipient(null);
+                  setGiftMessage('');
+                  setRecipientSearch('');
+                }}
+              >
+                {ts.cancel}
+              </Button>
+              <Button
+                onClick={handleSendGift}
+                disabled={!selectedRecipient || sendGiftMutation.isPending}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {sendGiftMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {ts.sendingGift}
+                  </>
+                ) : (
+                  <>
+                    <Gift className="mr-2 h-4 w-4" />
+                    {ts.sendGiftButton}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

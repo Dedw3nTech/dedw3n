@@ -7,5 +7,6 @@ declare module 'express-session' {
     };
     userId?: number;
     isAuthenticated?: boolean;
+    lastActivity?: string;
   }
 }

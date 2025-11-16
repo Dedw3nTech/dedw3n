@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useMasterTranslation } from "@/hooks/use-master-translation";
 import { 
   Card, 
   CardContent, 
@@ -35,7 +35,7 @@ import { createStoreSlug } from "@shared/utils";
 
 const VendorCard = ({ vendor }: { vendor: Vendor }) => {
   const [, setLocation] = useLocation();
-  const { t } = useTranslation();
+  const { translateText } = useMasterTranslation();
   
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -51,7 +51,7 @@ const VendorCard = ({ vendor }: { vendor: Vendor }) => {
           <div className="flex items-center mt-1">
             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
             <span className="text-sm font-medium">
-              {vendor.rating?.toFixed(1) || "New"} 
+              {vendor.rating?.toFixed(1) || translateText("New")} 
               {vendor.ratingCount ? ` (${vendor.ratingCount})` : ""}
             </span>
           </div>
@@ -59,7 +59,7 @@ const VendorCard = ({ vendor }: { vendor: Vendor }) => {
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground line-clamp-2">
-          {vendor.description || t("vendors.no_description")}
+          {vendor.description || translateText("No description available")}
         </p>
       </CardContent>
       <CardFooter className="flex justify-between">
@@ -68,14 +68,14 @@ const VendorCard = ({ vendor }: { vendor: Vendor }) => {
           size="sm"
           onClick={() => setLocation(`/vendor/${createStoreSlug(vendor.storeName)}`)}
         >
-          {t("vendors.view_profile")}
+          {translateText("View Profile")}
         </Button>
         <Button
           variant="ghost" 
           size="sm"
           onClick={() => setLocation(`/products?vendorId=${vendor.id}`)}
         >
-          {t("vendors.browse_products")} <ArrowRight className="ml-1 h-4 w-4" />
+          {translateText("Browse Products")} <ArrowRight className="ml-1 h-4 w-4" />
         </Button>
       </CardFooter>
     </Card>
@@ -84,7 +84,7 @@ const VendorCard = ({ vendor }: { vendor: Vendor }) => {
 
 export default function VendorsPage() {
   usePageTitle({ title: "Vendors" });
-  const { t } = useTranslation();
+  const { translateText } = useMasterTranslation();
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
@@ -136,15 +136,15 @@ export default function VendorsPage() {
     <div className="container py-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold">{t("vendors.title")}</h1>
+          <h1 className="text-3xl font-bold">{translateText("Vendors")}</h1>
           <p className="text-muted-foreground mt-1">
-            {t("vendors.subtitle")}
+            {translateText("Discover and connect with trusted sellers")}
           </p>
         </div>
         
         {user && !user.isVendor && (
           <Button onClick={() => setLocation("/become-vendor")}>
-            {t("vendors.become_vendor")}
+            {translateText("Become a Vendor")}
             <ArrowUpRight className="ml-1 h-4 w-4" />
           </Button>
         )}
@@ -154,7 +154,7 @@ export default function VendorsPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input 
-            placeholder={t("vendors.search_placeholder")}
+            placeholder={translateText("Search vendors...")}
             className="pl-9"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -168,9 +168,9 @@ export default function VendorsPage() {
           onValueChange={setActiveTab}
         >
           <TabsList className="grid grid-cols-3 w-full">
-            <TabsTrigger value="all">{t("vendors.all")}</TabsTrigger>
-            <TabsTrigger value="popular">{t("vendors.popular")}</TabsTrigger>
-            <TabsTrigger value="new">{t("vendors.new")}</TabsTrigger>
+            <TabsTrigger value="all">{translateText("All")}</TabsTrigger>
+            <TabsTrigger value="popular">{translateText("Popular")}</TabsTrigger>
+            <TabsTrigger value="new">{translateText("New")}</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -210,13 +210,13 @@ export default function VendorsPage() {
           <ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
           <h3 className="mt-4 text-lg font-medium">
             {searchQuery 
-              ? t("vendors.no_results") 
-              : t("vendors.no_vendors")}
+              ? translateText("No vendors found") 
+              : translateText("No vendors yet")}
           </h3>
           <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
             {searchQuery 
-              ? t("vendors.try_different_search")
-              : t("vendors.check_back_later")}
+              ? translateText("Try adjusting your search")
+              : translateText("Check back later for new vendors")}
           </p>
         </div>
       )}

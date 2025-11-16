@@ -84,7 +84,7 @@ const CommissionPaymentForm = ({
     } catch (error) {
       console.error('Payment error:', error);
       toast({
-        title: "Payment Error",
+        title: "Error",
         description: "An unexpected error occurred during payment processing.",
         variant: "destructive",
       });
@@ -282,7 +282,7 @@ export default function CommissionPayment() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-destructive">
               <AlertCircle className="h-5 w-5" />
-              Payment Error
+              Error
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">

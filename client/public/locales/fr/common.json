@@ -131,6 +131,7 @@
     "username": "Nom d'Utilisateur",
     "name": "Nom",
     "forgot_password": "Mot de Passe Oublié ?",
+    "forgot_password_link": "Mot de passe oublié ? Cliquez ici pour le réinitialiser",
     "remember_me": "Se Souvenir de Moi",
     "no_account": "Vous n'avez pas de compte ?",
     "have_account": "Vous avez déjà un compte ?",
@@ -214,5 +215,105 @@
     "more": "Plus",
     "all": "Tous",
     "none": "Aucun"
+  },
+  "giftcards": {
+    "title": "Cartes Cadeaux",
+    "page_title": "Cartes Cadeaux Dedw3n",
+    "description": "Offrez le cadeau parfait avec une carte cadeau Dedw3n. Choisissez entre cartes numériques ou physiques.",
+    "purchase": "Acheter Carte Cadeau",
+    "redeem": "Échanger Carte Cadeau",
+    "check_balance": "Vérifier Solde",
+    "my_gift_cards": "Mes Cartes Cadeaux",
+    "give_gift": "Offrir le Cadeau du Choix",
+    "perfect_gift": "Parfait pour toute occasion",
+    "instant_delivery": "Livraison numérique instantanée disponible",
+    "no_expiry": "Aucune date d'expiration",
+    "amounts": {
+      "select_amount": "Sélectionner Montant",
+      "custom_amount": "Montant Personnalisé",
+      "minimum": "Minimum 10€",
+      "maximum": "Maximum 1000€",
+      "currency": "EUR"
+    },
+    "types": {
+      "digital": "Carte Cadeau Numérique",
+      "physical": "Carte Cadeau Physique",
+      "email": "Livraison par Email",
+      "mail": "Livraison par Courrier"
+    },
+    "purchase_form": {
+      "recipient_name": "Nom du Destinataire",
+      "recipient_email": "Email du Destinataire",
+      "sender_name": "Votre Nom",
+      "personal_message": "Message Personnel",
+      "message_placeholder": "Écrivez un message personnel...",
+      "delivery_date": "Date de Livraison",
+      "delivery_method": "Méthode de Livraison",
+      "preview": "Aperçu de la Carte",
+      "add_to_cart": "Ajouter au Panier",
+      "buy_now": "Acheter Maintenant"
+    },
+    "redeem_form": {
+      "gift_card_code": "Code Carte Cadeau",
+      "code_placeholder": "Entrez votre code de carte cadeau",
+      "redeem_button": "Échanger Carte Cadeau",
+      "apply_to_order": "Appliquer à la Commande Actuelle",
+      "check_balance_button": "Vérifier le Solde Uniquement"
+    },
+    "balance": {
+      "current_balance": "Solde Actuel",
+      "remaining_balance": "Solde Restant",
+      "used_amount": "Montant Utilisé",
+      "transaction_history": "Historique des Transactions",
+      "date_purchased": "Date d'Achat",
+      "date_expires": "Expire",
+      "never_expires": "Jamais"
+    },
+    "status": {
+      "active": "Active",
+      "redeemed": "Entièrement Échangée",
+      "expired": "Expirée",
+      "pending": "En Attente",
+      "cancelled": "Annulée"
+    },
+    "messages": {
+      "purchase_success": "Carte cadeau achetée avec succès!",
+      "redeem_success": "Carte cadeau échangée avec succès!",
+      "balance_applied": "Solde de carte cadeau appliqué à votre commande",
+      "invalid_code": "Code de carte cadeau invalide",
+      "expired_card": "Cette carte cadeau a expiré",
+      "already_redeemed": "Cette carte cadeau a déjà été entièrement échangée",
+      "insufficient_balance": "Solde de carte cadeau insuffisant",
+      "email_sent": "Email de carte cadeau envoyé avec succès",
+      "code_required": "Veuillez entrer un code de carte cadeau"
+    },
+    "terms": {
+      "title": "Termes et Conditions",
+      "no_refund": "Les cartes cadeaux ne sont pas remboursables",
+      "no_exchange": "Les cartes cadeaux ne peuvent pas être échangées contre de l'argent",
+      "marketplace_only": "Valides uniquement pour les achats sur la marketplace Dedw3n",
+      "fraud_protection": "Les cartes perdues ou volées ne peuvent pas être remplacées",
+      "balance_check": "Vérifiez votre solde à tout moment sur cette page"
+    },
+    "common": {
+      "amount": "Montant",
+      "code": "Code",
+      "date": "Date",
+      "status": "Statut",
+      "actions": "Actions",
+      "view": "Voir",
+      "print": "Imprimer",
+      "email": "Email",
+      "copy_code": "Copier Code",
+      "download": "Télécharger",
+      "share": "Partager"
+    },
+    "help": {
+      "how_to_use": "Comment Utiliser les Cartes Cadeaux",
+      "purchase_guide": "Comment Acheter",
+      "redeem_guide": "Comment Échanger",
+      "contact_support": "Contacter le Support",
+      "faq": "Questions Fréquemment Posées"
+    }
   }
 }

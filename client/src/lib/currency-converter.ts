@@ -89,6 +89,16 @@ export function convertCurrency(
  * Format currency amount with proper decimals and separators
  */
 export function formatCurrencyAmount(amount: number, currency: string): string {
+  // Cryptocurrencies and stablecoins - use up to 10 decimal places
+  const cryptoCurrencies = ['BTC', 'ETH', 'BNB', 'ADA', 'SOL', 'DOT', 'AVAX', 'LINK', 'MATIC', 'LTC'];
+  const stablecoins = ['USDT', 'USDC', 'BUSD', 'DAI', 'TUSD'];
+  
+  if (cryptoCurrencies.includes(currency) || stablecoins.includes(currency)) {
+    // For crypto: use up to 10 decimal places, remove trailing zeros safely to avoid scientific notation
+    const preciseAmount = amount.toFixed(10);
+    return preciseAmount.replace(/\.?0+$/, '');
+  }
+  
   const roundedAmount = Math.round(amount * 100) / 100;
   
   // Currencies that typically don't use decimal places

@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useLocation, Link } from "wouter";
-const dedw3nLogo = "/dedw3n-logo-black.png";
+const dedw3nLogo = "/logo.png";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,7 @@ import { useNameValidation } from "@/hooks/use-name-validation";
 import { useAffiliateVerification } from "@/hooks/use-affiliate-verification";
 import { useUsernameVerification } from "@/hooks/use-username-verification";
 import { usePasswordStrength } from "@/hooks/use-password-strength";
+import { PASSWORD_TRANSLATIONS } from "@/constants/password-validation-translations";
 
 import { 
   User,
@@ -261,8 +262,6 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
     }
   }, [formData.username, usernameTouched, isLogin, verifyUsername]);
 
-  // No longer need CAPTCHA validation handler for Google reCAPTCHA v3
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -319,11 +318,6 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           // Clear remembered credentials if checkbox is unchecked
           localStorage.removeItem('dedwen_remembered_credentials');
         }
-        
-        toast({
-          title: t["Welcome back!"] || "Welcome back!",
-          description: t["You've successfully logged in."] || "You've successfully logged in.",
-        });
       } else {
         await registerMutation.mutateAsync({
           username: formData.username,
@@ -338,16 +332,12 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           city: formData.city,
           preferredLanguage: formData.language
         });
-        toast({
-          title: t["Account created!"] || "Account created!",
-          description: t["Welcome to Dedw3n! You can now enjoy all features."] || "Welcome to Dedw3n! You can now enjoy all features.",
-        });
       }
       onClose();
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Something went wrong. Please try again.",
+        description: error.message || "Something went wrong.",
         variant: "destructive",
       });
     }
@@ -398,12 +388,9 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="bg-white sm:max-w-md max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex-shrink-0">
           <DialogHeader className="text-center">
-            <DialogTitle className="text-2xl font-bold text-gray-900">
-              {t["Dedw3n"] || "Dedw3n"}
-            </DialogTitle>
             <DialogDescription className="text-sm text-gray-600">
               {isLogin ? 
                 (t["Welcome back! Sign in to your account."] || "Welcome back! Sign in to your account.") : 
@@ -420,7 +407,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           {!isLogin && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName">{t["First Name"] || "First Name"}</Label>
+                <Label htmlFor="firstName" className="text-black">{t["First Name"] || "First Name"}</Label>
                 <div className="relative">
                   <Input
                     id="firstName"
@@ -435,7 +422,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                       if (formData.firstName) setNameTouched(true);
                     }}
                     required={!isLogin}
-                    className={`pr-10 ${
+                    className={`bg-white text-black placeholder:text-black pr-10 ${
                       nameTouched && formData.firstName ? (
                         nameIsValid === true ? "border-green-500 focus:ring-green-500" :
                         nameIsValid === false ? "border-red-500 focus:ring-red-500" :
@@ -465,12 +452,12 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                     ) : nameIsValid === true ? (
                       <p className="text-green-600 flex items-center">
                         <CheckCircle className="mr-1 h-3 w-3" />
-                        {getNameValidationMessage() || t["Name verified as genuine"] || "Name verified as genuine"}
+                        {t[getNameValidationMessage()] || getNameValidationMessage() || t["Name is valid"] || "Name is valid"}
                       </p>
                     ) : nameIsValid === false ? (
                       <p className="text-red-500 flex items-center">
                         <XCircle className="mr-1 h-3 w-3" />
-                        {getNameValidationMessage() || t["Name appears invalid or gibberish"] || "Name appears invalid or gibberish"}
+                        {t[getNameValidationMessage()] || getNameValidationMessage() || t["Name appears invalid or gibberish"] || "Name appears invalid or gibberish"}
                       </p>
                     ) : null}
                   </div>
@@ -478,7 +465,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="lastName">{t["Surname"] || "Surname"}</Label>
+                <Label htmlFor="lastName" className="text-black">{t["Surname"] || "Surname"}</Label>
                 <div className="relative">
                   <Input
                     id="lastName"
@@ -493,7 +480,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                       if (formData.lastName && !isLogin) setLastNameTouched(true);
                     }}
                     required={!isLogin}
-                    className={`pr-10 ${
+                    className={`bg-white text-black placeholder:text-black pr-10 ${
                       lastNameTouched && formData.lastName && !isLogin ? (
                         lastNameIsValid === true ? "border-green-500 focus:ring-green-500" :
                         lastNameIsValid === false ? "border-red-500 focus:ring-red-500" :
@@ -523,12 +510,12 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                     ) : lastNameIsValid === true ? (
                       <p className="text-green-600 flex items-center">
                         <CheckCircle className="mr-1 h-3 w-3" />
-                        {getLastNameValidationMessage() || t["Name verified as genuine"] || "Name verified as genuine"}
+                        {t[getLastNameValidationMessage()] || getLastNameValidationMessage() || t["Name is valid"] || "Name is valid"}
                       </p>
                     ) : lastNameIsValid === false ? (
                       <p className="text-red-500 flex items-center">
                         <XCircle className="mr-1 h-3 w-3" />
-                        {getLastNameValidationMessage() || t["Name appears invalid or gibberish"] || "Name appears invalid or gibberish"}
+                        {t[getLastNameValidationMessage()] || getLastNameValidationMessage() || t["Name appears invalid or gibberish"] || "Name appears invalid or gibberish"}
                       </p>
                     ) : null}
                   </div>
@@ -538,7 +525,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="username">{t["Username"] || "Username"}</Label>
+            <Label htmlFor="username" className="text-black">{t["Username"] || "Username"}</Label>
             <div className="relative">
               <Input
                 id="username"
@@ -553,7 +540,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                   if (formData.username && !isLogin) setUsernameTouched(true);
                 }}
                 required
-                className={`pr-10 ${
+                className={`bg-white text-black placeholder:text-black pr-10 ${
                   usernameTouched && formData.username && !isLogin ? (
                     usernameIsAvailable === true ? "border-green-500 focus:ring-green-500" :
                     usernameIsAvailable === false ? "border-red-500 focus:ring-red-500" :
@@ -583,12 +570,12 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                 ) : usernameIsAvailable === true ? (
                   <p className="text-green-600 flex items-center">
                     <CheckCircle className="mr-1 h-3 w-3" />
-                    {usernameMessage || t["Username is available"] || "Username is available"}
+                    {usernameMessage ? (t[usernameMessage] || usernameMessage) : (t["Username is available"] || "Username is available")}
                   </p>
                 ) : usernameIsAvailable === false ? (
                   <p className="text-red-500 flex items-center">
                     <XCircle className="mr-1 h-3 w-3" />
-                    {usernameError || usernameMessage || t["Username is not available"] || "Username is not available"}
+                    {usernameError ? (t[usernameError] || usernameError) : usernameMessage ? (t[usernameMessage] || usernameMessage) : (t["Username is not available"] || "Username is not available")}
                   </p>
                 ) : null}
               </div>
@@ -596,7 +583,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">{t["Password"] || "Password"}</Label>
+            <Label htmlFor="password" className="text-black">{t["Password"] || "Password"}</Label>
             <div className="relative">
               <Input
                 id="password"
@@ -605,17 +592,17 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
-                className={!isLogin && formData.password && passwordStrength ? (
+                className={`bg-white text-black placeholder:text-black ${!isLogin && formData.password && passwordStrength ? (
                   passwordStrength.isSecure ? "border-green-500 focus:ring-green-500" :
                   passwordStrength.isWeak ? "border-red-500 focus:ring-red-500" :
                   "border-orange-500 focus:ring-orange-500"
-                ) : ""}
+                ) : ""}`}
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                className="absolute right-0 top-0 h-full px-3 py-2 text-black"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? (
@@ -629,9 +616,11 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
             {!isLogin && formData.password && passwordStrength && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Password Strength:</span>
+                  <span className="text-sm font-medium">
+                    {t["Password Strength:"]}
+                  </span>
                   <span className={`text-sm font-semibold ${passwordStrength.color}`}>
-                    {passwordStrength.strengthLabel}
+                    {t[passwordStrength.strengthLabel] || passwordStrength.strengthLabel}
                   </span>
                 </div>
                 {/* Password strength progress bar */}
@@ -656,24 +645,26 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                       ) : (
                         <AlertTriangle className="h-3 w-3 mr-1 mt-0.5 flex-shrink-0" />
                       )}
-                      <span>{message}</span>
+                      <span>{t[message] || message}</span>
                     </div>
                   ))}
                   {passwordStrength.isWeak && passwordStrength.suggestions.length > 0 && (
                     <div className="mt-2 pt-2 border-t border-gray-100">
-                      <p className="text-gray-600 font-medium">Suggestions:</p>
+                      <p className="text-gray-600 font-medium">
+                        {t["Suggestions:"]}
+                      </p>
                       {passwordStrength.suggestions.slice(0, 3).map((suggestion, index) => (
                         <div key={index} className="flex items-start text-gray-600 mt-1">
                           <span className="w-1 h-1 bg-gray-400 rounded-full mr-2 mt-2 flex-shrink-0"></span>
-                          <span>{suggestion}</span>
+                          <span>{t[suggestion] || suggestion}</span>
                         </div>
                       ))}
                     </div>
                   )}
                   {passwordStrength.estimatedCrackTime !== 'Unknown' && (
                     <div className="flex items-center justify-between pt-1 text-gray-500">
-                      <span>Estimated crack time:</span>
-                      <span className="font-medium">{passwordStrength.estimatedCrackTime}</span>
+                      <span>{t["Estimated crack time:"]}</span>
+                      <span className="font-medium">{t[passwordStrength.estimatedCrackTime] || passwordStrength.estimatedCrackTime}</span>
                     </div>
                   )}
                 </div>
@@ -688,8 +679,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                   className="text-sm hover:underline"
                   onClick={() => onClose()}
                 >
-                  <span className="text-gray-500">Forgot password? </span>
-                  <span className="text-blue-600 hover:text-blue-500">Click here to reset</span>
+                  <span className="text-gray-500">{t["Forgot password?"] || "Forgot password?"} </span>
+                  <span className="text-blue-600 hover:text-blue-500">{t["Click here to reset"] || "Click here to reset"}</span>
                 </Link>
               </div>
             )}
@@ -697,7 +688,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
           {!isLogin && (
             <div className="space-y-2">
-              <Label htmlFor="email">
+              <Label htmlFor="email" className="text-black">
                 {t["Email"] || "Email"}
               </Label>
               <div className="relative">
@@ -712,7 +703,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                   }}
                   onBlur={() => setEmailTouched(true)}
                   required={!isLogin}
-                  className={`pr-10 ${
+                  className={`bg-white text-black placeholder:text-black pr-10 ${
                     emailTouched && formData.email ? (
                       emailIsValid === true ? "border-green-500 focus:ring-green-500" :
                       emailIsValid === false ? "border-red-500 focus:ring-red-500" :
@@ -747,7 +738,11 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                   ) : emailIsValid === false ? (
                     <p className="text-red-500 flex items-center">
                       <XCircle className="mr-1 h-3 w-3" />
-                      {getValidationMessage() || t["Invalid email address"] || "Invalid email address"}
+                      {(() => {
+                        const msg = getValidationMessage();
+                        if (msg) return t[msg] || msg;
+                        return t["Invalid email address"] || "Invalid email address";
+                      })()}
                     </p>
                   ) : null}
                 </div>
@@ -757,8 +752,8 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
           {!isLogin && (
             <div className="space-y-2">
-              <Label htmlFor="dateOfBirth">
-                {t["Date of Birth"] || "Date of Birth"} <span className="text-gray-500 ml-1">(18+ required)</span>
+              <Label htmlFor="dateOfBirth" className="text-black">
+                {t["Date of Birth"] || "Date of Birth"} <span className="text-gray-500 ml-1">({t["18+ required"] || "18+ required"})</span>
               </Label>
               <div className="relative">
                 <Input
@@ -768,7 +763,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                   onChange={handleDateOfBirthChange}
                   required={!isLogin}
                   max={new Date().toISOString().split('T')[0]}
-                  className={ageError ? "border-red-500" : formData.dateOfBirth && !ageError ? "border-green-500" : ""}
+                  className={`bg-white text-black placeholder:text-black ${ageError ? "border-red-500" : formData.dateOfBirth && !ageError ? "border-green-500" : ""}`}
                 />
                 {formData.dateOfBirth && !ageError && (
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -779,7 +774,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
               {ageError ? (
                 <p className="text-sm text-red-500 flex items-center mt-1">
                   <XCircle className="mr-1 h-3 w-3" />
-                  {ageError}
+                  {t[ageError] || ageError}
                 </p>
               ) : formData.dateOfBirth && !ageError ? (
                 <p className="text-sm text-green-600 flex items-center mt-1">
@@ -794,12 +789,12 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
           {!isLogin && (
             <div className="space-y-2">
-              <Label htmlFor="language">{t["Language"] || "Language"}</Label>
+              <Label htmlFor="language" className="text-black">{t["Language"] || "Language"}</Label>
               <Select value={formData.language} onValueChange={(value) => setFormData({ ...formData, language: value })}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-white text-black data-[placeholder]:text-black">
                   <SelectValue placeholder={t["Select your language"] || "Select your language"} />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white text-black">
                   <SelectItem value="ar">{t["Arabic"] || "Arabic"}</SelectItem>
                   <SelectItem value="zh">{t["Chinese"] || "Chinese"}</SelectItem>
                   <SelectItem value="cs">{t["Czech"] || "Czech"}</SelectItem>
@@ -828,7 +823,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
           {/* Affiliate Partner Field - Only show for registration */}
           {!isLogin && (
             <div className="space-y-2">
-              <Label htmlFor="affiliatePartner">{t["Affiliate Partner"] || "Affiliate Partner"}</Label>
+              <Label htmlFor="affiliatePartner" className="text-black">{t["Affiliate Partner"] || "Affiliate Partner"}</Label>
               <div className="relative">
                 <Input
                   id="affiliatePartner"
@@ -842,7 +837,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                   onBlur={() => {
                     if (formData.affiliatePartner) setAffiliateTouched(true);
                   }}
-                  className={`pr-10 ${
+                  className={`bg-white text-black placeholder:text-black pr-10 ${
                     affiliateTouched && formData.affiliatePartner ? (
                       affiliateIsValid === true ? "border-green-500 focus:ring-green-500" :
                       affiliateIsValid === false ? "border-red-500 focus:ring-red-500" :
@@ -872,12 +867,12 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
                   ) : affiliateIsValid === true && affiliatePartner ? (
                     <p className="text-green-600 flex items-center">
                       <CheckCircle className="mr-1 h-3 w-3" />
-                      {t["Affiliate partner verified:"] || "Affiliate partner verified:"} {affiliatePartner.name} ({affiliatePartner.company || "Individual"})
+                      {t["Affiliate partner verified:"] || "Affiliate partner verified:"} {affiliatePartner.name} ({affiliatePartner.company || t["Individual"] || "Individual"})
                     </p>
                   ) : affiliateIsValid === false ? (
                     <p className="text-red-500 flex items-center">
                       <XCircle className="mr-1 h-3 w-3" />
-                      {affiliateError || t["Affiliate partner code not found"] || "Affiliate partner code not found"}
+                      {affiliateError ? (t[affiliateError] || affiliateError) : (t["Affiliate partner code not found"] || "Affiliate partner code not found")}
                     </p>
                   ) : null}
                 </div>
@@ -896,7 +891,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
               />
               <Label 
                 htmlFor="remember-password" 
-                className="leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="text-black leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 style={{ fontSize: '10px', fontWeight: 'normal' }}
               >
                 {t["Remember Password"] || "Remember Password"}
@@ -908,7 +903,7 @@ export function LoginPromptModal({ isOpen, onClose, action = "continue" }: Login
 
           <Button 
               type="submit" 
-              className="w-full bg-black hover:bg-gray-900 text-white" 
+              className="w-full bg-white text-black border border-gray-300" 
               disabled={Boolean(
                 loginMutation.isPending || 
                 registerMutation.isPending || 

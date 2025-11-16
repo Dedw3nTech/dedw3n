@@ -131,6 +131,7 @@
     "username": "Nome de Usuário",
     "name": "Nome",
     "forgot_password": "Esqueceu a Senha?",
+    "forgot_password_link": "Esqueceu a senha? Clique aqui para redefinir",
     "remember_me": "Lembrar de Mim",
     "no_account": "Não tem uma conta?",
     "have_account": "Já tem uma conta?",
@@ -214,5 +215,105 @@
     "more": "Mais",
     "all": "Todos",
     "none": "Nenhum"
+  },
+  "giftcards": {
+    "title": "Cartões Presente",
+    "page_title": "Cartões Presente Dedw3n",
+    "description": "Dê o presente perfeito com um cartão presente Dedw3n. Escolha entre cartões digitais ou físicos.",
+    "purchase": "Comprar Cartão Presente",
+    "redeem": "Resgatar Cartão Presente",
+    "check_balance": "Verificar Saldo",
+    "my_gift_cards": "Meus Cartões Presente",
+    "give_gift": "Dê o Presente da Escolha",
+    "perfect_gift": "Perfeito para qualquer ocasião",
+    "instant_delivery": "Entrega digital instantânea disponível",
+    "no_expiry": "Sem data de validade",
+    "amounts": {
+      "select_amount": "Selecionar Valor",
+      "custom_amount": "Valor Personalizado",
+      "minimum": "Mínimo R$50",
+      "maximum": "Máximo R$5000",
+      "currency": "BRL"
+    },
+    "types": {
+      "digital": "Cartão Presente Digital",
+      "physical": "Cartão Presente Físico",
+      "email": "Entrega por Email",
+      "mail": "Entrega pelos Correios"
+    },
+    "purchase_form": {
+      "recipient_name": "Nome do Destinatário",
+      "recipient_email": "Email do Destinatário",
+      "sender_name": "Seu Nome",
+      "personal_message": "Mensagem Pessoal",
+      "message_placeholder": "Escreva uma mensagem pessoal...",
+      "delivery_date": "Data de Entrega",
+      "delivery_method": "Método de Entrega",
+      "preview": "Visualizar Cartão",
+      "add_to_cart": "Adicionar ao Carrinho",
+      "buy_now": "Comprar Agora"
+    },
+    "redeem_form": {
+      "gift_card_code": "Código do Cartão Presente",
+      "code_placeholder": "Digite o código do seu cartão presente",
+      "redeem_button": "Resgatar Cartão Presente",
+      "apply_to_order": "Aplicar ao Pedido Atual",
+      "check_balance_button": "Apenas Verificar Saldo"
+    },
+    "balance": {
+      "current_balance": "Saldo Atual",
+      "remaining_balance": "Saldo Restante",
+      "used_amount": "Valor Utilizado",
+      "transaction_history": "Histórico de Transações",
+      "date_purchased": "Data da Compra",
+      "date_expires": "Validade",
+      "never_expires": "Nunca"
+    },
+    "status": {
+      "active": "Ativo",
+      "redeemed": "Totalmente Resgatado",
+      "expired": "Vencido",
+      "pending": "Pendente",
+      "cancelled": "Cancelado"
+    },
+    "messages": {
+      "purchase_success": "Cartão presente comprado com sucesso!",
+      "redeem_success": "Cartão presente resgatado com sucesso!",
+      "balance_applied": "Saldo do cartão presente aplicado ao seu pedido",
+      "invalid_code": "Código de cartão presente inválido",
+      "expired_card": "Este cartão presente expirou",
+      "already_redeemed": "Este cartão presente já foi totalmente resgatado",
+      "insufficient_balance": "Saldo insuficiente no cartão presente",
+      "email_sent": "Email do cartão presente enviado com sucesso",
+      "code_required": "Por favor, digite um código de cartão presente"
+    },
+    "terms": {
+      "title": "Termos e Condições",
+      "no_refund": "Cartões presente não são reembolsáveis",
+      "no_exchange": "Cartões presente não podem ser trocados por dinheiro",
+      "marketplace_only": "Válido apenas para compras no marketplace Dedw3n",
+      "fraud_protection": "Cartões perdidos ou roubados não podem ser substituídos",
+      "balance_check": "Verifique seu saldo a qualquer momento nesta página"
+    },
+    "common": {
+      "amount": "Valor",
+      "code": "Código",
+      "date": "Data",
+      "status": "Status",
+      "actions": "Ações",
+      "view": "Ver",
+      "print": "Imprimir",
+      "email": "Email",
+      "copy_code": "Copiar Código",
+      "download": "Baixar",
+      "share": "Compartilhar"
+    },
+    "help": {
+      "how_to_use": "Como Usar Cartões Presente",
+      "purchase_guide": "Como Comprar",
+      "redeem_guide": "Como Resgatar",
+      "contact_support": "Contatar Suporte",
+      "faq": "Perguntas Frequentes"
+    }
   }
 }

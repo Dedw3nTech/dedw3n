@@ -5,7 +5,7 @@ import EnhancedPostCard from "@/components/social/EnhancedPostCard";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Users, Sparkles, User, Clock } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { useMasterTranslation } from "@/hooks/use-master-translation";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -26,7 +26,7 @@ export default function ContentFeed({
   limit, 
   userPosts 
 }: ContentFeedProps) {
-  const { t } = useTranslation();
+  const { translateText } = useMasterTranslation();
   const [feedType, setFeedType] = useState<'personal' | 'communities' | 'recommended'>(initialFeedType);
   const [sortType, setSortType] = useState<'relevant' | 'recent'>(initialSortType);
   const [page, setPage] = useState(1);
@@ -105,14 +105,14 @@ export default function ContentFeed({
               onClick={() => handleFeedTypeChange('personal')}
             >
               <User className={`h-4 w-4 inline mr-1 ${feedType === 'personal' ? "text-black font-bold" : ""}`} />
-              {t("social.my_feed")}
+              {translateText("My Feed")}
             </span>
             <span 
               className={`cursor-pointer text-lg ${feedType === 'communities' ? "font-bold text-black" : "text-gray-600 hover:text-gray-900"}`} 
               onClick={() => handleFeedTypeChange('communities')}
             >
               <Users className={`h-4 w-4 inline mr-1 ${feedType === 'communities' ? "text-black font-bold" : ""}`} />
-              {t("social.communities")}
+              {translateText("Communities")}
             </span>
           </div>
         </div>
@@ -126,14 +126,14 @@ export default function ContentFeed({
             onClick={() => handleSortChange('relevant')}
           >
             <Sparkles className={`h-4 w-4 inline mr-1 ${sortType === 'relevant' ? "text-black font-bold" : ""}`} />
-            {t("social.most_relevant")}
+            {translateText("Most Relevant")}
           </span>
           <span 
             className={`cursor-pointer ${sortType === 'recent' ? "font-bold text-black" : "text-gray-600 hover:text-gray-900"}`} 
             onClick={() => handleSortChange('recent')}
           >
             <Clock className={`h-4 w-4 inline mr-1 ${sortType === 'recent' ? "text-black font-bold" : ""}`} />
-            {t("social.most_recent")}
+            {translateText("Most Recent")}
           </span>
         </div>
       </div>
@@ -148,13 +148,13 @@ export default function ContentFeed({
       {/* No Posts State */}
       {!isLoading && (!data || data.length === 0) && (
         <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-          <h3 className="text-lg font-medium text-gray-900">{t("social.no_posts")}</h3>
+          <h3 className="text-lg font-medium text-gray-900">{translateText("No posts yet")}</h3>
           <p className="mt-2 text-sm text-gray-500">
             {feedType === 'personal' 
-              ? t("social.follow_users") 
+              ? translateText("Follow users to see their posts in your feed") 
               : feedType === 'communities' 
-                ? t("social.join_communities")
-                : t("social.be_first")
+                ? translateText("Join communities to see their posts")
+                : translateText("Be the first to post!")
             }
           </p>
         </div>
@@ -179,10 +179,10 @@ export default function ContentFeed({
                 {isFetching ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t("social.loading")}
+                    {translateText("Loading...")}
                   </>
                 ) : (
-                  t("social.load_more")
+                  translateText("Load More")
                 )}
               </Button>
             </div>

@@ -2,9 +2,7 @@ import Stripe from 'stripe';
 import { Client as PayPalClient, Environment, OrdersController, OAuthAuthorizationController } from '@paypal/paypal-server-sdk';
 
 // Initialize payment gateways
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 const paypalClient = new PayPalClient({
   clientCredentialsAuthCredentials: {
@@ -136,8 +134,8 @@ export class PayPalGateway implements PaymentGatewayInterface {
             },
           ],
           application_context: {
-            return_url: `${process.env.BASE_URL || 'http://localhost:5000'}/payment/success`,
-            cancel_url: `${process.env.BASE_URL || 'http://localhost:5000'}/payment/cancel`,
+            return_url: `${process.env.BASE_URL || `https://${process.env.REPLIT_DOMAINS?.split(',')[0] || 'localhost:5000'}`}/payment/success`,
+            cancel_url: `${process.env.BASE_URL || `https://${process.env.REPLIT_DOMAINS?.split(',')[0] || 'localhost:5000'}`}/payment/cancel`,
           },
         },
         prefer: 'return=representation',

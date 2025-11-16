@@ -7,15 +7,25 @@ import { Express, Request, Response } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
+import bcrypt from "bcryptjs";
 import { storage } from "./storage";
 import { User as SelectUser, users } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, isNotNull } from "drizzle-orm";
-import { sendEmail } from "./email-service";
+import { emailService, sendEmail } from "./email-service-enhanced";
+import { verificationService } from "./auth/verification-service";
+import { emailQueue } from "./queues/email-queue";
 import createMemoryStore from "memorystore";
 import speakeasy from "speakeasy";
 import QRCode from "qrcode";
-import { verifyTurnstileToken } from "./turnstile";
+import { getBaseUrl } from "./utils/url";
+import { generateToken } from "./jwt-auth";
+import { logger } from "./logger";
+
+// Export sessionParser for WebSocket authentication
+export let sessionParser: any = null;
+export let sessionStore: any = null;
+export let cookieSecret: string = '';
 
 // Simple in-memory rate limiter for authentication endpoints
 const authAttempts = new Map<string, { count: number; resetTime: number }>();
@@ -29,7 +39,18 @@ const ACCOUNT_LOCKOUT_DURATION = 30 * 60 * 1000; // 30 minutes
 
 // Simplified password security settings for better user experience
 const PASSWORD_MIN_LENGTH = 6;
-const PASSWORD_PEPPER = process.env.PASSWORD_PEPPER || 'DedW3nSecurePepper2025!@#';
+
+// CRITICAL: PASSWORD_PEPPER must be set in environment variables
+// Changing or losing this value will invalidate ALL existing user passwords
+if (!process.env.PASSWORD_PEPPER) {
+  logger.error('CRITICAL: PASSWORD_PEPPER environment variable not set', {
+    impact: 'All user login attempts will fail',
+    action: 'Set PASSWORD_PEPPER in environment secrets'
+  }, undefined, 'startup');
+  throw new Error('PASSWORD_PEPPER environment variable is required');
+}
+
+const PASSWORD_PEPPER = process.env.PASSWORD_PEPPER;
 
 // Simplified password validation for easier account creation
 function validatePasswordStrength(password: string): { isValid: boolean; errors: string[] } {
@@ -74,7 +95,7 @@ function rateLimitAuth(ip: string, maxAttempts = 5, windowMs = 15 * 60 * 1000): 
   }
   
   if (attempt.count >= maxAttempts) {
-    console.log(`[SECURITY] Rate limit exceeded for IP ${ip}: ${attempt.count} attempts`);
+    logger.warn('Rate limit exceeded', { ip, attempts: attempt.count, maxAttempts }, 'api');
     return false;
   }
   
@@ -90,7 +111,6 @@ function resetAuthAttempts(ip: string): void {
 // Legacy CAPTCHA generation removed - using math CAPTCHA only
 
 // Google reCAPTCHA v3 verification - no local CAPTCHA needed
-// All verification is handled by verifyRecaptcha function above
 
 // Account lockout functions
 async function checkAccountLockout(user: any): Promise<{ isLocked: boolean; lockoutExpires?: Date }> {
@@ -120,7 +140,12 @@ async function handleFailedLogin(user: any): Promise<void> {
     lastLogin: shouldLock ? new Date() : user.lastLogin
   });
   
-  console.log(`[SECURITY] Failed login attempt ${newAttempts}/${ACCOUNT_LOCKOUT_ATTEMPTS} for user ${user.username}${shouldLock ? ' - Account locked' : ''}`);
+  logger.warn('Failed login attempt', {
+    username: user.username,
+    attempts: newAttempts,
+    maxAttempts: ACCOUNT_LOCKOUT_ATTEMPTS,
+    accountLocked: shouldLock
+  }, 'api');
 }
 
 async function handleSuccessfulLogin(user: any): Promise<void> {
@@ -153,22 +178,39 @@ export async function hashPassword(password: string) {
     const hashedPassword = `${buf.toString("hex")}.${salt}`;
     return hashedPassword;
   } catch (error) {
-    console.error('[ERROR] Password hashing failed:', error);
+    logger.error('Password hashing failed', undefined, error as Error, 'api');
     throw new Error('Password hashing failed');
   }
 }
 
-async function comparePasswords(supplied: string, stored: string) {
+export async function comparePasswords(supplied: string, stored: string) {
   if (!stored || !supplied) {
-    console.error('[ERROR] Missing password for comparison');
+    logger.error('Missing password for comparison', undefined, undefined, 'api');
     return false;
   }
   
   try {
+    // Check if this is a bcrypt hash (legacy format from user.service.ts)
+    // Bcrypt hashes start with $2a$, $2b$, or $2y$ and don't contain a "." separator
+    if (stored.startsWith('$2') && !stored.includes('.')) {
+      logger.debug('Detected legacy bcrypt password - attempting verification', undefined, 'api');
+      try {
+        const isValid = await bcrypt.compare(supplied, stored);
+        if (isValid) {
+          logger.debug('Legacy bcrypt password verified successfully', undefined, 'api');
+        }
+        return isValid;
+      } catch (bcryptError) {
+        logger.error('Bcrypt verification failed', undefined, bcryptError as Error, 'api');
+        return false;
+      }
+    }
+    
+    // Standard scrypt+pepper flow
     const [hashed, salt] = stored.split(".");
     
     if (!hashed || !salt) {
-      console.error('[ERROR] Invalid stored password format');
+      logger.warn('Invalid stored password format - not scrypt format', undefined, 'api');
       return false;
     }
     
@@ -184,7 +226,7 @@ async function comparePasswords(supplied: string, stored: string) {
         return true;
       }
     } catch (pepperError) {
-      console.log('[AUTH] Pepper-based verification failed, trying legacy format');
+      logger.debug('Pepper-based verification failed - trying legacy format', undefined, 'api');
     }
     
     // Fallback to legacy format without pepper (for existing users)
@@ -216,66 +258,70 @@ async function comparePasswords(supplied: string, stored: string) {
     
     return false;
   } catch (error) {
-    console.error('[ERROR] Password comparison failed:', error);
+    logger.error('Password comparison failed', undefined, error as Error, 'api');
     return false;
   }
 }
 
 export function setupAuth(app: Express) {
-  // Generate cryptographically secure session secret if not provided
-  const sessionSecret = process.env.SESSION_SECRET || randomBytes(64).toString('hex');
+  // Require SESSION_SECRET from environment - fail fast if missing
+  const sessionSecret = process.env.SESSION_SECRET;
+  if (!sessionSecret) {
+    throw new Error('SESSION_SECRET environment variable is required but not set. Please add it to Replit Secrets.');
+  }
   
-  // Enhanced session configuration with cross-domain support
-  const getCookieDomain = (req: Request): string | undefined => {
-    const host = req.get('host') || '';
-    
-    // In development, don't set domain to allow localhost
-    if (process.env.NODE_ENV === 'development') {
-      return undefined;
-    }
-    
-    // For Replit domains, extract the base domain
-    if (host.includes('.replit.dev')) {
-      const replitMatch = host.match(/([^.]+\.replit\.dev)$/);
-      if (replitMatch) {
-        return `.${replitMatch[1]}`;
-      }
-    }
-    
-    return undefined;
+  // Export for WebSocket authentication
+  cookieSecret = sessionSecret;
+  sessionStore = storage.sessionStore;
+  
+  // Detect environment and set secure cookie settings
+  const isProduction = process.env.NODE_ENV === 'production';
+  const isHttps = process.env.REPLIT_DEPLOYMENT === '1' || 
+                  process.env.REPL_SLUG !== undefined ||
+                  isProduction;
+  
+  // Task 6: Enhanced cookie security with sameSite=strict for luxury e-commerce standards
+  // WARNING: sameSite=strict prevents cross-domain cookie transmission
+  // This may break cross-domain authentication flows - test thoroughly before production
+  // Use 'strict' for production security, 'lax' for development to maintain Replit embedding
+  const cookieSameSite = isProduction ? 'strict' : 'lax';
+  
+  // Session configuration - production-grade settings
+  const sessionSettings: session.SessionOptions = {
+    secret: sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    store: storage.sessionStore,
+    name: 'dedwen_session',
+    genid: () => {
+      return randomBytes(32).toString('hex');
+    },
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      httpOnly: true,
+      secure: isHttps, // Enable secure for all HTTPS environments
+      sameSite: cookieSameSite, // 'none' for production cross-domain, 'lax' for dev
+      path: '/',
+    },
+    rolling: true, // Extend session on each request
   };
   
-  // Dynamic session configuration middleware with cross-domain support
-  app.use((req, res, next) => {
-    const cookieDomain = getCookieDomain(req);
-    
-    const sessionSettings: session.SessionOptions = {
-      secret: sessionSecret,
-      resave: false,
-      saveUninitialized: false,
-      store: storage.sessionStore,
-      name: 'dedwen_session',
-      genid: () => {
-        return randomBytes(32).toString('hex');
-      },
-      cookie: {
-        maxAge: 1000 * 60 * 15, // 15 minutes
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-        domain: cookieDomain,
-        path: '/'
-      },
-      rolling: true,
-    };
-    
-    // Apply session only if not already configured for this request
-    if (!req.session) {
-      session(sessionSettings)(req, res, next);
-    } else {
-      next();
-    }
+  logger.debug('Session cookie config', {
+    secure: isHttps,
+    sameSite: cookieSameSite,
+    maxAge: '7 days',
+    httpOnly: true,
+    environment: isProduction ? 'production' : 'development'
   });
+  
+  // Create session parser middleware (exported for WebSocket upgrade handling)
+  const sp = session(sessionSettings);
+  
+  // Apply session middleware once
+  app.use(sp);
+  
+  // Export session parser for WebSocket authentication
+  sessionParser = sp;
 
   // Trust the first proxy if behind a reverse proxy
   app.set('trust proxy', 1);
@@ -320,7 +366,7 @@ export function setupAuth(app: Express) {
     
     // Only reject if both logout state is detected AND there's an active session
     if ((isLoggedOut || hasLogoutCookie) && req.session && req.isAuthenticated && req.isAuthenticated()) {
-      console.log('[CROSS-DOMAIN] Logout state detected for authenticated user, clearing session');
+      logger.debug('Logout state detected for authenticated user, clearing session');
       req.session.destroy(() => {
         return res.status(401).json({ 
           message: 'User logged out across domains',
@@ -336,35 +382,11 @@ export function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Session activity tracking middleware for security monitoring
+  // Session activity tracking middleware (removed idle timeout to align with 7-day session duration)
   app.use((req, res, next) => {
     if (req.session && req.isAuthenticated()) {
-      const now = new Date();
-      
-      // Check for session timeout (idle sessions)
-      if (req.session.lastActivity) {
-        const timeSinceLastActivity = now.getTime() - new Date(req.session.lastActivity).getTime();
-        const timeoutMinutes = 15; // 15 minutes idle timeout
-        
-        if (timeSinceLastActivity > timeoutMinutes * 60 * 1000) {
-          console.log(`[SECURITY] Session timeout for user ${req.user?.id} after ${Math.round(timeSinceLastActivity / 60000)} minutes`);
-          
-          // Destroy expired session
-          req.session.destroy((err) => {
-            if (err) {
-              console.error(`[ERROR] Failed to destroy expired session:`, err);
-            }
-          });
-          
-          return res.status(401).json({ 
-            message: "Session expired due to inactivity",
-            code: "SESSION_TIMEOUT"
-          });
-        }
-      }
-      
-      // Update last activity timestamp
-      req.session.lastActivity = now.toISOString();
+      // Update last activity timestamp for analytics/auditing purposes only
+      req.session.lastActivity = new Date().toISOString();
     }
     
     next();
@@ -374,24 +396,108 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
-        console.log(`[DEBUG] LocalStrategy: authenticating user ${username}`);
+        logger.debug(`LocalStrategy: authenticating user ${username}`);
         
         const user = await storage.getUserByUsername(username);
         if (!user) {
-          console.log(`[DEBUG] LocalStrategy: user ${username} not found`);
+          logger.debug(`LocalStrategy: user ${username} not found`);
           return done(null, false, { message: "Incorrect username" });
+        }
+        
+        // Check if account is deleted
+        if ((user as any).accountDeleted) {
+          logger.debug(`LocalStrategy: account for ${username} is deleted`);
+          return done(null, false, { message: "This account has been closed. Please create a new account if you wish to use Dedw3n." });
         }
         
         // Check if account is locked
         if (user.isLocked) {
-          console.log(`[DEBUG] LocalStrategy: account for ${username} is locked`);
+          logger.debug(`LocalStrategy: account for ${username} is locked`);
           return done(null, false, { message: "Account is locked. Please reset your password or contact support." });
+        }
+        
+        // Check if account is suspended
+        if ((user as any).accountSuspended) {
+          const suspendedAt = (user as any).accountSuspendedAt;
+          if (suspendedAt) {
+            const hoursSinceSuspension = (Date.now() - new Date(suspendedAt).getTime()) / (1000 * 60 * 60);
+            
+            // Allow reactivation after 24 hours
+            if (hoursSinceSuspension >= 24) {
+              logger.debug(`LocalStrategy: reactivating account for ${username} after 24 hours`);
+              await storage.updateUser(user.id, {
+                accountSuspended: false,
+                accountSuspendedAt: null
+              });
+
+              // Send reactivation email
+              try {
+                const htmlContent = `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2 style="color: #333;">Account Reactivated Successfully</h2>
+                    <p style="color: #555; line-height: 1.6;">Hello ${user.name || user.username},</p>
+                    <p style="color: #555; line-height: 1.6;">
+                      Welcome back! Your Dedw3n account has been successfully reactivated.
+                    </p>
+                    <div style="background: #f0f9ff; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #0ea5e9;">
+                      <p style="margin: 5px 0;"><strong>Account Status:</strong> Active</p>
+                      <p style="margin: 5px 0;"><strong>Reactivated On:</strong> ${new Date().toLocaleString()}</p>
+                      <p style="margin: 5px 0;"><strong>Login Time:</strong> ${new Date().toLocaleString()}</p>
+                    </div>
+                    <p style="color: #555; line-height: 1.6;">
+                      Your account is now fully active and you have complete access to all Dedw3n features.
+                    </p>
+                    <p style="color: #888; font-size: 12px; margin-top: 30px;">
+                      If you did not log in or request this reactivation, please secure your account immediately and contact our support team.
+                    </p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                    <p style="color: #888; font-size: 12px;">
+                      This is an automated message from Dedw3n. Please do not reply to this email.
+                    </p>
+                  </div>
+                `;
+
+                const textContent = `Account Reactivated Successfully
+
+Hello ${user.name || user.username},
+
+Welcome back! Your Dedw3n account has been successfully reactivated.
+
+Account Status: Active
+Reactivated On: ${new Date().toLocaleString()}
+Login Time: ${new Date().toLocaleString()}
+
+Your account is now fully active and you have complete access to all Dedw3n features.
+
+If you did not log in or request this reactivation, please secure your account immediately and contact our support team.
+
+This is an automated message from Dedw3n. Please do not reply to this email.`;
+
+                await sendEmail({
+                  from: 'noreply@dedw3n.com',
+                  to: user.email,
+                  subject: 'Account Reactivated - Welcome Back to Dedw3n',
+                  html: htmlContent,
+                  text: textContent
+                });
+
+                logger.info("Reactivation email sent to ${user.email}", undefined, 'api');
+              } catch (emailError) {
+                logger.error('Failed to send reactivation email:', undefined, emailError as Error, 'api');
+                // Don't fail login if email fails
+              }
+            } else {
+              const hoursRemaining = Math.ceil(24 - hoursSinceSuspension);
+              logger.debug(`LocalStrategy: account for ${username} is suspended. ${hoursRemaining} hours remaining`);
+              return done(null, false, { message: `Account is suspended. You can reactivate it in ${hoursRemaining} hour${hoursRemaining > 1 ? 's' : ''}.` });
+            }
+          }
         }
         
         const isValid = await comparePasswords(password, user.password);
         
         if (!isValid) {
-          console.log(`[DEBUG] LocalStrategy: incorrect password for ${username}`);
+          logger.debug(`LocalStrategy: incorrect password for ${username}`);
           
           // Track failed login attempts
           const failedAttempts = (user.failedLoginAttempts || 0) + 1;
@@ -399,7 +505,7 @@ export function setupAuth(app: Express) {
           
           // Lock account after 5 failed attempts
           if (failedAttempts >= 5) {
-            console.log(`[DEBUG] LocalStrategy: locking account for ${username} after ${failedAttempts} failed attempts`);
+            logger.debug(`LocalStrategy: locking account for ${username} after ${failedAttempts} failed attempts`);
             updates.isLocked = true;
           }
           
@@ -408,16 +514,29 @@ export function setupAuth(app: Express) {
           return done(null, false, { message: "Incorrect password" });
         }
         
+        // Auto-migrate legacy bcrypt passwords to scrypt+pepper
+        if (user.password.startsWith('$2') && !user.password.includes('.')) {
+          logger.debug("Auto-migrating legacy bcrypt password to scrypt+pepper for user ${username}", undefined, 'api');
+          try {
+            const newHash = await hashPassword(password);
+            await storage.updateUser(user.id, { password: newHash });
+            logger.debug("Successfully migrated password for user ${username}", undefined, 'api');
+          } catch (migrationError) {
+            logger.error("Failed to migrate password for user ${username}:", undefined, migrationError as Error, 'api');
+            // Don't fail login if migration fails - user can still log in
+          }
+        }
+        
         // Reset failed attempts and update last login on successful login
         await storage.updateUser(user.id, { 
           failedLoginAttempts: 0,
           lastLogin: new Date()
         });
         
-        console.log(`[DEBUG] LocalStrategy: authentication successful for ${username}`);
+        logger.debug(`LocalStrategy: authentication successful for ${username}`);
         return done(null, user);
       } catch (err) {
-        console.error(`[ERROR] LocalStrategy authentication error:`, err);
+        logger.error(`LocalStrategy authentication error:`, err);
         return done(err);
       }
     })
@@ -434,12 +553,12 @@ export function setupAuth(app: Express) {
       const user = await storage.getUser(id);
       if (!user) {
         // User no longer exists, clear the session gracefully
-        console.log(`[AUTH] User ID ${id} no longer exists, clearing session`);
+        logger.debug("User ID ${id} no longer exists, clearing session", undefined, 'api');
         return done(null, false);
       }
       done(null, user);
     } catch (err) {
-      console.error(`[AUTH] Error deserializing user ID ${id}:`, err);
+      logger.error("Error deserializing user ID ${id}:", undefined, err as Error, 'api');
       // Clear session on any error to prevent loops
       done(null, false);
     }
@@ -458,51 +577,37 @@ export function setupAuth(app: Express) {
     const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
     
     try {
-      console.log(`[DEBUG] Registration attempt for username: ${req.body.username} from IP: ${clientIp}`);
-      console.log(`[DEBUG] Registration: request body:`, req.body);
-      console.log(`[DEBUG] Registration: session ID before:`, req.sessionID);
+      logger.debug(`Registration attempt for username: ${req.body.username} from IP: ${clientIp}`);
+      logger.debug(`Registration: request body:`, req.body);
+      logger.debug(`Registration: session ID before:`, req.sessionID);
       
       // Rate limiting for registration attempts (more restrictive than login)
       if (!rateLimitAuth(clientIp, 3, 30 * 60 * 1000)) { // 3 attempts per 30 minutes
-        console.log(`[SECURITY] Registration rate limit exceeded for IP: ${clientIp}`);
+        logger.warn('Registration rate limit exceeded', { ip: clientIp }, 'api');
         return res.status(429).json({ 
           message: "Too many registration attempts. Please try again later.",
           code: "RATE_LIMIT_EXCEEDED"
         });
       }
-
-      // Verify Turnstile token
-      if (req.body.turnstileToken) {
-        const turnstileResult = await verifyTurnstileToken(req.body.turnstileToken, clientIp);
-        if (!turnstileResult.success) {
-          console.log(`[SECURITY] Turnstile verification failed for registration: ${req.body.username}`);
-          return res.status(400).json({ 
-            message: "Bot verification failed. Please try again.",
-            code: "TURNSTILE_FAILED",
-            error: turnstileResult.error
-          });
-        }
-        console.log(`[SECURITY] Turnstile verification passed for registration: ${req.body.username}`);
-      }
       
       // Check if username already exists
       const existingUser = await storage.getUserByUsername(req.body.username);
       if (existingUser) {
-        console.log(`[DEBUG] Registration failed: Username ${req.body.username} already exists`);
+        logger.debug(`Registration failed: Username ${req.body.username} already exists`);
         return res.status(400).json({ message: "Username already exists" });
       }
 
       // Check if email already exists
       const existingEmail = await storage.getUserByEmail(req.body.email);
       if (existingEmail) {
-        console.log(`[DEBUG] Registration failed: Email ${req.body.email} already exists`);
+        logger.debug(`Registration failed: Email ${req.body.email} already exists`);
         return res.status(400).json({ message: "Email already exists" });
       }
 
       // Validate password strength
       const passwordValidation = validatePasswordStrength(req.body.password);
       if (!passwordValidation.isValid) {
-        console.log(`[SECURITY] Weak password attempt for user: ${req.body.username}`);
+        logger.warn('Weak password attempt', { username: req.body.username }, 'api');
         return res.status(400).json({ 
           message: "Password does not meet security requirements",
           errors: passwordValidation.errors
@@ -512,165 +617,166 @@ export function setupAuth(app: Express) {
       // Hash password
       const hashedPassword = await hashPassword(req.body.password);
 
-      // Generate verification token
-      const verificationToken = randomBytes(32).toString("hex");
+      // Generate secure verification token using the new verification service
+      const { token: verificationToken, hashedToken, expiresAt } = await verificationService.generateSecureToken();
 
-      // Create user with verification token
-      console.log(`[DEBUG] Creating new user ${req.body.username} in storage`);
+      // Filter out empty string fields to avoid database enum errors
+      const userData: any = { ...req.body };
+      Object.keys(userData).forEach(key => {
+        if (userData[key] === '') {
+          delete userData[key];
+        }
+      });
+
+      // Create user with hashed verification token for security
+      logger.debug(`Creating new user ${req.body.username} in storage`);
       const user = await storage.createUser({
-        ...req.body,
+        ...userData,
         password: hashedPassword,
         emailVerified: false,
-        verificationToken: verificationToken,
+        verificationToken: hashedToken, // Store the hashed version in database
+        verificationTokenExpires: expiresAt, // Store expiry date
       });
-      console.log(`[DEBUG] User created with ID: ${user.id}, username: ${user.username}`);
+      logger.debug(`User created with ID: ${user.id}, username: ${user.username}`);
 
-      // Send verification email
+      // Send verification email using the new email queue system
       try {
-        const verificationLink = `${req.protocol}://${req.get('host')}/verify-email?token=${verificationToken}`;
+        const verificationLink = verificationService.generateVerificationUrl(
+          getBaseUrl(req),
+          verificationToken, // Use the plain token in the URL
+          'email'
+        );
         
-        const emailHtml = `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Verify Your Email - Dedw3n</title>
-          </head>
-          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-              <h1 style="color: white; margin: 0; font-size: 28px;">Welcome to Dedw3n!</h1>
-            </div>
-            
-            <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #ddd;">
-              <h2 style="color: #333; margin-top: 0;">Verify Your Email Address</h2>
-              
-              <p>Hello <strong>${user.name || user.username}</strong>,</p>
-              
-              <p>Thank you for creating an account with Dedw3n! To complete your registration and access all features, please verify your email address by clicking the button below:</p>
-              
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${verificationLink}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block; transition: all 0.3s;">
-                  Verify Email Address
-                </a>
-              </div>
-              
-              <p>If the button doesn't work, you can also copy and paste this link into your browser:</p>
-              <p style="word-break: break-all; background: #fff; padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
-                ${verificationLink}
-              </p>
-              
-              <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 15px; margin: 20px 0;">
-                <p style="margin: 0; color: #856404;"><strong>Important:</strong> This verification link will expire in 24 hours for security reasons.</p>
-              </div>
-              
-              <p>If you didn't create this account, please ignore this email.</p>
-              
-              <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
-              
-              <p style="font-size: 14px; color: #666;">
-                Best regards,<br>
-                The Dedw3n Team
-              </p>
-              
-              <p style="font-size: 12px; color: #999; margin-top: 30px;">
-                This is an automated message, please do not reply to this email.
-              </p>
-            </div>
-          </body>
-          </html>
-        `;
-
-        const emailText = `
-Welcome to Dedw3n!
-
-Hello ${user.name || user.username},
-
-Thank you for creating an account with Dedw3n! To complete your registration and access all features, please verify your email address by visiting this link:
-
-${verificationLink}
-
-This verification link will expire in 24 hours for security reasons.
-
-If you didn't create this account, please ignore this email.
-
-Best regards,
-The Dedw3n Team
-        `;
-
-        const emailSent = await sendEmail({
+        // Add email to queue with high priority
+        const emailJobId = await emailQueue.add({
+          type: 'welcome',
           to: user.email,
-          from: 'noreply@dedw3n.com',
-          subject: 'Welcome to Dedw3n - Please Verify Your Email',
-          text: emailText,
-          html: emailHtml
+          priority: 'high',
+          data: {
+            name: user.name || user.username,
+            username: user.username,
+            email: user.email,
+            verificationLink: verificationLink,
+            language: user.preferredLanguage || 'EN'
+          },
+          metadata: {
+            userId: user.id,
+            registrationDate: new Date(),
+            tokenExpiry: expiresAt
+          }
         });
-
-        if (emailSent) {
-          console.log(`[EMAIL] Verification email sent successfully to ${user.email}`);
-        } else {
-          console.error(`[EMAIL] Failed to send verification email to ${user.email}`);
-        }
+        
+        logger.info('Welcome email queued', { email: user.email, jobId: emailJobId }, 'api');
       } catch (emailError) {
-        console.error(`[EMAIL] Error sending verification email:`, emailError);
+        logger.error('Error sending verification email', undefined, emailError as Error, 'api');
         // Continue with registration even if email fails
       }
 
-      // Log in the user
-      console.log(`[DEBUG] Calling req.login for newly created user ${user.username}`);
-      // Login the user directly without session regeneration to avoid conflicts
-      req.login(user, (err) => {
-        if (err) {
-          console.error(`[ERROR] Login after registration failed:`, err);
-          return next(err);
+      // Log in the user with session regeneration for clean state
+      // CRITICAL FIX: Promisify session operations to ensure proper sequencing
+      logger.debug(`Calling req.login for newly created user ${user.username}`);
+      
+      const loginNewUserAsync = async () => {
+        try {
+          // Step 1: Regenerate session to prevent session fixation
+          await new Promise<void>((resolve, reject) => {
+            req.session.regenerate((regenerateErr) => {
+              if (regenerateErr) {
+                logger.error(`Session regeneration error after registration:`, regenerateErr);
+                reject(regenerateErr);
+              } else {
+                logger.debug(`Session regenerated successfully after registration`);
+                resolve();
+              }
+            });
+          });
+          
+          // Step 2: Log in the new user
+          await new Promise<void>((resolve, reject) => {
+            req.login(user, (loginErr) => {
+              if (loginErr) {
+                logger.error(`Login after registration failed:`, loginErr);
+                reject(loginErr);
+              } else {
+                logger.debug(`User ${user.username} logged in after registration`);
+                logger.debug(`New Session ID after regeneration: ${req.sessionID}`);
+                resolve();
+              }
+            });
+          });
+          
+          // Step 3: Save session to persist changes
+          await new Promise<void>((resolve, reject) => {
+            req.session.save((saveErr) => {
+              if (saveErr) {
+                logger.error(`Session save error after registration:`, saveErr);
+                reject(saveErr);
+              } else {
+                logger.debug(`Session saved successfully after registration`);
+                logger.debug(`Authentication status: ${req.isAuthenticated()}`);
+                logger.debug(`Session passport data:`, (req.session as any).passport);
+                resolve();
+              }
+            });
+          });
+          
+          // All session operations completed successfully
+          logger.debug(`All registration session operations completed - ready to send response`);
+          
+          // Generate JWT token for WebSocket authentication
+          const { generateToken } = require('./jwt-auth');
+          const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
+          const deviceInfo = {
+            clientId: req.sessionID || 'unknown',
+            deviceType: req.headers['user-agent'] || 'unknown',
+            ipAddress: clientIp
+          };
+          
+          let jwtToken = null;
+          let tokenExpiresAt = null;
+          try {
+            const tokenData = await generateToken(user.id, user.role || 'user', deviceInfo);
+            jwtToken = tokenData.token;
+            tokenExpiresAt = tokenData.expiresAt;
+            logger.debug("Generated JWT token for new user ${user.id} (expires: ${new Date(tokenExpiresAt).toISOString()})", undefined, 'api');
+          } catch (tokenError) {
+            logger.error(`Failed to generate JWT token during registration:`, tokenError);
+            // Continue without token - session auth will still work for HTTP requests
+          }
+          
+          // Return user without password and verification token, plus JWT for WebSocket
+          const { password, verificationToken: token, ...userWithoutPassword } = user;
+          res.status(201).json({
+            ...userWithoutPassword,
+            emailVerificationSent: true,
+            message: "Account created successfully! Please check your email to verify your account.",
+            ...(jwtToken ? { token: jwtToken, tokenExpiresAt } : {})
+          });
+        } catch (error) {
+          logger.error(`Registration login process failed:`, error);
+          return next(error);
         }
-        
-        console.log(`[DEBUG] User ${user.username} logged in after registration`);
-        console.log(`[DEBUG] Session ID after login:`, req.sessionID);
-        
-        // Double-check authentication status
-        console.log(`[DEBUG] Authentication status after login: ${req.isAuthenticated()}`);
-        console.log(`[DEBUG] User in session:`, req.user);
-        
-        // Return user without password and verification token
-        const { password, verificationToken: token, ...userWithoutPassword } = user;
-        res.status(201).json({
-          ...userWithoutPassword,
-          emailVerificationSent: true,
-          message: "Account created successfully! Please check your email to verify your account."
-        });
-      });
+      };
+      
+      // Execute the async login process
+      loginNewUserAsync().catch(next);
     } catch (error) {
-      console.error(`[ERROR] Registration failed:`, error);
+      logger.error(`Registration failed:`, error);
       next(error);
     }
   });
 
   app.post("/api/auth/login", async (req, res, next) => {
     const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
-    console.log(`[DEBUG] Login attempt for username: ${req.body.username} from IP: ${clientIp}`);
+    logger.debug(`Login attempt for username: ${req.body.username} from IP: ${clientIp}`);
     
     // Rate limiting for authentication attempts
     if (!rateLimitAuth(clientIp)) {
-      console.log(`[SECURITY] Login rate limit exceeded for IP: ${clientIp}`);
+      logger.warn('Login rate limit exceeded', { ip: clientIp }, 'api');
       return res.status(429).json({ 
         message: "Too many login attempts. Please try again later.",
         code: "RATE_LIMIT_EXCEEDED"
       });
-    }
-
-    // Verify Turnstile token
-    if (req.body.turnstileToken) {
-      const turnstileResult = await verifyTurnstileToken(req.body.turnstileToken, clientIp);
-      if (!turnstileResult.success) {
-        console.log(`[SECURITY] Turnstile verification failed for login: ${req.body.username}`);
-        return res.status(400).json({ 
-          message: "Bot verification failed. Please try again.",
-          code: "TURNSTILE_FAILED",
-          error: turnstileResult.error
-        });
-      }
-      console.log(`[SECURITY] Turnstile verification passed for login: ${req.body.username}`);
     }
 
     // Check for account lockout first
@@ -679,7 +785,7 @@ The Dedw3n Team
       if (userForLockoutCheck) {
         const lockoutStatus = await checkAccountLockout(userForLockoutCheck);
         if (lockoutStatus.isLocked) {
-          console.log(`[SECURITY] Account locked for user: ${req.body.username}`);
+          logger.warn('Account locked', { username: req.body.username }, 'api');
           return res.status(423).json({ 
             message: `Account is locked due to multiple failed login attempts. Please try again later.`,
             code: "ACCOUNT_LOCKED",
@@ -688,17 +794,17 @@ The Dedw3n Team
         }
       }
     } catch (error) {
-      console.error(`[ERROR] Error checking account lockout:`, error);
+      logger.error(`Error checking account lockout:`, error);
     }
     
     passport.authenticate("local", async (err: Error | null, user: any, info: { message: string } | undefined) => {
       if (err) {
-        console.error(`[ERROR] Login authentication error:`, err);
+        logger.error(`Login authentication error:`, err);
         return next(err);
       }
       
       if (!user) {
-        console.log(`[DEBUG] Login failed: ${info?.message || "Authentication failed"}`);
+        logger.debug(`Login failed: ${info?.message || "Authentication failed"}`);
         
         // Handle failed login attempt for account lockout
         try {
@@ -707,39 +813,156 @@ The Dedw3n Team
             await handleFailedLogin(userForFailedAttempt);
           }
         } catch (error) {
-          console.error(`[ERROR] Error handling failed login:`, error);
+          logger.error(`Error handling failed login:`, error);
         }
         
         return res.status(401).json({ message: info?.message || "Authentication failed" });
       }
       
-      console.log(`[DEBUG] User ${user.username} authenticated, logging in`);
+      logger.debug(`User ${user.username} authenticated, logging in`);
       
-      // Login user directly without session regeneration to avoid conflicts
-      req.login(user, async (err: Error | null) => {
-        if (err) {
-          console.error(`[ERROR] req.login error:`, err);
-          return next(err);
-        }
+      // Check if user has MFA enabled
+      if (user.twoFactorEnabled) {
+        logger.info('User has MFA enabled - sending verification code', { username: user.username }, 'api');
         
-        console.log(`[DEBUG] req.login successful for ${user.username}`);
-        console.log(`[DEBUG] Session ID: ${req.sessionID}`);
-        console.log(`[DEBUG] isAuthenticated: ${req.isAuthenticated()}`);
-        
-        // Reset auth attempts on successful login
-        resetAuthAttempts(clientIp);
-        
-        // Handle successful login tracking
+        // Generate 6-digit code
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
         try {
-          await handleSuccessfulLogin(user);
+          // Store code in database
+          await storage.updateUser(user.id, {
+            twoFactorCode: code,
+            twoFactorCodeExpires: expiresAt
+          });
+
+          // TODO: Implement WhatsApp sending via Twilio integration
+          // Send 2FA code via email
+
+          logger.info('MFA code sent', { userId: user.id, method: user.twoFactorMethod || 'email' }, 'api');
+          
+          // Reset auth attempts on successful password verification
+          resetAuthAttempts(clientIp);
+          
+          // Return response indicating MFA is required
+          return res.json({
+            requiresMFA: true,
+            requires2FA: true, // Backward compatibility
+            email: user.email,
+            method: user.twoFactorMethod || 'email',
+            message: 'Verification code sent. Please check your ' + (user.twoFactorMethod === 'whatsapp' ? 'WhatsApp' : 'email')
+          });
         } catch (error) {
-          console.error(`[ERROR] Error handling successful login:`, error);
+          logger.error(`Failed to send MFA code:`, error);
+          return res.status(500).json({ message: 'Failed to send verification code. Please try again.' });
         }
-        
-        // Return user without password
-        const { password, ...userWithoutPassword } = user;
-        return res.json(userWithoutPassword);
-      });
+      }
+      
+      // No MFA, login user directly
+      // CRITICAL FIX: Promisify session operations to ensure proper sequencing
+      // This prevents the "double login" bug while maintaining session fixation protection
+      
+      const loginUserAsync = async () => {
+        try {
+          // Step 1: Regenerate session to prevent session fixation attacks
+          await new Promise<void>((resolve, reject) => {
+            req.session.regenerate((regenerateErr) => {
+              if (regenerateErr) {
+                logger.error(`Session regeneration error:`, regenerateErr);
+                reject(regenerateErr);
+              } else {
+                logger.debug(`Session regenerated successfully for ${user.username}`);
+                resolve();
+              }
+            });
+          });
+          
+          // Step 2: Log in the user
+          await new Promise<void>((resolve, reject) => {
+            req.login(user, (loginErr) => {
+              if (loginErr) {
+                logger.error(`req.login error:`, loginErr);
+                reject(loginErr);
+              } else {
+                logger.debug(`req.login successful for ${user.username}`);
+                logger.debug(`New Session ID after regeneration: ${req.sessionID}`);
+                logger.debug(`isAuthenticated: ${req.isAuthenticated()}`);
+                resolve();
+              }
+            });
+          });
+          
+          // Step 3: Save session to persist changes
+          await new Promise<void>((resolve, reject) => {
+            req.session.save((saveErr) => {
+              if (saveErr) {
+                logger.error(`Session save error:`, saveErr);
+                reject(saveErr);
+              } else {
+                logger.debug(`Session saved successfully for ${user.username}`);
+                logger.debug(`Session passport data:`, (req.session as any).passport);
+                logger.debug(`Session cookie will be sent with name: dedwen_session`);
+                resolve();
+              }
+            });
+          });
+          
+          // All session operations completed successfully
+          logger.debug(`All session operations completed - ready to send response`);
+          
+          // Reset auth attempts on successful login
+          resetAuthAttempts(clientIp);
+          
+          // Handle successful login tracking (non-blocking)
+          handleSuccessfulLogin(user).catch(error => {
+            logger.error(`Error handling successful login:`, error);
+          });
+          
+          // Generate JWT token for WebSocket authentication
+          // Detect device type from user agent
+          const userAgent = req.headers['user-agent'] || 'unknown';
+          let deviceType = 'unknown';
+          if (/mobile/i.test(userAgent)) {
+            deviceType = 'mobile';
+          } else if (/tablet/i.test(userAgent)) {
+            deviceType = 'tablet';
+          } else {
+            deviceType = 'desktop';
+          }
+          
+          const deviceInfo = {
+            clientId: req.sessionID || 'unknown',
+            deviceType: deviceType,
+            deviceInfo: userAgent,
+            ipAddress: clientIp || req.ip || ''
+          };
+          
+          let token = null;
+          let tokenExpiresAt = null;
+          try {
+            const tokenData = await generateToken(user.id, user.role || 'user', deviceInfo);
+            token = tokenData.token;
+            tokenExpiresAt = tokenData.expiresAt;
+            logger.debug("Generated JWT token for user ${user.id} (expires: ${new Date(tokenExpiresAt).toISOString()})", undefined, 'api');
+          } catch (tokenError) {
+            logger.error(`Failed to generate JWT token:`, tokenError);
+            // Continue without token - session auth will still work for HTTP requests
+          }
+          
+          // Return user without password, plus JWT token for WebSocket
+          const { password, ...userWithoutPassword } = user;
+          return res.json({
+            ...userWithoutPassword,
+            ...(token ? { token, tokenExpiresAt } : {})
+          });
+        } catch (error) {
+          logger.error(`Login process failed:`, error);
+          return next(error);
+        }
+      };
+      
+      // Execute the async login process
+      loginUserAsync().catch(next);
     })(req, res, next);
   });
 
@@ -747,7 +970,7 @@ The Dedw3n Team
   // Use /api/logout instead (handled by fast-logout.ts)
   /*
   app.post("/api/auth/logout", (req, res) => {
-    console.log(`[DEBUG] Logout request for session: ${req.sessionID}`);
+    logger.debug(`Logout request for session: ${req.sessionID}`);
     
     try {
       // Clear user first to prevent session regeneration issues
@@ -757,9 +980,9 @@ The Dedw3n Team
       if (req.session) {
         req.session.destroy((destroyErr) => {
           if (destroyErr) {
-            console.error(`[ERROR] Session destruction failed:`, destroyErr);
+            logger.error(`Session destruction failed:`, destroyErr);
           } else {
-            console.log(`[DEBUG] Session destroyed successfully`);
+            logger.debug(`Session destroyed successfully`);
           }
         });
       }
@@ -770,10 +993,10 @@ The Dedw3n Team
       res.clearCookie('token');
       res.clearCookie('auth');
       
-      console.log(`[DEBUG] Logout completed successfully`);
+      logger.debug(`Logout completed successfully`);
       res.status(200).json({ message: "Successfully logged out" });
     } catch (error) {
-      console.error(`[ERROR] Logout error:`, error);
+      logger.error(`Logout error:`, error);
       res.status(200).json({ message: "Logged out" });
     }
   });
@@ -790,7 +1013,7 @@ The Dedw3n Team
         return res.status(400).json({ message: "Token and password are required" });
       }
       
-      console.log(`[DEBUG] Password reset confirmation with token: ${token}`);
+      logger.debug(`Password reset confirmation with token: ${token}`);
       
       // Find user by token
       const user = await storage.getUserByResetToken(token);
@@ -815,11 +1038,11 @@ The Dedw3n Team
         failedLoginAttempts: 0
       });
       
-      console.log(`[DEBUG] Password reset successful for user ID: ${user.id}`);
+      logger.debug(`Password reset successful for user ID: ${user.id}`);
       
       res.status(200).json({ message: "Password has been reset successfully. You can now log in with your new password." });
     } catch (error) {
-      console.error(`[ERROR] Password reset confirmation failed:`, error);
+      logger.error(`Password reset confirmation failed:`, error);
       res.status(500).json({ message: "Password reset failed" });
     }
   });
@@ -847,7 +1070,7 @@ The Dedw3n Team
       });
       
       // In a real app, we would send an email here with the verification link
-      console.log(`[DEBUG] Email verification token for ${user.email}: ${verificationToken}`);
+      logger.debug(`Email verification token for ${user.email}: ${verificationToken}`);
       
       res.status(200).json({
         message: "Verification email has been sent. Please check your inbox.",
@@ -855,12 +1078,12 @@ The Dedw3n Team
         token: verificationToken
       });
     } catch (error) {
-      console.error(`[ERROR] Email verification request failed:`, error);
+      logger.error(`Email verification request failed:`, error);
       res.status(500).json({ message: "Email verification request failed" });
     }
   });
   
-  // Email verification confirmation
+  // Email verification confirmation - UPDATED WITH SECURE BCRYPT VERIFICATION
   app.post("/api/auth/verify-email/confirm", async (req, res) => {
     try {
       const { token } = req.body;
@@ -869,25 +1092,112 @@ The Dedw3n Team
         return res.status(400).json({ message: "Verification token is required" });
       }
       
-      console.log(`[DEBUG] Email verification with token: ${token}`);
+      // Security check: Reject tokens that look like bcrypt hashes
+      // Valid tokens should be 64-character hex strings, not hashes
+      if (token.startsWith('$2a$') || token.startsWith('$2b$') || token.startsWith('$2y$')) {
+        logger.warn('Rejected verification attempt with bcrypt hash instead of plain token', undefined, 'api');
+        return res.status(400).json({ message: "Invalid verification token format" });
+      }
       
-      // Find user by verification token
-      const user = await storage.getUserByVerificationToken(token);
-      if (!user) {
+      // Validate token format - should be 64-character hex string
+      if (!/^[a-f0-9]{64}$/i.test(token)) {
+        logger.warn('Rejected verification attempt with invalid token format', undefined, 'api');
+        return res.status(400).json({ message: "Invalid verification token format" });
+      }
+      
+      logger.debug(`Email verification request with valid format token`);
+      
+      // Get all unverified users with verification tokens
+      const unverifiedUsers = await db.select()
+        .from(users)
+        .where(
+          and(
+            eq(users.emailVerified, false),
+            isNotNull(users.verificationToken)
+          )
+        );
+      
+      if (unverifiedUsers.length === 0) {
+        logger.debug('No unverified users found', undefined, 'api');
         return res.status(400).json({ message: "Invalid verification token" });
       }
       
+      // Find the user by comparing token with bcrypt
+      let matchedUser = null;
+      for (const user of unverifiedUsers) {
+        if (user.verificationToken) {
+          const verifyResult = await verificationService.verifyToken(
+            token,
+            user.verificationToken,
+            user.verificationTokenExpires
+          );
+          
+          if (verifyResult.isValid) {
+            matchedUser = user;
+            break;
+          }
+        }
+      }
+      
+      if (!matchedUser) {
+        logger.debug('No user matched the verification token', undefined, 'api');
+        return res.status(400).json({ message: "Invalid verification token" });
+      }
+      
+      // Check if account is expired (more than 24 hours old and not verified)
+      const accountAge = Date.now() - new Date(matchedUser.createdAt!).getTime();
+      const twentyFourHours = 24 * 60 * 60 * 1000;
+      
+      if (accountAge > twentyFourHours) {
+        logger.debug('Verification token expired for user', { userId: matchedUser.id }, 'api');
+        return res.status(400).json({ 
+          message: "Verification link has expired. Your temporary account has been inactive for more than 24 hours.",
+          expired: true
+        });
+      }
+      
       // Update user
-      await storage.updateUser(user.id, {
+      await storage.updateUser(matchedUser.id, {
         emailVerified: true,
-        verificationToken: null
+        verificationToken: null,
+        verificationTokenExpires: null
       });
       
-      console.log(`[DEBUG] Email verification successful for user ID: ${user.id}`);
+      logger.debug(`Email verification successful for user ID: ${matchedUser.id}`);
+      
+      // Send welcome/activation email in user's selected language
+      try {
+        const { EmailTranslationService } = await import('./email-translation-service');
+        const translationService = EmailTranslationService.getInstance();
+        
+        // Use user's preferred language, default to EN
+        const userLanguage = matchedUser.preferredLanguage || 'EN';
+        logger.info('Sending account activation email', { language: userLanguage, email: matchedUser.email }, 'api');
+        
+        // Translate welcome email using DeepL API
+        const { subject, html } = await translationService.translateWelcomeEmail(
+          userLanguage,
+          matchedUser.name || matchedUser.username,
+          matchedUser.email
+        );
+        
+        // Send activation email using imported emailService
+        await emailService.sendEmail({
+          to: matchedUser.email,
+          subject,
+          html,
+          text: subject // Plain text fallback
+        });
+        
+        logger.info('Account activation email sent successfully', { email: matchedUser.email }, 'api');
+      } catch (emailError) {
+        // Log error but don't fail verification if email fails
+        logger.error('Failed to send activation email', undefined, emailError as Error, 'api');
+      }
       
       res.status(200).json({ message: "Email has been verified successfully." });
     } catch (error) {
-      console.error(`[ERROR] Email verification failed:`, error);
+      logger.error(`Email verification failed:`, error);
       res.status(500).json({ message: "Email verification failed" });
     }
   });
@@ -895,15 +1205,15 @@ The Dedw3n Team
   // Get current user - COMMENTED OUT as this is now handled by unified auth in routes.ts
   /*
   app.get("/api/auth/me", (req, res) => {
-    console.log(`[DEBUG] /api/auth/me - isAuthenticated: ${req.isAuthenticated()}`);
+    logger.debug(`/api/auth/me - isAuthenticated: ${req.isAuthenticated()}`);
     
     if (!req.isAuthenticated()) {
-      console.log(`[DEBUG] /api/auth/me - Session ID: ${req.sessionID}`);
-      console.log(`[DEBUG] /api/auth/me - Session:`, req.session);
+      logger.debug(`/api/auth/me - Session ID: ${req.sessionID}`);
+      logger.debug(`/api/auth/me - Session:`, req.session);
       return res.status(401).json({ message: "Not authenticated" });
     }
     
-    console.log(`[DEBUG] /api/auth/me - User in session:`, req.user);
+    logger.debug(`/api/auth/me - User in session:`, req.user);
     
     // Return user without sensitive data
     const { password, passwordResetToken, passwordResetExpires, verificationToken, ...safeUserData } = req.user as SelectUser;
@@ -914,7 +1224,7 @@ The Dedw3n Team
   // Debug endpoint to check user credentials - FOR DEVELOPMENT ONLY
   app.get("/api/auth/test-login", async (req, res) => {
     try {
-      console.log("[DEBUG] Testing login credentials");
+      logger.debug('Testing login credentials', undefined, 'api');
       const { username, password } = req.query;
       
       if (!username || !password) {
@@ -923,7 +1233,7 @@ The Dedw3n Team
       
       // Get user from database
       const user = await storage.getUserByUsername(username as string);
-      console.log(`[DEBUG] Test login - User lookup for "${username}": ${user ? "Found" : "Not found"}`);
+      logger.debug(`Test login - User lookup for "${username}": ${user ? "Found" : "Not found"}`);
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -931,7 +1241,7 @@ The Dedw3n Team
       
       // Check password
       const isValid = await comparePasswords(password as string, user.password);
-      console.log(`[DEBUG] Test login - Password check: ${isValid ? "Valid" : "Invalid"}`);
+      logger.debug(`Test login - Password check: ${isValid ? "Valid" : "Invalid"}`);
       
       // Return result
       if (isValid) {
@@ -940,7 +1250,7 @@ The Dedw3n Team
         return res.status(401).json({ success: false, message: "Invalid password" });
       }
     } catch (error) {
-      console.error("[ERROR] Test login failed:", error);
+      logger.error('Test login failed', undefined, error as Error, 'api');
       res.status(500).json({ message: "Test login failed", error: String(error) });
     }
   });
@@ -1003,7 +1313,7 @@ The Dedw3n Team
         .where(eq(users.id, foundUser.id));
 
       // Create reset URL
-      const resetUrl = `${req.protocol}://${req.get('host')}/reset-password-confirm?token=${resetToken}`;
+      const resetUrl = `${getBaseUrl(req)}/reset-password-confirm?token=${resetToken}`;
 
       // Get user's preferred language and translate email content
       const { EmailTranslationService } = await import('./email-translation-service');
@@ -1011,7 +1321,7 @@ The Dedw3n Team
       
       // Get user's language preference (try multiple sources)
       const userLanguage = await emailTranslationService.getUserLanguagePreference(foundUser.email, foundUser.id);
-      console.log(`[AUTH] Using language ${userLanguage} for password reset email to ${foundUser.email}`);
+      logger.debug("Using language ${userLanguage} for password reset email to ${foundUser.email}", undefined, 'api');
       
       // Get translated email content
       const { subject: translatedSubject, html: emailHtml } = await emailTranslationService.translatePasswordResetEmail(
@@ -1028,9 +1338,9 @@ The Dedw3n Team
           html: emailHtml
         });
 
-        console.log(`[AUTH] Password reset email sent to ${foundUser.email}`);
+        logger.debug("Password reset email sent to ${foundUser.email}", undefined, 'api');
       } catch (emailError) {
-        console.error(`[AUTH] Failed to send reset email to ${foundUser.email}:`, emailError);
+        logger.error("Failed to send reset email to ${foundUser.email}:", undefined, emailError as Error, 'api');
         
         // Clear the reset token since email failed
         await db.update(users)
@@ -1051,7 +1361,7 @@ The Dedw3n Team
       });
 
     } catch (error) {
-      console.error("[AUTH] Password reset request error:", error);
+      logger.error('Password reset request error', undefined, error as Error, 'api');
       res.status(500).json({ 
         message: "An error occurred while processing your request" 
       });
@@ -1148,7 +1458,7 @@ The Dedw3n Team
         })
         .where(eq(users.id, foundUser.id));
 
-      console.log(`[AUTH] Password reset successful for user ${foundUser.email}`);
+      logger.debug("Password reset successful for user ${foundUser.email}", undefined, 'api');
 
       // Send confirmation email
       const confirmationEmailHtml = `
@@ -1191,7 +1501,7 @@ The Dedw3n Team
           html: confirmationEmailHtml
         });
       } catch (emailError) {
-        console.error(`[AUTH] Failed to send confirmation email to ${foundUser.email}:`, emailError);
+        logger.error("Failed to send confirmation email to ${foundUser.email}:", undefined, emailError as Error, 'api');
         // Don't fail the request if confirmation email fails
       }
 
@@ -1200,7 +1510,7 @@ The Dedw3n Team
       });
 
     } catch (error) {
-      console.error("[AUTH] Password reset confirmation error:", error);
+      logger.error('Password reset confirmation error', undefined, error as Error, 'api');
       res.status(500).json({ 
         message: "An error occurred while resetting your password" 
       });
@@ -1215,6 +1525,3 @@ The Dedw3n Team
     next();
   });
 }
-
-// Export reCAPTCHA verification function and password utilities for use in routes
-export { comparePasswords };

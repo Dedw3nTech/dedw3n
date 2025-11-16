@@ -142,7 +142,7 @@ export function PremiumVideoPaywall({ videoId, title, creator, price, thumbnailU
               </div>
               
               {!user ? (
-                <div className="bg-yellow-100 dark:bg-yellow-900/30 p-4 rounded-md text-yellow-800 dark:text-yellow-200 flex items-start gap-3">
+                <div className="bg-yellow-100 p-4 rounded-md text-yellow-800 flex items-start gap-3">
                   <AlertTriangle className="h-5 w-5 mt-0.5 flex-shrink-0" />
                   <p className="text-sm">You need to be logged in to purchase premium content. Please log in or create an account.</p>
                 </div>

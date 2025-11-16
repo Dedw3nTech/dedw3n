@@ -5,13 +5,13 @@ import { X } from 'lucide-react';
 import { InstantImage, preloadCriticalImages, initializeImagePreloader } from '@/hooks/use-ultra-instant-image';
 
 // Use server-served static asset paths for production compatibility
-const luxuryMarketplaceAd = '/attached_assets/Dedw3n Marketplace (1).png';
-const businessB2BAd = '/attached_assets/Dedw3n Business B2B.png';
-const businessB2CAd = '/attached_assets/Copy of Dedw3n Business B2C Header.png';
-const communityAd = '/attached_assets/Dedw3n comm Footer.png';
-const marketplaceHeaderAd = '/attached_assets/Copy of Dedw3n Marketplace II.png';
-const campaignAd = '/attached_assets/Copy of Copy of Pre Launch Campaign  SELL (1).png';
-const marketplaceFooterAd = '/attached_assets/Copy of Dedw3n Marketplace III.png';
+const luxuryMarketplaceAd = '/attached_assets/Dedw3n%20Marketplace%20(1).png';
+const businessB2BAd = '/attached_assets/Dedw3n%20Business%20B2B.png';
+const businessB2CAd = '/attached_assets/b2c-header-new.png';
+const communityAd = '/attached_assets/Dedw3n%20comm%20Footer.png';
+const marketplaceHeaderAd = '/attached_assets/marketplace-header-new.png';
+const campaignAd = '/attached_assets/Copy%20of%20Copy%20of%20Pre%20Launch%20Campaign%20%20SELL%20(1).png';
+const marketplaceFooterAd = '/attached_assets/Copy%20of%20Dedw3n%20Marketplace%20III.png';
 
 // Critical advertisements to preload immediately
 const CRITICAL_ADS = [
@@ -98,18 +98,21 @@ export function ZeroLoadingAd({
 
   // Dynamic styling based on position
   const getPositionStyles = () => {
+    const isB2C = adType === 'business' && marketType === 'b2c';
+    const sizeMultiplier = isB2C ? 'scale-150' : '';
+    
     switch (position) {
       case 'banner':
-        return 'w-full max-h-32 overflow-hidden';
+        return `w-full max-h-48 overflow-hidden ${sizeMultiplier}`;
       case 'floating':
-        return 'fixed bottom-4 right-4 z-50 max-w-sm shadow-xl';
+        return `fixed bottom-4 right-4 z-50 max-w-sm shadow-xl ${sizeMultiplier}`;
       case 'inline':
-        return 'w-full max-w-md mx-auto my-4';
+        return `w-full max-w-lg mx-auto my-4 ${sizeMultiplier}`;
       case 'hero':
-        return 'w-full max-w-4xl mx-auto';
+        return `w-full max-w-6xl mx-auto ${sizeMultiplier}`;
       case 'sidebar':
       default:
-        return 'w-full max-w-xs';
+        return `w-full max-w-sm ${sizeMultiplier}`;
     }
   };
 

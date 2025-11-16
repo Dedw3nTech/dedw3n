@@ -1,14 +1,85 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { Server } from 'http';
-import { verifyToken } from './jwt-auth';
+import type { IncomingMessage } from 'http';
 import { storage } from './storage';
+import { authenticateWebSocketRequest, rejectWebSocketUpgrade } from './websocket-auth';
+
+// ============================================================================
+// SIMPLIFIED WEBSOCKET AUTHENTICATION (Clean Coding Best Practices)
+// ============================================================================
+// This implementation follows the architect's guidance:
+// - Reuse Express sessionParser for authentication
+// - Reject unauthenticated upgrades immediately
+// - Remove custom cache/timeout logic
+// - Rely on req.session.passport.user for userId
+// ============================================================================
 
 // Global WebSocket connection management
-const wsClients = new Map<number, WebSocket>();
+// Use Set to allow multiple connections per user (prevents orphaned connections)
+const wsClients = new Map<number, Set<WebSocket>>();
 let wss: WebSocketServer;
+let isWebSocketSetupComplete = false; // Idempotency guard for hot-reload
 
+/**
+ * Adds a WebSocket connection for a user.
+ * Properly manages multiple connections per user.
+ */
+function addUserConnection(userId: number, ws: WebSocket): void {
+  if (!wsClients.has(userId)) {
+    wsClients.set(userId, new Set());
+  }
+  wsClients.get(userId)!.add(ws);
+  console.log(`[WebSocket] User ${userId} now has ${wsClients.get(userId)!.size} active connection(s)`);
+}
+
+/**
+ * Removes a WebSocket connection for a user.
+ * Cleans up empty sets to prevent memory leaks.
+ */
+function removeUserConnection(userId: number, ws: WebSocket): void {
+  const connections = wsClients.get(userId);
+  if (connections) {
+    connections.delete(ws);
+    if (connections.size === 0) {
+      wsClients.delete(userId);
+      console.log(`[WebSocket] User ${userId} has no more active connections`);
+    } else {
+      console.log(`[WebSocket] User ${userId} still has ${connections.size} active connection(s)`);
+    }
+  }
+}
+
+/**
+ * Sends a message to all of a user's active connections.
+ */
+function sendToUser(userId: number, message: string): void {
+  const connections = wsClients.get(userId);
+  if (connections) {
+    connections.forEach(ws => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(message);
+      }
+    });
+  }
+}
+
+/**
+ * Broadcasts a message to a specific user (exported for use in routes)
+ * @param message - The message object to send
+ * @param userId - The ID of the user to send to
+ */
+export function broadcastMessage(message: { id: number; senderId: number; receiverId: number; content: string; [key: string]: any }, userId: number): void {
+  const payload: WebSocketMessage = {
+    type: 'message',
+    data: message,
+    timestamp: new Date().toISOString()
+  };
+  sendToUser(userId, JSON.stringify(payload));
+}
+
+// WebSocket message interface
 export interface WebSocketMessage {
-  type: 'message' | 'typing' | 'read_receipt' | 'connection_status' | 'error' | 'auth' | 'authenticate' | 'ping' | 'pong';
+  type: 'message' | 'typing' | 'read_receipt' | 'connection_status' | 'error' | 'ping' | 'pong';
   data?: any;
   userId?: number;
   targetUserId?: number;
@@ -21,39 +92,113 @@ export interface WebSocketMessage {
   };
 }
 
-export function setupWebSocket(server: Server) {
-  console.log('[WebSocket] Setting up WebSocket server on /ws path');
+// Extend IncomingMessage to include session
+interface AuthenticatedRequest extends IncomingMessage {
+  session?: any;
+}
+
+// Store reference to meeting WebSocket server for central dispatcher
+let meetingWssRef: WebSocketServer | null = null;
+
+export function setupWebSocket(server: Server, sessionStore: any, cookieSecret: string) {
+  // Idempotency guard: prevent duplicate WebSocket server creation
+  if (isWebSocketSetupComplete) {
+    console.log('[WebSocket] Server already initialized, skipping duplicate setup');
+    return wss;
+  }
   
-  // Create WebSocket server with improved connection stability
+  console.log('[WebSocket] Setting up simplified WebSocket server with session-based auth');
+  
+  // Create WebSocket server with noServer: true to handle upgrade manually
   wss = new WebSocketServer({ 
-    server, 
-    path: '/ws',
+    noServer: true,
     perMessageDeflate: false,
     clientTracking: true,
-    maxPayload: 16 * 1024, // 16KB max payload
-    skipUTF8Validation: false
+    maxPayload: 256 * 1024, // 256KB max payload
+    skipUTF8Validation: false,
   });
 
-  wss.on('connection', async (ws, req) => {
-    console.log('[WebSocket] New connection attempt');
+  // Central HTTP upgrade dispatcher - routes to correct WebSocket server
+  // Uses shared authentication utility for consistent security
+  server.on('upgrade', async (req: AuthenticatedRequest, socket, head) => {
+    const url = req.url || '';
+    console.log(`[WebSocket-Dispatcher] ====== UPGRADE REQUEST ======`);
+    console.log(`[WebSocket-Dispatcher] Path: ${url}`);
     
-    let userId: number | null = null;
-    let isAuthenticated = false;
-    let pingInterval: NodeJS.Timeout | null = null;
+    // Determine which WebSocket server should handle this upgrade
+    const isMeetingPath = url.startsWith('/ws/meeting');
+    const isMessagingPath = url.startsWith('/ws?') || url === '/ws';
+    
+    if (!isMeetingPath && !isMessagingPath) {
+      console.log(`[WebSocket-Dispatcher] Ignoring non-WebSocket path: ${url}`);
+      return;
+    }
+    
+    console.log(`[WebSocket-Dispatcher] Target: ${isMeetingPath ? 'MEETING' : 'MESSAGING'}`);
 
-    // Heartbeat mechanism to prevent connection drops
-    const startHeartbeat = () => {
-      if (pingInterval) clearInterval(pingInterval);
-      
-      pingInterval = setInterval(() => {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.ping(); // Send native WebSocket ping
-          console.log(`[WebSocket] Sent ping to user ${userId}`);
-        } else {
-          clearInterval(pingInterval!);
-        }
-      }, 30000); // Ping every 30 seconds
-    };
+    // Handle socket errors
+    socket.on('error', (err) => {
+      console.error('[WebSocket-Dispatcher] Socket error during upgrade:', err);
+    });
+
+    // Authenticate using shared utility (eliminates code duplication)
+    const authResult = await authenticateWebSocketRequest(req, sessionStore, cookieSecret);
+    
+    if (!authResult.authenticated) {
+      console.warn(`[WebSocket-Dispatcher] Authentication failed: ${authResult.error}`);
+      rejectWebSocketUpgrade(socket, authResult.error);
+      return;
+    }
+
+    console.log(`[WebSocket-Dispatcher] ✅ User ${authResult.userId} authenticated successfully`);
+
+    // Attach authenticated user ID to request for handlers
+    (req as any).userId = authResult.userId;
+    (req as any).sessionId = authResult.sessionId;
+
+    // Route to appropriate WebSocket server
+    if (isMeetingPath) {
+      if (!meetingWssRef) {
+        console.error('[WebSocket-Dispatcher] Meeting WebSocket server not initialized!');
+        socket.write('HTTP/1.1 503 Service Unavailable\r\n\r\n');
+        socket.destroy();
+        return;
+      }
+
+      console.log('[WebSocket-Dispatcher] Routing to Meeting WebSocket server');
+      try {
+        meetingWssRef.handleUpgrade(req, socket, head, (ws) => {
+          meetingWssRef!.emit('connection', ws, req);
+        });
+      } catch (error) {
+        console.error('[WebSocket-Dispatcher] Meeting upgrade failed:', error);
+        socket.destroy();
+      }
+    } else if (isMessagingPath) {
+      console.log('[WebSocket-Dispatcher] Routing to Messaging WebSocket server');
+      try {
+        wss.handleUpgrade(req, socket, head, (ws) => {
+          wss.emit('connection', ws, req);
+        });
+      } catch (error) {
+        console.error('[WebSocket-Dispatcher] Messaging upgrade failed:', error);
+        socket.destroy();
+      }
+    }
+  });
+
+  // Add error handling for the WebSocket server itself
+  wss.on('error', (error) => {
+    console.error('[WebSocket] Server error:', error);
+  });
+
+  console.log('[WebSocket] WebSocket server created successfully');
+
+  // Handle WebSocket connections - user is pre-authenticated from upgrade handler
+  wss.on('connection', async (ws, req: any) => {
+    let userId: number | null = req.userId;
+    let pingInterval: NodeJS.Timeout | null = null;
+    let isAuthenticated = !!userId;
 
     const stopHeartbeat = () => {
       if (pingInterval) {
@@ -62,272 +207,124 @@ export function setupWebSocket(server: Server) {
       }
     };
 
-    // Authentication handler
-    const authenticate = async (token: string) => {
-      try {
-        const decoded = await verifyToken(token);
-        if (decoded && typeof decoded === 'object' && 'id' in decoded) {
-          userId = decoded.id as number;
-          isAuthenticated = true;
-          wsClients.set(userId, ws);
-          
-          console.log(`[WebSocket] User ${userId} authenticated and connected`);
-          
-          // Start ping/pong heartbeat to prevent connection drops
-          startHeartbeat();
-          
-          // Send connection success with persistent status
-          ws.send(JSON.stringify({
-            type: 'connection_status',
-            data: { 
-              status: 'connected', 
-              userId,
-              persistent: true,
-              serverTime: new Date().toISOString()
-            }
-          }));
-          
-          return true;
-        }
-      } catch (error) {
-        console.error('[WebSocket] Authentication failed:', error);
-      }
-      return false;
-    };
-
-    // Session-based authentication fallback
-    const authenticateFromSession = async () => {
-      try {
-        console.log('[WebSocket] Attempting session-based authentication');
-        console.log('[WebSocket] Request URL:', req.url);
-        
-        // Extract userId from URL query parameters
-        const urlPath = req.url || '';
-        console.log('[WebSocket] Full URL path:', urlPath);
-        
-        const userIdMatch = urlPath.match(/userId=(\d+)/);
-        const userIdParam = userIdMatch ? userIdMatch[1] : null;
-        
-        console.log('[WebSocket] Extracted userId from URL:', userIdParam);
-        
-        if (userIdParam) {
-          const parsedUserId = parseInt(userIdParam, 10);
-          if (!isNaN(parsedUserId)) {
-            console.log('[WebSocket] Attempting to verify user:', parsedUserId);
-            
-            // Simple verification - if we get a userId in the URL, trust it for now
-            // In production, this should verify against session store
-            userId = parsedUserId;
-            isAuthenticated = true;
-            wsClients.set(userId, ws);
-            
-            console.log(`[WebSocket] User ${userId} authenticated via session`);
-            
-            // Start ping/pong heartbeat to prevent connection drops
-            startHeartbeat();
-            
-            // Send connection success immediately
-            ws.send(JSON.stringify({
-              type: 'connection_status',
-              data: { 
-                status: 'connected', 
-                userId,
-                persistent: true,
-                message: 'Successfully connected to messaging service',
-                serverTime: new Date().toISOString()
-              }
-            }));
-            
-            return true;
-          }
-        }
-        
-        console.log('[WebSocket] Session authentication failed - no valid userId found');
-        return false;
-      } catch (error) {
-        console.error('[WebSocket] Session authentication failed:', error);
-        return false;
-      }
-    };
-
     // Handle incoming messages
     ws.on('message', async (data) => {
+      if (!isAuthenticated || !userId) {
+        ws.close(4401, 'Not authenticated');
+        return;
+      }
+
       try {
         const message: WebSocketMessage = JSON.parse(data.toString());
-        console.log(`[WebSocket] Received message type: ${message.type} from user ${userId || 'unknown'}`);
-        
-        // Handle authentication - support both 'auth' and 'authenticate' message types
-        if ((message.type === 'auth' || message.type === 'authenticate') && message.data?.token) {
-          const success = await authenticate(message.data.token);
-          if (!success) {
-            // Send persistent authentication error
-            ws.send(JSON.stringify({
-              type: 'error',
-              error: {
-                code: 'AUTH_FAILED',
-                message: 'Authentication failed - please login again',
-                persistent: true
-              },
-              timestamp: new Date().toISOString()
-            }));
-          }
-          return;
-        }
-        
-        // Handle legacy authenticate message format without token (session-based auth already done)
-        if (message.type === 'authenticate' || message.type === 'auth') {
-          if (isAuthenticated && userId) {
-            // Already authenticated via session, acknowledge the message
-            console.log(`[WebSocket] Acknowledging authentication for user ${userId}`);
-            ws.send(JSON.stringify({
-              type: 'auth_success',
-              data: { 
-                status: 'authenticated',
-                userId,
-                timestamp: new Date().toISOString()
-              }
-            }));
-          } else {
-            console.log(`[WebSocket] Authentication message received but user not authenticated yet`);
-          }
-          return;
-        }
 
-        // Require authentication for other message types
-        if (!isAuthenticated || !userId) {
-          ws.send(JSON.stringify({
-            type: 'error',
-            error: {
-              code: 'NOT_AUTHENTICATED',
-              message: 'Please authenticate before sending messages',
-              persistent: true
-            },
-            timestamp: new Date().toISOString()
-          }));
-          return;
-        }
-
-        // Handle different message types
         switch (message.type) {
           case 'message':
             await handleChatMessage(message, userId, ws);
             break;
+
           case 'typing':
-            handleTypingIndicator(message, userId);
+            await handleTypingStatus(message, userId);
             break;
+
           case 'read_receipt':
-            handleReadReceipt(message, userId);
+            await handleReadReceipt(message, userId);
             break;
+
           case 'ping':
-            // Respond to ping with pong to maintain connection
             ws.send(JSON.stringify({
               type: 'pong',
               timestamp: new Date().toISOString()
             }));
             break;
-          case 'pong':
-            // Client responded to our ping, connection is alive
-            console.log(`[WebSocket] Received pong from user ${userId}`);
-            break;
+
           default:
-            console.log(`[WebSocket] Unknown message type: ${message.type}`);
+            console.warn(`[WebSocket] Unknown message type: ${message.type}`);
         }
       } catch (error) {
         console.error('[WebSocket] Error processing message:', error);
-        
-        // Send persistent error message
         ws.send(JSON.stringify({
           type: 'error',
           error: {
             code: 'MESSAGE_PROCESSING_ERROR',
-            message: 'Failed to process message - connection may be unstable',
-            persistent: true
+            message: 'Failed to process message',
+            persistent: false
           },
           timestamp: new Date().toISOString()
         }));
       }
     });
 
-    // Handle connection close with detailed logging
+    // Handle connection close
     ws.on('close', (code, reason) => {
-      const reasonText = reason.toString();
-      console.log(`[WebSocket] Connection closed for user ${userId}: code=${code}, reason=${reasonText || 'none'}`);
-      
-      // Log different close codes for debugging
-      switch (code) {
-        case 1000:
-          console.log(`[WebSocket] Normal closure for user ${userId}`);
-          break;
-        case 1001:
-          console.log(`[WebSocket] Client going away (tab closed/navigation) for user ${userId}`);
-          break;
-        case 1006:
-          console.log(`[WebSocket] Abnormal closure (connection lost) for user ${userId}`);
-          break;
-        case 1011:
-          console.log(`[WebSocket] Server error caused closure for user ${userId}`);
-          break;
-        default:
-          console.log(`[WebSocket] Unexpected close code ${code} for user ${userId}`);
-      }
-      
       if (userId) {
-        wsClients.delete(userId);
+        console.log(`[WebSocket] User ${userId} disconnected: code=${code}`);
+        removeUserConnection(userId, ws);
       }
-      
-      // Clean up heartbeat interval on connection close
       stopHeartbeat();
     });
 
-    // Handle connection errors with persistent messaging
+    // Handle connection errors
     ws.on('error', (error) => {
-      console.error(`[WebSocket] Connection error for user ${userId}:`, error);
-      
-      try {
-        ws.send(JSON.stringify({
-          type: 'error',
-          error: {
-            code: 'CONNECTION_ERROR',
-            message: 'WebSocket connection error - attempting to reconnect',
-            persistent: true
-          },
-          timestamp: new Date().toISOString()
-        }));
-      } catch (sendError) {
-        console.error('[WebSocket] Failed to send error message:', sendError);
-      }
-      
+      console.error('[WebSocket] Connection error:', error);
       if (userId) {
-        wsClients.delete(userId);
+        removeUserConnection(userId, ws);
       }
-      
-      // Clean up heartbeat interval on error
       stopHeartbeat();
     });
 
     // Handle native WebSocket pong events
     ws.on('pong', () => {
-      console.log(`[WebSocket] Received native pong from user ${userId}`);
+      // Silent heartbeat acknowledgment
     });
 
-    // Try session-based authentication first
-    const sessionAuth = await authenticateFromSession();
-    
-    if (!sessionAuth) {
-      // Send initial connection message if session auth fails
+    // User is already authenticated from upgrade handler
+    if (!userId) {
+      ws.close(4401, 'Not authenticated');
+      return;
+    }
+
+    console.log(`[WebSocket] User ${userId} connected`);
+
+    // Register client connection (supports multiple connections per user)
+    addUserConnection(userId, ws);
+
+    // Start heartbeat
+    pingInterval = setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.ping();
+      } else {
+        clearInterval(pingInterval!);
+      }
+    }, 30000);
+
+    // Send connection success message immediately
+    if (ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({
         type: 'connection_status',
-        data: { 
-          status: 'pending_auth',
-          message: 'Please authenticate to start messaging',
-          persistent: false
+        data: {
+          status: 'connected',
+          userId,
+          persistent: true,
+          serverTime: new Date().toISOString(),
+          authMethod: 'session'
         }
       }));
+      console.log(`[WebSocket] Sent connection_status to user ${userId}`);
+    } else {
+      console.error(`[WebSocket] Cannot send connection_status - socket not open. State: ${ws.readyState}`);
     }
   });
 
+  // Mark setup as complete to prevent duplicate initialization
+  isWebSocketSetupComplete = true;
   console.log('[WebSocket] WebSocket server setup complete');
   return wss;
+}
+
+// Register meeting WebSocket server for central dispatcher
+export function registerMeetingWebSocketServer(meetingWss: WebSocketServer) {
+  meetingWssRef = meetingWss;
+  console.log('[WebSocket] Meeting WebSocket server registered with central dispatcher');
 }
 
 // Handle chat messages
@@ -348,15 +345,12 @@ async function handleChatMessage(message: WebSocketMessage, senderId: number, se
       attachmentType: message.data.attachmentType
     });
 
-    // Send to target user if online
-    const targetWs = wsClients.get(receiverId);
-    if (targetWs && targetWs.readyState === WebSocket.OPEN) {
-      targetWs.send(JSON.stringify({
-        type: 'message',
-        data: newMessage,
-        timestamp: new Date().toISOString()
-      }));
-    }
+    // Send to all of target user's active connections
+    sendToUser(receiverId, JSON.stringify({
+      type: 'message',
+      data: newMessage,
+      timestamp: new Date().toISOString()
+    }));
 
     // Confirm to sender
     senderWs.send(JSON.stringify({
@@ -366,98 +360,68 @@ async function handleChatMessage(message: WebSocketMessage, senderId: number, se
     }));
 
   } catch (error) {
-    console.error('[WebSocket] Error handling chat message:', error);
+    console.error('[WebSocket] Failed to handle chat message:', error);
     senderWs.send(JSON.stringify({
       type: 'error',
       error: {
         code: 'MESSAGE_SEND_FAILED',
-        message: 'Failed to send message - please try again',
-        persistent: true
+        message: 'Failed to send message',
+        persistent: false
       },
       timestamp: new Date().toISOString()
     }));
   }
 }
 
-// Handle typing indicators
-function handleTypingIndicator(message: WebSocketMessage, senderId: number) {
-  if (!message.targetUserId) return;
+// Handle typing status
+async function handleTypingStatus(message: WebSocketMessage, userId: number) {
+  try {
+    const targetUserId = message.data?.targetUserId || message.targetUserId;
+    
+    if (!targetUserId) {
+      return;
+    }
 
-  const targetWs = wsClients.get(message.targetUserId);
-  if (targetWs && targetWs.readyState === WebSocket.OPEN) {
-    targetWs.send(JSON.stringify({
+    sendToUser(targetUserId, JSON.stringify({
       type: 'typing',
       data: {
-        userId: senderId,
+        userId,
         isTyping: message.data?.isTyping || false
       },
       timestamp: new Date().toISOString()
     }));
+  } catch (error) {
+    console.error('[WebSocket] Failed to handle typing status:', error);
   }
 }
 
-// Handle read receipts
-function handleReadReceipt(message: WebSocketMessage, userId: number) {
-  if (!message.messageId || !message.targetUserId) return;
+// Handle read receipt
+async function handleReadReceipt(message: WebSocketMessage, userId: number) {
+  try {
+    const messageId = message.messageId || message.data?.messageId;
+    
+    if (!messageId) {
+      return;
+    }
 
-  const targetWs = wsClients.get(message.targetUserId);
-  if (targetWs && targetWs.readyState === WebSocket.OPEN) {
-    targetWs.send(JSON.stringify({
-      type: 'read_receipt',
-      data: {
-        messageId: message.messageId,
-        readBy: userId
-      },
-      timestamp: new Date().toISOString()
-    }));
-  }
-}
+    // Mark message as read
+    await storage.markMessageAsRead(messageId);
 
-// Send message to specific user
-export function sendToUser(userId: number, message: WebSocketMessage) {
-  const ws = wsClients.get(userId);
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({
-      ...message,
-      timestamp: new Date().toISOString()
-    }));
-    return true;
-  }
-  return false;
-}
-
-// Broadcast to all connected users
-export function broadcast(message: WebSocketMessage) {
-  wsClients.forEach((ws, userId) => {
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({
-        ...message,
+    // Notify sender if online
+    const msg = await storage.getMessage(messageId);
+    if (msg) {
+      sendToUser(msg.senderId, JSON.stringify({
+        type: 'read_receipt',
+        data: {
+          messageId,
+          readBy: userId
+        },
         timestamp: new Date().toISOString()
       }));
     }
-  });
-}
-
-// Get connection status
-export function getConnectionStats() {
-  return {
-    totalConnections: wsClients.size,
-    connectedUsers: Array.from(wsClients.keys())
-  };
-}
-
-// Broadcast message to specific user (used by routes.ts)
-export function broadcastMessage(message: any, targetUserId: number) {
-  const ws = wsClients.get(targetUserId);
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({
-      type: 'message',
-      data: message,
-      timestamp: new Date().toISOString()
-    }));
-    return true;
+  } catch (error) {
+    console.error('[WebSocket] Failed to handle read receipt:', error);
   }
-  return false;
 }
 
 // Cleanup function
@@ -467,4 +431,46 @@ export function closeWebSocketServer() {
     wsClients.clear();
     console.log('[WebSocket] WebSocket server closed');
   }
+}
+
+// Logout handler - notify all connections and disconnect
+export function handleUserLogout(userId: number) {
+  const connections = wsClients.get(userId);
+  if (connections && connections.size > 0) {
+    const logoutMessage = JSON.stringify({
+      type: 'connection_status',
+      data: {
+        status: 'logged_out',
+        message: 'User logged out',
+        persistent: true
+      },
+      timestamp: new Date().toISOString()
+    });
+
+    // Notify and close all connections
+    connections.forEach(ws => {
+      if (ws.readyState === WebSocket.OPEN) {
+        try {
+          ws.send(logoutMessage);
+        } catch (error) {
+          console.error('[WebSocket] Failed to send logout notification:', error);
+        }
+        ws.close(1000, 'User logged out');
+      }
+    });
+    
+    // Clear all connections for this user
+    wsClients.delete(userId);
+    console.log(`[WebSocket] User ${userId} logged out - closed ${connections.size} connection(s)`);
+  }
+}
+
+// Alias for backward compatibility with clean-logout.ts
+export function disconnectUserWebSocket(userId: number) {
+  handleUserLogout(userId);
+}
+
+// No-op for backward compatibility - session cache removed in simplified auth
+export function invalidateSessionCache(sessionId: string) {
+  console.log(`[WebSocket] Session cache invalidation called (no-op in simplified auth)`);
 }

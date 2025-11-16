@@ -1,9 +1,10 @@
 import { useState, useRef, ChangeEvent } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ResolvedUserAvatar } from "@/components/ui/resolved-user-avatar";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -11,73 +12,19 @@ import { getInitials } from "@/lib/utils";
 import { useLocation } from "wouter";
 import {
   Image as ImageIcon,
-  Video,
-  Tag,
-  Link as LinkIcon,
-  FileText,
-  Smile,
-  Users,
   Loader2,
   X,
-  ChevronDown,
-  MessageSquarePlus,
-  PenLine,
-  Book,
-  Megaphone,
-  ShoppingBag,
-  Search,
-  Calendar
+  Calendar,
+  Send
 } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-} from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Input } from "@/components/ui/input";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
 import { EmojiPickerComponent } from "@/components/ui/emoji-picker";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface CreatePostProps {
   communityId?: number;
   editingPost?: any;
   onSuccess?: () => void;
-}
-
-type ContentType = 'standard' | 'article' | 'visual' | 'video' | 'advertisement';
-
-// Product interface
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  imageUrl: string;
-  vendorId: number;
-  vendorName?: string;
-  discountPrice?: number | null;
-  category?: string;
 }
 
 export default function CreatePost({
@@ -97,20 +44,15 @@ export default function CreatePost({
     "Posting...",
     "Updating...",
     "Add Photo",
-    "Add Video",
-    "Share Event",
-    "Event Tagged",
-    "Tag Product", 
-    "Product Tagged",
-    "Select an Event to Share",
-    "Share an event with your followers. They can view event details and purchase tickets directly from your post.",
-    "Search events...",
-    "No events found",
-    "Confirm Selection",
-    "Select a Product to Tag",
-    "Tag a product to make your post shoppable. Users can view and purchase the product directly from your post.",
-    "Search products...",
-    "No products found"
+    "Title (optional)",
+    "Add tag",
+    "Save as Draft",
+    "Schedule",
+    "Publish Status",
+    "Publish Now",
+    "Draft",
+    "Scheduled",
+    "Schedule Date & Time"
   ];
 
   const { translations } = useMasterBatchTranslation(textsToTranslate);
@@ -122,116 +64,34 @@ export default function CreatePost({
   const postingText = translations[4] || "Posting...";
   const updatingText = translations[5] || "Updating...";
   const addPhotoText = translations[6] || "Add Photo";
-  const addVideoText = translations[7] || "Add Video";
-  const shareEventText = translations[8] || "Share Event";
-  const eventTaggedText = translations[9] || "Event Tagged";
-  const tagProductText = translations[10] || "Tag Product";
-  const productTaggedText = translations[11] || "Product Tagged";
-  const selectEventText = translations[12] || "Select an Event to Share";
-  const shareEventDescText = translations[13] || "Share an event with your followers. They can view event details and purchase tickets directly from your post.";
-  const searchEventsText = translations[14] || "Search events...";
-  const noEventsText = translations[15] || "No events found";
-  const confirmSelectionText = translations[16] || "Confirm Selection";
-  const selectProductText = translations[17] || "Select a Product to Tag";
-  const tagProductDescText = translations[18] || "Tag a product to make your post shoppable. Users can view and purchase the product directly from your post.";
-  const searchProductsText = translations[19] || "Search products...";
-  const noProductsText = translations[20] || "No products found";
+  const titlePlaceholderText = translations[7] || "Title (optional)";
+  const addTagText = translations[8] || "Add tag";
+  const saveAsDraftText = translations[9] || "Save as Draft";
+  const scheduleText = translations[10] || "Schedule";
+  const publishStatusText = translations[11] || "Publish Status";
+  const publishedText = translations[12] || "Publish Now";
+  const draftText = translations[13] || "Draft";
+  const scheduledText = translations[14] || "Scheduled";
+  const scheduleDateText = translations[15] || "Schedule Date & Time";
+
   const [, setLocation] = useLocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const videoInputRef = useRef<HTMLInputElement>(null);
   
   const [content, setContent] = useState(editingPost?.content || "");
-  const [title, setTitle] = useState(editingPost?.title || "");
-  const [tags, setTags] = useState<string[]>(editingPost?.tags || []);
-  const [currentTag, setCurrentTag] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>(editingPost?.imageUrl || "");
-  const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [videoPreview, setVideoPreview] = useState<string>(editingPost?.videoUrl || "");
   const [isExpanded, setIsExpanded] = useState(!!editingPost);
-  const [postToVisibility, setPostToVisibility] = useState<string>(editingPost?.communityId ? "community" : "public");
   const [selectedCommunityId, setSelectedCommunityId] = useState<number | null>(
     editingPost?.communityId || communityId || null
   );
-  const [contentType, setContentType] = useState<ContentType>(editingPost?.contentType || 'standard');
-  const [linkUrl, setLinkUrl] = useState(editingPost?.linkUrl || "");
-  const [isPromoted, setIsPromoted] = useState(editingPost?.isPromoted || false);
   
-  // Product tagging
-  const [isShoppable, setIsShoppable] = useState(editingPost?.isShoppable || false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(editingPost?.product || null);
-  const [productSearchQuery, setProductSearchQuery] = useState("");
-  const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
-
-  // Event tagging
-  const [selectedEvent, setSelectedEvent] = useState<any>(null);
-  const [eventSearchQuery, setEventSearchQuery] = useState("");
-  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
-
-  // Fetch communities that the user is a member of
-  const { data: userCommunities, isLoading: isLoadingCommunities } = useQuery({
-    queryKey: ["/api/users/communities"],
-    queryFn: async () => {
-      const response = await fetch("/api/users/communities", {
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Use-Session': 'true',
-          'X-Client-Auth': 'true',
-          'X-Request-Time': new Date().toISOString(),
-          'X-Client-User-ID': user?.id?.toString() || '',
-          'Accept': 'application/json',
-        }
-      });
-      if (!response.ok) {
-        throw new Error("Failed to fetch user communities");
-      }
-      return response.json();
-    },
-    enabled: !!user,
-  });
-
-  // Fetch products for tagging
-  const { data: products, isLoading: isLoadingProducts } = useQuery({
-    queryKey: ["/api/products", productSearchQuery],
-    queryFn: async () => {
-      const url = productSearchQuery 
-        ? `/api/products?search=${encodeURIComponent(productSearchQuery)}`
-        : "/api/products";
-      
-      const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Use-Session': 'true',
-          'X-Client-Auth': 'true',
-          'X-Request-Time': new Date().toISOString(),
-          'X-Client-User-ID': user?.id?.toString() || '',
-          'Accept': 'application/json',
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch products");
-      }
-      return response.json();
-    },
-    enabled: isProductDialogOpen && !!user
-  });
-
-  // Fetch events for tagging
-  const { data: events, isLoading: isLoadingEvents } = useQuery({
-    queryKey: ["/api/events", eventSearchQuery],
-    queryFn: async () => {
-      const url = eventSearchQuery 
-        ? `/api/events?search=${encodeURIComponent(eventSearchQuery)}`
-        : "/api/events";
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error("Failed to fetch events");
-      }
-      return response.json();
-    },
-    enabled: isEventDialogOpen
-  });
+  // Modern CMS fields
+  const [publishStatus, setPublishStatus] = useState<'draft' | 'scheduled' | 'published'>(
+    editingPost?.publishStatus || 'published'
+  );
+  const [publishAt, setPublishAt] = useState<string>(
+    editingPost?.publishAt ? new Date(editingPost.publishAt).toISOString().slice(0, 16) : ''
+  );
 
   // Create/Edit post mutation
   const postMutation = useMutation({
@@ -242,28 +102,8 @@ export default function CreatePost({
       
       const method = editingPost ? "PUT" : "POST";
       
-      // Log authentication state for debugging
-      console.log("Authentication state:", { 
-        user: user ? `ID: ${user.id}, Username: ${user.username}` : 'Not logged in',
-        isAuthenticated: !!user
-      });
-      
       // Get auth token directly from localStorage for direct authentication
       const authToken = localStorage.getItem('dedwen_auth_token');
-      console.log("Auth token available:", !!authToken);
-      
-      // Enhanced debugging for post data
-      console.log("Post data being sent:", { 
-        ...postData,
-        content: postData.content?.length > 50 ? 
-          `${postData.content.substring(0, 50)}... (${postData.content.length} chars)` : 
-          postData.content,
-        imageUrl: postData.imageUrl ? 
-          (postData.imageUrl.startsWith('data:') ? 
-            `[base64 data - ${postData.imageUrl.length} chars]` : 
-            postData.imageUrl) : 
-          'none'
-      });
       
       // Create options with enhanced debugging headers
       const options = {
@@ -279,8 +119,6 @@ export default function CreatePost({
         }
       };
       
-      console.log(`Sending ${method} request to ${url} with headers:`, options.headers);
-      
       try {
         // Use simple fetch for direct debugging instead of apiRequest
         const response = await fetch(url, {
@@ -292,15 +130,6 @@ export default function CreatePost({
           },
           body: JSON.stringify(postData)
         });
-        
-        console.log(`Server response status: ${response.status} ${response.statusText}`);
-        
-        // Log response headers for debugging
-        const headers: Record<string, string> = {};
-        response.headers.forEach((value, key) => {
-          headers[key] = value;
-        });
-        console.log("Response headers:", headers);
         
         if (!response.ok) {
           let errorMessage = "Failed to save post";
@@ -328,83 +157,109 @@ export default function CreatePost({
         throw error;
       }
     },
-    onSuccess: () => {
-      // Reset form
+    onSuccess: (newPost) => {
+      // Capture the final publish status before resetting state
+      const finalStatus = newPost.publishStatus ?? publishStatus;
+      const wasEditingDraft = editingPost?.publishStatus === 'draft';
+      const wasPublished = editingPost?.publishStatus === 'published';
+      const isDraft = finalStatus === 'draft';
+      
+      // Reset form immediately for instant feel
       setContent("");
-      setTitle("");
-      setTags([]);
-      setCurrentTag("");
       setImageFile(null);
       setImagePreview("");
-      setVideoFile(null);
-      setVideoPreview("");
       setIsExpanded(false);
-      setPostToVisibility("public");
       setSelectedCommunityId(communityId || null);
-      setSelectedProduct(null);
-      setIsShoppable(false);
-      setSelectedEvent(null);
+      setPublishStatus('published');
+      setPublishAt('');
       
-      // Show success message
-      toast({
-        title: "Success",
-        description: editingPost ? "Post updated successfully" : "Post created successfully",
-      });
+      // Construct complete post object with user info for optimistic update
+      const completePost = {
+        ...newPost,
+        user: {
+          id: user!.id,
+          name: user!.name || "",
+          username: user!.username,
+          avatar: user!.avatar || null
+        },
+        likes: newPost.likes || 0,
+        comments: newPost.comments || 0,
+        shares: newPost.shares || 0,
+        views: newPost.views || 0,
+        createdAt: newPost.createdAt || new Date().toISOString()
+      };
       
-      // Invalidate queries to refresh post lists
-      queryClient.invalidateQueries({ 
-        queryKey: ["/api/feed/personal"],
-        refetchType: 'all'
-      });
-      queryClient.invalidateQueries({ 
-        queryKey: ["/api/feed/communities"],
-        refetchType: 'all' 
-      });
-      queryClient.invalidateQueries({ 
-        queryKey: ["/api/feed/recommended"],
-        refetchType: 'all'
-      });
-      queryClient.invalidateQueries({ 
-        queryKey: ["/api/posts"],
-        refetchType: 'all'
-      });
-      queryClient.invalidateQueries({ 
-        queryKey: [`/api/users/${user?.username}/posts`],
-        refetchType: 'all'
-      });
-      
-      // Invalidate user stats queries to refresh post count
-      queryClient.invalidateQueries({ 
-        queryKey: ['/api/user/stats'],
-        refetchType: 'all'
-      });
-      queryClient.invalidateQueries({ 
-        queryKey: [`/api/users/${user?.id}/stats`],
-        refetchType: 'all'
-      });
-      queryClient.invalidateQueries({ 
-        queryKey: ['/api/social/posts/count'],
-        refetchType: 'all'
-      });
-      
-      if (communityId) {
-        queryClient.invalidateQueries({ 
-          queryKey: [`/api/communities/${communityId}/posts`],
-          refetchType: 'all'
+      // Optimistically add to all feed caches for instant visibility (only for published posts)
+      if (finalStatus === 'published') {
+        const feedKeys = [
+          ["/api/feed/personal"],
+          ["/api/feed/communities"],
+          ["/api/feed/recommended"],
+          ["/api/feed/community", 'new'],  // Community page feed with sortBy
+          ["/api/feed/community", 'trending'],
+          ["/api/feed/community", 'popular'],
+          ["/api/posts"],
+          [`/api/users/${user?.username}/posts`]
+        ];
+        
+        feedKeys.forEach(queryKey => {
+          queryClient.setQueryData(queryKey, (oldData: any) => {
+            // For infinite queries (community page uses useInfiniteQuery)
+            if (oldData && oldData.pages) {
+              return {
+                ...oldData,
+                pages: [
+                  { posts: [completePost, ...(oldData.pages[0]?.posts || [])], hasMore: true },
+                  ...oldData.pages.slice(1)
+                ]
+              };
+            }
+            // For regular queries (wall page uses useQuery)
+            if (!oldData) return [completePost];
+            if (Array.isArray(oldData)) {
+              return [completePost, ...oldData];
+            }
+            return oldData;
+          });
         });
       }
       
-      if (selectedCommunityId) {
-        queryClient.invalidateQueries({ 
-          queryKey: [`/api/communities/${selectedCommunityId}/posts`],
-          refetchType: 'all'
-        });
-      }
+      // Determine if we need to refresh feeds
+      const shouldRefreshFeeds = finalStatus === 'published' || (wasPublished && isDraft);
       
-      // Call onSuccess callback if provided
+      // Invalidate queries based on publish status for instant UI refresh
+      Promise.all([
+        // Invalidate feeds when publishing OR when converting published→draft
+        shouldRefreshFeeds ? queryClient.invalidateQueries({ queryKey: ["/api/feed/personal"] }) : Promise.resolve(),
+        shouldRefreshFeeds ? queryClient.invalidateQueries({ queryKey: ["/api/feed/communities"] }) : Promise.resolve(),
+        shouldRefreshFeeds ? queryClient.invalidateQueries({ queryKey: ["/api/feed/recommended"] }) : Promise.resolve(),
+        shouldRefreshFeeds ? queryClient.invalidateQueries({ queryKey: ["/api/feed/community"] }) : Promise.resolve(),
+        shouldRefreshFeeds ? queryClient.invalidateQueries({ queryKey: ["/api/posts"] }) : Promise.resolve(),
+        shouldRefreshFeeds ? queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.username}/posts`] }) : Promise.resolve(),
+        
+        // Always invalidate user stats
+        queryClient.invalidateQueries({ queryKey: ['/api/user/stats'] }),
+        queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}/stats`] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/social/posts/count'] }),
+        
+        // Invalidate draft posts if saving a draft OR publishing a draft (to remove from drafts list)
+        isDraft || wasEditingDraft
+          ? queryClient.invalidateQueries({ queryKey: ['/api/draft-posts'] })
+          : Promise.resolve(),
+      ]).catch(err => console.error('Background refresh error:', err));
+      
+      // Call onSuccess callback if provided (for wall page refetch)
       if (onSuccess) {
         onSuccess();
       }
+
+      // Show success toast with captured status
+      toast({
+        title: finalStatus === 'draft' ? "Draft saved" : finalStatus === 'scheduled' ? "Post scheduled" : "Post published",
+        description: finalStatus === 'scheduled' && publishAt 
+          ? `Will be published on ${new Date(publishAt).toLocaleString()}` 
+          : undefined,
+      });
     },
     onError: (error: Error) => {
       console.error('Post mutation error details:', error);
@@ -445,56 +300,6 @@ export default function CreatePost({
     
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
-    setVideoFile(null);
-    setVideoPreview("");
-  };
-
-  const handleVideoChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    if (!file.type.startsWith("video/")) {
-      toast({
-        title: "Invalid file",
-        description: "Please select a video file (MP4, WebM, etc.)",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setVideoFile(file);
-    setVideoPreview(URL.createObjectURL(file));
-    setImageFile(null);
-    setImagePreview("");
-  };
-
-  const addTag = () => {
-    if (!currentTag.trim()) return;
-    
-    if (tags.includes(currentTag.trim())) {
-      toast({
-        title: "Duplicate tag",
-        description: "This tag has already been added",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (tags.length >= 5) {
-      toast({
-        title: "Too many tags",
-        description: "You can add a maximum of 5 tags",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setTags([...tags, currentTag.trim()]);
-    setCurrentTag("");
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
   };
 
   // Function to convert File to base64
@@ -507,7 +312,7 @@ export default function CreatePost({
     });
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (submitPublishStatus?: 'draft' | 'scheduled' | 'published') => {
     if (!user) {
       toast({
         title: "Authentication required",
@@ -527,22 +332,31 @@ export default function CreatePost({
       });
       return;
     }
+
+    // Determine final publish status
+    const finalPublishStatus = submitPublishStatus || publishStatus;
+
+    // Validate scheduled posts have a date
+    if (finalPublishStatus === 'scheduled' && !publishAt) {
+      toast({
+        title: "Schedule date required",
+        description: "Please select a date and time for scheduled posts",
+        variant: "destructive",
+      });
+      return;
+    }
     
     // Create post data object with required fields including user ID
     const postData: any = {
       content,
+      publishStatus: finalPublishStatus,
       contentType: 'standard',
       userId: user.id, // Explicitly include user ID for server authentication
     };
-    
-    // Only add title if present
-    if (title.trim()) {
-      postData.title = title;
-    }
-    
-    // Add selected event if present
-    if (selectedEvent) {
-      postData.eventId = selectedEvent.id;
+
+    // Add publish date if scheduled
+    if (finalPublishStatus === 'scheduled' && publishAt) {
+      postData.publishAt = new Date(publishAt).toISOString();
     }
     
     // Handle image if present - keep payload as small as possible
@@ -557,23 +371,13 @@ export default function CreatePost({
     } catch (error) {
       toast({
         title: "File upload error",
-        description: "There was a problem processing your image file",
+        description: "There was a problem processing your file",
         variant: "destructive",
       });
       return;
     }
     
-    // Debug information to help troubleshoot
-    console.log("Sending post data - content length:", postData.content.length);
-    console.log("Post data keys:", Object.keys(postData));
-    
-    // Submit post with specific options to ensure proper formatting
-    toast({
-      title: "Creating post...",
-      description: "Please wait while we process your post",
-    });
-    
-    // Submit post with application/x-www-form-urlencoded format
+    // Submit post instantly without blocking UI
     postMutation.mutate(postData);
   };
 
@@ -590,17 +394,11 @@ export default function CreatePost({
             className="flex items-center gap-3 cursor-text"
             onClick={() => setIsExpanded(true)}
           >
-            <Avatar className="h-10 w-10">
-              {user.avatar ? (
-                <AvatarImage 
-                  src={user.avatar} 
-                  alt={user.name || "User"}
-                />
-              ) : null}
-              <AvatarFallback>
-                {getInitials(user.name || "User")}
-              </AvatarFallback>
-            </Avatar>
+            <ResolvedUserAvatar
+              user={user}
+              size="md"
+              className="h-10 w-10"
+            />
             <div className="bg-accent px-4 py-2 rounded-full text-muted-foreground flex-1">
               {whatsOnYourMindText}, {user.name?.split(" ")[0]}?
             </div>
@@ -626,28 +424,14 @@ export default function CreatePost({
               <div className="flex-1 space-y-3">
                 <p className="font-medium">{user.name}</p>
                 
-
-                
-
-                
-                {/* Title input removed as requested */}
-                
-                {/* Content textarea with emoji picker */}
-                <div className="relative">
-                  <Textarea
-                    placeholder={whatsOnYourMindText + "?"}
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    rows={4}
-                    className="border-0 bg-accent/50 focus-visible:ring-0 pr-10"
-                  />
-                  <div className="absolute bottom-2 right-2">
-                    <EmojiPickerComponent
-                      onEmojiSelect={(emoji: string) => setContent((prev: string) => prev + emoji)}
-                      className="text-muted-foreground hover:text-foreground"
-                    />
-                  </div>
-                </div>
+                {/* Simple Text Area */}
+                <textarea
+                  placeholder={whatsOnYourMindText + "?"}
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  className="w-full min-h-[120px] p-3 border-0 bg-accent/50 rounded-md resize-none focus-visible:outline-none focus-visible:ring-0"
+                  data-testid="textarea-post-content"
+                />
                 
                 {/* Image preview */}
                 {imagePreview && (
@@ -670,363 +454,30 @@ export default function CreatePost({
                     </Button>
                   </div>
                 )}
-                
-                {/* Video preview */}
-                {videoPreview && (
-                  <div className="relative">
-                    <video 
-                      src={videoPreview} 
-                      controls 
-                      className="max-h-64 rounded-md w-full"
-                    />
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 right-2 h-6 w-6 rounded-full"
-                      onClick={() => {
-                        setVideoFile(null);
-                        setVideoPreview("");
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-                
-                {/* Tags */}
-                {tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {tags.map((tag, index) => (
-                      <div 
-                        key={index}
-                        className="bg-primary/10 text-primary rounded-full px-3 py-1 text-xs flex items-center"
-                      >
-                        #{tag}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-4 w-4 ml-1"
-                          onClick={() => removeTag(tag)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-
               </div>
             </div>
             
-            {/* Content Type Selector Tabs */}
-            <Tabs
-              value={contentType}
-              onValueChange={(value) => setContentType(value as ContentType)}
-              className="w-full pt-3 border-t"
-            >
+            {/* Image upload button */}
+            <div className="w-full pt-3 border-t">
+              <div className="flex gap-2 mt-3">
+                <Button
+                  size="sm"
+                  className="bg-black text-white hover:bg-gray-800"
+                  onClick={() => fileInputRef.current?.click()}
+                  data-testid="button-add-photo"
+                >
+                  <ImageIcon className="h-3 w-3 mr-1 font-bold" />
+                  <span className="font-semibold">{addPhotoText}</span>
+                </Button>
+              </div>
+            </div>
 
-
-              {/* Standard Post Content */}
-              <TabsContent value="standard" className="space-y-2">
-                <div className="flex gap-2 mt-3">
-                  {/* Image upload button */}
-                  <Button
-                    size="sm"
-                    className="bg-black text-white hover:bg-gray-800"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={!!videoFile}
-                  >
-                    <ImageIcon className="h-3 w-3 mr-1 font-bold" />
-                    <span className="font-semibold">{addPhotoText}</span>
-                  </Button>
-                  
-                  {/* Video upload button */}
-                  <Button
-                    size="sm"
-                    className="bg-black text-white hover:bg-gray-800"
-                    onClick={() => videoInputRef.current?.click()}
-                    disabled={!!imageFile}
-                  >
-                    <Video className="h-3 w-3 mr-1 font-bold" />
-                    <span className="font-semibold">{addVideoText}</span>
-                  </Button>
-                  
-                  {/* Events & Meetups button */}
-                  <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button 
-                        size="sm"
-                        className="bg-black text-white hover:bg-gray-800"
-                      >
-                        <Calendar className="h-3 w-3 mr-1 font-bold" />
-                        <span className="font-semibold">{selectedEvent ? eventTaggedText : shareEventText}</span>
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
-                      <DialogHeader>
-                        <DialogTitle>{selectEventText}</DialogTitle>
-                        <DialogDescription>
-                          {shareEventDescText}
-                        </DialogDescription>
-                      </DialogHeader>
-                      
-                      <div className="my-4">
-                        <div className="flex gap-2 mb-4">
-                          <Input
-                            placeholder={searchEventsText}
-                            value={eventSearchQuery}
-                            onChange={(e) => setEventSearchQuery(e.target.value)}
-                            className="flex-1"
-                          />
-                          <Button variant="secondary" size="icon">
-                            <Search className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        
-                        <ScrollArea className="h-[300px] rounded-md border p-2">
-                          {isLoadingEvents ? (
-                            <div className="flex justify-center py-10">
-                              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                            </div>
-                          ) : events && events.length > 0 ? (
-                            <div className="space-y-3">
-                              {events.map((event: any) => (
-                                <div 
-                                  key={event.id}
-                                  className={`flex gap-3 p-2 rounded-md cursor-pointer transition-colors ${
-                                    selectedEvent?.id === event.id
-                                      ? "bg-primary/10 border border-primary/30"
-                                      : "hover:bg-muted"
-                                  }`}
-                                  onClick={() => setSelectedEvent(event)}
-                                >
-                                  <div className="h-16 w-16 rounded overflow-hidden flex-shrink-0 bg-blue-50">
-                                    <div className="h-full w-full flex items-center justify-center">
-                                      <Calendar className="h-6 w-6 text-blue-600" />
-                                    </div>
-                                  </div>
-                                  <div className="flex-1">
-                                    <h3 className="font-medium text-sm">{event.title}</h3>
-                                    <p className="text-xs text-muted-foreground mb-1">
-                                      {event.location} • {new Date(event.startDate).toLocaleDateString()}
-                                    </p>
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-sm font-semibold text-blue-600">
-                                        {event.price === 0 ? 'Free' : `£${event.price}`}
-                                      </span>
-                                      <span className="text-xs text-muted-foreground">
-                                        {event.attendees || 0} attending
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="text-center py-10 text-muted-foreground">
-                              <p>{noEventsText}</p>
-                            </div>
-                          )}
-                        </ScrollArea>
-                      </div>
-                      
-                      <DialogFooter>
-                        <Button 
-                          variant="outline" 
-                          onClick={() => {
-                            setIsEventDialogOpen(false);
-                            setSelectedEvent(null);
-                          }}
-                        >
-                          {cancelText}
-                        </Button>
-                        <Button 
-                          onClick={() => {
-                            setIsEventDialogOpen(false);
-                          }}
-                          disabled={!selectedEvent}
-                        >
-                          {confirmSelectionText}
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                  
-                  {/* Product tagging button */}
-                  <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button 
-                        size="sm"
-                        className="bg-black text-white hover:bg-gray-800"
-                      >
-                        <ShoppingBag className="h-3 w-3 mr-1 font-bold" />
-                        <span className="font-semibold">{selectedProduct ? productTaggedText : tagProductText}</span>
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
-                      <DialogHeader>
-                        <DialogTitle>{selectProductText}</DialogTitle>
-                        <DialogDescription>
-                          {tagProductDescText}
-                        </DialogDescription>
-                      </DialogHeader>
-                      
-                      <div className="my-4">
-                        <div className="flex gap-2 mb-4">
-                          <Input
-                            placeholder={searchProductsText}
-                            value={productSearchQuery}
-                            onChange={(e) => setProductSearchQuery(e.target.value)}
-                            className="flex-1"
-                          />
-                          <Button variant="secondary" size="icon">
-                            <Search className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        
-                        <ScrollArea className="h-[300px] rounded-md border p-2">
-                          {isLoadingProducts ? (
-                            <div className="flex justify-center py-10">
-                              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                            </div>
-                          ) : products && products.length > 0 ? (
-                            <div className="space-y-3">
-                              {products.map((product: Product) => (
-                                <div 
-                                  key={product.id}
-                                  className={`flex gap-3 p-2 rounded-md cursor-pointer transition-colors ${
-                                    selectedProduct?.id === product.id
-                                      ? "bg-primary/10 border border-primary/30"
-                                      : "hover:bg-muted"
-                                  }`}
-                                  onClick={() => setSelectedProduct(product)}
-                                >
-                                  <div className="h-16 w-16 rounded overflow-hidden flex-shrink-0">
-                                    <img 
-                                      src={product.imageUrl} 
-                                      alt={product.name}
-                                      className="h-full w-full object-cover"
-                                    />
-                                  </div>
-                                  <div className="flex-1">
-                                    <h3 className="font-medium text-sm">{product.name}</h3>
-                                    <p className="text-xs text-muted-foreground mb-1">
-                                      {product.category || "Uncategorized"}
-                                    </p>
-                                    <div className="flex items-center gap-2">
-                                      {product.discountPrice ? (
-                                        <>
-                                          <span className="text-xs line-through text-muted-foreground">
-                                            £{product.price.toFixed(2)}
-                                          </span>
-                                          <span className="text-sm font-semibold text-primary">
-                                            £{product.discountPrice.toFixed(2)}
-                                          </span>
-                                        </>
-                                      ) : (
-                                        <span className="text-sm font-semibold">
-                                          £{product.price.toFixed(2)}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="text-center py-10 text-muted-foreground">
-                              <p>{noProductsText}</p>
-                            </div>
-                          )}
-                        </ScrollArea>
-                      </div>
-                      
-                      <DialogFooter>
-                        <Button 
-                          variant="outline" 
-                          onClick={() => {
-                            setIsProductDialogOpen(false);
-                            setSelectedProduct(null);
-                          }}
-                        >
-                          {cancelText}
-                        </Button>
-                        <Button 
-                          onClick={() => {
-                            setIsProductDialogOpen(false);
-                            setIsShoppable(!!selectedProduct);
-                          }}
-                          disabled={!selectedProduct}
-                        >
-                          {confirmSelectionText}
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-                
-                {/* Selected Product Preview */}
-                {selectedProduct && (
-                  <div className="border rounded-md p-3 bg-muted/30 mt-3 flex items-center gap-3">
-                    <div className="h-14 w-14 rounded overflow-hidden flex-shrink-0">
-                      <img 
-                        src={selectedProduct.imageUrl} 
-                        alt={selectedProduct.name}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium text-sm">{selectedProduct.name}</h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        {selectedProduct.discountPrice ? (
-                          <>
-                            <span className="text-xs line-through text-muted-foreground">
-                              £{selectedProduct.price.toFixed(2)}
-                            </span>
-                            <span className="text-sm font-semibold text-primary">
-                              £{selectedProduct.discountPrice.toFixed(2)}
-                            </span>
-                          </>
-                        ) : (
-                          <span className="text-sm font-semibold">
-                            £{selectedProduct.price.toFixed(2)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => {
-                        setSelectedProduct(null);
-                        setIsShoppable(false);
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-              </TabsContent>
-
-
-
-
-            </Tabs>
-
-            {/* Shared upload inputs */}
+            {/* Image upload input */}
             <input
               type="file"
               ref={fileInputRef}
               accept="image/*"
               onChange={handleImageChange}
-              className="hidden"
-            />
-            <input
-              type="file"
-              ref={videoInputRef}
-              accept="video/*"
-              onChange={handleVideoChange}
               className="hidden"
             />
 
@@ -1037,27 +488,33 @@ export default function CreatePost({
                   onClick={() => {
                     setIsExpanded(false);
                     setContent("");
-                    setTitle("");
-                    setTags([]);
-                    setCurrentTag("");
                     setImageFile(null);
                     setImagePreview("");
-                    setVideoFile(null);
-                    setVideoPreview("");
-                    setPostToVisibility("public");
                     setSelectedCommunityId(communityId || null);
-                    setContentType('standard');
-                    setLinkUrl('');
-                    setIsPromoted(false);
+                    setPublishStatus('published');
+                    setPublishAt('');
                   }}
                 >
                   {cancelText}
                 </Button>
+
+                {/* Save as Draft button */}
+                {publishStatus !== 'draft' && (
+                  <Button
+                    variant="outline"
+                    onClick={() => handleSubmit('draft')}
+                    disabled={postMutation.isPending || !content.trim()}
+                    data-testid="button-save-draft"
+                  >
+                    {saveAsDraftText}
+                  </Button>
+                )}
                 
                 <Button
-                  onClick={handleSubmit}
+                  onClick={() => handleSubmit()}
                   disabled={postMutation.isPending || !content.trim()}
                   className="bg-black text-white hover:bg-gray-800 disabled:bg-gray-400"
+                  data-testid="button-submit-post"
                 >
                   {postMutation.isPending ? (
                     <>
@@ -1065,7 +522,7 @@ export default function CreatePost({
                       {editingPost ? updatingText : postingText}
                     </>
                   ) : (
-                    <>{editingPost ? updateText : postText}</>
+                    publishStatus === 'draft' ? saveAsDraftText : editingPost ? updateText : postText
                   )}
                 </Button>
               </div>

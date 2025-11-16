@@ -13,7 +13,7 @@ export function DimensionUnitSelector() {
             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
         }`}
       >
-        CM
+        cm
       </button>
       <span className="text-xs text-gray-400">|</span>
       <button
@@ -24,7 +24,7 @@ export function DimensionUnitSelector() {
             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
         }`}
       >
-        INCH
+        inch
       </button>
     </div>
   );

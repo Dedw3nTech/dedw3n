@@ -4,7 +4,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useTranslation } from "react-i18next";
+import { useMasterTranslation } from "@/hooks/use-master-translation";
 import { Wifi, WifiOff, RefreshCw, Database, X } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { queryClient } from "@/lib/queryClient";
@@ -12,10 +12,10 @@ import { queryClient } from "@/lib/queryClient";
 export default function OfflineSimulator() {
   const { isOnline, setOnlineStatus, queuedRequests, processAllQueuedRequests, clearQueuedRequests } = useOfflineStore();
   const [isOpen, setIsOpen] = useState(true);
-  const { t } = useTranslation();
+  const { translateText } = useMasterTranslation();
 
   return (
-    <div className="fixed top-24 right-4 z-50 bg-white dark:bg-gray-800 shadow-lg p-4 rounded-lg border border-gray-200 dark:border-gray-700 w-80">
+    <div className="fixed top-24 right-4 z-50 bg-white shadow-lg p-4 rounded-lg border border-gray-200 w-80">
       <div className="flex justify-between items-center mb-3">
         <div className="flex items-center space-x-2">
           {isOnline ? (
@@ -23,7 +23,7 @@ export default function OfflineSimulator() {
           ) : (
             <WifiOff size={16} className="text-amber-500" />
           )}
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Offline Simulator</h3>
+          <h3 className="text-sm font-semibold text-gray-900">Offline Simulator</h3>
         </div>
         <Button 
           variant="ghost" 
@@ -36,7 +36,7 @@ export default function OfflineSimulator() {
       
       {isOpen && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between rounded-md bg-gray-50 dark:bg-gray-900 p-2">
+            <div className="flex items-center justify-between rounded-md bg-gray-50 p-2">
               <div className="flex items-center space-x-2">
                 <Switch
                   id="offline-mode"
@@ -57,16 +57,16 @@ export default function OfflineSimulator() {
             
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Pending Requests</span>
+                <span className="text-xs font-medium text-gray-700">Pending Requests</span>
                 <Badge variant={queuedRequests.length > 0 ? "default" : "outline"}>
                   {queuedRequests.length}
                 </Badge>
               </div>
               
               {queuedRequests.length > 0 && (
-                <div className="max-h-28 overflow-y-auto rounded-md bg-gray-50 dark:bg-gray-900 p-2">
+                <div className="max-h-28 overflow-y-auto rounded-md bg-gray-50 p-2">
                   {queuedRequests.map((req) => (
-                    <div key={req.id} className="text-xs mb-1 py-1 px-2 bg-white dark:bg-gray-800 rounded">
+                    <div key={req.id} className="text-xs mb-1 py-1 px-2 bg-white rounded">
                       <span className="font-mono">{req.method}</span> {req.url.split('/').slice(-2).join('/')}
                     </div>
                   ))}
@@ -115,7 +115,7 @@ export default function OfflineSimulator() {
               </Button>
             </div>
             
-            <p className="text-xs text-gray-500 dark:text-gray-400 pt-2 italic">
+            <p className="text-xs text-gray-500 pt-2 italic">
               Use this panel to test the app's behavior in offline/online scenarios.
             </p>
           </div>

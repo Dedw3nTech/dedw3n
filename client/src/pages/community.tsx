@@ -16,18 +16,15 @@ import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import { VideoDisplayCard } from "@/components/products/VideoDisplayCard";
 
 import { TrendingProductsToolbar } from "@/components/products/TrendingProductsToolbar";
-import { SidebarAdCard } from "@/components/SidebarAdCard";
-import { CommunityUniqueAdCard } from "@/components/CommunityUniqueAdCard";
 import { ProfileSideCard } from "@/components/ProfileSideCard";
-import { AdPostCard } from "@/components/AdPostCard";
 
 const campaignImage = "/attached_assets/Copy of Copy of Pre Launch Campaign  SELL (1).png";
 import { useLocation } from "wouter";
+import leopardVideo from "@assets/Generated File November 09, 2025 - 8_24PM (1)_1762805360661.mp4";
 
 // Community-specific promotional images
 const communityTopPromo = "/attached_assets/Dedw3n Business commHeader.png";
 const communityBottomPromo = "/attached_assets/_Dedw3n Business comm footer _1749580313800.png";
-const communityMidPromo = "/attached_assets/Dedw3n Business II (1).png";
 
 interface Post {
   id: number;
@@ -76,10 +73,6 @@ function CommunityTopPromoSection({ altText }: { altText: string }) {
   );
 }
 
-function CommunityMidPromoSection() {
-  return null;
-}
-
 function CommunityBottomPromoSection({ altText }: { altText: string }) {
   return (
     <div className="w-full mt-8">
@@ -96,14 +89,13 @@ export default function CommunityPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isAdVisible, setIsAdVisible] = useState(true);
   const [sortBy, setSortBy] = useState<'new' | 'trending' | 'popular' | 'following' | 'region' | 'country' | 'city'>('new');
   const [searchTerm, setSearchTerm] = useState("");
 
   // Optimized Translation System - Split into smaller manageable batches
   const coreTexts = [
     "Community Feed", "New", "Trending", "Popular", "Following", 
-    "Loading community posts...", "No posts yet", "Create Post", 
+    "Thinking", "No posts yet", "Create Post", 
     "Refresh", "Try Again", "Failed to fetch community feed"
   ];
 
@@ -250,7 +242,11 @@ export default function CommunityPage() {
   const handlePostCreated = () => {
     setHasReachedEnd(false);
     setLastFetchedCount(0);
+    // Refetch the community feed immediately to show new post
+    refetch();
+    // Also invalidate other feed queries
     queryClient.invalidateQueries({ queryKey: ['/api/feed/personal'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/feed/communities'] });
   };
 
   // Reset end state when sorting changes
@@ -261,7 +257,7 @@ export default function CommunityPage() {
 
   if (isError) {
     return (
-      <Container className="py-8">
+      <Container className="py-8 bg-white">
         <div className="text-center">
           <div className="mb-4">
             <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
@@ -281,13 +277,10 @@ export default function CommunityPage() {
 
   return (
     <>
-      <Container className="py-6">
+      <Container className="py-6 min-h-screen bg-white">
         <div className="max-w-7xl mx-auto">
-          {/* Top Community Advertisement */}
-          <CommunityTopPromoSection altText={getTranslation("Dedwen Community - Connect and Share")} />
-
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-6 gap-6 pb-20">
           {/* Profile Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-6">
@@ -336,67 +329,25 @@ export default function CommunityPage() {
               </div>
             </div>
 
-            {/* Feed Sorting Options */}
-            <div className="mb-6 flex items-center justify-center">
-              <div className="flex gap-8 text-xs text-gray-600">
-                <button
-                  onClick={() => setSortBy('popular')}
-                  className={`transition-colors duration-200 ${
-                    sortBy === 'popular' 
-                      ? 'text-black font-medium' 
-                      : 'hover:text-gray-800'
-                  }`}
-                >
-                  {getTranslation("Popular")}
-                </button>
-                <button
-                  onClick={() => setSortBy('following')}
-                  className={`transition-colors duration-200 ${
-                    sortBy === 'following' 
-                      ? 'text-black font-medium' 
-                      : 'hover:text-gray-800'
-                  }`}
-                >
-                  {getTranslation("Following")}
-                </button>
-                <button
-                  onClick={() => setSortBy('region')}
-                  className={`transition-colors duration-200 ${
-                    sortBy === 'region' 
-                      ? 'text-black font-medium' 
-                      : 'hover:text-gray-800'
-                  }`}
-                >
-                  {getTranslation("My Region")}
-                </button>
-                <button
-                  onClick={() => setSortBy('country')}
-                  className={`transition-colors duration-200 ${
-                    sortBy === 'country' 
-                      ? 'text-black font-medium' 
-                      : 'hover:text-gray-800'
-                  }`}
-                >
-                  {getTranslation("My Country")}
-                </button>
-                <button
-                  onClick={() => setSortBy('city')}
-                  className={`transition-colors duration-200 ${
-                    sortBy === 'city' 
-                      ? 'text-black font-medium' 
-                      : 'hover:text-gray-800'
-                  }`}
-                >
-                  {getTranslation("My City")}
-                </button>
-              </div>
-            </div>
-
             {/* Loading State */}
             {isLoading && (
               <div className="text-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-                <p className="text-gray-600">Loading community posts...</p>
+                <video 
+                  src={leopardVideo} 
+                  autoPlay 
+                  loop 
+                  muted 
+                  playsInline
+                  className="h-24 w-auto object-contain mx-auto mb-4"
+                />
+                <p className="text-gray-600">
+                  {getTranslation("Thinking")}
+                  <span className="inline-flex ml-1">
+                    <span className="animate-bounce" style={{ animationDelay: '0ms' }}>.</span>
+                    <span className="animate-bounce" style={{ animationDelay: '150ms' }}>.</span>
+                    <span className="animate-bounce" style={{ animationDelay: '300ms' }}>.</span>
+                  </span>
+                </p>
               </div>
             )}
 
@@ -407,18 +358,6 @@ export default function CommunityPage() {
               {uniquePosts.map((post, index) => (
                 <div key={`${post.id}-${index}`}>
                   <PostCard post={post} />
-                  {/* Insert community mid advertisement every 6 posts */}
-                  {(index + 1) % 6 === 0 && (
-                    <div className="mt-6">
-                      <CommunityMidPromoSection />
-                    </div>
-                  )}
-                  {/* Insert regular advertisement every 4 posts (offset from mid promo) */}
-                  {(index + 1) % 4 === 0 && (index + 1) % 6 !== 0 && (
-                    <div className="mt-6">
-                      <AdPostCard />
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
@@ -426,33 +365,22 @@ export default function CommunityPage() {
             {/* Load More Indicator */}
             {isFetchingNextPage && (
               <div className="text-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-primary" />
-                <p className="text-sm text-gray-600">{getTranslation("Loading more posts...")}</p>
-              </div>
-            )}
-
-            {/* End of Feed */}
-            {(!hasNextPage || hasReachedEnd) && uniquePosts.length > 0 && (
-              <div className="text-center py-8">
-                <div className="bg-white rounded-lg p-6 max-w-md mx-auto">
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <h3 className="text-[14px] font-semibold text-gray-900">
-                      {getTranslation("You've reached the end!")}
-                    </h3>
-                    <Button 
-                      onClick={handleRefresh}
-                      variant="ghost"
-                      size="sm"
-                      className="inline-flex items-center gap-1 p-1 h-auto"
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                      {getTranslation("Refresh")}
-                    </Button>
-                  </div>
-                  <p className="text-[12px] text-gray-600">
-                    {getTranslation("Check back later for new content or try refreshing to see if there are any updates.")}
-                  </p>
-                </div>
+                <video 
+                  src={leopardVideo} 
+                  autoPlay 
+                  loop 
+                  muted 
+                  playsInline
+                  className="h-16 w-auto object-contain mx-auto mb-2"
+                />
+                <p className="text-sm text-gray-600">
+                  {getTranslation("Thinking")}
+                  <span className="inline-flex ml-1">
+                    <span className="animate-bounce" style={{ animationDelay: '0ms' }}>.</span>
+                    <span className="animate-bounce" style={{ animationDelay: '150ms' }}>.</span>
+                    <span className="animate-bounce" style={{ animationDelay: '300ms' }}>.</span>
+                  </span>
+                </p>
               </div>
             )}
 
@@ -476,23 +404,9 @@ export default function CommunityPage() {
           {/* Products Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-6 space-y-6">
-              <VideoDisplayCard 
-                marketType="b2c" 
-                title="Dedw3n Community Features" 
-                autoPlay={true}
-                showControls={true}
-              />
-              <TrendingCategoriesCard />
-              <CommunityUniqueAdCard />
-              <LatestProductsCard />
-              <PopularProductsCard />
-              <SidebarAdCard />
             </div>
           </div>
         </div>
-
-        {/* Bottom Community Advertisement */}
-        <CommunityBottomPromoSection altText={getTranslation("Join the Dedwen Community")} />
       </div>
       </Container>
     </>

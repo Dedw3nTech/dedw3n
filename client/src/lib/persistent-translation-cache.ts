@@ -143,7 +143,10 @@ class PersistentTranslationCache {
       oldestTimestamp = Math.min(oldestTimestamp, cached.timestamp);
       newestTimestamp = Math.max(newestTimestamp, cached.timestamp);
       totalAccess += cached.accessCount;
-      if (cached.accessCount > 1) totalHits++;
+      // Count actual cache hits: accessCount - 1 (first access is miss, rest are hits)
+      if (cached.accessCount > 1) {
+        totalHits += (cached.accessCount - 1);
+      }
     }
 
     return {

@@ -1,50 +1,45 @@
 import { Link } from "wouter";
-import { useEffect } from "react";
-import { ReportButton } from "@/components/ui/report-button";
+import { useEffect, useMemo } from "react";
+import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 
 export default function NotFoundPage() {
+  // Translation array for 404 page
+  const notFoundTexts = useMemo(() => [
+    "Page Not Found",
+    "The page you are seeking is no longer available. Please return to the",
+    "homepage"
+  ], []);
+
+  const { translations: translatedTexts } = useMasterBatchTranslation(notFoundTexts);
+
+  // Helper function to get translated text
+  const t = (text: string): string => {
+    if (Array.isArray(translatedTexts)) {
+      const index = notFoundTexts.indexOf(text);
+      return index !== -1 ? translatedTexts[index] || text : text;
+    }
+    return text;
+  };
+
   useEffect(() => {
     // Set proper 404 status in document title for SEO
-    document.title = "404 - Page Not Found | Dedw3n";
+    document.title = `404 - ${t("Page Not Found")} | Dedw3n`;
     
     // Add canonical URL for 404 page
     const canonicalLink = document.querySelector('link[rel="canonical"]');
     if (canonicalLink) {
       canonicalLink.setAttribute('href', window.location.href);
     }
-  }, []);
+  }, [translatedTexts]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="flex-1 flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full text-center px-6">
         <div className="mb-8">
-          <h1 className="text-9xl font-bold text-gray-200">404</h1>
-          <h2 className="text-2xl font-semibold text-gray-800 mt-4">Page Not Found</h2>
-          <p className="text-gray-600 mt-2">
-            The page you're looking for doesn't exist or has been moved.
+          <h2 className="text-2xl font-semibold text-gray-800 mt-4">{t("Page Not Found")}</h2>
+          <p className="text-gray-600 mt-6 text-lg">
+            {t("The page you are seeking is no longer available. Please return to the")} <Link href="/" className="text-gray-500 italic underline font-medium" data-testid="link-homepage">{t("homepage")}</Link>.
           </p>
-        </div>
-
-        <div className="flex items-center justify-center space-x-4 whitespace-nowrap">
-          <Link href="/" className="text-black text-base hover:underline">Go to Homepage</Link>
-          <span className="text-gray-400">|</span>
-          <Link href="/products" className="text-black text-base hover:underline">Browse Marketplace</Link>
-          <span className="text-gray-400">|</span>
-          <Link href="/wall" className="text-black text-base hover:underline">Visit Community</Link>
-        </div>
-
-        <div className="mt-8 space-y-4">
-          <div className="text-sm text-gray-500">
-            <p>If you believe this is an error, please <Link href="/contact" className="text-blue-600 hover:underline">contact us</Link>.</p>
-          </div>
-          <div className="flex justify-center">
-            <ReportButton 
-              errorType="404 - Page Not Found"
-              errorMessage={`Page not found: ${window.location.pathname}`}
-              variant="outline"
-              size="sm"
-            />
-          </div>
         </div>
       </div>
     </div>

@@ -1,14 +1,14 @@
-modules = ["nodejs-20", "web", "postgresql-16", "python-3.11", "python3"]
+modules = ["web", "postgresql-16", "python-3.11", "python3", "nodejs-22"]
 run = "npm run dev"
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["glibcLocales", "google-cloud-sdk", "jq"]
+packages = ["glibcLocales", "google-cloud-sdk", "jq", "ffmpeg"]
 
 [deployment]
 deploymentTarget = "autoscale"
-build = ["npm", "run", "build"]
+build = ["sh", "-c", "NODE_OPTIONS='--max-old-space-size=4096' npm run build"]
 run = ["npm", "run", "start"]
 
 [[ports]]
@@ -97,7 +97,7 @@ args = "npm run dev"
 waitForPort = 5000
 
 [agent]
-integrations = ["javascript_stripe:1.0.0"]
+integrations = ["javascript_database:1.0.0", "javascript_stripe:1.0.0", "javascript_object_storage:1.0.0"]
 
 [objectStorage]
 defaultBucketID = "replit-objstore-933e312b-a3f8-4c9e-b3e9-99fe9e01ba0a"

@@ -267,7 +267,7 @@ const ContentDetail: React.FC<ContentDetailProps> = ({ contentId, communityId, o
           </div>
           
           {/* Description */}
-          <div className="prose prose-sm max-w-none dark:prose-invert">
+          <div className="prose prose-sm max-w-none">
             <p>{content.description}</p>
             
             {/* Article content */}

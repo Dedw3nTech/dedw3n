@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import crypto from 'crypto';
 import { storage } from './storage';
+import { logger } from './logger';
 
 // Mock database for payment references and statuses (in a real app, this would be in a database)
 const paymentReferences = new Map<string, {
@@ -119,7 +120,7 @@ export async function initiatePayment(req: Request, res: Response) {
     });
 
   } catch (error: any) {
-    console.error('Error initiating mobile money payment:', error);
+    logger.error('Failed to initiate mobile money payment', { providerId: req.body.providerId, phoneNumber: req.body.phoneNumber?.substring(0, 4) + '***' }, error, 'api');
     res.status(500).json({ message: 'Failed to initiate payment', error: error.message });
   }
 }
@@ -155,7 +156,7 @@ export async function checkPaymentStatus(req: Request, res: Response) {
     });
 
   } catch (error: any) {
-    console.error('Error checking mobile money payment status:', error);
+    logger.error('Failed to check mobile money payment status', { referenceId: req.params.referenceId }, error, 'api');
     res.status(500).json({ message: 'Failed to check payment status', error: error.message });
   }
 }
@@ -200,7 +201,7 @@ export async function verifyPayment(req: Request, res: Response) {
     });
 
   } catch (error: any) {
-    console.error('Error verifying mobile money payment:', error);
+    logger.error('Failed to verify mobile money payment', { referenceId: req.body.referenceId }, error, 'api');
     res.status(500).json({ message: 'Failed to verify payment', error: error.message });
   }
 }

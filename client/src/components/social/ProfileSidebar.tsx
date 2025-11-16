@@ -39,8 +39,8 @@ export default function ProfileSidebar() {
       {/* Social Navigation */}
       <div className="bg-white rounded-lg shadow-sm p-4">
         <nav className="space-y-2">
-          <Link href="/social">
-            <a className={`flex items-center py-2 px-3 ${location === "/social" ? "bg-blue-50 text-primary" : "text-gray-700 hover:bg-gray-50"} rounded`}>
+          <Link href="/community">
+            <a className={`flex items-center py-2 px-3 ${location === "/community" ? "bg-blue-50 text-primary" : "text-gray-700 hover:bg-gray-50"} rounded`}>
               <i className="ri-home-line mr-3"></i>
               <span>Home Feed</span>
             </a>

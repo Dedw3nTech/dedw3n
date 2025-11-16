@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { InsertPost, Post } from "@shared/schema";
+import { InsertPost, Post, Product } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -11,22 +11,24 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Tag, 
   X,
   CheckCircle, 
   Image as ImageIcon,
-  Video as VideoIcon
+  Video as VideoIcon,
+  ShoppingBag
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useTranslation } from "react-i18next";
+import { useMasterTranslation } from "@/hooks/use-master-translation";
 
 interface ContentCreatorProps {
   onSuccess?: () => void;
 }
 
 export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
-  const { t } = useTranslation();
+  const { translateText } = useMasterTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -39,12 +41,19 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
   const [isPromoted, setIsPromoted] = useState(false);
   const [promotionDialogOpen, setPromotionDialogOpen] = useState(false);
   const [selectedPromotionPlan, setSelectedPromotionPlan] = useState("1day");
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
   
   // Media state
   const [mediaType, setMediaType] = useState<"none" | "image" | "video">("none");
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const [mediaData, setMediaData] = useState<any | null>(null);
+  
+  // Fetch products for product sharing
+  const { data: products } = useQuery<Product[]>({
+    queryKey: ["/api/products"],
+    enabled: !!user,
+  });
   
   // File input references
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -122,8 +131,8 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
       
       // Show success toast
       toast({
-        title: "Media Uploaded",
-        description: "Your media has been uploaded successfully",
+        title: translateText("Media Uploaded"),
+        description: translateText("Your media has been uploaded successfully"),
       });
       
       // Store both the media URL and original data for use later in form submission
@@ -147,8 +156,8 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
       setMediaData(null);
       
       toast({
-        title: "Upload Failed",
-        description: error.message || "Failed to upload media. Please try again.",
+        title: translateText("Upload Failed"),
+        description: error.message || translateText("Failed to upload media. Please try again."),
         variant: "destructive",
       });
     }
@@ -172,6 +181,7 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
       setTags([]);
       setTagInput("");
       setIsPromoted(false);
+      setSelectedProductId(null);
       setMediaType("none");
       setMediaPreview(null);
       setMediaData(null);
@@ -196,8 +206,8 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
       
       // Show success toast
       toast({
-        title: t("post_created") || "Post Created",
-        description: t("post_success_message") || "Your post has been published successfully.",
+        title: translateText("Post Created"),
+        description: translateText("Your post has been published successfully"),
       });
       
       console.log("Post created successfully, calling onSuccess callback");
@@ -212,8 +222,8 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
     },
     onError: (error: any) => {
       toast({
-        title: t("errors.error") || "Error",
-        description: error.message || t("post_error") || "Failed to create post",
+        title: translateText("Error"),
+        description: error.message || translateText("Failed to create post"),
         variant: "destructive",
       });
     },
@@ -241,8 +251,8 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
     // Basic validation
     if (type === "image" && !file.type.startsWith("image/")) {
       toast({
-        title: "Invalid File",
-        description: "Please select a valid image file.",
+        title: translateText("Invalid File"),
+        description: translateText("Please select a valid image file"),
         variant: "destructive",
       });
       return;
@@ -250,8 +260,8 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
     
     if (type === "video" && !file.type.startsWith("video/")) {
       toast({
-        title: "Invalid File",
-        description: "Please select a valid video file.",
+        title: translateText("Invalid File"),
+        description: translateText("Please select a valid video file"),
         variant: "destructive",
       });
       return;
@@ -259,10 +269,11 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
     
     // Size check - limit to 10MB for images, 50MB for videos
     const maxSize = type === "image" ? 10 * 1024 * 1024 : 50 * 1024 * 1024;
+    const maxSizeMB = maxSize / (1024 * 1024);
     if (file.size > maxSize) {
       toast({
-        title: "File Too Large",
-        description: `Please select a ${type} file less than ${maxSize / (1024 * 1024)}MB.`,
+        title: translateText("File Too Large"),
+        description: `${translateText("Maximum file size")}: ${maxSizeMB}MB`,
         variant: "destructive",
       });
       return;
@@ -298,8 +309,8 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
       reader.onerror = () => {
         setUploadingMedia(false);
         toast({
-          title: "File Read Error",
-          description: "Failed to process the selected file. Please try again.",
+          title: translateText("File Read Error"),
+          description: translateText("Failed to process the selected file. Please try again."),
           variant: "destructive",
         });
       };
@@ -309,8 +320,8 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
     } catch (error) {
       setUploadingMedia(false);
       toast({
-        title: "File Processing Error",
-        description: "Failed to process the selected file. Please try again.",
+        title: translateText("File Processing Error"),
+        description: translateText("Failed to process the selected file. Please try again."),
         variant: "destructive",
       });
     }
@@ -325,8 +336,8 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
   const handleSubmit = () => {
     if (!user) {
       toast({
-        title: t("errors.error") || "Error",
-        description: t("errors.unauthorized") || "You must be logged in to post",
+        title: translateText("Error"),
+        description: translateText("You must be logged in to post"),
         variant: "destructive",
       });
       return;
@@ -335,8 +346,8 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
     // Basic validation
     if (!content.trim() && !mediaPreview) {
       toast({
-        title: t("errors.error") || "Error",
-        description: "Please add some content or media to your post",
+        title: translateText("Error"),
+        description: translateText("Please add some content or media to your post"),
         variant: "destructive",
       });
       return;
@@ -345,8 +356,8 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
     // Check if media is still uploading
     if (uploadingMedia) {
       toast({
-        title: "Media Still Uploading",
-        description: "Please wait for your media to finish uploading before posting",
+        title: translateText("Media Still Uploading"),
+        description: translateText("Please wait for your media to finish uploading before posting"),
         variant: "destructive",
       });
       return;
@@ -397,6 +408,11 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
       }
     }
     
+    // Add product ID if selected
+    if (selectedProductId) {
+      postData.productId = selectedProductId;
+    }
+    
     // Submit post
     createPostMutation.mutate(postData);
   };
@@ -438,8 +454,8 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
     
     // Show confirmation toast
     toast({
-      title: "Promotion Added",
-      description: `${selected.duration} promotion (£${selected.price}) added to your cart.`,
+      title: translateText("Promotion Added"),
+      description: `${selected.duration} ${translateText("promotion added to cart for")} £${selected.price}`,
     });
   };
   
@@ -450,9 +466,9 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
         <Dialog open={promotionDialogOpen} onOpenChange={setPromotionDialogOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Promote Your Post</DialogTitle>
+              <DialogTitle>{translateText("Promote Your Post")}</DialogTitle>
               <DialogDescription>
-                Select a promotion plan to increase the visibility of your post.
+                {translateText("Select a promotion plan to increase the visibility of your post")}
               </DialogDescription>
             </DialogHeader>
             
@@ -469,9 +485,9 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
                     className="flex-grow flex justify-between cursor-pointer"
                   >
                     <div>
-                      <span className="font-medium">1 Day</span>
+                      <span className="font-medium">{translateText("1 Day")}</span>
                       <p className="text-sm text-muted-foreground">
-                        Short boost for immediate impact.
+                        {translateText("Short boost for immediate impact")}
                       </p>
                     </div>
                     <span className="font-semibold">£2</span>
@@ -485,9 +501,9 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
                     className="flex-grow flex justify-between cursor-pointer"
                   >
                     <div>
-                      <span className="font-medium">7 Days</span>
+                      <span className="font-medium">{translateText("7 Days")}</span>
                       <p className="text-sm text-muted-foreground">
-                        Week-long visibility boost. Best value.
+                        {translateText("Week-long visibility boost. Best value")}
                       </p>
                     </div>
                     <span className="font-semibold">£10</span>
@@ -501,9 +517,9 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
                     className="flex-grow flex justify-between cursor-pointer"
                   >
                     <div>
-                      <span className="font-medium">30 Days</span>
+                      <span className="font-medium">{translateText("30 Days")}</span>
                       <p className="text-sm text-muted-foreground">
-                        Maximum exposure for a full month.
+                        {translateText("Maximum exposure for a full month")}
                       </p>
                     </div>
                     <span className="font-semibold">£30</span>
@@ -517,14 +533,14 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
                 variant="outline" 
                 onClick={() => setPromotionDialogOpen(false)}
               >
-                Cancel
+                {translateText("Cancel")}
               </Button>
               <Button 
                 onClick={handlePromotionSelect}
                 className="bg-green-500 hover:bg-green-600"
               >
                 <CheckCircle className="h-4 w-4 mr-2" />
-                Add to Cart
+                {translateText("Add to Cart")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -533,7 +549,7 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
         {/* Text content area */}
         <div className="space-y-4">
           <Textarea
-            placeholder="Write your post..."
+            placeholder={translateText("Write your post...")}
             className="min-h-[120px] resize-none"
             value={content}
             onChange={(e) => setContent(e.target.value)}
@@ -557,7 +573,7 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 onBlur={() => tagInput.trim() && handleTagAdd()}
-                placeholder="Add tags..."
+                placeholder={translateText("Add tags...")}
                 className="flex-1 border-none shadow-none focus-visible:ring-0 min-w-[100px] h-7 p-0"
               />
             </div>
@@ -600,42 +616,74 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
             </div>
           )}
           
-          {/* Media upload buttons */}
-          <div className="flex space-x-2">
-            <input 
-              type="file" 
-              ref={imageInputRef} 
-              className="hidden" 
-              accept="image/*" 
-              onChange={(e) => handleFileChange(e, "image")}
-            />
-            <input 
-              type="file" 
-              ref={videoInputRef} 
-              className="hidden" 
-              accept="video/*" 
-              onChange={(e) => handleFileChange(e, "video")}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleShareImage}
-              className="flex items-center gap-1 border-blue-400 text-blue-600 hover:bg-blue-50"
-              disabled={uploadingMedia}
-            >
-              <ImageIcon className="h-4 w-4" />
-              <span>Share Picture</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleShareVideo}
-              className="flex items-center gap-1 border-purple-400 text-purple-600 hover:bg-purple-50"
-              disabled={uploadingMedia}
-            >
-              <VideoIcon className="h-4 w-4" />
-              <span>Share Video</span>
-            </Button>
+          {/* Media upload buttons and product selector */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex space-x-2">
+              <input 
+                type="file" 
+                ref={imageInputRef} 
+                className="hidden" 
+                accept="image/*" 
+                onChange={(e) => handleFileChange(e, "image")}
+              />
+              <input 
+                type="file" 
+                ref={videoInputRef} 
+                className="hidden" 
+                accept="video/*" 
+                onChange={(e) => handleFileChange(e, "video")}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleShareImage}
+                className="flex items-center gap-1 border-blue-400 text-blue-600 hover:bg-blue-50"
+                disabled={uploadingMedia}
+                data-testid="button-share-image"
+              >
+                <ImageIcon className="h-4 w-4" />
+                <span>{translateText("Share Picture")}</span>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleShareVideo}
+                className="flex items-center gap-1 border-purple-400 text-purple-600 hover:bg-purple-50"
+                disabled={uploadingMedia}
+                data-testid="button-share-video"
+              >
+                <VideoIcon className="h-4 w-4" />
+                <span>{translateText("Share Video")}</span>
+              </Button>
+            </div>
+            
+            {/* Product selection */}
+            {products && products.length > 0 && (
+              <div className="flex items-center gap-2 flex-1 max-w-sm">
+                <ShoppingBag className="h-4 w-4 text-orange-600" />
+                <Select
+                  value={selectedProductId?.toString() || ""}
+                  onValueChange={(value) => setSelectedProductId(value ? parseInt(value) : null)}
+                >
+                  <SelectTrigger 
+                    className="border-orange-400 text-orange-600 hover:bg-orange-50"
+                    data-testid="select-product"
+                  >
+                    <SelectValue placeholder={translateText("Share Product (Optional)")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">
+                      {translateText("No Product")}
+                    </SelectItem>
+                    {products.map((product) => (
+                      <SelectItem key={product.id} value={product.id.toString()}>
+                        {product.name} - ${product.price}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
           
           {/* Action buttons */}
@@ -646,7 +694,7 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
               className={`flex items-center gap-1 ${isPromoted ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'}`}
             >
               <span className="text-white">
-                {isPromoted ? 'Promoted ✓' : 'Promote'}
+                {isPromoted ? translateText('Promoted ✓') : translateText('Promote')}
               </span>
             </Button>
             <Button 
@@ -654,7 +702,7 @@ export default function ContentCreator({ onSuccess }: ContentCreatorProps) {
               disabled={createPostMutation.isPending || uploadingMedia}
               className="bg-primary hover:bg-primary/90"
             >
-              {createPostMutation.isPending ? "Posting..." : (uploadingMedia ? "Uploading..." : "Post")}
+              {createPostMutation.isPending ? translateText("Posting...") : (uploadingMedia ? translateText("Uploading...") : translateText("Post"))}
             </Button>
           </div>
         </div>

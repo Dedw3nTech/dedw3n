@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { PayPalButtons, PayPalScriptProvider } from '@paypal/react-paypal-js';
 import { Button } from '@/components/ui/button';
+import { useMasterTranslation } from '@/hooks/use-master-translation';
 
 // Define script loaded event handler
 declare global {
@@ -39,6 +40,7 @@ export const PaypalPaymentForm = ({
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
   const [paypalSdkReady, setPaypalSdkReady] = useState(false);
   const [paypalSdkError, setPaypalSdkError] = useState(false);
+  const { translateText } = useMasterTranslation();
 
   // Initialize PayPal options
   const paypalOptions = {
@@ -118,7 +120,7 @@ export const PaypalPaymentForm = ({
     } catch (error: any) {
       setErrorMessage(error.message || 'Failed to create PayPal order');
       toast({
-        title: 'PayPal Error',
+        title: translateText('Error'),
         description: error.message || 'Failed to create PayPal order',
         variant: 'destructive',
       });
@@ -160,7 +162,7 @@ export const PaypalPaymentForm = ({
     } catch (error: any) {
       setErrorMessage(error.message || 'Failed to capture payment');
       toast({
-        title: 'Payment Error',
+        title: translateText('Error'),
         description: error.message || 'Failed to capture payment',
         variant: 'destructive',
       });
@@ -174,7 +176,7 @@ export const PaypalPaymentForm = ({
     const errorMessage = 'PayPal encountered an error. Please try again later.';
     setErrorMessage(errorMessage);
     toast({
-      title: 'PayPal Error',
+      title: translateText('Error'),
       description: errorMessage,
       variant: 'destructive',
     });

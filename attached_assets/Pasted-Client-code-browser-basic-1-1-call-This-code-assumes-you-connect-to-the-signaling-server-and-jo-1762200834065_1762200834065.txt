@@ -1,0 +1,237 @@
+Client code (browser) — basic 1:1 call
+
+This code assumes you connect to the signaling server and join a room ID. Put in an HTML page or React component.
+
+<!-- index.html (simple) -->
+<!doctype html>
+<html>
+  <body>
+    <button id="start">Start Call</button>
+    <audio id="localAudio" autoplay muted></audio>
+    <audio id="remoteAudio" autoplay></audio>
+
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <script>
+      const socket = io('https://your-signaling.example.com'); // wss in prod
+      const room = 'room-123'; // generate per call/session
+      let pc;
+      let localStream;
+      const config = {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          // production must include a TURN server
+          // { urls: 'turn:your.turn.server:3478', username: 'user', credential: 'pass' }
+        ]
+      };
+
+      async function start() {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        document.getElementById('localAudio').srcObject = localStream;
+
+        socket.emit('join', room);
+
+        socket.on('peer-joined', () => {
+          // if another peer joined, create offer
+          createPeer(true);
+        });
+
+        socket.on('offer', async ({ from, sdp }) => {
+          await createPeer(false);
+          await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          socket.emit('answer', { target: from, sdp: pc.localDescription });
+        });
+
+        socket.on('answer', async ({ sdp }) => {
+          await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+        });
+
+        socket.on('ice-candidate', async ({ candidate }) => {
+          try {
+            await pc.addIceCandidate(candidate);
+          } catch (e) {
+            console.warn('Error adding received ICE candidate', e);
+          }
+        });
+
+        socket.on('peer-left', () => {
+          console.log('Peer left, cleaning up');
+          cleanup();
+        });
+      }
+
+      async function createPeer(isCaller) {
+        pc = new RTCPeerConnection(config);
+
+        // send our ice candidates to remote via signaling
+        pc.onicecandidate = (event) => {
+          if (event.candidate) {
+            socket.emit('ice-candidate', { target: null, candidate: event.candidate });
+            // In a room model you should target the peer id; for simplicity we broadcast by leaving target null and server should forward appropriately
+          }
+        };
+
+        pc.ontrack = (event) => {
+          document.getElementById('remoteAudio').srcObject = event.streams[0];
+        };
+
+        // add tracks
+        localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+        if (isCaller) {
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+          socket.emit('offer', { target: null, sdp: pc.localDescription }); // server should forward to other peer(s)
+        }
+      }
+
+      function cleanup() {
+        if (pc) {
+          pc.close();
+          pc = null;
+        }
+        if (localStream) {
+          localStream.getTracks().forEach(t => t.stop());
+          localStream = null;
+        }
+      }
+
+      document.getElementById('start').addEventListener('click', start);
+    </script>
+  </body>
+</html>
+
+
+Notes:
+
+In production, signal messages should specify target peer IDs so ICEs and offers are routed to the intended recipient. I simplified routing for readability.
+
+You must supply a TURN server for reliability.
+
+STUN / TURN configuration
+
+STUN: use public STUN for dev (e.g. stun:stun.l.google.com:19302).
+
+TURN: production must use TURN. Host coturn with long-term auth or use a managed TURN provider. TURN credentials should be dynamically issued (time-limited) for security.
+
+Example ICE server array:
+
+[
+  { urls: "stun:stun1.l.google.com:19302" },
+  { urls: "turn:turn.example.com:3478", username: "user", credential: "pass" }
+]
+
+Multi-party & scaling options
+
+For small group calls (3–6 users): SFU (mediasoup, Janus, Jitsi) — clients send one uplink, SFU forwards downlinks. Efficient bandwidth.
+
+For >10–100s concurrent calls: horizontally scale SFU and signaling servers, use load balancers, autoscaling, and persistent storage for logs/recordings.
+
+For recording: SFU or a dedicated recorder endpoint that subscribes to streams server-side.
+
+PSTN / SIP integration
+
+Use Twilio Programmable Voice for fast PSTN bridging (you can SIP to Twilio or use Twilio’s WebRTC SDK).
+
+Or self-host via Asterisk/FreeSWITCH with SIP over WebSocket (WSS) + RTP bridging.
+
+Consider codec negotiation: Opus is best for web audio quality.
+
+Quality, monitoring, and testing
+
+Implement stats collection via RTCPeerConnection.getStats() (RTT, jitter, packet loss, bitrate). Send to a backend for per-call dashboards.
+
+Synthetic monitoring: automated calls to detect degradations.
+
+Use client-side UX to downgrade video or switch to audio-only under poor networks.
+
+Security & privacy
+
+Serve app over HTTPS (required for getUserMedia). Use secure websockets (wss).
+
+DTLS-SRTP is used by WebRTC automatically for media encryption.
+
+Authenticate signaling with tokens (JWT). Validate tokens server-side on connect.
+
+Turn credentials: issue ephemeral TURN credentials with limited lifetime.
+
+Log minimization and secure storage for any recordings (GDPR, HIPAA considerations — check compliance).
+
+Common pitfalls & gotchas
+
+Not configuring TURN → many calls fail behind strict NATs.
+
+Not handling ICE candidates ordering / setRemoteDescription before addIceCandidate — leads to errors.
+
+Browser differences: test widely (Chrome, Firefox, Safari). Safari may require additional handling and constraints.
+
+Mobile: background audio limitations on iOS.
+
+Scale: P2P is fine for 1:1, but for group calls, P2P becomes unmanageable.
+
+MVP feature checklist
+
+ 1:1 audio call via WebRTC (getUserMedia + RTCPeerConnection)
+
+ Signaling server (WebSocket/Socket.io)
+
+ STUN + TURN (TURN ready for production)
+
+ Secure transport (HTTPS + wss)
+
+ User authentication + per-call tokens
+
+ Basic logging and call metrics (getStats)
+
+ Reconnect & retry logic for flaky networks
+
+ UI for mute/unmute, volume/level indicator, call privacy (hold, end call)
+
+ Group calls via SFU (if required)
+
+ PSTN bridge (if you want phone calls in/out)
+
+ Recording & storage (if required, with legal/compliance)
+
+Example advanced path (if you want production-grade)
+
+Use mediasoup (or Janus) for multi-party SFU.
+
+Use coturn cluster + monitoring.
+
+Use Redis for signaling persistence & Pub/Sub across multiple signaling servers.
+
+Instrument getStats and collect to Prometheus/Grafana.
+
+Integrate SIP/PSTN with Twilio or Asterisk behind SIP-over-WSS.
+
+Add per-minute billing hooks if monetizing.
+
+Tests & QA
+
+Unit tests for signaling messages and server handlers.
+
+E2E integration tests with headless browsers (Puppeteer) to establish calls and verify audio routing.
+
+Load tests simulating many concurrent calls (locust, custom scripts).
+
+Costs to consider (none are precise; categories only)
+
+TURN server bandwidth (largest variable)
+
+SFU server resources (CPU/NET) if self-hosting
+
+PSTN provider per-minute fees (Twilio, Plivo)
+
+Storage for recordings
+
+Final recommendations (practical)
+
+Start with Node.js signaling + WebRTC P2P + managed TURN (to get working quickly).
+
+Only add SFU if you need multi-party or server-side recording.
+
+Use a provider (Twilio/Xirsys) for TURN/PSTN while prototyping — reduces ops friction.
+
+Add monitoring and ephemeral credentials early.

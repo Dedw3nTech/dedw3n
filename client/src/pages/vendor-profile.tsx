@@ -151,10 +151,6 @@ export default function VendorProfile() {
   const handleAddToCart = async (product: Product) => {
     try {
       await addToCart(product.id, 1);
-      toast({
-        title: "Added to Cart",
-        description: `${product.name} has been added to your cart.`,
-      });
     } catch (error) {
       toast({
         title: "Error",

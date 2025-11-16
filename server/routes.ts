@@ -1,4 +1,9 @@
 import type { Express, Request, Response, NextFunction } from "express";
+
+// Global server instance for WebSocket setup
+declare global {
+  var httpServer: import("http").Server | undefined;
+}
 import { createServer, type Server } from "http";
 import Stripe from "stripe";
 // WebSocket implementation moved to messaging-suite.ts
@@ -11,30 +16,70 @@ import { fileURLToPath } from 'url';
 import { storage } from "./storage";
 import { db } from "./db";
 import { eq, or, like, ilike, sql, and, ne, inArray, desc, count, sum, avg, isNull, gte, lte, between, notInArray, isNotNull } from "drizzle-orm";
-import { users, products, orders, vendors, carts, orderItems, reviews, messages, vendorPaymentInfo, insertVendorPaymentInfoSchema, vendorDiscounts, discountUsages, promotionalCampaigns, insertVendorDiscountSchema, insertDiscountUsageSchema, insertPromotionalCampaignSchema, returns, insertReturnSchema, marketingCampaigns, campaignActivities, campaignTouchpoints, campaignAnalytics, campaignProducts, insertMarketingCampaignSchema, insertCampaignActivitySchema, insertCampaignTouchpointSchema, insertCampaignAnalyticsSchema, storeUsers, cities, privateRoomInvitations, audioSessions } from "@shared/schema";
+import { users, products, orders, vendors, carts, orderItems, reviews, messages, vendorPaymentInfo, insertVendorPaymentInfoSchema, vendorDiscounts, discountUsages, promotionalCampaigns, insertVendorDiscountSchema, insertDiscountUsageSchema, insertPromotionalCampaignSchema, returns, insertReturnSchema, marketingCampaigns, campaignActivities, campaignTouchpoints, campaignAnalytics, campaignProducts, insertMarketingCampaignSchema, insertCampaignActivitySchema, insertCampaignTouchpointSchema, insertCampaignAnalyticsSchema, storeUsers, cities, privateRoomInvitations, videos, videoPurchases, subscriptions, creatorEarnings, friendships, friendRequests, audioSessions, giftPropositions, notifications, moderationReports, insertModerationReportSchema, likedProducts, toastReports, insertToastReportSchema, affiliatePartners, vendorAffiliatePartners } from "@shared/schema";
 
 import { setupAuth, hashPassword, comparePasswords } from "./auth";
-import { setupJwtAuth, verifyToken, revokeToken } from "./jwt-auth";
+import { setupJwtAuth, verifyToken, revokeToken, generateToken } from "./jwt-auth";
 import { promisify } from "util";
 import { scrypt, randomBytes } from "crypto";
-import { isAuthenticated as unifiedIsAuthenticated, isAuthenticated, requireRole } from './unified-auth';
+import { isAuthenticated as unifiedIsAuthenticated, isAuthenticated, requireRole, optionalAuth } from './unified-auth';
+import { checkAuthentication } from './auth-utils';
+import { rateLimiter, RateLimits } from './rate-limit-utils';
+
+// Helper function to get authenticated user
+async function getAuthenticatedUser(req: Request): Promise<any> {
+  // Check if user is authenticated via session
+  if (req.user) {
+    return req.user;
+  }
+  
+  // Check if user is in session
+  if (req.session && (req.session as any).passport && (req.session as any).passport.user) {
+    const userId = (req.session as any).passport.user;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+      return user;
+    } catch (error) {
+      console.error('Error fetching user from session', error);
+      return null;
+    }
+  }
+  
+  return null;
+}
+
+// Utility function to normalize language codes to uppercase for DeepL API compatibility
+function normalizeLanguageCode(languageCode: string | undefined | null): string {
+  if (!languageCode) return 'EN';
+  return languageCode.toUpperCase().trim();
+}
+
 import { registerPaymentRoutes } from "./payment";
+import { registerCryptoPaymentRoutes } from "./cryptoPayment";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
-import { fraudRiskMiddleware, highRiskActionMiddleware, registerFraudPreventionRoutes } from "./fraud-prevention";
+import { highRiskActionMiddleware, registerFraudPreventionRoutes } from "./fraud-prevention";
 import { registerShippingRoutes } from "./shipping";
-import { registerImageRoutes } from "./image-handler";
-import { registerMediaRoutes } from "./media-handler";
+import { registerCalendarEventFileRoutes } from "./calendar-event-files";
+// OLD EPHEMERAL HANDLERS - REPLACED WITH PERSISTENT OBJECT STORAGE
+// import { registerImageRoutes } from "./image-handler";
+// import { registerMediaRoutes } from "./media-handler";
+import { registerPresignedUploadRoutes } from "./presigned-upload";
+import { registerSecureUploadRoutes } from "./secure-upload-proxy";
+import { registerImageCacheRoutes } from "./image-cache";
 import { registerMobileMoneyRoutes } from "./mobile-money";
 import { registerPawapayRoutes } from "./pawapay";
 import { registerSubscriptionPaymentRoutes } from "./subscription-payment";
 import { registerExclusiveContentRoutes } from "./exclusive-content";
+import { generateProductCode } from "./utils/productCode";
 import { registerSubscriptionRoutes } from "./subscription";
 import { registerAdminRoutes } from "./admin";
 // import { registerMessagingSuite } from "./messaging-suite"; // Disabled to prevent WebSocket conflicts
 import { registerAIInsightsRoutes } from "./ai-insights";
 import { registerNewsFeedRoutes } from "./news-feed";
 import { registerFileUploadRoutes } from "./file-upload";
+import { registerCallRoutes } from "./call-management";
 import { seedDatabase } from "./seed";
+import { initializeStorageSync } from "./storage-sync-startup";
 import { advancedSocialMediaSuite } from "./advanced-social-suite";
 import {
   getAdvertisements,
@@ -48,13 +93,21 @@ import {
 } from "./advertisement-management";
 
 import { setupWebSocket } from "./websocket-handler";
+import { setupMeetingWebSocket } from "./meeting-websocket";
 import { sendContactEmail, setBrevoApiKey, sendEmail } from "./email-service";
 import EmailTranslationService from "./email-translation-service";
 import { upload } from "./multer-config";
 import { updateVendorBadge, getVendorBadgeStats, updateAllVendorBadges } from "./vendor-badges";
+import { ObjectStorageService, ObjectNotFoundError, objectStorageClient } from "./objectStorage";
+import { ObjectPermission, setObjectAclPolicy, canAccessObject } from "./objectAcl";
 import TranslationOptimizer from "./translation-optimizer";
 import { queryCache } from "./query-cache";
-import { createEnhancedLogout, addSecurityHeaders, logoutStateChecker } from "./enhanced-logout";
+import { createEnhancedLogout, addSecurityHeaders, attachPrivacyHeaders, logoutStateChecker } from "./enhanced-logout";
+import { createCleanLogout } from "./clean-logout";
+import { createInstantLogout } from "./instant-logout";
+import { multiLangSearchService } from "./search-service";
+import { searchCacheService } from "./search-cache";
+import { getBaseUrl } from "./utils/url";
 import {
   generateSmartReply,
   summarizeConversation,
@@ -71,6 +124,11 @@ import {
   generateSEOKeywords, 
   createAIAssistedProduct 
 } from './ai-product-upload';
+import { HolidaysService } from './services/holidays';
+import { cacheService, CACHE_TTL } from './cache-service';
+import { httpCacheMiddleware, cachePresets } from './http-cache-middleware';
+import { CacheInvalidator } from './cache-invalidation';
+import { getCacheStats, resetCacheStats } from './cache-monitor';
 
 import { 
   insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
@@ -81,12 +139,16 @@ import {
   insertCreatorEarningSchema, insertSubscriptionSchema, insertVideoSchema,
   insertVideoEngagementSchema, insertVideoPlaylistSchema, insertPlaylistItemSchema,
   insertVideoProductOverlaySchema, insertCommunityContentSchema,
-  chatrooms, chatroomMessages, chatroomMembers, insertChatroomMessageSchema
+  chatrooms, chatroomMessages, chatroomMembers, insertChatroomMessageSchema,
+  insertCalendarEventSchema, insertCalendarEventParticipantSchema, insertCalendarEventReminderSchema,
+  updateCalendarEventParticipantStatusSchema,
+  insertLifestyleServiceSchema, insertServiceSchema
 } from "@shared/schema";
 
 // Import validation routes
 import validationRoutes from "./routes/validation";
 import { z } from "zod";
+import { logger } from "./logger";
 
 // Email notification function for vendor registration
 async function sendVendorNotificationEmail(user: any, vendor: any, vendorType: string, isApproved: boolean): Promise<void> {
@@ -165,7 +227,7 @@ This is an automated notification from the Dedw3n marketplace system.
 
     await sendEmail({
       to: 'love@dedw3n.com',
-      from: '8e7c36001@smtp-brevo.com',
+      from: process.env.BREVO_SMTP_USER || 'noreply@dedw3n.com',
       subject,
       text,
       html
@@ -173,14 +235,14 @@ This is an automated notification from the Dedw3n marketplace system.
 
     console.log(`[VENDOR_REGISTER] Vendor notification sent for ${vendor.storeName || vendor.businessName}`);
   } catch (error) {
-    console.error('[VENDOR_REGISTER] Failed to send vendor notification:', error);
+    console.error('[VENDOR_REGISTER] Failed to send vendor notification', error);
     throw error;
   }
 }
 
 // Content management API endpoints
 interface PageContent {
-  id: string;
+          id: string;
   title: string;
   content: string;
   lastUpdated: Date;
@@ -189,12 +251,11 @@ interface PageContent {
 // Store static page content
 const pageContents: Record<string, PageContent> = {
   "catalogue-rules": {
-    id: "catalogue-rules",
+          id: "catalogue-rules",
     title: "Catalogue Rules",
     content: `
       <div class="catalogue-rules-content">
         <div class="header-section">
-          <h2>DEDW3N LTD.</h2>
           <h3>Catalogue Rules</h3>
           <p><strong>Version 08-07-2025</strong></p>
           <p><strong>WELCOME TO DEDW3N</strong><br>Thank you for choosing our platform!</p>
@@ -290,87 +351,10 @@ const pageContents: Record<string, PageContent> = {
     lastUpdated: new Date('2025-07-08')
   },
   "tips-tricks": {
-    id: "tips-tricks",
+          id: "tips-tricks",
     title: "Tips & Tricks",
     content: `
       <div class="tips-tricks-content">
-        <div class="header-section">
-          <h2>DEDW3N LTD.</h2>
-          <h3>Tips & Tricks</h3>
-          <p><strong>Version 08-07-2025</strong></p>
-          <p><strong>WELCOME TO DEDW3N</strong><br>Thank you for choosing our platform!</p>
-        </div>
-
-        <div class="dating-title-section">
-          <h2 style="text-align: left; font-size: 2.5rem; font-weight: bold; color: #1f2937; margin: 2rem 0;">DATING</h2>
-        </div>
-
-        <div class="intro-section">
-          <h3>Tips and Tricks</h3>
-          <p>Meeting new people is exciting, but you should always be cautious when communicating with someone you don't know. Use common sense and put your safety first, whether you're exchanging initial messages or meeting in person. While you can't control the actions of others, there are things you can do to stay safe during your Dedw3n experience.</p>
-        </div>
-
-        <div class="personal-info-section">
-          <h3>Protect your personal information</h3>
-          <p>Never share personal information, such as your social security number, home or work address, or details about your daily routine (e.g., that you go to a certain gym every Monday) with people you don't know. If you have children, limit the information you share about them on your profile and in initial conversations. Don't give details such as your children's names, where they go to school, or their age or gender.</p>
-        </div>
-
-        <div class="financial-safety-section">
-          <h3>Never send money or share financial information</h3>
-          <p>Never send money, especially via bank transfer, even if the person claims to be in an emergency situation. Transferring money is like sending cash. It is almost impossible to reverse the transaction or trace where the money has gone. Never share information that could be used to access your financial accounts. If another user asks you for money, report it to us immediately.</p>
-        </div>
-
-        <div class="platform-safety-section">
-          <h3>Stay on the platform</h3>
-          <p>Conduct your conversations on the Dedw3n platform when you are just getting to know someone. Because exchanges on Dedw3n must comply with our secure message filters (more information here), users with malicious intentions often try to move the conversation immediately to text, messaging apps, email or phone.</p>
-        </div>
-
-        <div class="distance-relationships-section">
-          <h3>Be wary of long-distance relationships</h3>
-          <p>Watch out for scammers who claim to be from your country but are stuck somewhere else, especially if they ask for financial help to return home. Be wary of anyone who does not want to meet in person or talk on the phone/video chat. They may not be who they say they are. If someone avoids your questions or insists on a serious relationship without first meeting you or getting to know you, be careful. This is usually a red flag.</p>
-        </div>
-
-        <div class="reporting-section">
-          <h3>Report any suspicious or offensive behaviour</h3>
-          <p>You know when someone crosses the line, and when they do, we want to know about it. Block and report anyone who violates our terms and conditions. Here are some examples of violations:</p>
-          <ul>
-            <li>Requests for money or donations</li>
-            <li>Underage users</li>
-            <li>Harassment, threats and offensive messages</li>
-            <li>Inappropriate or negative behaviour during or after a personal meeting</li>
-            <li>Fraudulent profiles</li>
-            <li>Spam or requests including links to commercial websites or attempts to sell products or services</li>
-          </ul>
-          <p>You can report suspicious behaviour via any profile page or message window, or by sending an email to love@Dedw3n.com.</p>
-        </div>
-
-        <div class="account-security-section">
-          <h3>Secure your account</h3>
-          <p>Make sure you choose a strong password and always be careful when logging into your account from a public or shared computer. Dedw3n will never send you an email asking for your username and password. If you receive an email asking for account information, report it immediately. If you log in with your phone number, do not share your SMS code with anyone. Any website that asks for this code to verify your identity is in no way affiliated with Dedw3n.</p>
-        </div>
-
-        <div class="meeting-person-section">
-          <h3>Meeting in person</h3>
-          
-          <h4>Don't rush</h4>
-          <p>Take your time and get to know the other person before meeting them or chatting outside the Dedw3n platform. Don't be afraid to ask questions to screen for red flags or personal deal-breakers. After moving the conversation outside the Dedw3n platform, a phone call or video chat can be a useful screening tool before meeting someone in person.</p>
-          
-          <h4>Meet in a public place and stay in a public place</h4>
-          <p>For the first few times, meet in a busy, public place. Never meet at home, at your date's house, or at any other private location. If your date pressures you to go to a private location, end the date.</p>
-          
-          <h4>Tell friends and family about your plans</h4>
-          <p>Tell a friend or family member about your plans. Also tell them when you are leaving and where you are going. Make sure you always have a charged phone with you.</p>
-          
-          <h4>Know your limits</h4>
-          <p>Be aware of the effects that drugs or alcohol have on you. They can affect your judgement and alertness. If your date tries to pressure you into using drugs or drinking more than you feel comfortable with, stand your ground and end the date.</p>
-          
-          <h4>Do not leave drinks or personal items unattended</h4>
-          <p>Know where your drink comes from and keep it with you. Only accept drinks that are poured or served directly by the bartender or wait staff. Many substances added to drinks to facilitate sexual assault are odourless, colourless and tasteless. Also, always keep your phone, handbag, wallet and anything containing personal information with you.</p>
-          
-          <h4>If you feel uncomfortable, leave</h4>
-          <p>It is perfectly acceptable to end the date early if you feel uncomfortable. In fact, it is recommended. And if your instincts tell you that something is wrong or you feel unsafe, ask the bartender or wait staff for help.</p>
-        </div>
-
         <div class="marketplace-section">
           <h2>MARKETPLACE</h2>
           
@@ -441,13 +425,67 @@ const pageContents: Record<string, PageContent> = {
             <li><strong>Understand Algorithms:</strong> Social media platforms utilize algorithms to curate user content. Stay informed about changes to these algorithms and their implications for your posts.</li>
             <li><strong>Monitor Your Engagement:</strong> Track the performance of your posts, analyse what resonates with your audience, and adjust your strategy accordingly.</li>
           </ul>
+
+        <div class="dating-section">
+          <h2 style="text-align: left; font-size: 2.5rem; font-weight: bold; color: #1f2937; margin: 2rem 0;">DATING</h2>
+          
+          <h3>Tips and Tricks</h3>
+          <p>Meeting new people is exciting, but you should always be cautious when communicating with someone you don't know. Use common sense and put your safety first, whether you're exchanging initial messages or meeting in person. While you can't control the actions of others, there are things you can do to stay safe during your Dedw3n experience.</p>
+
+          <h3>Protect your personal information</h3>
+          <p>Never share personal information, such as your social security number, home or work address, or details about your daily routine (e.g., that you go to a certain gym every Monday) with people you don't know. If you have children, limit the information you share about them on your profile and in initial conversations. Don't give details such as your children's names, where they go to school, or their age or gender.</p>
+
+          <h3>Never send money or share financial information</h3>
+          <p>Never send money, especially via bank transfer, even if the person claims to be in an emergency situation. Transferring money is like sending cash. It is almost impossible to reverse the transaction or trace where the money has gone. Never share information that could be used to access your financial accounts. If another user asks you for money, report it to us immediately.</p>
+
+          <h3>Stay on the platform</h3>
+          <p>Conduct your conversations on the Dedw3n platform when you are just getting to know someone. Because exchanges on Dedw3n must comply with our secure message filters (more information here), users with malicious intentions often try to move the conversation immediately to text, messaging apps, email or phone.</p>
+
+          <h3>Be wary of long-distance relationships</h3>
+          <p>Watch out for scammers who claim to be from your country but are stuck somewhere else, especially if they ask for financial help to return home. Be wary of anyone who does not want to meet in person or talk on the phone/video chat. They may not be who they say they are. If someone avoids your questions or insists on a serious relationship without first meeting you or getting to know you, be careful. This is usually a red flag.</p>
+
+          <h3>Report any suspicious or offensive behaviour</h3>
+          <p>You know when someone crosses the line, and when they do, we want to know about it. Block and report anyone who violates our terms and conditions. Here are some examples of violations:</p>
+          <ul>
+            <li>Requests for money or donations</li>
+            <li>Underage users</li>
+            <li>Harassment, threats and offensive messages</li>
+            <li>Inappropriate or negative behaviour during or after a personal meeting</li>
+            <li>Fraudulent profiles</li>
+            <li>Spam or requests including links to commercial websites or attempts to sell products or services</li>
+          </ul>
+          <p>You can report suspicious behaviour via any profile page or message window, or by sending an email to love@Dedw3n.com.</p>
+
+          <h3>Secure your account</h3>
+          <p>Make sure you choose a strong password and always be careful when logging into your account from a public or shared computer. Dedw3n will never send you an email asking for your username and password. If you receive an email asking for account information, report it immediately. If you log in with your phone number, do not share your SMS code with anyone. Any website that asks for this code to verify your identity is in no way affiliated with Dedw3n.</p>
+
+          <h3>Meeting in person</h3>
+          
+          <h4>Don't rush</h4>
+          <p>Take your time and get to know the other person before meeting them or chatting outside the Dedw3n platform. Don't be afraid to ask questions to screen for red flags or personal deal-breakers. After moving the conversation outside the Dedw3n platform, a phone call or video chat can be a useful screening tool before meeting someone in person.</p>
+          
+          <h4>Meet in a public place and stay in a public place</h4>
+          <p>For the first few times, meet in a busy, public place. Never meet at home, at your date's house, or at any other private location. If your date pressures you to go to a private location, end the date.</p>
+          
+          <h4>Tell friends and family about your plans</h4>
+          <p>Tell a friend or family member about your plans. Also tell them when you are leaving and where you are going. Make sure you always have a charged phone with you.</p>
+          
+          <h4>Know your limits</h4>
+          <p>Be aware of the effects that drugs or alcohol have on you. They can affect your judgement and alertness. If your date tries to pressure you into using drugs or drinking more than you feel comfortable with, stand your ground and end the date.</p>
+          
+          <h4>Do not leave drinks or personal items unattended</h4>
+          <p>Know where your drink comes from and keep it with you. Only accept drinks that are poured or served directly by the bartender or wait staff. Many substances added to drinks to facilitate sexual assault are odourless, colourless and tasteless. Also, always keep your phone, handbag, wallet and anything containing personal information with you.</p>
+          
+          <h4>If you feel uncomfortable, leave</h4>
+          <p>It is perfectly acceptable to end the date early if you feel uncomfortable. In fact, it is recommended. And if your instincts tell you that something is wrong or you feel unsafe, ask the bartender or wait staff for help.</p>
+        </div>
         </div>
       </div>
     `,
     lastUpdated: new Date('2025-07-08')
   },
   "affiliate-partnerships": {
-    id: "affiliate-partnerships",
+          id: "affiliate-partnerships",
     title: "Affiliate Partnership",
     content: `
       <div class="affiliate-partnerships-content">
@@ -577,13 +615,13 @@ const pageContents: Record<string, PageContent> = {
     lastUpdated: new Date('2025-07-08')
   },
   "faq": {
-    id: "faq",
+          id: "faq",
     title: "Frequently Asked Questions",
     content: `
       <h2>General Questions</h2>
       <div class="faq-item">
         <h3>What is Dedw3n?</h3>
-        <p>Dedw3n is a comprehensive multi-vendor social marketplace and dating platform that creates meaningful digital connections through intelligent, adaptive social experiences. Our platform provides advanced financial interactions with seamless payment mechanisms, including e-wallet integration, real-time transaction processing, and intuitive user interfaces for managing digital transactions.</p>
+        <p>As contemporary artisan developer est. 2024 in London, we embody the dedication, inventiveness, and skill of traditional craftsmen. Rather than merely writing functional code, we prioritize developing meticulously crafted, high-quality, and scalable software solutions that provide outstanding user experiences</p>
       </div>
       
       <div class="faq-item">
@@ -627,7 +665,7 @@ const pageContents: Record<string, PageContent> = {
     lastUpdated: new Date("2025-04-10")
   },
   "shipping": {
-    id: "shipping",
+          id: "shipping",
     title: "Shipping & Returns Policy",
     content: `
       <h2>Shipping Policy</h2>
@@ -662,7 +700,7 @@ const pageContents: Record<string, PageContent> = {
         <li>Follow the instructions to print a return shipping label</li>
         <li>Package the item securely in its original packaging if possible</li>
         <li>Attach the return shipping label and drop off at the specified carrier location</li>
-      </ol>
+      // TODO: Add requireRole('admin') middleware after Passport is fully initialized
       
       <h3>Refunds</h3>
       <p>Once your return is received and inspected, we will process your refund. The refund will be issued to the original payment method within 5-10 business days, depending on your payment provider.</p>
@@ -673,7 +711,7 @@ const pageContents: Record<string, PageContent> = {
     lastUpdated: new Date("2025-04-12")
   },
   "privacy": {
-    id: "privacy",
+          id: "privacy",
     title: "Privacy Policy",
     content: `
       <h2>Dedw3n Ltd</h2>
@@ -937,19 +975,9 @@ const pageContents: Record<string, PageContent> = {
     lastUpdated: new Date("2025-07-08")
   },
   "terms": {
-    id: "terms",
+          id: "terms",
     title: "Terms of Service",
     content: `
-      <h2>DEDW3N LTD. Terms Of Service</h2>
-      <p><strong>Version 08-07-2025</strong></p>
-      
-      <h2>WELCOME TO DEDW3N</h2>
-      <p>Thank you for choosing our platform!</p>
-      
-      <div style="background-color: #f3f4f6; padding: 1rem; border-radius: 0.5rem; margin: 1.5rem 0;">
-        <p><strong>For Business Users:</strong> <a href="/business-terms" style="color: #2563eb; text-decoration: underline;">Visit our Business Terms Of Service</a> for comprehensive business vendor and buyer legal requirements.</p>
-      </div>
-      
       <h3>I. About</h3>
       <p>Dedw3n Ltd. is a British Company registered in England, Wales and Scotland under registration number 15930281, whose registered office is situated 50 Essex Street, London, England, WC2R3JF. Our bank is registered with HSBC UK IBAN GB79 HBUK 4003 2782 3984 94(BIC BUKGB4B), our sole official website is www.dedw3n.com. We also refer to Dedw3n Affiliates, which are all companies within our group.</p>
       
@@ -1306,13 +1334,9 @@ const pageContents: Record<string, PageContent> = {
     lastUpdated: new Date("2025-07-08")
   },
   "cookies": {
-    id: "cookies",
+          id: "cookies",
     title: "Cookie Policy",
     content: `
-      <h2>DEDW3N LTD. Cookie Policy</h2>
-      <p><strong>Version 08-07-2025</strong></p>
-      
-      <h2>WELCOME TO DEDW3N</h2>
       <p>Thank you for choosing our platform!</p>
       
       <p>When you utilize the Dedw3n Website or App (collectively referred to as the "Platform"), we, along with our partners, may automatically store and/or access information on your device through cookies and similar technologies. This data processing is crucial for the operation of the Platform, managing behavioural advertising presented to you on both the Platform and third-party sites, and analysing your engagement with the Platform. This Cookie Policy outlines what cookies are, how we use them, and how you can control them.</p>
@@ -1470,16 +1494,220 @@ const pageContents: Record<string, PageContent> = {
     `,
     lastUpdated: new Date("2025-07-08")
   },
+  "education-policy": {
+          id: "education-policy",
+    title: "Dedw3n Education Policy",
+    content: `
+      <p><strong>Last Updated: April 2025</strong></p>
+      
+      <p>The following terms of service (the "Terms") govern your access to and use of the Learn from Dedw3n platform ("Learn from Dedw3n" or the "Site"), which is owned and operated by Dedw3n International Ltd. ("Dedw3n," also referred to as "we" or "our").</p>
+      
+      <p>Please thoroughly review these Terms prior to utilizing Learn from Dedw3n. By accessing or using Learn from Dedw3n, you acknowledge and consent to be legally bound by these Terms and our Privacy Policy, accessible here, which is incorporated by reference. Should you disagree with these Terms or the Privacy Policy, you are required to cease access or use of the Site. These Terms supplement Dedw3n.com's general terms of service, accessible here (the "Terms of Service"), which also apply to your access and use of Learn from Dedw3n.</p>
+      
+      <p>Learn from Dedw3n acts as a digital marketplace for online courses across various disciplines (the "Courses"), available exclusively to Dedw3n users. All Courses are developed and delivered by independent instructors (the "Instructors"). Dedw3n disclaims responsibility for the content, quality, or academic level of the Courses and does not assure the accuracy or completeness of any information provided by the Instructors. We recommend users to employ our rating system for evaluating the quality of each Course.</p>
+      
+      <p>As a service provider, we do not inspect Courses for legal compliance or assess the legality of their content. Your participation in any Course and its associated materials is at your own risk, and you accept full responsibility for any actions taken post-engagement with a Course.</p>
+      
+      <h3>1. Copyright Infringement</h3>
+      <p>Instructors affirm that all content included in their Courses is original and does not violate any third-party rights, including copyrights, trademarks, or service marks. Where music or stock footage is utilized, Instructors must confirm possession of a valid license for such media.</p>
+      
+      <p>Dedw3n will respond to precise and complete notices of alleged copyright or trademark infringement. Our Intellectual Property claims procedures can be reviewed here.</p>
+      
+      <h3>2. Third-Party Websites</h3>
+      <p>Courses on Learn from Dedw3n may include links to third-party websites not owned or controlled by Dedw3n. Accessing third-party websites is done at your own risk. Dedw3n disclaims liability for any damage or loss incurred from using or relying on information, materials, products, or services obtained through third-party websites. Users should thoroughly review the terms and conditions of each third-party service provider.</p>
+      
+      <h3>3. License</h3>
+      <p>Upon registration for a Course, Instructors grant you a restricted, non-transferable right to view the Course and its related materials for personal, non-commercial use. You are prohibited from distributing, transmitting, assigning, selling, broadcasting, renting, sharing, modifying, creating derivative works of, or otherwise transferring or utilizing the Course.</p>
+      
+      <h3>4. Payment</h3>
+      <p>Courses require advance payment, exclusively via credit card. For additional payment terms, refer to the purchasing section in our Terms of Service here. Applicable indirect taxes (such as sales tax, VAT, or GST) may apply based on your residency and relevant laws.</p>
+      
+      <h3>5. Refunds</h3>
+      <p>If dissatisfied with a Course, contact us via the Contact Us page. Refund requests are accepted within 30 days of purchase.</p>
+      
+      <p><strong>Please Note:</strong> Completion of a Course disqualifies you from a refund. Users with repeated purchase and refund behavior may face suspension for abusing the refund policy.</p>
+      
+      <p>Refunds generally process within 7-12 business days, although they may take up to 30 days to reflect in your account. If over 10 business days have passed since processing, contact your bank directly for updates.</p>
+      
+      <p>For programs with multiple Courses, refunds are only available for incomplete Courses, calculated as the program's total price minus the completed Courses' full price.</p>
+      
+      <h3>6. Promo Codes</h3>
+      <p>We may offer promo codes for Course and program discounts. To apply a promo code, enter it at checkout. Promo codes are non-combinable with other promotions, subject to expiration, non-refundable, and hold no cash value. Dedw3n reserves the right to modify or cancel promo codes at any time.</p>
+      
+      <h3>7. Course Badges and Benefits</h3>
+      <p>Upon successful Course completion, a badge will display on your Seller page. This badge enhances visibility in the marketplace, as Course completion contributes to professional skills.</p>
+      
+      <p>"Successful Completion" involves viewing all video content, completing all exercises, and independently finishing the final exam and/or quizzes.</p>
+      
+      <h3>8. Disclaimer of Warranties</h3>
+      <p>THE SITE AND ITS CONTENT ARE PROVIDED "AS IS" AND "AS AVAILABLE," WITHOUT WARRANTIES OF ANY KIND, WHETHER EXPRESS OR IMPLIED. Dedw3n MAKES NO WARRANTIES OR REPRESENTATIONS REGARDING THE COMPLETENESS, SECURITY, RELIABILITY, QUALITY, ACCURACY, OR AVAILABILITY OF THE WEBSITE. THIS DISCLAIMER DOES NOT AFFECT WARRANTIES THAT CANNOT BE EXCLUDED OR LIMITED UNDER APPLICABLE LAW.</p>
+      
+      <h3>9. Limitation on Liability</h3>
+      <p>IN NO EVENT WILL Dedw3n, ITS AFFILIATES, OR THEIR LICENSORS, SERVICE PROVIDERS, EMPLOYEES, AGENTS, OFFICERS, OR DIRECTORS BE LIABLE FOR DAMAGES ARISING FROM YOUR USE OR INABILITY TO USE THE SITE, ANY LINKED WEBSITES, SITE CONTENT, OR COURSES OBTAINED THROUGH THE SITE OR OTHER WEBSITES. THIS INCLUDES DIRECT, INDIRECT, SPECIAL, INCIDENTAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, EVEN IF FORESEEABLE.</p>
+      
+      <p>THIS LIMITATION DOES NOT AFFECT LIABILITY THAT CANNOT BE EXCLUDED OR LIMITED UNDER APPLICABLE LAW.</p>
+      
+      <p>We reserve the right to suspend your account for any fraudulent or inappropriate activity. Users suspended for Terms of Service violations will lose access to Learn from Dedw3n and their Courses, with refund requests denied.</p>
+      
+      <p>We may amend these Terms periodically. New versions will be available on this page. Continued use of the Site post-amendment constitutes acceptance of the updated Terms.</p>
+      
+      <p>We reserve the right to close or suspend the Site and/or Learn from Dedw3n platform (including badges and related benefits) at any time without notice.</p>
+      
+      <h3>Contact Us</h3>
+      <p>For any inquiries, please contact us at <a href="mailto:legal@dedw3n.com">legal@dedw3n.com</a>.</p>
+    `,
+    lastUpdated: new Date("2025-04-01")
+  },
+  "intellectual-property": {
+          id: "intellectual-property",
+    title: "Intellectual Property Claims Policy",
+    content: `
+      <h3>REPORTING CLAIMS OF INTELLECTUAL PROPERTY</h3>
+      
+      <p>Dedw3n.com's content is based on User Generated Content (UGC). Dedw3n does not check user uploaded/created content for violations of copyright or other rights. However, if you believe any of the uploaded content violates your copyright or a related exclusive right, you should follow the process below. Dedw3n looks into reported violations and removes or disables content shown to be violating third party rights.</p>
+      
+      <p>In case you encounter any violation of intellectual property rights on Dedw3n, please use Dedw3n's easy-to-use online tools, which allow users to add all of the relevant information to their report. Learn more on how to report content on Dedw3n here. In addition, Dedw3n maintains additional reporting flows for DMCA notices and counter-notices, and for trademark infringement, through designated agents, as set forth in detail below.</p>
+      
+      <h3>REPORTING COPYRIGHT CLAIMS UNDER THE US DIGITAL MILLENIUM COPYRIGHT ACT (DMCA)</h3>
+      
+      <p>In case you are reporting under the U.S DMCA, you can either report through the existing online tools, or send an infringement notice ("Infrigement Notice") on our contact form to Dedw3n's designated DMCA agent.</p>
+      
+      <h3>DMCA NOTICE REQUIREMENTS</h3>
+      
+      <p>In order to allow us to review your report promptly and effectively, the Notice should include the following:</p>
+      
+      <ul>
+        <li>Identification of your copyrighted work and what is protected under the copyright(s) that you are referring to.</li>
+        <li>Your copyright certificate(s)/designation(s) and the type, e.g., registered or unregistered.</li>
+        <li>Proof of your copyrights ownership, such as the registration number or a copy of the registration certificate.</li>
+        <li>A short description of how our user(s) allegedly infringe(s) your copyright(s).</li>
+        <li>Clear reference to the materials you allege are infringing and which you are requesting to be removed, for example, the GIG® url, a link to the deliverable provided to a user, etc.</li>
+        <li>Your complete name, address, email address, and telephone number.</li>
+        <li>A statement that you have a good faith belief that use of the material in the manner complained of is not authorized by the copyright owner, its agent, or the law.</li>
+        <li>A statement made under penalty of perjury that the information provided in the notice is accurate and that you are the copyright owner or the owner of an exclusive right that is being infringed, or are authorized to make the complaint on behalf of the copyright owner or the owner of an exclusive right that is being infringed.</li>
+        <li>Your electronic or physical signature.</li>
+      </ul>
+      
+      <p>You can send your Notice to our designated DMCA Claims Agent at:</p>
+      
+      <p><strong>Dedw3n Ltd.<br>
+      Attention: DMCA Claims Agent<br>
+      50 Essex St, Temple, London WC2R3JF<br>
+      England, United Kingdom</strong></p>
+      
+      <p>Alternatively you can submit the Notice electronically to DMCA@Dedw3n.com or by submitting a ticket to our DMCA Agent via our contact us form here.</p>
+      
+      <p>Note that we will provide the user who is allegedly infringing your copyright with information about the Notice and allow them to respond. In cases where sufficient proof of infringement is provided, we may remove or suspend the reported materials prior to receiving the user's response. In cases where the allegedly infringing user provides us with a proper counter-notice indicating that it is permitted to post the allegedly infringing material, we may notify you and then replace the removed or disabled material. In all such cases, we will act in accordance with 17 U.S.C Section 512 and other applicable laws.</p>
+      
+      <p>If you fail to comply with all of the requirements of Section 512(c)(3) of the DMCA, your DMCA Notice may not be effective.</p>
+      
+      <p>Please be aware that if you knowingly materially misrepresent that material or activity on the Website is infringing your copyright, you may be held liable for damages (including costs and attorneys' fees) under Section 512(f) of the DMCA.</p>
+      
+      <h3>DMCA COUNTER-NOTICE REQUIREMENTS</h3>
+      
+      <p>If you believe that material you posted on the site was removed or access to it was disabled by mistake or misidentification, you may file a counter-notice with us (a "Counter-Notice") by submitting written notification to our DMCA Claims agent (identified above). Pursuant to the DMCA, the Counter-Notice must include substantially the following:</p>
+      
+      <ul>
+        <li>Your physical or electronic signature.</li>
+        <li>An identification of the material that has been removed or to which access has been disabled and the location at which the material appeared before it was removed or access disabled.</li>
+        <li>Adequate information by which we can contact you (including your name, postal address, telephone number and, if available, e-mail address).</li>
+        <li>A statement under penalty of perjury by you that you have a good faith belief that the material identified above was removed or disabled as a result of a mistake or misidentification of the material to be removed or disabled.</li>
+        <li>A statement that you will consent to the jurisdiction of the Federal District Court for the judicial district in which your address is located (or if you reside outside the United States for any judicial district in which the Website may be found) and that you will accept service from the person (or an agent of that person) who provided the Website with the complaint at issue.</li>
+      </ul>
+      
+      <p>The DMCA allows us to restore the removed content if the party filing the original DMCA Notice does not file a court action against you within ten business days of receiving the copy of your Counter-Notice. Please be aware that if you knowingly materially misrepresent that material or activity on the Website was removed or disabled by mistake or misidentification, you may be held liable for damages (including costs and attorneys' fees) under Section 512(f) of the DMCA.</p>
+      
+      <h3>REPORTING TRADEMARK INFRINGEMENT</h3>
+      
+      <p>Dedw3n.com's content is based on User Generated Content (UGC). Dedw3n does not check user uploaded/created content for violations of trademark or other rights. However, if you believe any of the uploaded content violates your trademark, you should follow the process below. Dedw3n looks into reported violations and removes or disables content shown to be violating third party trademark rights.</p>
+      
+      <p>In order to allow us to review your report promptly and effectively, a trademark infringement notice ("TM Notice") should include the following:</p>
+      
+      <ul>
+        <li>Identification of your trademark and the goods/services for which you claim trademark rights.</li>
+        <li>Your trademark registration certificate and a printout from the pertinent country's trademark office records showing current status and title of the registration. Alternatively, a statement that your mark is unregistered, together with a court ruling confirming your rights.</li>
+        <li>A short description of how our user(s) allegedly infringe(s) your trademark(s).</li>
+        <li>Clear reference to the materials you allege are infringing and which you are requesting to be removed, for example, the GIG® url, a link to the deliverable provided to a user, etc.</li>
+        <li>Your complete name, address, email address, and telephone number.</li>
+        <li>A statement that you have a good faith belief that use of the material in the manner complained of is not authorized by the trademark owner, its agent, or the law.</li>
+        <li>A statement made under penalty of perjury that the information provided in the notice is accurate and that you are the trademark or are authorized to make the complaint on behalf of the trademark owner.</li>
+        <li>Your electronic or physical signature</li>
+      </ul>
+      
+      <p>You can send your Notice to:</p>
+      
+      <p><strong>Dedw3n Ltd.<br>
+      Attention: DMCA Claims Agent<br>
+      50 Essex St, Temple, London WC2R3JF<br>
+      England, United Kingdom</strong></p>
+      
+      <p>Note that we will provide the user who is allegedly infringing your trademark with information about the TM Notice and allow them to respond. In cases where sufficient proof of infringement is provided, we may remove or suspend the reported materials prior to receiving the user's response. In cases where the allegedly infringing user provides us with information indicating that it is permitted to post the allegedly infringing material, we may notify you and then replace the removed or disabled material. In all such cases, we will act in accordance with applicable law.</p>
+      
+      <h3>REPEAT INFRINGERS</h3>
+      
+      <p>It is our policy in appropriate circumstances to disable and/or terminate the accounts of users who are repeat infringers.</p>
+    `,
+    lastUpdated: new Date("2025-10-26")
+  },
+  "advertisement-terms": {
+          id: "advertisement-terms",
+    title: "Dedw3n Advertisement Terms of Service",
+    content: `
+      <p>The following terms of service (the "Terms") govern your access to and use of the Dedw3n Advertisement program ("Dedw3n Advertisement", the "Program", or the "Service") by Dedw3n Ltd. and its subsidiaries as applicable (collectively, "Dedw3n" or "we").</p>
+      
+      <p>Please read these Terms carefully before you start using Dedw3n Advertisement. By using Dedw3n Advertisement, you accept and agree to be bound and abide by the Terms, incorporated herein by reference. If you do not want to agree to these Terms, you must not access or use the Service. These Terms are supplemental to Dedw3n.com's general Terms of Service (the "Terms of Service"), which also apply to Dedw3n Advertisement. Capitalized terms used but not defined herein shall have the respective meanings given to them in the Terms of Service.</p>
+      
+      <h3>1. Dedw3n Advertisement</h3>
+      <p>The Dedw3n Advertisement Program allows qualified Sellers to promote their business by making their services visible as Advertisement in prime locations in the marketplace (the "Advertisement"), within certain categories. Dedw3n Advertisement uses a first-price auction mechanism to determine the cost and placement of Advertisement from participating Sellers. In Dedw3n Advertisement, Sellers pay a fee only when Buyers click on the Sellers' Advertisement. Dedw3n Advertisement is available for qualified Sellers who meet various quality metrics and are not found to be in violation of the Terms of Service and/or Dedw3n's Community Standards.</p>
+      
+      <h3>2. Bids</h3>
+      <p>A bid is the highest amount the Seller is willing to pay for one click on their Dedw3n Advertisement' Ad. Higher bids may increase Sellers' chances of winning auctions; however, other metrics—such as relevancy or quality (the likelihood of views, sales, etc.)—are also taken into consideration for determining the service's "Ad rank", which ultimately determines the auction winners.</p>
+      
+      <p>Please note that the highest bid does not necessarily win the auction. High-quality services may win auctions with lower bids (while maintaining the highest Ad ranks). Under no circumstances does the Program constitute a guarantee or obligation by Dedw3n to promote your services. Furthermore, we cannot promise that an Ad will be clicked, nor that if the Ad is clicked, that the Dedw3n Ad will be purchased. Should you win an auction, the placement of your Dedw3n Ad, if any, will be subject to Dedw3n's sole choice and discretion. Bids are subject to minimum amounts set by Dedw3n in advance.</p>
+      
+      <h3>3. Auction</h3>
+      <p>Dedw3n Advertisement are based on a "First-Price Auction" process, which means that while the service with the highest Ad rank wins, the price that the Seller will be charged for each click (Cost-Per-Click) is based on the bid for the winning Ad, and calculated automatically by Dedw3n. Click here to learn more.</p>
+      
+      <h3>4. Advertisement Location</h3>
+      <p>Locations of Advertisement on the Site are based on a variety of factors, including the bid amount, the quality of the service, relevance, and others, and in any event, are subject, at any time, to Dedw3n's sole discretion.</p>
+      
+      <h3>5. Daily Limit</h3>
+      <p>The daily limit is the maximum amount a Seller is willing to pay in a single day to promote their services. Sellers are required to define a daily limit in order to turn on Dedw3n Advertisement. A day, for this purpose, is defined as a calendar day in Coordinated Universal Time (UTC).</p>
+      
+      <p>Please note that there is no guarantee that the entire daily limit will be used on any day. The daily limit may be updated by the Seller at any point, with effect no later than the next business day.</p>
+      
+      <h3>6. Payment Terms</h3>
+      <p>Dedw3n Advertisement' fees are charged on a monthly basis, during the first week of each calendar month, based on the clicks made in the previous month. By default, the fee is charged from the Seller's Dedw3n Credits and/or Dedw3n Balance (if there are not enough Dedw3n Credits). However, when there are no sufficient funds in the Seller's Dedw3n Balance, the remaining fee will be charged from the payment method defined by the Seller in their account, or deducted from the Seller's future earnings if no payment method is defined.</p>
+      
+      <p>Sellers may be charged with indirect taxes (such as Sales Tax, VAT, or GST) depending on residency, location, and any applicable law, in addition to the fee which was calculated in the auction process. Please note that the daily limit set by the Sellers does not include any and all taxes.</p>
+      
+      <p>For all other terms, please read the Purchasing section in our Terms of Service.</p>
+      
+      <h3>7. Disclaimer of Warranties</h3>
+      <p>THE Dedw3n Advertisement PROGRAM IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS, WITHOUT ANY WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. NEITHER Dedw3n NOR ANY PERSON ASSOCIATED WITH Dedw3n MAKES ANY WARRANTY OR REPRESENTATION WITH RESPECT TO THE COMPLETENESS, SECURITY, RELIABILITY, QUALITY, ACCURACY, OR AVAILABILITY OF THE SERVICE. THE FOREGOING DOES NOT AFFECT ANY WARRANTIES WHICH CANNOT BE EXCLUDED OR LIMITED UNDER APPLICABLE LAW.</p>
+      
+      <h3>8. Limitation on Liability</h3>
+      <p>IN NO EVENT WILL Dedw3n, ITS AFFILIATES OR THEIR LICENSORS, SERVICE PROVIDERS, EMPLOYEES, AGENTS, OFFICERS, OR DIRECTORS BE LIABLE FOR DAMAGES OF ANY KIND, UNDER ANY LEGAL THEORY, ARISING OUT OF OR IN CONNECTION WITH YOUR USE, OR INABILITY TO USE, THE SITE, ANY WEBSITES LINKED TO IT, ANY CONTENT ON THE WEBSITE OR SUCH OTHER WEBSITES OR ANY COURSES OR ITEMS OBTAINED THROUGH THE WEBSITE OR SUCH OTHER WEBSITES, INCLUDING ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL, CONSEQUENTIAL OR PUNITIVE DAMAGES, INCLUDING BUT NOT LIMITED TO, PERSONAL INJURY, PAIN AND SUFFERING, EMOTIONAL DISTRESS, LOSS OF REVENUE, LOSS OF PROFITS, LOSS OF BUSINESS OR ANTICIPATED SAVINGS, LOSS OF USE, LOSS OF GOODWILL, LOSS OF DATA, AND WHETHER CAUSED BY TORT (INCLUDING NEGLIGENCE), BREACH OF CONTRACT OR OTHERWISE, EVEN IF FORESEEABLE.</p>
+      
+      <p>THE FOREGOING DOES NOT AFFECT ANY LIABILITY WHICH CANNOT BE EXCLUDED OR LIMITED UNDER APPLICABLE LAW.</p>
+      
+      <p>We reserve the right to suspend your account should we notice any activity we determine fraudulent or inappropriate.</p>
+      
+      <p>Users who are suspended from Dedw3n due to a violation of our Terms of Service cannot access the Program.</p>
+      
+      <p>We may make changes to these Terms from time to time. When these changes are made, we will make a new copy of the Terms available on this page.</p>
+      
+      <p>You understand and agree that if you use the Service after the date on which the Terms have changed, we will treat your use as acceptance of the updated Terms.</p>
+      
+      <p>We reserve the right to suspend the Program at any time without notice.</p>
+    `,
+    lastUpdated: new Date("2025-10-26")
+  },
   "business-terms": {
-    id: "business-terms",
+          id: "business-terms",
     title: "Business Terms of Service",
     content: `
       <div class="business-terms-content">
-        <h2>DEDW3N LTD.<br>Terms Of Service<br>Version 08-07-2025</h2>
-        
-        <h3>WELCOME TO DEDW3N</h3>
-        <p>Thank you for choosing our platform!</p>
-        
         <h3>About</h3>
         <p>Dedw3n Ltd. is a British Company registered in England, Wales and Scotland under registration number 15930281, whose registered office is situated 50 Essex Street, London, England, WC2R3JF. Our bank is registered with HSBC UK IBAN GB79 HBUK 4003 2782 3984 94(BIC BUKGB4B), our sole official website is www.dedw3n.com .We also refer to Dedw3n Affiliates, which are all companies within our group.</p>
         
@@ -1828,11 +2056,56 @@ const pageContents: Record<string, PageContent> = {
     `,
     lastUpdated: new Date("2025-09-02")
   },
+  "about-us": {
+          id: "about-us",
+    title: "About Us",
+    content: `<p>Dedw3n is a platform for contemporary artisans to express and expose their art. Dedw3n was founded in 2024 by the Yalusongamo family.</p>
+
+<h3><em><strong>Beginning</strong></em></h3>
+<p>The Yalusongamo family encountered obstacles while trying to connect with contemporary artisans globally. They made it their mission to create equilibrium, allowing all artisans globally to be accessible, by providing a platform (Dedw3n) for artisans to expose their art, no matter the location, social status or background.</p>
+
+<h3><em><strong>Equilibrium</strong></em></h3>
+<p>Dedw3n is a family-run, apolitical and independent enterprise, with a social mission to bring equilibrium and prosperity to all artisans.</p>`,
+    lastUpdated: new Date("2025-01-23")
+  },
+  "code-of-ethics": {
+          id: "code-of-ethics",
+    title: "Code of Ethics",
+    content: `
+      <div class="code-of-ethics-content">
+        <p>At Dedw3n, we are committed to upholding the highest standards of ethics, integrity, and social responsibility in all our operations. Our core values guide our decisions and actions, ensuring a positive impact on our employees, customers, partners, the community, and the planet. We believe that ethical conduct is fundamental to sustainable success and a thriving global society.</p>
+
+        <h3>Non-Discrimination and Equal Opportunity</h3>
+        <p>We are dedicated to fostering a diverse, equitable, and inclusive workplace where all individuals are treated with respect and dignity. We prohibit discrimination based on race, color, religion, gender, sexual orientation, gender identity or expression, national origin, age, disability, or any other protected characteristic. Our policies and practices ensure equal opportunities in all aspects of employment, including recruitment, hiring, training, promotion, and compensation.</p>
+
+        <h3>Anti-Slavery and Human Trafficking</h3>
+        <p>We have zero tolerance for any form of modern slavery, forced labor, or human trafficking. We are committed to ensuring that our supply chains and operations are free from such practices. We adhere to international laws and conventions, including the Universal Declaration of Human Rights and the International Labour Organization (ILO) conventions, to protect human rights and promote fair labor practices. We conduct due diligence to identify and mitigate risks of modern slavery within our operations and supply chains.</p>
+
+        <h3>Planet Protection and Sustainability</h3>
+        <p>We recognize our responsibility to protect the environment and promote sustainable practices. We are committed to minimizing our environmental footprint through responsible resource management, waste reduction, energy efficiency, and the adoption of eco-friendly technologies. We strive to comply with all applicable environmental laws and regulations and continuously seek innovative ways to contribute to a healthier planet for future generations.</p>
+
+        <h3>Compliance with International Laws</h3>
+        <p>We are committed to conducting our business in full compliance with all applicable national and international laws, regulations, and conventions. This includes, but is not limited to, laws related to anti-corruption, anti-bribery, data privacy, competition, and trade. We expect all employees and business partners to adhere to these legal requirements.</p>
+
+        <h3>Anti-Crime and Anti-Corruption</h3>
+        <p>We maintain a strict stance against all forms of criminal activity, including fraud, bribery, corruption, and money laundering. We implement robust internal controls and policies to prevent and detect illegal activities. We are committed to transparent and ethical business practices and will cooperate fully with law enforcement authorities in the investigation of any alleged misconduct.</p>
+
+        <h3>Anti-Racism</h3>
+        <p>We are unequivocally opposed to racism in all its forms. We are committed to creating an environment where racism is not tolerated, and where individuals from all backgrounds feel safe, respected, and valued. We actively promote anti-racist practices and encourage open dialogue to address and eliminate systemic racism within our organization and beyond.</p>
+
+        <h2>Reporting and Accountability</h2>
+        <p>We encourage all employees to report any concerns about potential violations of this Code of Ethics without fear of retaliation. We are committed to investigating all reports thoroughly and taking appropriate corrective action. Accountability for upholding these ethical standards rests with every individual within our organization.</p>
+
+        <p>This Code of Ethics is a living document that will be reviewed and updated periodically to reflect changes in laws, regulations, and best practices.</p>
+      </div>
+    `,
+    lastUpdated: new Date('2025-01-27')
+  },
 };
 
 // FAQ, contact form submissions, etc.
 interface ContactFormSubmission {
-  id: number;
+          id: number;
   name: string;
   email: string;
   subject: string;
@@ -1848,9 +2121,7 @@ let submissionId = 1;
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
 }
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2024-11-20.acacia",
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function registerRoutes(app: Express, httpServer?: Server): Promise<Server> {
   const server = httpServer || createServer(app);
@@ -1858,13 +2129,17 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // SEO routes moved to server/index.ts to be absolutely first
 
   // Store server instance globally for WebSocket setup
-  (global as any).httpServer = server;
+  global.httpServer = server;
 
   // Setup authentication with passport FIRST - before any routes that need auth
   setupAuth(app);
   
-  // Setup JWT authentication routes
-  setupJwtAuth(app);
+  // DISABLED: JWT authentication conflicts with session-based auth
+  // setupJwtAuth(app);
+  
+  // NOTE: Health check endpoints are now defined in server/index.ts
+  // - Public endpoint: GET /health (simple uptime check)
+  // - Admin endpoint: GET /api/health/detailed (requires admin authentication)
   
   // Stripe payment intent creation
   app.post("/api/create-payment-intent", async (req: Request, res: Response) => {
@@ -1945,7 +2220,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const escrowData = await escrowResponse.json();
       
       res.json({
-        id: escrowData.id,
+          id: escrowData.id,
         status: escrowData.status,
         amount: amount,
         currency: currency,
@@ -1955,23 +2230,109 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       res.status(500).json({ message: 'Failed to create escrow transaction' });
     }
   });
-  // Apply fraud risk middleware to all routes
-  app.use(fraudRiskMiddleware);
   
   // Register fraud prevention routes
   registerFraudPreventionRoutes(app);
   
+  // Diagnostic endpoint for notification debugging (admin-only)
+  app.get('/api/diagnostic/notifications-debug', requireRole('admin'), async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      
+      // Get current user info
+      const currentUser = await storage.getUser(req.user.id);
+      
+      // Get all notifications for current user
+      const userNotifications = await storage.getNotifications(req.user.id, 100);
+      
+      // Get total notification count from database
+      const allNotificationsQuery = await db.execute(
+        sql`SELECT COUNT(*) as total FROM notifications`
+      );
+      const totalNotifications = allNotificationsQuery.rows[0]?.total || 0;
+      
+      // Get notifications by user ID
+      const notificationsByUserQuery = await db.execute(
+        sql`SELECT user_id, COUNT(*) as count 
+            FROM notifications 
+            GROUP BY user_id 
+            ORDER BY count DESC 
+            LIMIT 10`
+      );
+      
+      // Get recent notifications (all users)
+      const recentNotificationsQuery = await db.execute(
+        sql`SELECT id, user_id, type, title, created_at 
+            FROM notifications 
+            ORDER BY created_at DESC 
+            LIMIT 10`
+      );
+      
+      return res.json({
+        currentUser: {
+          id: currentUser?.id,
+          username: currentUser?.username,
+          email: currentUser?.email,
+          role: currentUser?.role
+        },
+        userNotifications: {
+          count: userNotifications.length,
+          sample: userNotifications.slice(0, 3).map(n => ({
+          id: n.id,
+            userId: n.userId,
+            type: n.type,
+            title: n.title?.substring(0, 50),
+            createdAt: n.createdAt
+          }))
+        },
+        databaseStats: {
+          totalNotifications,
+          notificationsByUser: notificationsByUserQuery.rows.map(row => ({
+            userId: row.user_id,
+            count: row.count
+          })),
+          recentNotifications: recentNotificationsQuery.rows.map(row => ({
+          id: row.id,
+            userId: row.user_id,
+            type: row.type,
+            title: String(row.title || '').substring(0, 50),
+            createdAt: row.created_at
+          }))
+        }
+      });
+    } catch (error) {
+      console.error('[DIAGNOSTIC] Error', error);
+      return res.status(500).json({ error: 'Diagnostic failed' });
+    }
+  });
+  
   // Notification API endpoints
   // Get all notifications for the authenticated user
   app.get('/api/notifications', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
     try {
       if (!req.user?.id) {
+        console.log('[NOTIFICATIONS] Authentication failed - No user ID found');
         return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
       }
       
+      const username = 'username' in req.user ? req.user.username : 'N/A';
+      const email = 'email' in req.user ? req.user.email : 'N/A';
+      
       const notifications = await storage.getNotifications(req.user.id);
+      
+      console.log(`[NOTIFICATIONS] Query returned ${notifications?.length || 0} notifications for user ID: ${req.user.id}`);
+      
+      if (notifications && notifications.length > 0) {
+      }
+      
       return res.json(notifications);
     } catch (error) {
+      console.error('[NOTIFICATIONS] Error fetching notifications', error);
       return res.status(500).json({ message: 'Failed to fetch notifications' });
     }
   });
@@ -1990,8 +2351,93 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
   
-  // Mark notification as read
+  // Get calendar notification count (upcoming reminders in next 7 days)
+  app.get('/api/calendar/notifications/count', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+      
+      const count = await storage.getCalendarNotificationCount(req.user.id);
+      return res.json({ count });
+    } catch (error) {
+      console.error('Error fetching calendar notification count', error);
+      return res.status(500).json({ message: 'Failed to fetch calendar notification count' });
+    }
+  });
+
+  // Offline mode bootstrap endpoint - aggregates critical resources for caching
+  app.get('/api/offline/bootstrap', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      // Aggregate critical resources in parallel
+      const [
+        userProfile,
+        unreadMessagesCount,
+        unreadNotificationsCount,
+        calendarNotificationsCount,
+        subscriptionStatus
+      ] = await Promise.all([
+        // User profile
+        storage.getUser(req.user.id),
+        // Unread messages count
+        storage.getUnreadMessageCount(req.user.id).catch(() => 0),
+        // Unread notifications count
+        storage.getUnreadNotificationCount(req.user.id).catch(() => 0),
+        // Calendar notifications count
+        storage.getCalendarNotificationCount(req.user.id).catch(() => 0),
+        // Subscription status
+        storage.getUserSubscription(req.user.id).catch(() => null)
+      ]);
+
+      // Return aggregated data
+      const bootstrapData = {
+        user: userProfile,
+        counts: {
+          unreadMessages: unreadMessagesCount,
+          unreadNotifications: unreadNotificationsCount,
+          calendarNotifications: calendarNotificationsCount
+        },
+        subscription: subscriptionStatus,
+        timestamp: Date.now()
+      };
+
+      return res.json(bootstrapData);
+    } catch (error) {
+      console.error('[OfflineBootstrap] Error fetching bootstrap data:', error);
+      return res.status(500).json({ message: 'Failed to fetch offline bootstrap data' });
+    }
+  });
+  
+  // Mark notification as read (PATCH)
   app.patch('/api/notifications/:id/read', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+      
+      const notificationId = parseInt(req.params.id);
+      if (isNaN(notificationId)) {
+        return res.status(400).json({ message: 'Invalid notification ID' });
+      }
+      
+      const updatedNotification = await storage.markNotificationAsRead(notificationId);
+      
+      if (!updatedNotification) {
+        return res.status(404).json({ message: 'Notification not found' });
+      }
+      
+      return res.json(updatedNotification);
+    } catch (error) {
+      return res.status(500).json({ message: 'Failed to update notification' });
+    }
+  });
+
+  // Mark notification as read (POST - alias for frontend compatibility)
+  app.post('/api/notifications/:id/read', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       if (!req.user?.id) {
         return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
@@ -2030,6 +2476,914 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       return res.json({ success: true, message: 'All notifications marked as read' });
     } catch (error) {
       return res.status(500).json({ message: 'Failed to update notifications' });
+    }
+  });
+
+  // Mark all notifications as read (alias for frontend compatibility)
+  app.post('/api/notifications/read-all', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+      
+      const success = await storage.markAllNotificationsAsRead(req.user.id);
+      
+      if (!success) {
+        return res.status(500).json({ message: 'Failed to mark notifications as read' });
+      }
+      
+      return res.json({ success: true, message: 'All notifications marked as read' });
+    } catch (error) {
+      return res.status(500).json({ message: 'Failed to update notifications' });
+    }
+  });
+
+  // Calendar API Routes
+  // Get all calendar events for the authenticated user
+  app.get('/api/calendar/events', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      const { startDate, endDate, category } = req.query;
+      
+      let events;
+      if (category) {
+        events = await storage.getEventsByCategory(req.user.id, category as string);
+      } else if (startDate && endDate) {
+        events = await storage.getUserCalendarEvents(
+          req.user.id,
+          new Date(startDate as string),
+          new Date(endDate as string)
+        );
+      } else {
+        events = await storage.getUserCalendarEvents(req.user.id);
+      }
+      
+      return res.json(events);
+    } catch (error) {
+      console.error('Error fetching calendar events', error);
+      return res.status(500).json({ message: 'Failed to fetch calendar events' });
+    }
+  });
+
+  // Get upcoming events
+  app.get('/api/calendar/events/upcoming', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const events = await storage.getUpcomingEvents(req.user.id, limit);
+      
+      return res.json(events);
+    } catch (error) {
+      console.error('Error fetching upcoming events', error);
+      return res.status(500).json({ message: 'Failed to fetch upcoming events' });
+    }
+  });
+
+  // Get a single calendar event
+  app.get('/api/calendar/events/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      const eventId = parseInt(req.params.id);
+      if (isNaN(eventId)) {
+        return res.status(400).json({ message: 'Invalid event ID' });
+      }
+
+      const event = await storage.getCalendarEvent(eventId);
+      
+      if (!event) {
+        return res.status(404).json({ message: 'Event not found' });
+      }
+
+      // Check if the user has access to this event
+      if (event.userId !== req.user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      return res.json(event);
+    } catch (error) {
+      console.error('Error fetching calendar event', error);
+      return res.status(500).json({ message: 'Failed to fetch calendar event' });
+    }
+  });
+
+  // Create a new calendar event
+  app.post('/api/calendar/events', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      // Validate request body with Zod schema
+      const validationResult = insertCalendarEventSchema.safeParse({
+        ...req.body,
+        userId: req.user.id,
+      });
+
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: 'Invalid event data', 
+          errors: validationResult.error.issues 
+        });
+      }
+
+      const newEvent = await storage.createCalendarEvent(validationResult.data);
+      return res.status(201).json(newEvent);
+    } catch (error) {
+      console.error('Error creating calendar event', error);
+      return res.status(500).json({ message: 'Failed to create calendar event' });
+    }
+  });
+
+  // Update a calendar event
+  app.put('/api/calendar/events/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      const eventId = parseInt(req.params.id);
+      if (isNaN(eventId)) {
+        return res.status(400).json({ message: 'Invalid event ID' });
+      }
+
+      // Validate request body with partial schema for updates
+      const updateSchema = insertCalendarEventSchema.partial().omit({ userId: true });
+      const validationResult = updateSchema.safeParse(req.body);
+
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: 'Invalid event data', 
+          errors: validationResult.error.issues 
+        });
+      }
+
+      const updatedEvent = await storage.updateCalendarEvent(eventId, req.user.id, validationResult.data);
+      
+      if (!updatedEvent) {
+        return res.status(404).json({ message: 'Event not found or access denied' });
+      }
+      
+      return res.json(updatedEvent);
+    } catch (error) {
+      console.error('Error updating calendar event', error);
+      return res.status(500).json({ message: 'Failed to update calendar event' });
+    }
+  });
+
+  // Delete a calendar event
+  app.delete('/api/calendar/events/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      const eventId = parseInt(req.params.id);
+      if (isNaN(eventId)) {
+        return res.status(400).json({ message: 'Invalid event ID' });
+      }
+
+      const success = await storage.deleteCalendarEvent(eventId, req.user.id);
+      
+      if (!success) {
+        return res.status(404).json({ message: 'Event not found or access denied' });
+      }
+      
+      return res.json({ success: true, message: 'Event deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting calendar event', error);
+      return res.status(500).json({ message: 'Failed to delete calendar event' });
+    }
+  });
+
+  // Get event participants
+  app.get('/api/calendar/events/:id/participants', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      const eventId = parseInt(req.params.id);
+      if (isNaN(eventId)) {
+        return res.status(400).json({ message: 'Invalid event ID' });
+      }
+
+      const participants = await storage.getEventParticipants(eventId);
+      return res.json(participants);
+    } catch (error) {
+      console.error('Error fetching event participants', error);
+      return res.status(500).json({ message: 'Failed to fetch event participants' });
+    }
+  });
+
+  // Add event participant
+  app.post('/api/calendar/events/:id/participants', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      const eventId = parseInt(req.params.id);
+      if (isNaN(eventId)) {
+        return res.status(400).json({ message: 'Invalid event ID' });
+      }
+
+      // Validate request body with Zod schema
+      const validationResult = insertCalendarEventParticipantSchema.safeParse({
+        eventId,
+        ...req.body,
+      });
+
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: 'Invalid participant data', 
+          errors: validationResult.error.issues 
+        });
+      }
+
+      const newParticipant = await storage.addEventParticipant(validationResult.data);
+      return res.status(201).json(newParticipant);
+    } catch (error) {
+      console.error('Error adding event participant', error);
+      return res.status(500).json({ message: 'Failed to add event participant' });
+    }
+  });
+
+  // Update participant status
+  app.patch('/api/calendar/events/:id/participants/:userId/status', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      const eventId = parseInt(req.params.id);
+      const userId = parseInt(req.params.userId);
+      
+      if (isNaN(eventId) || isNaN(userId)) {
+        return res.status(400).json({ message: 'Invalid event or user ID' });
+      }
+
+      // Validate request body with Zod schema
+      const validationResult = updateCalendarEventParticipantStatusSchema.safeParse(req.body);
+
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: 'Invalid status value', 
+          errors: validationResult.error.issues 
+        });
+      }
+
+      const updatedParticipant = await storage.updateParticipantStatus(eventId, userId, validationResult.data.status);
+      
+      if (!updatedParticipant) {
+        return res.status(404).json({ message: 'Participant not found' });
+      }
+      
+      return res.json(updatedParticipant);
+    } catch (error) {
+      console.error('Error updating participant status', error);
+      return res.status(500).json({ message: 'Failed to update participant status' });
+    }
+  });
+
+  // Get event reminders
+  app.get('/api/calendar/reminders', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      const reminders = await storage.getEventReminders(req.user.id);
+      return res.json(reminders);
+    } catch (error) {
+      console.error('Error fetching event reminders', error);
+      return res.status(500).json({ message: 'Failed to fetch event reminders' });
+    }
+  });
+
+  // Create event reminder
+  app.post('/api/calendar/reminders', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      // Validate request body with Zod schema
+      const validationResult = insertCalendarEventReminderSchema.safeParse({
+        ...req.body,
+        userId: req.user.id,
+      });
+
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: 'Invalid reminder data', 
+          errors: validationResult.error.issues 
+        });
+      }
+
+      const newReminder = await storage.createEventReminder(validationResult.data);
+      return res.status(201).json(newReminder);
+    } catch (error) {
+      console.error('Error creating event reminder', error);
+      return res.status(500).json({ message: 'Failed to create event reminder' });
+    }
+  });
+
+  // Search calendar events
+  app.get('/api/calendar/events/search', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      const { q } = req.query;
+      
+      if (!q || typeof q !== 'string' || q.trim() === '') {
+        return res.json([]);
+      }
+
+      const events = await storage.searchCalendarEvents(req.user.id, q.trim());
+      return res.json(events);
+    } catch (error) {
+      console.error('Error searching calendar events', error);
+      return res.status(500).json({ message: 'Failed to search calendar events' });
+    }
+  });
+
+  // ============================================================================
+  // GLOBAL HOLIDAYS ROUTES
+  // ============================================================================
+
+  // Get holidays by date range
+  app.get('/api/calendar/holidays', async (req: Request, res: Response) => {
+    try {
+      const { startDate, endDate, countries } = req.query;
+
+      if (!startDate || !endDate) {
+        return res.status(400).json({ message: 'startDate and endDate are required' });
+      }
+
+      const countryCodes = countries
+        ? (Array.isArray(countries) ? countries : [countries]).map(String)
+        : undefined;
+
+      const holidays = await HolidaysService.getHolidaysByDateRange(
+        startDate as string,
+        endDate as string,
+        countryCodes
+      );
+
+      return res.json(holidays);
+    } catch (error) {
+      console.error('Error fetching holidays', error);
+      return res.status(500).json({ message: 'Failed to fetch holidays' });
+    }
+  });
+
+  // Get available countries from Nager.Date API
+  app.get('/api/calendar/holidays/countries', async (_req: Request, res: Response) => {
+    try {
+      const countries = await HolidaysService.getAvailableCountries();
+      return res.json(countries);
+    } catch (error) {
+      console.error('Error fetching available countries', error);
+      return res.status(500).json({ message: 'Failed to fetch available countries' });
+    }
+  });
+
+  // Get countries that have holidays stored in the database
+  app.get('/api/calendar/holidays/stored-countries', async (_req: Request, res: Response) => {
+    try {
+      const countries = await HolidaysService.getStoredCountries();
+      return res.json(countries);
+    } catch (error) {
+      console.error('Error fetching stored countries', error);
+      return res.status(500).json({ message: 'Failed to fetch stored countries' });
+    }
+  });
+
+  // Populate holidays for a specific country and year (admin only)
+  app.post('/api/calendar/holidays/populate', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      if (req.user.role !== 'admin' && req.user.role !== 'moderator') {
+        return res.status(403).json({ message: 'Forbidden - Admin access required' });
+      }
+
+      const { countryCode, year } = req.body;
+
+      if (!countryCode || !year) {
+        return res.status(400).json({ message: 'countryCode and year are required' });
+      }
+
+      const count = await HolidaysService.populateHolidaysForCountry(countryCode, year);
+      return res.json({ message: `Populated ${count} holidays for ${countryCode} in ${year}`, count });
+    } catch (error) {
+      console.error('Error populating holidays', error);
+      return res.status(500).json({ message: 'Failed to populate holidays' });
+    }
+  });
+
+  // Bulk populate holidays for major countries (admin only)
+  app.post('/api/calendar/holidays/populate-bulk', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      if (req.user.role !== 'admin' && req.user.role !== 'moderator') {
+        return res.status(403).json({ message: 'Forbidden - Admin access required' });
+      }
+
+      const { years } = req.body;
+
+      if (!years || !Array.isArray(years)) {
+        return res.status(400).json({ message: 'years array is required' });
+      }
+
+      // Run async without blocking the response
+      HolidaysService.populateHolidaysForMajorCountries(years).catch(err => {
+        console.error('[HOLIDAYS] Bulk population error', err);
+      });
+
+      return res.json({ message: 'Bulk population started in background' });
+    } catch (error) {
+      console.error('Error starting bulk population', error);
+      return res.status(500).json({ message: 'Failed to start bulk population' });
+    }
+  });
+
+  // Comprehensive populate holidays for ALL available countries (admin only)
+  app.post('/api/calendar/holidays/populate-all', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      if (req.user.role !== 'admin' && req.user.role !== 'moderator') {
+        return res.status(403).json({ message: 'Forbidden - Admin access required' });
+      }
+
+      const { years } = req.body;
+
+      if (!years || !Array.isArray(years)) {
+        return res.status(400).json({ message: 'years array is required' });
+      }
+
+      const username = 'username' in req.user ? req.user.username : `User${req.user.id}`;
+
+      // Run async without blocking the response
+      HolidaysService.populateHolidaysForAllCountries(years).catch(err => {
+        console.error('[HOLIDAYS] Comprehensive population error', err);
+      });
+
+      return res.json({ 
+        message: 'Comprehensive holiday population started in background for all available countries',
+        years 
+      });
+    } catch (error) {
+      console.error('Error starting comprehensive population', error);
+      return res.status(500).json({ message: 'Failed to start comprehensive population' });
+    }
+  });
+
+  // ============================================================================
+  // FILE UPLOAD ROUTES FOR CALENDAR ATTACHMENTS
+  // ============================================================================
+
+  app.post('/api/upload/file', unifiedIsAuthenticated, upload.single('file'), async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      const privateObjectDir = objectStorageService.getPrivateObjectDir();
+      
+      const fileName = `calendar-attachments/${req.user.id}/${Date.now()}-${req.file.originalname}`;
+      const fullPath = `${privateObjectDir}/${fileName}`;
+      
+      const { bucketName, objectName } = parseObjectPath(fullPath);
+      const bucket = objectStorageClient.bucket(bucketName);
+      const file = bucket.file(objectName);
+
+      const stream = file.createWriteStream({
+        metadata: {
+          contentType: req.file.mimetype,
+          metadata: {
+            uploadedBy: req.user.id.toString(),
+            originalName: req.file.originalname,
+          }
+        }
+      });
+
+      stream.on('error', (err: Error) => {
+        console.error('Upload stream error', err);
+        if (!res.headersSent) {
+          return res.status(500).json({ message: 'Failed to upload file' });
+        }
+      });
+
+      stream.on('finish', async () => {
+        try {
+          if (!req.user?.id) {
+            if (!res.headersSent) {
+              return res.status(401).json({ message: 'User authentication required' });
+            }
+            return;
+          }
+          
+          await setObjectAclPolicy(file, {
+            owner: req.user.id.toString(),
+            visibility: 'private',
+          });
+
+          const normalizedPath = objectStorageService.normalizeObjectEntityPath(`/${bucketName}/${objectName}`);
+          
+          return res.json({
+            url: normalizedPath,
+            name: req.file!.originalname,
+            type: req.file!.mimetype,
+            size: req.file!.size,
+          });
+        } catch (err) {
+          console.error('Error setting ACL', err);
+          if (!res.headersSent) {
+            return res.status(500).json({ message: 'File uploaded but failed to set permissions' });
+          }
+        }
+      });
+
+      stream.end(req.file.buffer);
+    } catch (error) {
+      console.error('Error uploading file', error);
+      if (!res.headersSent) {
+        return res.status(500).json({ message: 'Failed to upload file' });
+      }
+    }
+  });
+
+  function parseObjectPath(path: string): { bucketName: string; objectName: string } {
+    if (!path.startsWith('/')) {
+      path = `/${path}`;
+    }
+    const pathParts = path.split('/');
+    if (pathParts.length < 3) {
+      throw new Error('Invalid path: must contain at least a bucket name');
+    }
+    const bucketName = pathParts[1];
+    const objectName = pathParts.slice(2).join('/');
+    return { bucketName, objectName };
+  }
+
+  // ============================================================================
+  // LIFESTYLE SERVICES ROUTES
+  // ============================================================================
+
+  // Get all lifestyle services (optionally filtered by category)
+  app.get('/api/lifestyle-services', async (req: Request, res: Response) => {
+    try {
+      const { category } = req.query;
+      const services = await storage.getAllLifestyleServices(category as string | undefined);
+      return res.json(services);
+    } catch (error) {
+      console.error('Error fetching lifestyle services', error);
+      return res.status(500).json({ message: 'Failed to fetch lifestyle services' });
+    }
+  });
+
+  // Get featured lifestyle services
+  app.get('/api/lifestyle-services/featured', async (req: Request, res: Response) => {
+    try {
+      const { category, limit } = req.query;
+      const limitNum = limit ? parseInt(limit as string) : undefined;
+      const services = await storage.getFeaturedLifestyleServices(category as string | undefined, limitNum);
+      return res.json(services);
+    } catch (error) {
+      console.error('Error fetching featured lifestyle services', error);
+      return res.status(500).json({ message: 'Failed to fetch featured lifestyle services' });
+    }
+  });
+
+  // Search lifestyle services
+  app.get('/api/lifestyle-services/search', async (req: Request, res: Response) => {
+    try {
+      const { q, category } = req.query;
+      if (!q) {
+        return res.status(400).json({ message: 'Search query is required' });
+      }
+      const services = await storage.searchLifestyleServices(q as string, category as string | undefined);
+      return res.json(services);
+    } catch (error) {
+      console.error('Error searching lifestyle services', error);
+      return res.status(500).json({ message: 'Failed to search lifestyle services' });
+    }
+  });
+
+  // Get a single lifestyle service by ID
+  app.get('/api/lifestyle-services/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid service ID' });
+      }
+
+      const service = await storage.getLifestyleService(id);
+      if (!service) {
+        return res.status(404).json({ message: 'Lifestyle service not found' });
+      }
+
+      return res.json(service);
+    } catch (error) {
+      console.error('Error fetching lifestyle service', error);
+      return res.status(500).json({ message: 'Failed to fetch lifestyle service' });
+    }
+  });
+
+  // Get user's lifestyle services
+  app.get('/api/lifestyle-services/user/:userId', async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+
+      const { category } = req.query;
+      const services = await storage.getUserLifestyleServices(userId, category as string | undefined);
+      return res.json(services);
+    } catch (error) {
+      console.error('Error fetching user lifestyle services', error);
+      return res.status(500).json({ message: 'Failed to fetch user lifestyle services' });
+    }
+  });
+
+  // Create a new lifestyle service
+  app.post('/api/lifestyle-services', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      // Validate request body with Zod schema
+      const validationResult = insertLifestyleServiceSchema.safeParse({
+        ...req.body,
+        userId: req.user.id,
+      });
+
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: 'Invalid service data', 
+          errors: validationResult.error.issues 
+        });
+      }
+
+      const newService = await storage.createLifestyleService(validationResult.data);
+      return res.status(201).json(newService);
+    } catch (error) {
+      console.error('Error creating lifestyle service', error);
+      return res.status(500).json({ message: 'Failed to create lifestyle service' });
+    }
+  });
+
+  // Update a lifestyle service
+  app.put('/api/lifestyle-services/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid service ID' });
+      }
+
+      // Validate request body with partial schema for updates
+      const updateSchema = insertLifestyleServiceSchema.partial().omit({ userId: true });
+      const validationResult = updateSchema.safeParse(req.body);
+
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: 'Invalid service data', 
+          errors: validationResult.error.issues 
+        });
+      }
+
+      const updatedService = await storage.updateLifestyleService(id, req.user.id, validationResult.data);
+      
+      if (!updatedService) {
+        return res.status(404).json({ message: 'Service not found or access denied' });
+      }
+      
+      return res.json(updatedService);
+    } catch (error) {
+      console.error('Error updating lifestyle service', error);
+      return res.status(500).json({ message: 'Failed to update lifestyle service' });
+    }
+  });
+
+  // Delete a lifestyle service
+  app.delete('/api/lifestyle-services/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid service ID' });
+      }
+
+      const deleted = await storage.deleteLifestyleService(id, req.user.id);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: 'Service not found or access denied' });
+      }
+      
+      return res.json({ message: 'Service deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting lifestyle service', error);
+      return res.status(500).json({ message: 'Failed to delete lifestyle service' });
+    }
+  });
+
+  // Get all services (optionally filtered by category)
+  app.get('/api/services', async (req: Request, res: Response) => {
+    try {
+      const { category } = req.query;
+      const services = await storage.getAllServices(category as string | undefined);
+      return res.json(services);
+    } catch (error) {
+      console.error('Error fetching services', error);
+      return res.status(500).json({ message: 'Failed to fetch services' });
+    }
+  });
+
+  // Get featured services
+  app.get('/api/services/featured', async (req: Request, res: Response) => {
+    try {
+      const { category, limit } = req.query;
+      const limitNum = limit ? parseInt(limit as string) : undefined;
+      const services = await storage.getFeaturedServices(category as string | undefined, limitNum);
+      return res.json(services);
+    } catch (error) {
+      console.error('Error fetching featured services', error);
+      return res.status(500).json({ message: 'Failed to fetch featured services' });
+    }
+  });
+
+  // Search services
+  app.get('/api/services/search', async (req: Request, res: Response) => {
+    try {
+      const { q, category } = req.query;
+      if (!q) {
+        return res.status(400).json({ message: 'Search query is required' });
+      }
+      const services = await storage.searchServices(q as string, category as string | undefined);
+      return res.json(services);
+    } catch (error) {
+      console.error('Error searching services', error);
+      return res.status(500).json({ message: 'Failed to search services' });
+    }
+  });
+
+  // Get a single service by ID
+  app.get('/api/services/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid service ID' });
+      }
+
+      const service = await storage.getService(id);
+      if (!service) {
+        return res.status(404).json({ message: 'Service not found' });
+      }
+
+      return res.json(service);
+    } catch (error) {
+      console.error('Error fetching service', error);
+      return res.status(500).json({ message: 'Failed to fetch service' });
+    }
+  });
+
+  // Get user's services
+  app.get('/api/services/user/:userId', async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+
+      const { category } = req.query;
+      const services = await storage.getUserServices(userId, category as string | undefined);
+      return res.json(services);
+    } catch (error) {
+      console.error('Error fetching user services', error);
+      return res.status(500).json({ message: 'Failed to fetch user services' });
+    }
+  });
+
+  // Create a new service
+  app.post('/api/services', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      // Validate request body with Zod schema
+      const validationResult = insertServiceSchema.safeParse({
+        ...req.body,
+        userId: req.user.id,
+      });
+
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: 'Invalid service data', 
+          errors: validationResult.error.issues 
+        });
+      }
+
+      const newService = await storage.createService(validationResult.data);
+      return res.status(201).json(newService);
+    } catch (error) {
+      console.error('Error creating service', error);
+      return res.status(500).json({ message: 'Failed to create service' });
+    }
+  });
+
+  // Update a service
+  app.put('/api/services/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid service ID' });
+      }
+
+      // Validate request body with partial schema for updates
+      const updateSchema = insertServiceSchema.partial().omit({ userId: true });
+      const validationResult = updateSchema.safeParse(req.body);
+
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: 'Invalid service data', 
+          errors: validationResult.error.issues 
+        });
+      }
+
+      const updatedService = await storage.updateService(id, req.user.id, validationResult.data);
+      
+      if (!updatedService) {
+        return res.status(404).json({ message: 'Service not found or access denied' });
+      }
+      
+      return res.json(updatedService);
+    } catch (error) {
+      console.error('Error updating service', error);
+      return res.status(500).json({ message: 'Failed to update service' });
+    }
+  });
+
+  // Delete a service
+  app.delete('/api/services/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid service ID' });
+      }
+
+      const deleted = await storage.deleteService(id, req.user.id);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: 'Service not found or access denied' });
+      }
+      
+      return res.json({ message: 'Service deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting service', error);
+      return res.status(500).json({ message: 'Failed to delete service' });
     }
   });
   
@@ -2081,7 +3435,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       // Store submission
       const submission: ContactFormSubmission = {
-        id: submissionId++,
+          id: submissionId++,
         name: name.trim(),
         email: email.trim().toLowerCase(),
         subject: subject.trim(),
@@ -2105,7 +3459,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
       
       // Send email using Brevo
-      console.log('[CONTACT] Attempting to send contact email for submission:', submission.id);
       const emailSent = await sendContactEmail({
         name: submission.name,
         email: submission.email,
@@ -2142,69 +3495,139 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Error reporting endpoint for sending error reports via SMTP
+  // RESILIENT: Always succeeds if database save works, email is optional
   app.post('/api/report-error', async (req: Request, res: Response) => {
+    const reportId = `ERR-${Date.now()}`;
+    
     try {
-      const { errorType, errorMessage, url, userAgent, additionalInfo, userEmail } = req.body;
+      const { errorType, errorMessage, url, userAgent, additionalInfo, userEmail, toastTitle, toastDescription } = req.body;
       
       // Basic validation
       if (!errorType || !errorMessage) {
         return res.status(400).json({ message: 'Error type and message are required' });
       }
       
-      // Generate error report content
-      const timestamp = new Date().toISOString();
-      const reportId = `ERR-${Date.now()}`;
-      
-      let emailContent = `ERROR REPORT - ${reportId}\n`;
-      emailContent += `===========================================\n\n`;
-      emailContent += `Timestamp: ${timestamp}\n`;
-      emailContent += `Error Type: ${errorType}\n`;
-      emailContent += `Error Message: ${errorMessage}\n`;
-      emailContent += `Page URL: ${url || 'Not provided'}\n`;
-      emailContent += `User Agent: ${userAgent || 'Not provided'}\n`;
-      
+      // Get user ID if authenticated
+      let userId = null;
       if (req.user) {
-        const user = req.user as any; // Type assertion to access user properties
-        emailContent += `\nUser Information:\n`;
-        emailContent += `- User ID: ${user.id}\n`;
-        emailContent += `- Username: ${user.username || 'N/A'}\n`;
-        emailContent += `- Email: ${user.email || 'N/A'}\n`;
-        emailContent += `- Role: ${user.role || 'N/A'}\n`;
-      } else if (userEmail) {
-        emailContent += `\nReporter Email: ${userEmail}\n`;
+        if ('id' in req.user) {
+          userId = req.user.id;
+        } else if ('userId' in req.user) {
+          userId = req.user.userId;
+        }
       }
-      
-      if (additionalInfo) {
-        emailContent += `\nAdditional Information:\n${additionalInfo}\n`;
-      }
-      
-      emailContent += `\n===========================================\n`;
-      emailContent += `This is an automated error report from Dedw3n platform.\n`;
-      emailContent += `Please investigate and resolve the issue as soon as possible.`;
-      
-      // Send error report email using Brevo
-      const emailSent = await sendContactEmail({
-        name: 'Error Reporting System',
-        email: userEmail || req.user?.email || 'system@dedw3n.com',
-        subject: `Error Report: ${errorType} - ${reportId}`,
-        message: emailContent
-      });
-      
-      if (emailSent) {
-        return res.json({ 
-          success: true, 
-          message: 'Error report has been sent successfully. Thank you for helping us improve!',
-          reportId: reportId
+
+      // PRIMARY: Save toast report to database
+      // This is the critical operation - if this succeeds, we consider the report submitted
+      let dbSaveSuccessful = false;
+      try {
+        await db.insert(toastReports).values({
+          userId,
+          errorType,
+          errorMessage,
+          toastTitle: toastTitle || null,
+          toastDescription: toastDescription || null,
+          url: url || 'Not provided',
+          userAgent: userAgent || null,
+          status: 'pending'
         });
-      } else {
+        dbSaveSuccessful = true;
+        console.log(`[ERROR-REPORT] Successfully saved report ${reportId} to database`);
+      } catch (dbError) {
+        console.error(`[ERROR-REPORT] CRITICAL: Failed to save report ${reportId} to database`, dbError);
+        // If database save fails, this is a real failure
         return res.status(500).json({ 
           success: false,
-          message: 'Failed to send error report. Please try again later.'
+          message: 'Unable to save error report. Please try again later.',
+          reportId: reportId
         });
       }
+      
+      // SECONDARY: Try to send email notification (best effort, non-blocking)
+      // If email fails, we still consider the report successful since it's saved in DB
+      try {
+        const timestamp = new Date().toISOString();
+        
+        let emailContent = `ERROR REPORT - ${reportId}\n`;
+        emailContent += `===========================================\n\n`;
+        emailContent += `Timestamp: ${timestamp}\n`;
+        emailContent += `Error Type: ${errorType}\n`;
+        emailContent += `Error Message: ${errorMessage}\n`;
+        
+        if (toastTitle) {
+          emailContent += `Toast Title: ${toastTitle}\n`;
+        }
+        if (toastDescription) {
+          emailContent += `Toast Description: ${toastDescription}\n`;
+        }
+        
+        emailContent += `Page URL: ${url || 'Not provided'}\n`;
+        emailContent += `User Agent: ${userAgent || 'Not provided'}\n`;
+        
+        if (req.user) {
+          const user = req.user as any;
+          emailContent += `\nUser Information:\n`;
+          emailContent += `- User ID: ${user.id || user.userId}\n`;
+          emailContent += `- Username: ${user.username || 'N/A'}\n`;
+          emailContent += `- Email: ${user.email || 'N/A'}\n`;
+          emailContent += `- Role: ${user.role || 'N/A'}\n`;
+        } else if (userEmail) {
+          emailContent += `\nReporter Email: ${userEmail}\n`;
+        }
+        
+        if (additionalInfo) {
+          emailContent += `\nAdditional Information:\n${additionalInfo}\n`;
+        }
+        
+        emailContent += `\n===========================================\n`;
+        emailContent += `This is an automated error report from Dedw3n platform.\n`;
+        emailContent += `Please investigate and resolve the issue as soon as possible.`;
+        
+        // Get user email if user is authenticated
+        let userEmailToUse = userEmail || 'system@dedw3n.com';
+        if (req.user && !userEmail) {
+          if ('email' in req.user) {
+            userEmailToUse = req.user.email;
+          } else {
+            const fullUser = await storage.getUser(req.user.userId);
+            if (fullUser) {
+              userEmailToUse = fullUser.email;
+            }
+          }
+        }
+
+        // Try to send email - don't await to avoid blocking
+        sendContactEmail({
+          name: 'Error Reporting System',
+          email: userEmailToUse,
+          subject: `Error Report: ${errorType} - ${reportId}`,
+          message: emailContent
+        }).then(emailSent => {
+          if (emailSent) {
+            console.log(`[ERROR-REPORT] Email notification sent for report ${reportId}`);
+          } else {
+          }
+        }).catch(emailError => {
+          console.error(`[ERROR-REPORT] Email error for report ${reportId}`, emailError);
+        });
+      } catch (emailError) {
+        // Email preparation failed, but we already saved to database
+        console.error(`[ERROR-REPORT] Email preparation failed for report ${reportId}`, emailError);
+      }
+      
+      // Always return success if database save succeeded
+      return res.json({ 
+        success: true, 
+        message: 'Error report has been received. Thank you for helping us improve!',
+        reportId: reportId
+      });
+      
     } catch (error) {
+      console.error(`[ERROR-REPORT] Unexpected error processing report ${reportId}`, error);
       return res.status(500).json({ 
-        message: 'An error occurred while processing your error report. Please try again later.' 
+        success: false,
+        message: 'An unexpected error occurred. Please try again later.',
+        reportId: reportId
       });
     }
   });
@@ -2245,8 +3668,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       const isValid = await comparePasswords(password, user.password);
       
-      return res.json({ 
-        username: username,
+      return res.json({
+          username: username,
         passwordValid: isValid,
         storedHashLength: user.password?.length || 0
       });
@@ -2254,10 +3677,193 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       return res.status(500).json({ message: "Test failed" });
     }
   });
+
+  // DISABLED: Conflicting login route - use /api/auth/login instead
+  // app.post('/api/auth/login-with-recaptcha', ...);
+  // All related code removed to prevent syntax errors
+
+  // Update user password
+  app.post('/api/auth/update-password', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: 'Current password and new password are required' });
+      }
+
+      if (newPassword.length < 8) {
+        return res.status(400).json({ message: 'New password must be at least 8 characters long' });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      const isCurrentPasswordValid = await comparePasswords(currentPassword, user.password);
+      if (!isCurrentPasswordValid) {
+        return res.status(401).json({ message: 'Current password is incorrect' });
+      }
+
+      const hashedNewPassword = await hashPassword(newPassword);
+
+      await storage.updateUser(userId, { password: hashedNewPassword });
+
+      console.log(`[AUTH] Password updated successfully for user ${userId}`);
+      
+      return res.json({ message: 'Password updated successfully' });
+    } catch (error) {
+      console.error('[AUTH] Password update failed', error);
+      return res.status(500).json({ message: 'Failed to update password' });
+    }
+  });
+
+  // Configure Brevo API key
+  app.post('/api/brevo/configure', async (req: Request, res: Response) => {
+    try {
+      const { apiKey } = req.body;
+      
+      if (!apiKey || typeof apiKey !== 'string') {
+        return res.status(400).json({ message: 'API key is required' });
+      }
+      
+      const success = setBrevoApiKey(apiKey.trim());
+      
+      if (success) {
+        return res.json({ success: true, message: 'Brevo API key configured successfully' });
+      } else {
+        return res.status(400).json({ message: 'Invalid API key format' });
+      }
+    } catch (error) {
+      return res.status(500).json({ message: 'Failed to configure API key' });
+    }
+  });
+  
+  // Get notification settings
+  app.get('/api/notifications/settings', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+      
+      const settings = await storage.getNotificationSettings(req.user.id);
+      return res.json(settings);
+    } catch (error) {
+      return res.status(500).json({ message: 'Failed to fetch notification settings' });
+    }
+  });
+  
+  // Update notification setting
+  app.patch('/api/notifications/settings', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+      
+      const { type, channel, enabled } = req.body;
+      
+      if (!type || !channel || typeof enabled !== 'boolean') {
+        return res.status(400).json({ message: 'Invalid request. Required fields: type, channel, enabled' });
+      }
+      
+      const updatedSetting = await storage.updateNotificationSetting(
+        req.user.id,
+        type,
+        channel,
+        enabled
+      );
+      
+      if (!updatedSetting) {
+        return res.status(500).json({ message: 'Failed to update notification setting' });
+      }
+      
+      return res.json(updatedSetting);
+    } catch (error) {
+      return res.status(500).json({ message: 'Failed to update notification setting' });
+    }
+  });
+  
+
+  
+  // Page content API endpoints
+  app.get('/api/page/:id', (req: Request, res: Response) => {
+    const { id } = req.params;
+    const pageContent = pageContents[id];
+    
+    if (!pageContent) {
+      return res.status(404).json({ message: `Page content for '${id}' not found` });
+    }
+    
+    res.json(pageContent);
+  });
+  
+  // NOTE: Dynamic sitemap removed to avoid conflicts with static sitemap.xml file
+  // Using static sitemap.xml in public folder for consistency and SEO optimization
+
+  // Duplicate contact endpoint removed - using the full-featured one above with file upload support
+  
+  // Admin-only endpoint to view contact submissions (would add proper authentication in production)
+  app.get('/api/admin/contact-submissions', (req: Request, res: Response) => {
+    // In production, this would be protected by authentication and authorization
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+    
+    res.json(contactSubmissions);
+  });
+  
+  // Register fraud prevention routes
+  registerFraudPreventionRoutes(app);
+  
+  // Unified auth endpoint for getting current user
+  app.get('/api/auth/me', async (req: Request, res: Response) => {
+    console.log('/api/auth/me - Authentication attempt');
+    
+    // First check session authentication
+    if (req.isAuthenticated() && req.user) {
+      return res.json(req.user);
+    }
+    
+    // If not authenticated via session, check JWT
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) { const token = authHeader.substring(7);
+      
+      try {
+        const payload = verifyToken(token);
+        if (payload) {
+          
+          // Look up user from payload
+          const user = await storage.getUser(payload.userId);
+          if (user) {
+            return res.json(user);
+          }
+        } else {
+          console.log('/api/auth/me - Invalid JWT token');
+        }
+      } catch (error) {
+        console.error('[DEBUG] /api/auth/me - JWT verification error', error);
+      }
+    }
+    
+    // If we get here, no valid authentication was found
+    console.log('/api/auth/me - Authentication failed');
+    return res.status(401).json({ 
+      message: 'Unauthorized - No valid authentication',
+      authMethods: ['session', 'bearer'],
+      error: 'invalid_credentials',
+      sessionExists: !!req.session,
+      sessionID: req.sessionID
+    });
+  });
   
   // Debug endpoint for session information - no authentication required
   app.get('/api/debug/session', (req: Request, res: Response) => {
-    console.log('[DEBUG] Session debug endpoint called');
+    console.log('Session debug endpoint called');
     // Return non-sensitive session information for debugging
     res.json({
       hasSession: !!req.session,
@@ -2287,16 +3893,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           return res.status(404).json({ message: 'User not found' });
         }
         
-        console.log(`[AUTH TEST] Found user for login:`, { 
-          id: user.id, 
-          username: user.username,
-          role: user.role
-        });
         
         // Safe session handling - check if regenerate method exists
         const handleLogin = (loginErr: any) => {
           if (loginErr) {
-            console.error('[AUTH TEST] Error logging in test user:', loginErr);
+            console.error('[AUTH TEST] Error logging in test user', loginErr);
             return res.status(500).json({ message: 'Error logging in test user', error: loginErr.message });
           }
           
@@ -2304,12 +3905,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           if (req.session && typeof req.session.save === 'function') {
             req.session.save((saveErr: any) => {
               if (saveErr) {
-                console.error('[AUTH TEST] Error saving session:', saveErr);
+                console.error('[AUTH TEST] Error saving session', saveErr);
               }
               
               console.log(`[AUTH TEST] Test user ${userId} logged in successfully via session`);
               console.log(`[AUTH TEST] Session ID: ${req.sessionID}`);
-              console.log(`[AUTH TEST] Is authenticated:`, req.isAuthenticated());
               
               return res.json({ 
                 success: true, 
@@ -2317,7 +3917,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
                 sessionId: req.sessionID,
                 isAuthenticated: req.isAuthenticated(),
                 user: {
-                  id: user.id,
+          id: user.id,
                   username: user.username,
                   email: user.email,
                   role: user.role,
@@ -2332,7 +3932,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
               success: true, 
               message: `Test user ${userId} logged in successfully`,
               user: {
-                id: user.id,
+          id: user.id,
                 username: user.username,
                 email: user.email,
                 role: user.role,
@@ -2346,7 +3946,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         if (req.session && typeof req.session.regenerate === 'function') {
           req.session.regenerate((regErr: any) => {
             if (regErr) {
-              console.error('[AUTH TEST] Error regenerating session:', regErr);
+              console.error('[AUTH TEST] Error regenerating session', regErr);
               // Fallback: proceed without regeneration
               req.login(user, handleLogin);
               return;
@@ -2355,11 +3955,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           });
         } else {
           // Fallback when regenerate is not available
-          console.warn('[AUTH TEST] Session regenerate not available, using direct login');
           req.login(user, handleLogin);
         }
       } catch (error) {
-        console.error('[AUTH TEST] Error in test login endpoint:', error);
+        console.error('[AUTH TEST] Error in test login endpoint', error);
         return res.status(500).json({ message: 'Server error during test login' });
       }
     });
@@ -2379,11 +3978,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           return res.status(404).json({ message: 'User not found' });
         }
         
-        console.log(`[AUTH TEST] Found user for token:`, { 
-          id: user.id, 
-          username: user.username,
-          role: user.role
-        });
         
         // Import directly to avoid circular dependencies
         const { generateToken } = require('./jwt-auth');
@@ -2394,7 +3988,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           ipAddress: req.ip || ''
         };
         
-        console.log(`[AUTH TEST] Generating token with device info:`, deviceInfo);
         
         const { token, expiresAt } = await generateToken(user.id, user.role || 'user', deviceInfo);
         console.log(`[AUTH TEST] Generated token for user ${userId} (expires: ${new Date(expiresAt).toISOString()})`);
@@ -2405,7 +3998,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           token,
           expiresAt,
           user: {
-            id: user.id,
+          id: user.id,
             username: user.username,
             email: user.email,
             role: user.role
@@ -2417,14 +4010,14 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           }
         });
       } catch (error) {
-        console.error('[AUTH TEST] Error in get-test-token endpoint:', error);
-        return res.status(500).json({ message: 'Server error generating test token' });
+        console.error('Error generating test token:', error);
+        return res.status(500).json({ message: 'Error generating test token' });
       }
     });
         
     // Add test endpoints for debugging
     app.get('/api/auth/test-auth', unifiedIsAuthenticated, (req: Request, res: Response) => {
-      console.log('[DEBUG] Authentication successful in test-auth endpoint');
+      console.log('Authentication successful in test-auth endpoint');
       const user = req.user as any;
       res.json({
         message: 'Authentication successful',
@@ -2502,14 +4095,14 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           });
           
         } catch (error) {
-          console.error('[ERROR] Failed to save test image:', error);
+          console.error('Failed to save test image:', error);
           return res.status(500).json({ 
             success: false,
             message: 'Failed to save image' 
           });
         }
       } catch (error) {
-        console.error('[ERROR] Test image upload failed:', error);
+        console.error('Test image upload failed:', error);
         res.status(500).json({ 
           success: false,
           message: 'Test image upload failed' 
@@ -2523,7 +4116,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         // Clear the existing session
         req.session.destroy((err) => {
           if (err) {
-            console.error('Error destroying session:', err);
+            console.error('Error destroying session', err);
           }
         });
         
@@ -2597,7 +4190,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         // Write the file directly
         fs.writeFileSync(imagePath, imageData);
         
-        console.log(`[DEBUG] Simple image created at: ${imagePath}`);
+        console.log(`Simple image created at: ${imagePath}`);
         
         // Return success with path to the created image
         return res.json({
@@ -2608,7 +4201,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           color: `rgb(${r},${g},${b})`
         });
       } catch (error) {
-        console.error('[ERROR] Failed to create image:', error);
+        console.error('Failed to create image:', error);
         return res.status(500).json({
           success: false,
           message: 'Failed to create image', 
@@ -2619,7 +4212,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     
     // API file upload endpoint using chunked data
     app.post('/api/chunked-upload', (req: Request, res: Response) => {
-      console.log('[DEBUG] Chunked upload endpoint called');
+      console.log('Chunked upload endpoint called');
       
       // Ensure uploads directories exist
       if (!fs.existsSync('./public/uploads')) {
@@ -2660,11 +4253,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
             
             fs.writeFileSync(chunkPath, base64Data, 'base64');
             
-            console.log(`[DEBUG] Saved chunk ${chunkIndex}/${totalChunks} for file ${fileId}`);
+            console.log(`Saved chunk ${chunkIndex}/${totalChunks} for file ${fileId}`);
             
             // If this is the last chunk, combine all chunks
             if (parseInt(chunkIndex) === parseInt(totalChunks) - 1) {
-              console.log(`[DEBUG] All chunks received for ${fileId}, combining...`);
               
               // Filename for the final file
               const filename = `file_${fileId}.png`;
@@ -2680,7 +4272,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
                   const chunkData = fs.readFileSync(currentChunkPath);
                   writeStream.write(chunkData);
                 } else {
-                  console.error(`[ERROR] Missing chunk ${i} for file ${fileId}`);
+                  console.error('Error occurred', `[ERROR] Missing chunk ${i} for file ${fileId}`);
                   return res.status(400).json({
                     success: false,
                     message: `Missing chunk ${i}`
@@ -2716,7 +4308,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
               });
             }
           } catch (error) {
-            console.error(`[ERROR] Error processing chunk ${chunkIndex}:`, error);
+            console.error(`Error processing chunk ${chunkIndex}:`, error);
             return res.status(500).json({
               success: false,
               message: 'Error processing chunk',
@@ -2730,7 +4322,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           });
         }
       } catch (error) {
-        console.error('[ERROR] Chunk upload failed:', error);
+        console.error('Chunk upload failed:', error);
         return res.status(500).json({
           success: false,
           message: 'Chunk upload failed',
@@ -2792,7 +4384,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       });
 
     } catch (error: any) {
-      console.error('Error checking username availability:', error);
+      console.error('Error checking username availability', error);
       return res.status(500).json({
         available: false,
         message: 'Failed to check username availability'
@@ -2802,19 +4394,19 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // Authentication validation endpoints
   app.get('/api/auth/validate', (req, res) => {
-    console.log('[DEBUG] /api/auth/validate - Session validation attempt');
+    console.log('/api/auth/validate - Session validation attempt');
     if (req.isAuthenticated()) {
-      console.log('[DEBUG] /api/auth/validate - User authenticated via session');
+      console.log('/api/auth/validate - User authenticated via session');
       return res.status(200).json({ message: 'Session authentication validated' });
     }
-    console.log('[DEBUG] /api/auth/validate - Session validation failed');
+    console.log('/api/auth/validate - Session validation failed');
     return res.status(401).json({ message: 'Not authenticated' });
   });
   
   // JWT validation - implemented in jwt-auth.ts but added here for consistency
   app.get('/api/auth/jwt/validate', (req, res) => {
     // This will be intercepted by the JWT middleware and only succeed if the JWT is valid
-    console.log('[DEBUG] /api/auth/jwt/validate - JWT validation successful');
+    console.log('/api/auth/jwt/validate - JWT validation successful');
     return res.status(200).json({ message: 'JWT authentication validated' });
   });
   
@@ -2822,9 +4414,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   if (!process.env.STRIPE_SECRET_KEY) {
     throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
   }
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: "2024-11-20.acacia",
-  });
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
   // Stripe payment route for one-time payments
   app.post("/api/create-payment-intent", async (req, res) => {
@@ -2858,14 +4448,463 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.patch('/api/admin/advertisements/:id/status', isAuthenticated, requireRole('admin'), updateAdvertisementStatus);
   app.delete('/api/admin/advertisements/:id', isAuthenticated, requireRole('admin'), deleteAdvertisement);
   
+  // Register admin dashboard routes
+  const { registerAdminDashboardRoutes } = await import('./routes/admin-dashboard');
+  registerAdminDashboardRoutes(app);
+  
+  // Register admin operations routes
+  const { registerAdminOperationsRoutes } = await import('./routes/admin-operations');
+  registerAdminOperationsRoutes(app);
+  
+  // Cache Monitoring and Management Routes
+  app.get('/api/admin/cache/stats', async (req: Request, res: Response) => {
+    try {
+      const stats = getCacheStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching cache stats', error);
+      res.status(500).json({ message: 'Failed to fetch cache stats' });
+    }
+  });
+
+  app.post('/api/admin/cache/clear', async (req: Request, res: Response) => {
+    try {
+      resetCacheStats();
+      res.json({ message: 'Cache cleared successfully' });
+    } catch (error) {
+      console.error('Error clearing cache', error);
+      res.status(500).json({ message: 'Failed to clear cache' });
+    }
+  });
+
+  app.post('/api/admin/cache/invalidate', async (req: Request, res: Response) => {
+    try {
+      const { pattern } = req.body;
+      if (!pattern) {
+        return res.status(400).json({ message: 'Pattern is required' });
+      }
+      
+      CacheInvalidator.invalidatePattern(pattern);
+      res.json({ message: `Cache invalidated for pattern: ${pattern}` });
+    } catch (error) {
+      console.error('Error invalidating cache', error);
+      res.status(500).json({ message: 'Failed to invalidate cache' });
+    }
+  });
+  
+  // Ticket Management Routes
+  app.get('/api/tickets', isAuthenticated, requireRole('admin'), async (req: Request, res: Response) => {
+    try {
+      const { status, department, assignedTo, userId, priority } = req.query;
+      const filters: any = {};
+      
+      if (status) filters.status = status as string;
+      if (department) filters.department = department as string;
+      if (assignedTo) filters.assignedTo = parseInt(assignedTo as string);
+      if (userId) filters.userId = parseInt(userId as string);
+      if (priority) filters.priority = priority as string;
+      
+      const tickets = await storage.getTickets(filters);
+      res.json(tickets);
+    } catch (error) {
+      console.error('Error fetching tickets', error);
+      res.status(500).json({ message: 'Failed to fetch tickets' });
+    }
+  });
+
+  app.get('/api/tickets/stats', isAuthenticated, requireRole('admin'), async (req: Request, res: Response) => {
+    try {
+      const stats = await storage.getTicketStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching ticket stats', error);
+      res.status(500).json({ message: 'Failed to fetch ticket stats' });
+    }
+  });
+
+  app.get('/api/tickets/:id', isAuthenticated, requireRole('admin'), async (req: Request, res: Response) => {
+    try {
+      const ticketId = parseInt(req.params.id);
+      const ticket = await storage.getTicket(ticketId);
+      
+      if (!ticket) {
+        return res.status(404).json({ message: 'Ticket not found' });
+      }
+      
+      const messages = await storage.getTicketMessages(ticketId);
+      const user = ticket.userId ? await storage.getUser(ticket.userId) : null;
+      const assignedUser = ticket.assignedTo ? await storage.getUser(ticket.assignedTo) : null;
+      
+      res.json({
+        ...ticket,
+        messages,
+        user,
+        assignedUser
+      });
+    } catch (error) {
+      console.error('Error fetching ticket', error);
+      res.status(500).json({ message: 'Failed to fetch ticket' });
+    }
+  });
+
+  app.post('/api/tickets', async (req: Request, res: Response) => {
+    try {
+      const { email, senderName, subject, description, department, priority } = req.body;
+      
+      if (!email || !subject || !description || !department) {
+        return res.status(400).json({ message: 'Missing required fields' });
+      }
+      
+      let userId = null;
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        userId = existingUser.id;
+      }
+      
+      const ticket = await storage.createTicket({
+        email,
+        senderName: senderName || email,
+        subject,
+        description,
+        department,
+        priority: priority || 'medium',
+        status: 'open',
+        userId
+      });
+      
+      res.json(ticket);
+    } catch (error) {
+      console.error('Error creating ticket', error);
+      res.status(500).json({ message: 'Failed to create ticket' });
+    }
+  });
+
+  app.patch('/api/tickets/:id', isAuthenticated, requireRole('admin'), async (req: Request, res: Response) => {
+    try {
+      const ticketId = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const ticket = await storage.updateTicket(ticketId, updates);
+      
+      if (!ticket) {
+        return res.status(404).json({ message: 'Ticket not found' });
+      }
+      
+      res.json(ticket);
+    } catch (error) {
+      console.error('Error updating ticket', error);
+      res.status(500).json({ message: 'Failed to update ticket' });
+    }
+  });
+
+  app.post('/api/tickets/:id/assign', isAuthenticated, requireRole('admin'), async (req: Request, res: Response) => {
+    try {
+      const ticketId = parseInt(req.params.id);
+      const { assignedTo } = req.body;
+      
+      if (!assignedTo) {
+        return res.status(400).json({ message: 'assignedTo is required' });
+      }
+      
+      const ticket = await storage.assignTicket(ticketId, assignedTo);
+      
+      if (!ticket) {
+        return res.status(404).json({ message: 'Ticket not found' });
+      }
+      
+      res.json(ticket);
+    } catch (error) {
+      console.error('Error assigning ticket', error);
+      res.status(500).json({ message: 'Failed to assign ticket' });
+    }
+  });
+
+  app.post('/api/tickets/:id/resolve', isAuthenticated, requireRole('admin'), async (req: Request, res: Response) => {
+    try {
+      const ticketId = parseInt(req.params.id);
+      const userId = (req.user as any)?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      
+      const ticket = await storage.resolveTicket(ticketId, userId);
+      
+      if (!ticket) {
+        return res.status(404).json({ message: 'Ticket not found' });
+      }
+      
+      res.json(ticket);
+    } catch (error) {
+      console.error('Error resolving ticket', error);
+      res.status(500).json({ message: 'Failed to resolve ticket' });
+    }
+  });
+
+  app.post('/api/tickets/:id/close', isAuthenticated, requireRole('admin'), async (req: Request, res: Response) => {
+    try {
+      const ticketId = parseInt(req.params.id);
+      const ticket = await storage.closeTicket(ticketId);
+      
+      if (!ticket) {
+        return res.status(404).json({ message: 'Ticket not found' });
+      }
+      
+      res.json(ticket);
+    } catch (error) {
+      console.error('Error closing ticket', error);
+      res.status(500).json({ message: 'Failed to close ticket' });
+    }
+  });
+
+  app.delete('/api/tickets/:id', isAuthenticated, requireRole('admin'), async (req: Request, res: Response) => {
+    try {
+      const ticketId = parseInt(req.params.id);
+      const success = await storage.deleteTicket(ticketId);
+      
+      if (!success) {
+        return res.status(404).json({ message: 'Ticket not found' });
+      }
+      
+      res.json({ message: 'Ticket deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting ticket', error);
+      res.status(500).json({ message: 'Failed to delete ticket' });
+    }
+  });
+
+  app.post('/api/tickets/:id/messages', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const ticketId = parseInt(req.params.id);
+      const { message, isInternal, senderEmail, senderName, sendEmailNotification } = req.body;
+      
+      if (!message) {
+        return res.status(400).json({ message: 'Message is required' });
+      }
+      
+      const userId = (req.user as any)?.id || null;
+      
+      if (sendEmailNotification && !(req.user as any)?.isAdmin) {
+        return res.status(403).json({ message: 'Only admins can send email notifications' });
+      }
+      
+      const ticketMessage = await storage.createTicketMessage({
+        ticketId,
+        userId,
+        message,
+        isInternal: isInternal || false,
+        isEmailReply: false,
+        senderEmail,
+        senderName
+      });
+      
+      if (sendEmailNotification && !isInternal) {
+        const ticket = await storage.getTicket(ticketId);
+        if (ticket && ticket.email) {
+          const adminUser = userId ? await storage.getUser(userId) : null;
+          const adminName = adminUser?.name || adminUser?.username || 'Dedw3n Support';
+          
+          const escapeHtml = (text: string) => {
+            return text
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#039;');
+          };
+          
+          const emailSubject = `Re: ${ticket.subject} [Ticket #${ticket.ticketNumber}]`;
+          const emailText = `Hello,
+
+${message}
+
+---
+This is a response to your support ticket #${ticket.ticketNumber}
+Department: ${ticket.department}
+Status: ${ticket.status}
+
+Please reply to this email to add a message to your ticket.
+
+Best regards,
+${adminName}
+Dedw3n Support Team`;
+
+          const emailHtml = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px;">Support Ticket Update</h2>
+              
+              <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <p style="margin: 5px 0;"><strong>Ticket #${escapeHtml(ticket.ticketNumber)}</strong></p>
+                <p style="margin: 5px 0; color: #666;">Department: ${escapeHtml(ticket.department)} | Status: ${escapeHtml(ticket.status)}</p>
+              </div>
+              
+              <div style="background: white; padding: 20px; border-left: 4px solid #007bff; margin: 20px 0;">
+                <p style="line-height: 1.6; color: #333; white-space: pre-wrap;">${escapeHtml(message)}</p>
+              </div>
+              
+              <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+              
+              <p style="color: #888; font-size: 12px;">
+                This is a response to your support ticket. Reply to this email to add a message to your ticket.
+              </p>
+              
+              <p style="color: #888; font-size: 12px; margin-top: 20px;">
+                Best regards,<br>
+                ${escapeHtml(adminName)}<br>
+                Dedw3n Support Team
+              </p>
+            </div>
+          `;
+          
+          try {
+            const emailSent = await sendEmail({
+              to: ticket.email,
+              from: process.env.BREVO_SMTP_USER || 'noreply@dedw3n.com',
+              subject: emailSubject,
+              text: emailText,
+              html: emailHtml
+            });
+            
+            if (!emailSent) {
+              console.error('Error occurred', `[TICKET] Failed to send email notification to ${ticket.email} for ticket #${ticket.ticketNumber}`);
+              return res.status(502).json({ 
+                message: 'Message saved but email notification failed to send',
+                ticketMessage,
+                emailSent: false
+              });
+            }
+            
+            console.log(`[TICKET] Email notification sent to ${ticket.email} for ticket #${ticket.ticketNumber}`);
+          } catch (emailError) {
+            console.error('[TICKET] Error sending email notification', emailError);
+            return res.status(502).json({ 
+              message: 'Message saved but email notification failed to send', 
+              ticketMessage,
+              emailSent: false,
+              error: emailError instanceof Error ? emailError.message : 'Unknown error'
+            });
+          }
+        }
+      }
+      
+      res.json(ticketMessage);
+    } catch (error) {
+      console.error('Error creating ticket message', error);
+      res.status(500).json({ message: 'Failed to create ticket message' });
+    }
+  });
+
+  app.get('/api/tickets/:id/messages', async (req: Request, res: Response) => {
+    try {
+      const ticketId = parseInt(req.params.id);
+      const messages = await storage.getTicketMessages(ticketId);
+      res.json(messages);
+    } catch (error) {
+      console.error('Error fetching ticket messages', error);
+      res.status(500).json({ message: 'Failed to fetch ticket messages' });
+    }
+  });
+
+  app.post('/api/webhooks/email-inbound', async (req: Request, res: Response) => {
+    try {
+      const DEBUG_WEBHOOKS = process.env.DEBUG_WEBHOOKS === 'true';
+      
+      if (DEBUG_WEBHOOKS) {
+      }
+      
+      const brevoEmail = req.body.items?.[0]?.email;
+      const fromArray = brevoEmail?.from || req.body.from;
+      const toArray = brevoEmail?.to || req.body.to;
+      const subject = brevoEmail?.subject || req.body.subject;
+      const text = brevoEmail?.text || req.body.text;
+      const html = brevoEmail?.html || req.body.html;
+      const headers = brevoEmail?.headers || {};
+      
+      const from = Array.isArray(fromArray) ? fromArray[0]?.address || fromArray[0] : fromArray;
+      const senderName = Array.isArray(fromArray) ? fromArray[0]?.name : headers['From']?.split('<')[0].trim();
+      const to = Array.isArray(toArray) ? toArray[0]?.address || toArray[0] : toArray;
+      
+      
+      if (!from || !subject || (!text && !html)) {
+        return res.status(400).json({ 
+          message: 'Missing required email fields',
+          received: { from: !!from, subject: !!subject, text: !!text, html: !!html },
+          hint: 'Expected Brevo inbound payload with items[0].email structure'
+        });
+      }
+      
+      const department = determineDepartmentFromEmail(to);
+      const emailContent = text || html || '';
+      
+      
+      let userId = null;
+      const existingUser = await storage.getUserByEmail(from);
+      if (existingUser) {
+        userId = existingUser.id;
+      }
+      
+      const ticket = await storage.createTicket({
+        email: from,
+        senderName: senderName || from.split('@')[0],
+        subject,
+        description: emailContent.substring(0, 5000),
+        department,
+        priority: 'medium',
+        status: 'open',
+        userId
+      });
+      
+      console.log(`[WEBHOOK] ✅ Ticket #${ticket.ticketNumber} created: ${from} → ${department}`);
+      
+      res.json({ 
+        success: true, 
+        ticketNumber: ticket.ticketNumber,
+        department,
+        message: 'Ticket created from inbound email'
+      });
+    } catch (error) {
+      console.error('[WEBHOOK] Error processing inbound email', error);
+      res.status(500).json({ 
+        message: 'Failed to process email',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  function determineDepartmentFromEmail(recipientEmail: string | undefined): string {
+    if (!recipientEmail) return 'operations';
+    
+    const email = recipientEmail.toLowerCase();
+    
+    if (email.includes('tech') || email.includes('support')) return 'tech';
+    if (email.includes('legal')) return 'legal';
+    if (email.includes('marketing')) return 'marketing';
+    if (email.includes('sales')) return 'sales';
+    if (email.includes('finance') || email.includes('billing')) return 'finance';
+    if (email.includes('hr') || email.includes('human')) return 'hr';
+    
+    return 'operations';
+  }
+  
+  // Register storage diagnostics routes (admin only)
+  const { registerStorageDiagnosticsRoutes } = await import('./storage-diagnostics-routes');
+  registerStorageDiagnosticsRoutes(app);
+  
   // Register AI insights routes
   registerAIInsightsRoutes(app);
 
-  // Register image handling routes
-  registerImageRoutes(app);
+  // OLD EPHEMERAL HANDLERS - REPLACED WITH PERSISTENT OBJECT STORAGE IN server/index.ts
+  // registerImageRoutes(app);
+  // registerMediaRoutes(app);
   
-  // Register media handling routes for images and videos
-  registerMediaRoutes(app);
+  // Register presigned URL routes for direct-to-storage uploads (fast, client-side validation)
+  registerPresignedUploadRoutes(app);
+  
+  // Register secure upload proxy routes (server-side size enforcement)
+  registerSecureUploadRoutes(app);
+  
+  // Register image cache routes for optimized serving
+  registerImageCacheRoutes(app);
 
   // Create HTTP server from Express
   // Register news feed routes
@@ -2877,6 +4916,131 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Register shipping routes
   registerShippingRoutes(app);
   
+  // Protected endpoint for uploading post media (images/videos) to Object Storage
+  app.post("/api/posts/upload-media", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const { mediaData, postId } = req.body;
+      
+      if (!mediaData) {
+        return res.status(400).json({ message: "Media data is required" });
+      }
+
+      // Use a temporary postId of 0 if not provided (for new posts)
+      const effectivePostId = postId || 0;
+
+      console.log(`[POST-MEDIA-UPLOAD] Uploading media for post ${effectivePostId}`);
+
+      const { communityPostProtection } = await import('./community-post-protection');
+      const result = await communityPostProtection.uploadMedia(effectivePostId, mediaData);
+
+      console.log(`[POST-MEDIA-UPLOAD] Successfully uploaded media: ${result.url}`);
+
+      res.json({
+        success: true,
+        message: 'Media uploaded successfully',
+        url: result.url,
+        publicUrl: result.publicUrl,
+        filename: result.filename,
+        timestamp: result.timestamp
+      });
+    } catch (error) {
+      console.error('[POST-MEDIA-UPLOAD] Error uploading media', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Failed to upload media',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Protected endpoint for updating post media with automatic backup
+  app.post("/api/posts/:id/update-media", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const postId = parseInt(req.params.id);
+      if (isNaN(postId)) {
+        return res.status(400).json({ message: "Invalid post ID" });
+      }
+
+      const { mediaData, mediaType } = req.body;
+      
+      if (!mediaData) {
+        return res.status(400).json({ message: "Media data is required" });
+      }
+
+      if (!mediaType || !['image', 'video'].includes(mediaType)) {
+        return res.status(400).json({ message: "Media type must be 'image' or 'video'" });
+      }
+
+      // Get the existing post
+      const post = await storage.getPostById(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      // Verify the user owns this post
+      if (post.userId !== userId) {
+        return res.status(403).json({ message: "You don't have permission to update this post" });
+      }
+
+      console.log(`[POST-MEDIA-UPDATE] Updating ${mediaType} for post ${postId}`);
+
+      const { communityPostProtection } = await import('./community-post-protection');
+
+      // Create backup of existing media if it exists
+      let backupInfo = null;
+      const existingUrl = mediaType === 'image' ? post.imageUrl : post.videoUrl;
+      
+      if (existingUrl) {
+        backupInfo = await communityPostProtection.createBackup(postId, existingUrl);
+        if (backupInfo) {
+          console.log(`[POST-MEDIA-UPDATE] Backup created: ${backupInfo.url}`);
+        }
+      }
+
+      // Upload new media
+      const result = await communityPostProtection.uploadMedia(postId, mediaData);
+
+      // Update the post in the database
+      const updateData: any = {};
+      if (mediaType === 'image') {
+        updateData.imageUrl = result.url;
+      } else {
+        updateData.videoUrl = result.url;
+      }
+
+      await storage.updatePost(postId, updateData);
+
+      console.log(`[POST-MEDIA-UPDATE] Successfully updated ${mediaType}: ${result.url}`);
+
+      res.json({
+        success: true,
+        message: `${mediaType} updated successfully`,
+        url: result.url,
+        publicUrl: result.publicUrl,
+        filename: result.filename,
+        backupCreated: !!backupInfo,
+        backupUrl: backupInfo?.url || null
+      });
+    } catch (error) {
+      console.error('[POST-MEDIA-UPDATE] Error updating media', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Failed to update media',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
   // Post creation endpoint
   app.post("/api/posts", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
@@ -2885,27 +5049,210 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(401).json({ message: "User not authenticated" });
       }
 
-      const postData = {
+      let imageUrl = req.body.imageUrl || null;
+      let videoUrl = req.body.videoUrl || null;
+
+      // Auto-upload base64 image data to Object Storage
+      if (imageUrl && imageUrl.startsWith('data:image/')) {
+        console.log('[POST-CREATE] Detected base64 image, uploading to Object Storage');
+        const { communityPostProtection } = await import('./community-post-protection');
+        const uploadResult = await communityPostProtection.uploadMedia(0, imageUrl);
+        imageUrl = uploadResult.url;
+        console.log('[POST-CREATE] Image uploaded successfully:', imageUrl);
+      }
+
+      // Auto-upload base64 video data to Object Storage
+      if (videoUrl && videoUrl.startsWith('data:video/')) {
+        try {
+          console.log('[POST-CREATE] Detected base64 video, uploading to Object Storage');
+          const { communityPostProtection } = await import('./community-post-protection');
+          const uploadResult = await communityPostProtection.uploadMedia(0, videoUrl);
+          videoUrl = uploadResult.url;
+          console.log('[POST-CREATE] Video uploaded successfully:', videoUrl);
+        } catch (error) {
+          console.error('[POST-CREATE] Video upload failed', error);
+          return res.status(400).json({
+            message: "Video upload failed",
+            error: error instanceof Error ? error.message : "Failed to upload video to storage",
+            code: "VIDEO_UPLOAD_FAILED"
+          });
+        }
+      }
+
+      // Validate that no base64 data slips through (defensive programming)
+      if ((imageUrl && imageUrl.startsWith('data:')) || (videoUrl && videoUrl.startsWith('data:'))) {
+        return res.status(400).json({
+          message: 'Base64 media data must be uploaded to Object Storage before saving',
+          code: 'INVALID_MEDIA_FORMAT'
+        });
+      }
+
+      // Modern CMS: Sync publishStatus with isPublished for backward compatibility
+      const publishStatus = req.body.publishStatus ?? 'published';
+      const isPublished = publishStatus === 'published'; // Synchronized: published = true, draft/scheduled/archived = false
+
+      const { insertPostSchema } = await import('../shared/schema.js');
+      const postData = insertPostSchema.parse({
         userId,
-        content: req.body.content || "",
-        title: req.body.title || null,
-        contentType: req.body.contentType || "text",
-        imageUrl: req.body.imageUrl || null,
-        videoUrl: req.body.videoUrl || null,
-        tags: req.body.tags || null,
-        productId: req.body.productId || null, // Support for product reposts
-        isPublished: true,
-        likes: 0,
-        comments: 0,
-        shares: 0,
-        views: 0
-      };
+        content: req.body.content ?? "",
+        title: req.body.title ?? null,
+        contentType: req.body.contentType ?? "standard",
+        imageUrl: imageUrl ?? null,
+        videoUrl: videoUrl ?? null,
+        tags: req.body.tags ?? null,
+        productId: req.body.productId ? parseInt(req.body.productId) : null,
+        eventId: req.body.eventId ? parseInt(req.body.eventId) : null,
+        // Modern CMS fields
+        publishStatus, // draft | scheduled | published | archived
+        publishAt: req.body.publishAt ?? null,
+        contentJson: req.body.contentJson ?? null, // Lexical editor state
+        contentVersion: 1, // Initial version
+        // Legacy field (synchronized)
+        isPublished
+      });
 
       const newPost = await storage.createPost(postData);
       res.status(201).json(newPost);
     } catch (error) {
-      console.error("Error creating post:", error);
+      console.error('Error creating post', error);
       res.status(500).json({ message: "Failed to create post" });
+    }
+  });
+
+  // Post update endpoint
+  app.put("/api/posts/:id", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const postId = parseInt(req.params.id);
+      if (isNaN(postId)) {
+        return res.status(400).json({ message: "Invalid post ID" });
+      }
+
+      const existingPost = await storage.getPostById(postId);
+      if (!existingPost) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      if (existingPost.userId !== userId) {
+        return res.status(403).json({ message: "You don't have permission to update this post" });
+      }
+
+      let imageUrl = req.body.imageUrl !== undefined ? req.body.imageUrl : existingPost.imageUrl;
+      let videoUrl = req.body.videoUrl !== undefined ? req.body.videoUrl : existingPost.videoUrl;
+
+      const { communityPostProtection } = await import('./community-post-protection');
+
+      // Auto-upload base64 image data to Object Storage with backup
+      if (imageUrl && imageUrl.startsWith('data:image/')) {
+        console.log('[POST-UPDATE] Detected base64 image, uploading to Object Storage');
+        if (existingPost.imageUrl) {
+          await communityPostProtection.createBackup(postId, existingPost.imageUrl);
+        }
+        const uploadResult = await communityPostProtection.uploadMedia(postId, imageUrl);
+        imageUrl = uploadResult.url;
+        console.log('[POST-UPDATE] Image uploaded successfully:', imageUrl);
+      }
+
+      // Auto-upload base64 video data to Object Storage with backup
+      if (videoUrl && videoUrl.startsWith('data:video/')) {
+        try {
+          console.log('[POST-UPDATE] Detected base64 video, uploading to Object Storage');
+          if (existingPost.videoUrl) {
+            await communityPostProtection.createBackup(postId, existingPost.videoUrl);
+          }
+          const uploadResult = await communityPostProtection.uploadMedia(postId, videoUrl);
+          videoUrl = uploadResult.url;
+          console.log('[POST-UPDATE] Video uploaded successfully:', videoUrl);
+        } catch (error) {
+          console.error('[POST-UPDATE] Video upload failed', error);
+          return res.status(400).json({
+            message: "Video upload failed",
+            error: error instanceof Error ? error.message : "Failed to upload video to storage",
+            code: "VIDEO_UPLOAD_FAILED"
+          });
+        }
+      }
+
+      // Validate that no base64 data slips through
+      if ((imageUrl && imageUrl.startsWith('data:')) || (videoUrl && videoUrl.startsWith('data:'))) {
+        return res.status(400).json({
+          message: 'Base64 media data must be uploaded to Object Storage before saving',
+          code: 'INVALID_MEDIA_FORMAT'
+        });
+      }
+
+      // Modern CMS: Sync publishStatus with isPublished for backward compatibility
+      const publishStatus = req.body.publishStatus !== undefined ? req.body.publishStatus : (existingPost.publishStatus || 'draft');
+      const isPublished = publishStatus === 'published'; // Synchronized: published = true, draft/scheduled/archived = false
+
+      // Modern CMS: Increment content version if content changed
+      const contentChanged = req.body.content !== undefined || req.body.contentJson !== undefined;
+      const contentVersion = contentChanged ? ((existingPost.contentVersion || 1) + 1) : (existingPost.contentVersion || 1);
+
+      const updateData: any = {
+        content: req.body.content,
+        title: req.body.title,
+        imageUrl,
+        videoUrl,
+        tags: req.body.tags,
+        // Modern CMS fields
+        publishStatus,
+        publishAt: req.body.publishAt !== undefined ? req.body.publishAt : existingPost.publishAt,
+        contentJson: req.body.contentJson !== undefined ? req.body.contentJson : existingPost.contentJson,
+        contentVersion,
+        // Legacy field (synchronized)
+        isPublished,
+      };
+
+      const updatedPost = await storage.updatePost(postId, updateData);
+      res.json(updatedPost);
+    } catch (error) {
+      console.error('Error updating post', error);
+      res.status(500).json({ message: "Failed to update post" });
+    }
+  });
+
+  // Publish draft post endpoint
+  app.patch("/api/posts/:id/publish", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const postId = parseInt(req.params.id);
+      if (isNaN(postId)) {
+        return res.status(400).json({ message: "Invalid post ID" });
+      }
+
+      const existingPost = await storage.getPostById(postId);
+      if (!existingPost) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      if (existingPost.userId !== userId) {
+        return res.status(403).json({ message: "You don't have permission to publish this post" });
+      }
+
+      if (existingPost.publishStatus !== 'draft') {
+        return res.status(400).json({ message: "Only draft posts can be published" });
+      }
+
+      const updateData = {
+        publishStatus: 'published' as const,
+        isPublished: true,
+        publishedAt: new Date()
+      };
+
+      const updatedPost = await storage.updatePost(postId, updateData);
+      res.json(updatedPost);
+    } catch (error) {
+      console.error('Error publishing post', error);
+      res.status(500).json({ message: "Failed to publish post" });
     }
   });
 
@@ -2921,7 +5268,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json(post);
     } catch (error) {
-      console.error('Error fetching post:', error);
+      console.error('Error fetching post', error);
       res.status(500).json({ message: 'Failed to fetch post' });
     }
   });
@@ -2933,7 +5280,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const comments = await storage.getPostComments(postId);
       res.json(comments);
     } catch (error) {
-      console.error('Error fetching comments:', error);
+      console.error('Error fetching comments', error);
       res.status(500).json({ message: 'Failed to fetch comments' });
     }
   });
@@ -2960,12 +5307,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.status(201).json(comment);
     } catch (error) {
-      console.error('Error adding comment:', error);
+      console.error('Error adding comment', error);
       res.status(500).json({ message: 'Failed to add comment' });
     }
   });
 
-  // Like/unlike a post
+  // Like a post
   app.post('/api/posts/:id/like', unifiedIsAuthenticated, async (req, res) => {
     try {
       const postId = parseInt(req.params.id);
@@ -2973,8 +5320,21 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const result = await storage.togglePostLike(postId, userId);
       res.json(result);
     } catch (error) {
-      console.error('Error toggling like:', error);
+      console.error('Error toggling like', error);
       res.status(500).json({ message: 'Failed to toggle like' });
+    }
+  });
+
+  // Unlike a post
+  app.delete('/api/posts/:id/like', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const userId = (req.user as any)?.id;
+      const result = await storage.togglePostLike(postId, userId);
+      res.json(result);
+    } catch (error) {
+      console.error('Error toggling unlike', error);
+      res.status(500).json({ message: 'Failed to toggle unlike' });
     }
   });
 
@@ -2986,8 +5346,21 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const result = await storage.togglePostSave(postId, userId);
       res.json(result);
     } catch (error) {
-      console.error('Error toggling save:', error);
+      console.error('Error toggling save', error);
       res.status(500).json({ message: 'Failed to toggle save' });
+    }
+  });
+
+  // Unsave a post
+  app.delete('/api/posts/:id/save', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const userId = (req.user as any)?.id;
+      const result = await storage.togglePostSave(postId, userId);
+      res.json(result);
+    } catch (error) {
+      console.error('Error toggling unsave', error);
+      res.status(500).json({ message: 'Failed to toggle unsave' });
     }
   });
 
@@ -2998,7 +5371,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       await storage.incrementPostShares(postId);
       res.json({ message: 'Post shared successfully' });
     } catch (error) {
-      console.error('Error sharing post:', error);
+      console.error('Error sharing post', error);
       res.status(500).json({ message: 'Failed to share post' });
     }
   });
@@ -3010,7 +5383,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       await storage.incrementPostViews(postId);
       res.json({ message: 'View tracked' });
     } catch (error) {
-      console.error('Error tracking view:', error);
+      console.error('Error tracking view', error);
       res.status(500).json({ message: 'Failed to track view' });
     }
   });
@@ -3024,7 +5397,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const liked = await storage.checkPostLike(postId, userId);
       res.json({ liked });
     } catch (error) {
-      console.error('Error checking like status:', error);
+      console.error('Error checking like status', error);
       res.status(500).json({ message: 'Failed to check like status' });
     }
   });
@@ -3038,8 +5411,46 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const saved = await storage.checkPostSave(postId, userId);
       res.json({ saved });
     } catch (error) {
-      console.error('Error checking save status:', error);
+      console.error('Error checking save status', error);
       res.status(500).json({ message: 'Failed to check save status' });
+    }
+  });
+
+  // Report a post
+  app.post('/api/reports/post', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      const { postId, reason, description } = req.body;
+
+      if (!postId || !reason) {
+        return res.status(400).json({ message: 'Post ID and reason are required' });
+      }
+
+      // Validate the report data using the insert schema
+      const reportData = insertModerationReportSchema.parse({
+        reportType: 'post',
+        reporterId: userId,
+        subjectId: postId,
+        subjectType: 'post',
+        reason: reason,
+        description: description || null,
+        status: 'pending',
+      });
+
+      // Insert the report into the database
+      const [report] = await db.insert(moderationReports).values(reportData).returning();
+
+      res.json({ 
+        message: 'Report submitted successfully',
+        reportId: report.id 
+      });
+    } catch (error) {
+      console.error('Error submitting report', error);
+      res.status(500).json({ message: 'Failed to submit report' });
     }
   });
 
@@ -3057,8 +5468,27 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const savedPosts = await storage.getSavedPosts(userId, { limit, offset });
       res.json(savedPosts);
     } catch (error) {
-      console.error('Error getting saved posts:', error);
+      console.error('Error getting saved posts', error);
       res.status(500).json({ message: 'Failed to get saved posts' });
+    }
+  });
+
+  // Get draft posts for current user
+  app.get('/api/draft-posts', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      const limit = parseInt(req.query.limit as string) || 20;
+      const offset = parseInt(req.query.offset as string) || 0;
+
+      const draftPosts = await storage.getUserDraftPosts(userId, limit, offset);
+      res.json(draftPosts);
+    } catch (error) {
+      console.error('Error getting draft posts', error);
+      res.status(500).json({ message: 'Failed to get draft posts' });
     }
   });
 
@@ -3074,7 +5504,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json(user);
     } catch (error) {
-      console.error('Error getting user profile:', error);
+      console.error('Error getting user profile', error);
       res.status(500).json({ message: 'Failed to get user profile' });
     }
   });
@@ -3088,7 +5518,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       const updateData = req.body;
-      console.log(`[DEBUG] Updating profile for user ${userId} with data:`, updateData);
+      
+      // Normalize language codes to uppercase for DeepL API compatibility
+      if (updateData.preferredLanguage) {
+        updateData.preferredLanguage = normalizeLanguageCode(updateData.preferredLanguage);
+      }
+      
 
       // Update the user profile
       const updatedUser = await storage.updateUser(userId, updateData);
@@ -3100,11 +5535,936 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Remove sensitive data before sending response
       const { password, passwordResetToken, passwordResetExpires, verificationToken, ...userWithoutPassword } = updatedUser;
       
-      console.log(`[DEBUG] Profile updated successfully for user ${userId}`);
+      console.log(`Profile updated successfully for user ${userId}`);
       res.json(userWithoutPassword);
     } catch (error) {
-      console.error('Error updating user profile:', error);
+      console.error('Error updating user profile', error);
       res.status(500).json({ message: 'Failed to update user profile' });
+    }
+  });
+
+  // Update user notification preferences
+  app.patch('/api/users/notification-preferences', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      const { emailOnNewNotification, emailOnNewMessage, emailOnNewOrder } = req.body;
+      
+      // Validate that at least one preference is provided
+      if (emailOnNewNotification === undefined && emailOnNewMessage === undefined && emailOnNewOrder === undefined) {
+        return res.status(400).json({ message: 'At least one notification preference must be provided' });
+      }
+
+      // Prepare update data
+      const updateData: any = {};
+      if (emailOnNewNotification !== undefined) updateData.emailOnNewNotification = emailOnNewNotification;
+      if (emailOnNewMessage !== undefined) updateData.emailOnNewMessage = emailOnNewMessage;
+      if (emailOnNewOrder !== undefined) updateData.emailOnNewOrder = emailOnNewOrder;
+      
+
+      // Update the user's notification preferences
+      const updatedUser = await storage.updateUser(userId, updateData);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      console.log(`Notification preferences updated successfully for user ${userId}`);
+      res.json({ 
+        success: true,
+        message: 'Notification preferences updated successfully',
+        preferences: {
+          emailOnNewNotification: updatedUser.emailOnNewNotification,
+          emailOnNewMessage: updatedUser.emailOnNewMessage,
+          emailOnNewOrder: updatedUser.emailOnNewOrder
+        }
+      });
+    } catch (error) {
+      console.error('Error updating notification preferences', error);
+      res.status(500).json({ message: 'Failed to update notification preferences' });
+    }
+  });
+
+  // Update user security settings (2FA)
+  app.patch('/api/users/security-settings', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      const { twoFactorEnabled } = req.body;
+
+      // Prepare update data
+      const updateData: any = {};
+      if (twoFactorEnabled !== undefined) updateData.twoFactorEnabled = twoFactorEnabled;
+      
+
+      // Update the user's security settings
+      const updatedUser = await storage.updateUser(userId, updateData);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      console.log(`Security settings updated successfully for user ${userId}`);
+      res.json({ 
+        success: true,
+        message: 'Security settings updated successfully',
+        settings: {
+          twoFactorEnabled: updatedUser.twoFactorEnabled,
+          twoFactorMethod: updatedUser.twoFactorMethod
+        }
+      });
+    } catch (error) {
+      console.error('Error updating security settings', error);
+      res.status(500).json({ message: 'Failed to update security settings' });
+    }
+  });
+
+  // Update AI training consent
+  app.patch('/api/users/ai-training-consent', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      const { aiTrainingConsent } = req.body;
+      
+      if (aiTrainingConsent === undefined) {
+        return res.status(400).json({ message: 'AI training consent value is required' });
+      }
+
+      // Update the user's AI training consent
+      const updatedUser = await storage.updateUser(userId, {
+        aiTrainingConsent: aiTrainingConsent
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      console.log(`[AI-TRAINING] User ${userId} updated AI training consent to: ${aiTrainingConsent}`);
+      res.json({ 
+        success: true,
+        message: 'AI training consent updated successfully',
+        aiTrainingConsent: updatedUser.aiTrainingConsent
+      });
+    } catch (error) {
+      console.error('Error updating AI training consent', error);
+      res.status(500).json({ message: 'Failed to update AI training consent' });
+    }
+  });
+
+  // Get user financial information
+  app.get('/api/users/financial', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Return financial fields with masked sensitive data
+      const maskAccountNumber = (accountNumber: string | null) => {
+        if (!accountNumber || accountNumber.length < 4) return '';
+        return '*'.repeat(accountNumber.length - 4) + accountNumber.slice(-4);
+      };
+
+      res.json({
+        bankName: user.bankName || '',
+        bankAccountHolderName: user.bankAccountHolderName || '',
+        bankAccountNumber: maskAccountNumber(user.bankAccountNumber),
+        bankRoutingNumber: user.bankRoutingNumber || '',
+        paypalEmail: user.paypalEmail || '',
+        cardProofUrl: user.cardProofUrl || '',
+        cardLast4Digits: user.cardLast4Digits || '',
+        cardHolderName: user.cardHolderName || '',
+        bankStatementUrl: user.bankStatementUrl || ''
+      });
+    } catch (error) {
+      console.error('Error getting financial information', error);
+      res.status(500).json({ message: 'Failed to get financial information' });
+    }
+  });
+
+  // Update user financial information
+  app.patch('/api/users/financial', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      const { 
+        bankName,
+        bankAccountHolderName,
+        bankAccountNumber,
+        bankRoutingNumber,
+        paypalEmail,
+        cardLast4Digits,
+        cardHolderName
+      } = req.body;
+
+      // Validate inputs
+      if (paypalEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(paypalEmail)) {
+        return res.status(400).json({ message: 'Invalid PayPal email format' });
+      }
+
+      if (cardLast4Digits && (!/^\d{4}$/.test(cardLast4Digits))) {
+        return res.status(400).json({ message: 'Card last 4 digits must be exactly 4 numeric digits' });
+      }
+
+      if (bankAccountNumber && bankAccountNumber.length > 0 && bankAccountNumber.length < 8) {
+        return res.status(400).json({ message: 'Bank account number must be at least 8 characters' });
+      }
+
+      // Prepare update data - only include fields that were provided
+      const updateData: any = {};
+      if (bankName !== undefined) updateData.bankName = bankName.trim();
+      if (bankAccountHolderName !== undefined) updateData.bankAccountHolderName = bankAccountHolderName.trim();
+      if (bankAccountNumber !== undefined) updateData.bankAccountNumber = bankAccountNumber.trim();
+      if (bankRoutingNumber !== undefined) updateData.bankRoutingNumber = bankRoutingNumber.trim();
+      if (paypalEmail !== undefined) updateData.paypalEmail = paypalEmail.trim();
+      if (cardLast4Digits !== undefined) updateData.cardLast4Digits = cardLast4Digits;
+      if (cardHolderName !== undefined) updateData.cardHolderName = cardHolderName.trim();
+
+      // Update the user's financial information
+      const updatedUser = await storage.updateUser(userId, updateData);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      console.log(`Financial information updated successfully for user ${userId}`);
+      
+      // Mask account number in response
+      const maskAccountNumber = (accountNumber: string | null) => {
+        if (!accountNumber || accountNumber.length < 4) return '';
+        return '*'.repeat(accountNumber.length - 4) + accountNumber.slice(-4);
+      };
+
+      res.json({ 
+        success: true,
+        message: 'Financial information updated successfully',
+        financial: {
+          bankName: updatedUser.bankName,
+          bankAccountHolderName: updatedUser.bankAccountHolderName,
+          bankAccountNumber: maskAccountNumber(updatedUser.bankAccountNumber),
+          bankRoutingNumber: updatedUser.bankRoutingNumber,
+          paypalEmail: updatedUser.paypalEmail,
+          cardProofUrl: updatedUser.cardProofUrl,
+          cardLast4Digits: updatedUser.cardLast4Digits,
+          cardHolderName: updatedUser.cardHolderName,
+          bankStatementUrl: updatedUser.bankStatementUrl
+        }
+      });
+    } catch (error) {
+      console.error('Error updating financial information', error);
+      res.status(500).json({ message: 'Failed to update financial information' });
+    }
+  });
+
+  // Upload card proof document
+  app.post('/api/users/financial/card-proof', unifiedIsAuthenticated, upload.single('cardProof'), async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: 'Card proof file is required' });
+      }
+
+      // Validate file type
+      const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'];
+      if (!allowedMimeTypes.includes(req.file.mimetype)) {
+        return res.status(400).json({ message: 'Invalid file type. Only JPG, PNG, WEBP, and PDF files are allowed' });
+      }
+
+      // Validate file size (max 10MB)
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (req.file.size > maxSize) {
+        return res.status(400).json({ message: 'File size exceeds 10MB limit' });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      const privateObjectDir = objectStorageService.getPrivateObjectDir();
+      
+      const fileName = `card-proofs/${req.user.id}/${Date.now()}-${req.file.originalname}`;
+      const fullPath = `${privateObjectDir}/${fileName}`;
+      
+      const { bucketName, objectName } = parseObjectPath(fullPath);
+      const bucket = objectStorageClient.bucket(bucketName);
+      const file = bucket.file(objectName);
+
+      const stream = file.createWriteStream({
+        metadata: {
+          contentType: req.file.mimetype,
+          metadata: {
+            uploadedBy: req.user.id.toString(),
+            originalName: req.file.originalname,
+          }
+        }
+      });
+
+      stream.on('error', (err: Error) => {
+        console.error('Card proof upload stream error', err);
+        if (!res.headersSent) {
+          return res.status(500).json({ message: 'Failed to upload card proof' });
+        }
+      });
+
+      stream.on('finish', async () => {
+        try {
+          if (!req.user?.id) {
+            if (!res.headersSent) {
+              return res.status(401).json({ message: 'User authentication required' });
+            }
+            return;
+          }
+          
+          await setObjectAclPolicy(file, {
+            owner: req.user.id.toString(),
+            visibility: 'private',
+          });
+
+          const normalizedPath = objectStorageService.normalizeObjectEntityPath(`/${bucketName}/${objectName}`);
+          
+          // Update user's card proof URL
+          const updatedUser = await storage.updateUser(req.user.id, {
+            cardProofUrl: normalizedPath
+          });
+
+          if (!updatedUser) {
+            if (!res.headersSent) {
+              return res.status(404).json({ message: 'User not found' });
+            }
+            return;
+          }
+
+          console.log(`Card proof uploaded successfully for user ${req.user.id}`);
+          return res.json({
+            success: true,
+            message: 'Card proof uploaded successfully',
+            cardProofUrl: normalizedPath,
+            name: req.file!.originalname,
+            type: req.file!.mimetype,
+            size: req.file!.size,
+          });
+        } catch (err) {
+          console.error('Error setting ACL or updating user', err);
+          if (!res.headersSent) {
+            return res.status(500).json({ message: 'File uploaded but failed to set permissions or update user' });
+          }
+        }
+      });
+
+      stream.end(req.file.buffer);
+    } catch (error) {
+      console.error('Error uploading card proof', error);
+      if (!res.headersSent) {
+        return res.status(500).json({ message: 'Failed to upload card proof' });
+      }
+    }
+  });
+
+  // Upload bank statement document
+  app.post('/api/users/financial/bank-statement', unifiedIsAuthenticated, upload.single('bankStatement'), async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: 'Bank statement file is required' });
+      }
+
+      // Validate file type
+      const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'];
+      if (!allowedMimeTypes.includes(req.file.mimetype)) {
+        return res.status(400).json({ message: 'Invalid file type. Only JPG, PNG, WEBP, and PDF files are allowed' });
+      }
+
+      // Validate file size (max 10MB)
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (req.file.size > maxSize) {
+        return res.status(400).json({ message: 'File size exceeds 10MB limit' });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      const privateObjectDir = objectStorageService.getPrivateObjectDir();
+      
+      const fileName = `bank-statements/${req.user.id}/${Date.now()}-${req.file.originalname}`;
+      const fullPath = `${privateObjectDir}/${fileName}`;
+      
+      const { bucketName, objectName } = parseObjectPath(fullPath);
+      const bucket = objectStorageClient.bucket(bucketName);
+      const file = bucket.file(objectName);
+
+      const stream = file.createWriteStream({
+        metadata: {
+          contentType: req.file.mimetype,
+          metadata: {
+            uploadedBy: req.user.id.toString(),
+            originalName: req.file.originalname,
+          }
+        }
+      });
+
+      stream.on('error', (err: Error) => {
+        console.error('Bank statement upload stream error', err);
+        if (!res.headersSent) {
+          return res.status(500).json({ message: 'Failed to upload bank statement' });
+        }
+      });
+
+      stream.on('finish', async () => {
+        try {
+          if (!req.user?.id) {
+            if (!res.headersSent) {
+              return res.status(401).json({ message: 'User authentication required' });
+            }
+            return;
+          }
+          
+          await setObjectAclPolicy(file, {
+            owner: req.user.id.toString(),
+            visibility: 'private',
+          });
+
+          const normalizedPath = objectStorageService.normalizeObjectEntityPath(`/${bucketName}/${objectName}`);
+          
+          // Update user's bank statement URL
+          const updatedUser = await storage.updateUser(req.user.id, {
+            bankStatementUrl: normalizedPath
+          });
+
+          if (!updatedUser) {
+            if (!res.headersSent) {
+              return res.status(404).json({ message: 'User not found' });
+            }
+            return;
+          }
+
+          console.log(`Bank statement uploaded successfully for user ${req.user.id}`);
+          return res.json({
+            success: true,
+            message: 'Bank statement uploaded successfully',
+            bankStatementUrl: normalizedPath,
+            name: req.file!.originalname,
+            type: req.file!.mimetype,
+            size: req.file!.size,
+          });
+        } catch (err) {
+          console.error('Error setting ACL or updating user', err);
+          if (!res.headersSent) {
+            return res.status(500).json({ message: 'File uploaded but failed to set permissions or update user' });
+          }
+        }
+      });
+
+      stream.end(req.file.buffer);
+    } catch (error) {
+      console.error('Error uploading bank statement', error);
+      if (!res.headersSent) {
+        return res.status(500).json({ message: 'Failed to upload bank statement' });
+      }
+    }
+  });
+
+  // Suspend account
+  app.post('/api/user/suspend-account', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      // Get user data for email
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Update the user's account to suspended
+      const updatedUser = await storage.updateUser(userId, {
+        accountSuspended: true,
+        accountSuspendedAt: new Date()
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Send suspension confirmation email
+      try {
+        const htmlContent = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #333;">Account Suspension Confirmation</h2>
+            <p style="color: #555; line-height: 1.6;">Hello ${user.name || user.username},</p>
+            <p style="color: #555; line-height: 1.6;">
+              Your Dedw3n account has been successfully suspended as requested.
+            </p>
+            <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+              <p style="margin: 5px 0;"><strong>Account Status:</strong> Suspended</p>
+              <p style="margin: 5px 0;"><strong>Suspended On:</strong> ${new Date().toLocaleString()}</p>
+              <p style="margin: 5px 0;"><strong>Reactivation Available:</strong> After 24 hours</p>
+            </div>
+            <p style="color: #555; line-height: 1.6;">
+              You can reactivate your account after 24 hours by simply logging back in with your credentials.
+            </p>
+            <p style="color: #888; font-size: 12px; margin-top: 30px;">
+              If you did not request this suspension, please contact our support team immediately.
+            </p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+            <p style="color: #888; font-size: 12px;">
+              This is an automated message from Dedw3n. Please do not reply to this email.
+            </p>
+          </div>
+        `;
+
+        const textContent = `Account Suspension Confirmation
+
+Hello ${user.name || user.username},
+
+Your Dedw3n account has been successfully suspended as requested.
+
+Account Status: Suspended
+Suspended On: ${new Date().toLocaleString()}
+Reactivation Available: After 24 hours
+
+You can reactivate your account after 24 hours by simply logging back in with your credentials.
+
+If you did not request this suspension, please contact our support team immediately.
+
+This is an automated message from Dedw3n. Please do not reply to this email.`;
+
+        await sendEmail({
+          from: 'noreply@dedw3n.com',
+          to: user.email,
+          subject: 'Account Suspension Confirmation - Dedw3n',
+          html: htmlContent,
+          text: textContent
+        });
+
+        console.log(`[ACCOUNT-SUSPENSION] Suspension confirmation email sent to ${user.email}`);
+      } catch (emailError) {
+        console.error('[ACCOUNT-SUSPENSION] Failed to send suspension email', emailError);
+        // Don't fail the suspension if email fails
+      }
+
+      console.log(`[ACCOUNT-SUSPENSION] User ${userId} suspended their account`);
+      res.json({ 
+        success: true,
+        message: 'Account suspended successfully'
+      });
+    } catch (error) {
+      console.error('Error suspending account', error);
+      res.status(500).json({ message: 'Failed to suspend account' });
+    }
+  });
+
+  // Close account (permanent deletion)
+  app.delete('/api/user/close-account', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      // Get user data for email before deletion
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Send account closure confirmation email
+      try {
+        const htmlContent = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #333;">Account Closure Confirmation</h2>
+            <p style="color: #555; line-height: 1.6;">Hello ${user.name || user.username},</p>
+            <p style="color: #555; line-height: 1.6;">
+              Your Dedw3n account has been permanently closed as requested.
+            </p>
+            <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+              <p style="margin: 5px 0;"><strong>Account Status:</strong> Permanently Deleted</p>
+              <p style="margin: 5px 0;"><strong>Closed On:</strong> ${new Date().toLocaleString()}</p>
+              <p style="margin: 5px 0;"><strong>Username:</strong> ${user.username}</p>
+            </div>
+            <p style="color: #555; line-height: 1.6;">
+              All your data, including connections, messages, endorsements, and recommendations have been permanently deleted.
+            </p>
+            <p style="color: #555; line-height: 1.6;">
+              We're sorry to see you go. If you change your mind in the future, you're always welcome to create a new account.
+            </p>
+            <p style="color: #888; font-size: 12px; margin-top: 30px;">
+              If you did not request this account closure, please contact our support team immediately.
+            </p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+            <p style="color: #888; font-size: 12px;">
+              This is an automated message from Dedw3n. Please do not reply to this email.
+            </p>
+          </div>
+        `;
+
+        const textContent = `Account Closure Confirmation
+
+Hello ${user.name || user.username},
+
+Your Dedw3n account has been permanently closed as requested.
+
+Account Status: Permanently Deleted
+Closed On: ${new Date().toLocaleString()}
+Username: ${user.username}
+
+All your data, including connections, messages, endorsements, and recommendations have been permanently deleted.
+
+We're sorry to see you go. If you change your mind in the future, you're always welcome to create a new account.
+
+If you did not request this account closure, please contact our support team immediately.
+
+This is an automated message from Dedw3n. Please do not reply to this email.`;
+
+        await sendEmail({
+          from: 'noreply@dedw3n.com',
+          to: user.email,
+          subject: 'Account Closure Confirmation - Dedw3n',
+          html: htmlContent,
+          text: textContent
+        });
+
+        console.log(`[ACCOUNT-CLOSURE] Closure confirmation email sent to ${user.email}`);
+      } catch (emailError) {
+        console.error('[ACCOUNT-CLOSURE] Failed to send closure email', emailError);
+        // Don't fail the deletion if email fails
+      }
+
+      // Soft delete: Mark account as deleted but keep data
+      // Store original username and release it after 24 hours
+      const deletedUsername = `deleted_${userId}_${Date.now()}`;
+      
+      await storage.updateUser(userId, {
+        accountDeleted: true,
+        accountDeletedAt: new Date(),
+        originalUsername: user.username,
+        username: deletedUsername // Temporarily change username to free it up
+      });
+
+      // Schedule username release after 24 hours
+      setTimeout(async () => {
+        try {
+          const randomSuffix = Math.random().toString(36).substring(2, 15);
+          await storage.updateUser(userId, {
+          username: `deleted_user_${randomSuffix}`
+          });
+          console.log(`[ACCOUNT-CLOSURE] Username released for user ${userId} after 24 hours`);
+        } catch (error) {
+          console.error(`[ACCOUNT-CLOSURE] Failed to release username for user ${userId}`, error);
+        }
+      }, 24 * 60 * 60 * 1000); // 24 hours in milliseconds
+
+      console.log(`[ACCOUNT-CLOSURE] User ${userId} closed their account (soft delete - data retained)`);
+      res.json({ 
+        success: true,
+        message: 'Account closed successfully'
+      });
+    } catch (error) {
+      console.error('Error closing account', error);
+      res.status(500).json({ message: 'Failed to close account' });
+    }
+  });
+
+  // Export user data (GDPR compliance)
+  app.post('/api/users/export-data', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      // Get user data
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Gather all user data
+      const userData = {
+        'Account Information': {
+          'User ID': user.id,
+          'Name': user.name || 'Not provided',
+          'Username': user.username || 'Not provided',
+          'Email': user.email,
+          'Account Created': user.createdAt ? new Date(user.createdAt).toISOString() : 'Unknown',
+          'Account Role': user.role || 'user',
+          'Email Verified': user.emailVerified || false,
+        },
+        'Profile Information': {
+          'Avatar URL': user.avatar || 'Not set',
+          'Bio': user.bio || 'Not provided',
+        },
+        'Security Settings': {
+          'Two-Factor Authentication': user.twoFactorEnabled ? 'Enabled' : 'Disabled',
+        },
+        'Notification Preferences': {
+          'Email on New Notification': (user as any).emailOnNewNotification !== false ? 'Enabled' : 'Disabled',
+          'Email on New Message': (user as any).emailOnNewMessage !== false ? 'Enabled' : 'Disabled',
+          'Email on New Order': (user as any).emailOnNewOrder !== false ? 'Enabled' : 'Disabled',
+        },
+      };
+
+      // Format data as text
+      let dataText = '='.repeat(70) + '\n';
+      dataText += 'DEDW3N - YOUR PERSONAL DATA EXPORT\n';
+      dataText += 'Generated on: ' + new Date().toISOString() + '\n';
+      dataText += '='.repeat(70) + '\n\n';
+
+      for (const [section, fields] of Object.entries(userData)) {
+        dataText += `\n${section.toUpperCase()}\n`;
+        dataText += '-'.repeat(70) + '\n';
+        for (const [key, value] of Object.entries(fields as Record<string, any>)) {
+          dataText += `${key}: ${value}\n`;
+        }
+      }
+
+      dataText += '\n' + '='.repeat(70) + '\n';
+      dataText += 'This export includes all personal data we store about you.\n';
+      dataText += 'For questions, contact: privacy@dedw3n.com\n';
+      dataText += '='.repeat(70) + '\n';
+
+      // Send via email
+      const { sendEmail } = await import('./email-service-enhanced');
+      const { createDataExportEmail } = await import('./email-templates/data-export');
+      
+      const emailContent = createDataExportEmail({
+        name: user.name,
+        firstName: user.name?.split(' ')[0],
+        surname: user.name?.split(' ')[1],
+        dataText
+      });
+      
+      await sendEmail({
+        to: user.email,
+        from: 'privacy@dedw3n.com',
+        subject: emailContent.subject,
+        html: emailContent.html
+      });
+
+      console.log(`[GDPR] Data export sent to user ${userId} at ${user.email}`);
+      
+      res.json({ 
+        success: true,
+        message: 'Your data export has been sent to your email address'
+      });
+    } catch (error) {
+      console.error('Error exporting user data', error);
+      res.status(500).json({ message: 'Failed to export data' });
+    }
+  });
+
+  // Send 2FA code
+  app.post('/api/auth/send-2fa-code', async (req: Request, res: Response) => {
+    try {
+      const { email, method } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: 'Email is required' });
+      }
+
+      // Get user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user || !user.twoFactorEnabled) {
+        // Don't reveal if user exists or has 2FA enabled for security
+        return res.status(200).json({ success: true, message: 'If 2FA is enabled, a code has been sent' });
+      }
+
+      // Generate 6-digit code
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+      // Store code in database
+      await storage.updateUser(user.id, {
+        twoFactorCode: code,
+        twoFactorCodeExpires: expiresAt
+      });
+
+      // Send code via email or WhatsApp based on user's choice
+      if (method === 'whatsapp') {
+        // TODO: Implement WhatsApp sending via Twilio integration
+        console.log(`[2FA] Would send WhatsApp code ${code} to user ${user.id}`);
+        // For now, also send via email as fallback
+      }
+      
+      // Send via email
+      const { sendEmail } = await import('./email-service-enhanced');
+      await sendEmail({
+        to: user.email,
+        from: 'security@dedw3n.com',
+        subject: 'Your Two-Factor Authentication Code',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #333;">Two-Factor Authentication</h2>
+            <p>Hello ${user.name},</p>
+            <p>Your verification code is:</p>
+            <div style="background: #f5f5f5; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;">
+              ${code}
+            </div>
+            <p>This code will expire in 10 minutes.</p>
+            <p>If you didn't request this code, please ignore this email.</p>
+            <p style="color: #666; font-size: 12px;">© ${new Date().getFullYear()} Dedw3n. All rights reserved.</p>
+          </div>
+        `
+      });
+
+      console.log(`[2FA] Code sent to user ${user.id} via ${user.twoFactorMethod || 'email'}`);
+      res.json({ success: true, message: 'Verification code sent', method: user.twoFactorMethod || 'email' });
+    } catch (error) {
+      console.error('Error sending 2FA code', error);
+      res.status(500).json({ message: 'Failed to send verification code' });
+    }
+  });
+
+  // Verify MFA code (new endpoint with updated terminology)
+  app.post('/api/auth/verify-mfa-code', async (req: Request, res: Response) => {
+    try {
+      const { email, code } = req.body;
+      
+      if (!email || !code) {
+        return res.status(400).json({ message: 'Email and code are required' });
+      }
+
+      // Get user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user || !user.twoFactorEnabled) {
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+
+      // Check if code exists and hasn't expired
+      if (!user.twoFactorCode || !user.twoFactorCodeExpires) {
+        return res.status(401).json({ message: 'No verification code found. Please request a new one' });
+      }
+
+      if (new Date() > new Date(user.twoFactorCodeExpires)) {
+        return res.status(401).json({ message: 'Verification code has expired. Please request a new one' });
+      }
+
+      // Verify code
+      if (user.twoFactorCode !== code) {
+        return res.status(401).json({ message: 'Invalid verification code' });
+      }
+
+      // Clear the code after successful verification
+      await storage.updateUser(user.id, {
+        twoFactorCode: null,
+        twoFactorCodeExpires: null,
+        failedLoginAttempts: 0,
+        lastLogin: new Date()
+      });
+
+      // Log in the user with session
+      req.session.regenerate((regenerateErr) => {
+        if (regenerateErr) {
+          console.error(`Session regeneration error during MFA:`, regenerateErr);
+          return res.status(500).json({ message: 'Login failed' });
+        }
+        
+        req.login(user, (err) => {
+          if (err) {
+            console.error(`Login after MFA failed:`, err);
+            return res.status(500).json({ message: 'Login failed' });
+          }
+          
+          req.session.save((saveErr) => {
+            if (saveErr) {
+              console.error(`Session save error after MFA:`, saveErr);
+              return res.status(500).json({ message: 'Login failed' });
+            }
+            
+            console.log(`[MFA] Code verified successfully for user ${user.id}`);
+            
+            const { password, ...userWithoutPassword } = user;
+            res.json({ 
+              success: true, 
+              message: 'MFA verification successful',
+              user: userWithoutPassword
+            });
+          });
+        });
+      });
+    } catch (error) {
+      console.error('Error verifying MFA code', error);
+      res.status(500).json({ message: 'Failed to verify code' });
+    }
+  });
+
+  // Verify 2FA code (legacy endpoint for backward compatibility)
+  app.post('/api/auth/verify-2fa-code', async (req: Request, res: Response) => {
+    try {
+      const { email, code } = req.body;
+      
+      if (!email || !code) {
+        return res.status(400).json({ message: 'Email and code are required' });
+      }
+
+      // Get user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user || !user.twoFactorEnabled) {
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+
+      // Check if code exists and hasn't expired
+      if (!user.twoFactorCode || !user.twoFactorCodeExpires) {
+        return res.status(401).json({ message: 'No verification code found. Please request a new one' });
+      }
+
+      if (new Date() > new Date(user.twoFactorCodeExpires)) {
+        return res.status(401).json({ message: 'Verification code has expired. Please request a new one' });
+      }
+
+      // Verify code
+      if (user.twoFactorCode !== code) {
+        return res.status(401).json({ message: 'Invalid verification code' });
+      }
+
+      // Clear the code after successful verification
+      await storage.updateUser(user.id, {
+        twoFactorCode: null,
+        twoFactorCodeExpires: null
+      });
+
+      // Generate session token
+      const { token } = await generateToken(user.id, user.role || 'user', {
+        deviceInfo: req.headers['user-agent'] || 'unknown',
+        ipAddress: req.ip
+      });
+
+      console.log(`[MFA] Code verified successfully for user ${user.id}`);
+      res.json({ 
+        success: true, 
+        message: 'MFA verification successful',
+        token,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          name: user.name,
+          avatar: user.avatar
+        }
+      });
+    } catch (error) {
+      console.error('Error verifying MFA code', error);
+      res.status(500).json({ message: 'Failed to verify code' });
     }
   });
 
@@ -3120,7 +6480,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const platformUsers = await storage.getPlatformUsers(currentUserId);
       res.json(platformUsers);
     } catch (error) {
-      console.error('Error getting platform users:', error);
+      console.error('Error getting platform users', error);
       res.status(500).json({ message: 'Failed to get platform users' });
     }
   });
@@ -3156,14 +6516,722 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         userId: recipientId,
         type: 'gift_received',
         title: 'Gift Received!',
-        message: `You received a gift from ${(req.user as any)?.name || 'Someone'}`,
-        data: { giftId: gift.id }
+        content: `You received a gift from ${(req.user as any)?.name || 'Someone'}`,
+        sourceId: gift.id,
+        sourceType: 'gift'
       });
 
       res.json({ success: true, giftId: gift.id, message: 'Gift sent successfully' });
     } catch (error) {
-      console.error('Error sending gift:', error);
+      console.error('Error sending gift', error);
       res.status(500).json({ message: 'Failed to send gift' });
+    }
+  });
+
+  // Gift Card Routes
+  // Create payment intent for gift card purchase
+  app.post('/api/gift-cards/create-payment-intent', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { amount, currency = 'GBP', design, recipientEmail, recipientName, giftMessage } = req.body;
+      
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ message: 'Invalid gift card amount' });
+      }
+      
+      // Validate amount is one of the allowed denominations
+      const allowedAmounts = [5, 10, 25, 50, 100, 500, 1000, 2500];
+      if (!allowedAmounts.includes(amount)) {
+        return res.status(400).json({ message: 'Invalid gift card denomination' });
+      }
+      
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to pence
+        currency: currency.toLowerCase(),
+        metadata: {
+          type: 'gift_card',
+          design: design || 'classic_blue',
+          recipientEmail: recipientEmail || '',
+          recipientName: recipientName || '',
+          giftMessage: giftMessage || '',
+          purchasedBy: (req.user as any)?.id?.toString() || ''
+        }
+      });
+      
+      res.json({ 
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id
+      });
+    } catch (error) {
+      console.error('Error creating gift card payment intent', error);
+      res.status(500).json({ message: 'Failed to create payment intent for gift card' });
+    }
+  });
+
+  // Complete gift card purchase after successful payment
+  app.post('/api/gift-cards/complete-purchase', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { paymentIntentId } = req.body;
+      const userId = (req.user as any)?.id;
+      
+      if (!paymentIntentId) {
+        return res.status(400).json({ message: 'Payment intent ID is required' });
+      }
+      
+      // Retrieve payment intent from Stripe to get metadata
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      
+      if (paymentIntent.status !== 'succeeded') {
+        return res.status(400).json({ message: 'Payment not completed successfully' });
+      }
+      
+      const { type, design, recipientEmail, recipientName, giftMessage, purchasedBy } = paymentIntent.metadata;
+      
+      if (type !== 'gift_card') {
+        return res.status(400).json({ message: 'Invalid payment type' });
+      }
+      
+      // CRITICAL SECURITY CHECK: Verify that the payment intent belongs to the requesting user
+      if (purchasedBy !== userId?.toString()) {
+        console.error('Error occurred', `[SECURITY] User ${userId} attempted to claim payment intent ${paymentIntentId} belonging to user ${purchasedBy}`);
+        return res.status(403).json({ message: 'Unauthorized: Payment intent does not belong to you' });
+      }
+      
+      const amount = paymentIntent.amount / 100; // Convert from pence to pounds
+      
+      // Create gift card
+      const giftCard = await storage.createGiftCard({
+        amount,
+        currency: paymentIntent.currency.toUpperCase(),
+        design: design as any || 'classic_blue',
+        purchasedBy: userId,
+        recipientEmail: recipientEmail || null,
+        recipientName: recipientName || null,
+        giftMessage: giftMessage || null,
+        stripePaymentIntentId: paymentIntentId,
+        expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year from now
+      });
+      
+      res.json({ 
+        success: true, 
+        giftCard: {
+          id: giftCard.id,
+          code: giftCard.code,
+          amount: giftCard.amount,
+          currency: giftCard.currency,
+          design: giftCard.design,
+          status: giftCard.status
+        }
+      });
+    } catch (error) {
+      console.error('Error completing gift card purchase', error);
+      res.status(500).json({ message: 'Failed to complete gift card purchase' });
+    }
+  });
+
+  // Get user's gift cards
+  app.get('/api/gift-cards/my-cards', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const giftCards = await storage.getUserGiftCards(userId);
+      
+      // Return safe gift card data (exclude sensitive information)
+      const safeGiftCards = giftCards.map(card => ({
+          id: card.id,
+        code: card.code,
+        amount: card.amount,
+        currency: card.currency,
+        design: card.design,
+        status: card.status,
+        redeemedAmount: card.redeemedAmount || 0,
+        recipientEmail: card.recipientEmail,
+        recipientName: card.recipientName,
+        giftMessage: card.giftMessage,
+        expiresAt: card.expiresAt,
+        createdAt: card.createdAt
+      }));
+      
+      res.json(safeGiftCards);
+    } catch (error) {
+      console.error('Error getting user gift cards', error);
+      res.status(500).json({ message: 'Failed to get gift cards' });
+    }
+  });
+
+  // Check gift card balance using card number and PIN
+  app.post('/api/gift-cards/check-balance', async (req: Request, res: Response) => {
+    try {
+      const { cardNumber, pin } = req.body;
+      
+      if (!cardNumber || !pin) {
+        return res.status(400).json({ message: 'Card number and PIN are required' });
+      }
+      
+      if (cardNumber.length !== 16) {
+        return res.status(400).json({ message: 'Card number must be 16 digits' });
+      }
+      
+      if (pin.length !== 4) {
+        return res.status(400).json({ message: 'PIN must be 4 digits' });
+      }
+      
+      const balance = await storage.getGiftCardBalanceByCardNumber(cardNumber, pin);
+      
+      if (!balance) {
+        return res.status(404).json({ message: 'Invalid card number or PIN' });
+      }
+      
+      res.json(balance);
+    } catch (error) {
+      console.error('Error checking gift card balance', error);
+      res.status(500).json({ message: 'Failed to check gift card balance' });
+    }
+  });
+
+  // Check gift card balance (legacy endpoint using code)
+  app.get('/api/gift-cards/balance/:code', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { code } = req.params;
+      const balance = await storage.getGiftCardBalance(code);
+      
+      if (!balance) {
+        return res.status(404).json({ message: 'Gift card not found' });
+      }
+      
+      res.json(balance);
+    } catch (error) {
+      console.error('Error checking gift card balance', error);
+      res.status(500).json({ message: 'Failed to check gift card balance' });
+    }
+  });
+
+  // Redeem gift card (to be used during checkout)
+  app.post('/api/gift-cards/redeem', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { code, orderId, amount } = req.body;
+      const userId = (req.user as any)?.id;
+      
+      if (!code || !orderId || !amount || amount <= 0) {
+        return res.status(400).json({ message: 'Code, order ID, and amount are required' });
+      }
+      
+      const result = await storage.redeemGiftCard(code, userId, orderId, amount);
+      
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: result.message,
+          remainingBalance: result.remainingBalance 
+        });
+      }
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Error redeeming gift card', error);
+      res.status(500).json({ message: 'Failed to redeem gift card' });
+    }
+  });
+
+  // Get gift card details by code (for validation)
+  app.get('/api/gift-cards/validate/:code', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { code } = req.params;
+      const giftCard = await storage.getGiftCardByCode(code);
+      
+      if (!giftCard) {
+        return res.status(404).json({ message: 'Gift card not found' });
+      }
+      
+      const currentBalance = giftCard.amount - (giftCard.redeemedAmount || 0);
+      
+      res.json({
+        valid: giftCard.status === 'active' && currentBalance > 0,
+        amount: giftCard.amount,
+        balance: Math.max(0, currentBalance),
+        currency: giftCard.currency,
+        status: giftCard.status,
+        expiresAt: giftCard.expiresAt
+      });
+    } catch (error) {
+      console.error('Error validating gift card', error);
+      res.status(500).json({ message: 'Failed to validate gift card' });
+    }
+  });
+
+  // ===== Proxy Accounts Routes - KYC/BYC/AML Compliant =====
+  
+  // Get all proxy accounts for the current user
+  app.get('/api/proxy-accounts', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      
+      const accounts = await storage.getUserProxyAccounts(userId);
+      res.json(accounts);
+    } catch (error) {
+      console.error('Error getting proxy accounts', error);
+      res.status(500).json({ message: 'Failed to get proxy accounts' });
+    }
+  });
+
+  // Get a specific proxy account
+  app.get('/api/proxy-accounts/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const accountId = parseInt(req.params.id);
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      
+      const account = await storage.getProxyAccount(accountId);
+      
+      if (!account) {
+        return res.status(404).json({ message: 'Proxy account not found' });
+      }
+      
+      // Verify ownership
+      if (account.parentUserId !== userId) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      res.json(account);
+    } catch (error) {
+      console.error('Error getting proxy account', error);
+      res.status(500).json({ message: 'Failed to get proxy account' });
+    }
+  });
+
+  // Create a new proxy account
+  app.post('/api/proxy-accounts', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      
+      let kidsUserId = null;
+      
+      // If it's a Kids Account, create a user account for the child
+      if (req.body.accountType === 'kids') {
+        const { kidsUsername, kidsEmail, kidsPassword, childFirstName, childLastName } = req.body;
+        
+        // Validate required fields for Kids Account
+        if (!kidsPassword || kidsPassword.length < 8) {
+          return res.status(400).json({ message: 'Password is required and must be at least 8 characters for Kids Accounts' });
+        }
+        
+        if (!kidsUsername || kidsUsername.length < 3) {
+          return res.status(400).json({ message: 'Username is required and must be at least 3 characters' });
+        }
+        
+        // Validate email using proper email regex
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!kidsEmail || !emailRegex.test(kidsEmail)) {
+          return res.status(400).json({ message: 'Valid email address is required' });
+        }
+        
+        if (!childFirstName || !childLastName) {
+          return res.status(400).json({ message: 'Child first name and last name are required' });
+        }
+        
+        // Check if username or email already exists
+        const existingUser = await storage.getUserByUsername(kidsUsername);
+        if (existingUser) {
+          return res.status(400).json({ message: 'Username already exists' });
+        }
+        
+        const existingEmail = await storage.getUserByEmail(kidsEmail);
+        if (existingEmail) {
+          return res.status(400).json({ message: 'Email address already exists' });
+        }
+        
+        // Create the user account for the child
+        const bcrypt = await import('bcryptjs');
+        const hashedPassword = await bcrypt.hash(kidsPassword, 10);
+        
+        const childUser = await storage.createUser({
+          username: kidsUsername,
+          email: kidsEmail,
+          password: hashedPassword,
+          name: `${childFirstName} ${childLastName}`,
+          emailVerified: false,
+          role: 'user'
+        });
+        
+        kidsUserId = childUser.id;
+      }
+      
+      const accountData = {
+        ...req.body,
+        parentUserId: userId,
+        kidsUserId: kidsUserId,
+        kidsPassword: undefined
+      };
+      
+      const account = await storage.createProxyAccount(accountData);
+      res.status(201).json(account);
+    } catch (error) {
+      console.error('Error creating proxy account', error);
+      res.status(500).json({ message: 'Failed to create proxy account' });
+    }
+  });
+
+  // Update a proxy account
+  app.put('/api/proxy-accounts/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const accountId = parseInt(req.params.id);
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      
+      const account = await storage.getProxyAccount(accountId);
+      
+      if (!account) {
+        return res.status(404).json({ message: 'Proxy account not found' });
+      }
+      
+      // Verify ownership
+      if (account.parentUserId !== userId) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      const updatedAccount = await storage.updateProxyAccount(accountId, req.body);
+      res.json(updatedAccount);
+    } catch (error) {
+      console.error('Error updating proxy account', error);
+      res.status(500).json({ message: 'Failed to update proxy account' });
+    }
+  });
+
+  // Update proxy account status
+  app.patch('/api/proxy-accounts/:id/status', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const accountId = parseInt(req.params.id);
+      const { status, notes } = req.body;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      
+      const account = await storage.getProxyAccount(accountId);
+      
+      if (!account) {
+        return res.status(404).json({ message: 'Proxy account not found' });
+      }
+      
+      // Verify ownership
+      if (account.parentUserId !== userId) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      const updatedAccount = await storage.updateProxyAccountStatus(accountId, status, notes);
+      res.json(updatedAccount);
+    } catch (error) {
+      console.error('Error updating proxy account status', error);
+      res.status(500).json({ message: 'Failed to update proxy account status' });
+    }
+  });
+
+  // Update proxy account KYC status
+  app.patch('/api/proxy-accounts/:id/kyc-status', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const accountId = parseInt(req.params.id);
+      const { kycStatus } = req.body;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      
+      const account = await storage.getProxyAccount(accountId);
+      
+      if (!account) {
+        return res.status(404).json({ message: 'Proxy account not found' });
+      }
+      
+      // Verify ownership
+      if (account.parentUserId !== userId) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      const updatedAccount = await storage.updateProxyAccountKYCStatus(accountId, kycStatus, userId);
+      res.json(updatedAccount);
+    } catch (error) {
+      console.error('Error updating proxy account KYC status', error);
+      res.status(500).json({ message: 'Failed to update proxy account KYC status' });
+    }
+  });
+
+  // Upload Kids Account verification document
+  app.post('/api/proxy-accounts/:id/kids-verification-document', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const accountId = parseInt(req.params.id);
+      const { documentData } = req.body;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      
+      if (!documentData) {
+        return res.status(400).json({ message: 'Document data is required' });
+      }
+      
+      const account = await storage.getProxyAccount(accountId);
+      
+      if (!account) {
+        return res.status(404).json({ message: 'Proxy account not found' });
+      }
+      
+      // Verify ownership
+      if (account.parentUserId !== userId) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      // Verify it's a kids account
+      if (account.accountType !== 'kids') {
+        return res.status(400).json({ message: 'This endpoint is only for Kids accounts' });
+      }
+      
+      const { kidsDocumentProtection } = await import('./kids-document-protection');
+      const result = await kidsDocumentProtection.uploadVerificationDocument(accountId, documentData);
+      
+      if (result.success) {
+        res.json({ 
+          message: 'Verification document uploaded successfully',
+          documentUrl: result.url
+        });
+      } else {
+        res.status(500).json({ 
+          message: 'Failed to upload verification document',
+          error: result.error
+        });
+      }
+    } catch (error) {
+      console.error('Error uploading Kids verification document', error);
+      res.status(500).json({ message: 'Failed to upload verification document' });
+    }
+  });
+
+  // Upload Company Account proof of incorporation document
+  app.post('/api/proxy-accounts/:id/company-proof-document', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const accountId = parseInt(req.params.id);
+      const { documentData } = req.body;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      
+      if (!documentData) {
+        return res.status(400).json({ message: 'Document data is required' });
+      }
+      
+      const account = await storage.getProxyAccount(accountId);
+      
+      if (!account) {
+        return res.status(404).json({ message: 'Proxy account not found' });
+      }
+      
+      // Verify ownership
+      if (account.parentUserId !== userId) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      // Verify it's a company account
+      if (account.accountType !== 'company') {
+        return res.status(400).json({ message: 'This endpoint is only for Company accounts' });
+      }
+      
+      try {
+        // Upload document to object storage
+        const base64Data = documentData.split(',')[1] || documentData;
+        const buffer = Buffer.from(base64Data, 'base64');
+        
+        // Generate unique filename
+        const fileExtension = documentData.match(/data:([^;]+);/)?.[1]?.split('/')[1] || 'pdf';
+        const filename = `company-proof-${accountId}-${Date.now()}.${fileExtension}`;
+        const fullPath = `${process.env.PRIVATE_OBJECT_DIR}/company-documents/${filename}`;
+        
+        // Parse the path to get bucket and object name
+        const pathParts = fullPath.startsWith('/') ? fullPath.split('/') : `/${fullPath}`.split('/');
+        const bucketName = pathParts[1];
+        const objectName = pathParts.slice(2).join('/');
+        
+        // Upload to object storage using Google Cloud Storage API
+        const bucket = objectStorageClient.bucket(bucketName);
+        const file = bucket.file(objectName);
+        
+        const contentType = documentData.match(/data:([^;]+);/)?.[1] || 'application/pdf';
+        await file.save(buffer, {
+          contentType,
+          metadata: {
+            accountId: accountId.toString(),
+            userId: userId.toString(),
+            documentType: 'proof_of_incorporation'
+          }
+        });
+        
+        const filePath = `/private-objects/company-documents/${filename}`;
+        
+        // Get existing documents
+        const existingDocs = Array.isArray(account.documentsUploaded) ? account.documentsUploaded : [];
+        
+        // Add new document to the array
+        const updatedDocs = [
+          ...existingDocs,
+          {
+            type: 'proof_of_incorporation',
+            url: filePath,
+            uploadedAt: new Date().toISOString(),
+            verified: false
+          }
+        ];
+        
+        // Update proxy account with document in documentsUploaded array
+        const updatedAccount = await storage.updateProxyAccount(accountId, {
+          documentsUploaded: updatedDocs as any
+        });
+        
+        res.json({ 
+          message: 'Company proof document uploaded successfully',
+          documentUrl: filePath
+        });
+      } catch (uploadError) {
+        console.error('Error uploading company proof document to storage', uploadError);
+        res.status(500).json({ 
+          message: 'Failed to upload company proof document',
+          error: uploadError instanceof Error ? uploadError.message : 'Upload failed'
+        });
+      }
+    } catch (error) {
+      console.error('Error uploading Company proof document', error);
+      res.status(500).json({ message: 'Failed to upload proof document' });
+    }
+  });
+
+  // Delete a proxy account
+  app.delete('/api/proxy-accounts/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const accountId = parseInt(req.params.id);
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      
+      const account = await storage.getProxyAccount(accountId);
+      
+      if (!account) {
+        return res.status(404).json({ message: 'Proxy account not found' });
+      }
+      
+      // Verify ownership
+      if (account.parentUserId !== userId) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      const success = await storage.deleteProxyAccount(accountId);
+      
+      if (success) {
+        res.json({ message: 'Proxy account deleted successfully' });
+      } else {
+        res.status(500).json({ message: 'Failed to delete proxy account' });
+      }
+    } catch (error) {
+      console.error('Error deleting proxy account', error);
+      res.status(500).json({ message: 'Failed to delete proxy account' });
+    }
+  });
+
+  // Switch to proxy account
+  app.post('/api/proxy-accounts/switch', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const { proxyAccountId } = req.body;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      
+      if (!proxyAccountId) {
+        return res.status(400).json({ message: 'Proxy account ID is required' });
+      }
+      
+      const account = await storage.getProxyAccount(proxyAccountId);
+      
+      if (!account) {
+        return res.status(404).json({ message: 'Proxy account not found' });
+      }
+      
+      // Verify ownership
+      if (account.parentUserId !== userId) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      // Store active proxy account in session
+      (req.session as any).activeProxyAccountId = proxyAccountId;
+      
+      // Explicitly save the session to ensure the change persists
+      req.session.save((err) => {
+        if (err) {
+          console.error('[SWITCH-ACCOUNT] Error saving session', err);
+          return res.status(500).json({ message: 'Failed to save session changes' });
+        }
+        
+        res.json({ 
+          message: 'Successfully switched to proxy account',
+          proxyAccount: account 
+        });
+      });
+    } catch (error) {
+      console.error('Error switching proxy account', error);
+      res.status(500).json({ message: 'Failed to switch proxy account' });
+    }
+  });
+
+  // Switch back to parent account
+  app.post('/api/proxy-accounts/switch-back', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      
+      // Clear active proxy account from session
+      delete (req.session as any).activeProxyAccountId;
+      
+      // Explicitly save and reload the session to ensure the change persists
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          console.error('[SWITCH-BACK] Error saving session', saveErr);
+          return res.status(500).json({ message: 'Failed to save session changes' });
+        }
+        
+        // Reload session from store to ensure changes are reflected
+        req.session.reload((reloadErr) => {
+          if (reloadErr) {
+            console.error('[SWITCH-BACK] Error reloading session', reloadErr);
+            return res.status(500).json({ message: 'Failed to reload session' });
+          }
+          
+          
+          res.json({ 
+            message: 'Successfully switched back to parent account'
+          });
+        });
+      });
+    } catch (error) {
+      console.error('Error switching back to parent account', error);
+      res.status(500).json({ message: 'Failed to switch back to parent account' });
     }
   });
 
@@ -3171,7 +7239,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.get('/api/users/communities', unifiedIsAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
-      console.log(`[DEBUG] Getting communities for user: ${userId}`);
+      console.log(`Getting communities for user: ${userId}`);
       
       if (!userId) {
         return res.status(401).json({ message: 'User not authenticated' });
@@ -3179,10 +7247,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       // Get user's communities from storage
       const communities = await storage.getUserCommunities(userId);
-      console.log(`[DEBUG] Found ${communities.length} communities for user ${userId}`);
+      console.log(`Found ${communities.length} communities for user ${userId}`);
       res.json(communities);
     } catch (error) {
-      console.error('Error getting user communities:', error);
+      console.error('Error getting user communities', error);
       res.status(500).json({ message: 'Failed to get user communities' });
     }
   });
@@ -3190,28 +7258,28 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Search users endpoint with authentication - MUST be before /:username route
   app.get('/api/users/search', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      console.log(`[DEBUG] /api/users/search called`);
+      console.log(`/api/users/search called`);
       
       if (!req.user?.id) {
         console.log('[AUTH] No authenticated user for user search');
         return res.status(401).json({ message: 'Authentication required for user search' });
       }
       
-      const authenticatedUser = req.user;
+      const authenticatedUser = req.user as any;
       console.log(`[AUTH] User search authenticated: ${authenticatedUser.id ? `(ID: ${authenticatedUser.id})` : 'No ID'}`);
       
       const query = req.query.q as string;
       const limit = parseInt(req.query.limit as string) || 20;
-      const currentUserId = authenticatedUser.id;
+      const currentUserId = authenticatedUser.id as number;
       
-      console.log(`[DEBUG] Searching users with query: "${query}" for user ${currentUserId}`);
+      console.log(`Searching users with query: "${query}" for user ${currentUserId}`);
       
       if (!query || query.trim().length < 2) {
         return res.json([]);
       }
       
       const users = await storage.searchUsers(query, limit);
-      console.log(`[DEBUG] Found ${users.length} users matching "${query}"`);
+      console.log(`Found ${users.length} users matching "${query}"`);
       
       // Remove current user from results and sensitive data
       const safeUsers = users
@@ -3226,10 +7294,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           role: user.role
         }));
       
-      console.log(`[DEBUG] Returning ${safeUsers.length} filtered users for recipient search`);
+      console.log(`Returning ${safeUsers.length} filtered users for recipient search`);
       res.json(safeUsers);
     } catch (error) {
-      console.error('Error searching users:', error);
+      console.error('Error searching users', error);
       res.status(500).json({ message: 'Failed to search users' });
     }
   });
@@ -3238,19 +7306,18 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.get('/api/users/:username', unifiedIsAuthenticated, async (req, res) => {
     try {
       const username = req.params.username;
-      console.log(`[DEBUG] Getting user profile for username: ${username}`);
+      console.log(`Getting user profile for username: ${username}`);
       
       const user = await storage.getUserByUsername(username);
       
       if (!user) {
-        console.log(`[DEBUG] User not found for username: ${username}`);
+        console.log(`User not found for username: ${username}`);
         return res.status(404).json({ message: 'User not found' });
       }
       
-      console.log(`[DEBUG] Found user:`, { id: user.id, username: user.username, name: user.name });
       res.json(user);
     } catch (error) {
-      console.error('Error getting user profile by username:', error);
+      console.error('Error getting user profile by username', error);
       res.status(500).json({ message: 'Failed to get user profile' });
     }
   });
@@ -3259,7 +7326,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.get('/api/users/:username/posts', unifiedIsAuthenticated, async (req, res) => {
     try {
       const username = req.params.username;
-      console.log(`[DEBUG] Getting posts for username: ${username}`);
+      console.log(`Getting posts for username: ${username}`);
       
       const user = await storage.getUserByUsername(username);
       if (!user) {
@@ -3267,10 +7334,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       const posts = await storage.getUserPosts(user.id);
-      console.log(`[DEBUG] Found ${posts.length} posts for user ${username}`);
+      console.log(`Found ${posts.length} posts for user ${username}`);
       res.json(posts);
     } catch (error) {
-      console.error('Error getting user posts:', error);
+      console.error('Error getting user posts', error);
       res.status(500).json({ message: 'Failed to get user posts' });
     }
   });
@@ -3279,7 +7346,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.get('/api/users/:username/communities', unifiedIsAuthenticated, async (req, res) => {
     try {
       const username = req.params.username;
-      console.log(`[DEBUG] Getting communities for username: ${username}`);
+      console.log(`Getting communities for username: ${username}`);
       
       const user = await storage.getUserByUsername(username);
       if (!user) {
@@ -3288,10 +7355,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       // For now, return empty array as communities aren't fully implemented
       const communities: any[] = [];
-      console.log(`[DEBUG] Found ${communities.length} communities for user ${username}`);
+      console.log(`Found ${communities.length} communities for user ${username}`);
       res.json(communities);
     } catch (error) {
-      console.error('Error getting user communities:', error);
+      console.error('Error getting user communities', error);
       res.status(500).json({ message: 'Failed to get user communities' });
     }
   });
@@ -3300,7 +7367,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.get('/api/users/:username/connections', unifiedIsAuthenticated, async (req, res) => {
     try {
       const username = req.params.username;
-      console.log(`[DEBUG] Getting connections for username: ${username}`);
+      console.log(`Getting connections for username: ${username}`);
       
       const user = await storage.getUserByUsername(username);
       if (!user) {
@@ -3309,11 +7376,78 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       // For now, return empty array as connections aren't fully implemented
       const connections: any[] = [];
-      console.log(`[DEBUG] Found ${connections.length} connections for user ${username}`);
+      console.log(`Found ${connections.length} connections for user ${username}`);
       res.json(connections);
     } catch (error) {
-      console.error('Error getting user connections:', error);
+      console.error('Error getting user connections', error);
       res.status(500).json({ message: 'Failed to get user connections' });
+    }
+  });
+
+  // Get user analytics stats
+  app.get('/api/users/:username/stats', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const username = req.params.username;
+      console.log(`Getting analytics stats for username: ${username}`);
+      
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      const stats = await storage.getUserAnalyticsStats(user.id);
+      console.log(`Retrieved analytics stats for user ${username}:`, stats);
+      res.json(stats);
+    } catch (error) {
+      console.error('Error getting user analytics stats', error);
+      res.status(500).json({ message: 'Failed to get analytics stats' });
+    }
+  });
+
+  // Get user vendor products by username
+  app.get('/api/users/:username/products', async (req, res) => {
+    try {
+      const username = req.params.username;
+      console.log(`Getting vendor products for username: ${username}`);
+      
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      if (!user.isVendor) {
+        return res.json([]);
+      }
+
+      // Get vendor accounts for the user
+      const vendorAccounts = await storage.getUserVendorAccounts(user.id);
+      if (!vendorAccounts || vendorAccounts.length === 0) {
+        return res.json([]);
+      }
+
+      // Get products for the first vendor account using direct DB query
+      const vendorId = vendorAccounts[0].id;
+      const vendorProducts = await db
+        .select({
+          id: products.id,
+          name: products.name,
+          description: products.description,
+          price: products.price,
+          imageUrl: products.imageUrl,
+          category: products.category,
+          marketplace: products.marketplace,
+          inventory: products.inventory,
+          createdAt: products.createdAt
+        })
+        .from(products)
+        .where(eq(products.vendorId, vendorId))
+        .orderBy(desc(products.createdAt));
+      
+      console.log(`Found ${vendorProducts.length} products for vendor ${vendorId}`);
+      res.json(vendorProducts);
+    } catch (error) {
+      console.error('Error getting user vendor products', error);
+      res.status(500).json({ message: 'Failed to get vendor products' });
     }
   });
 
@@ -3321,7 +7455,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.get('/api/users/id/:id', async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
-      console.log(`[DEBUG] Getting user by ID: ${userId}`);
+      console.log(`Getting user by ID: ${userId}`);
       
       if (isNaN(userId)) {
         return res.status(400).json({ message: 'Invalid user ID' });
@@ -3330,15 +7464,100 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const user = await storage.getUser(userId);
       
       if (!user) {
-        console.log(`[DEBUG] User not found for ID: ${userId}`);
+        console.log(`User not found for ID: ${userId}`);
         return res.status(404).json({ message: 'User not found' });
       }
       
-      console.log(`[DEBUG] Found user:`, { id: user.id, username: user.username, name: user.name });
       res.json(user);
     } catch (error) {
-      console.error('Error getting user by ID:', error);
+      console.error('Error getting user by ID', error);
       res.status(500).json({ message: 'Failed to get user' });
+    }
+  });
+
+  // =====================================
+  // Analytics Tracking Endpoints
+  // =====================================
+
+  // Track profile view
+  app.post('/api/analytics/profile-view', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const viewerUserId = req.user?.id;
+      const { profileUserId } = req.body;
+
+      if (!profileUserId) {
+        return res.status(400).json({ message: 'Profile user ID is required' });
+      }
+
+      // Don't track views of own profile
+      if (viewerUserId === profileUserId) {
+        return res.json({ success: true, message: 'Own profile view not tracked' });
+      }
+
+      await storage.trackProfileView({
+        profileUserId,
+        viewerUserId: viewerUserId || null,
+        viewerIp: req.ip || null,
+        viewerUserAgent: req.get('user-agent') || null,
+      });
+
+      console.log(`Tracked profile view: profile=${profileUserId}, viewer=${viewerUserId || 'anonymous'}`);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error tracking profile view', error);
+      res.status(500).json({ message: 'Failed to track profile view' });
+    }
+  });
+
+  // Track post impression
+  app.post('/api/analytics/post-impression', async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      const { postId, impressionType = 'view' } = req.body;
+
+      if (!postId) {
+        return res.status(400).json({ message: 'Post ID is required' });
+      }
+
+      await storage.trackPostImpression({
+        postId,
+        userId: userId || null,
+        impressionType,
+        userIp: req.ip || null,
+        userAgent: req.get('user-agent') || null,
+      });
+
+      console.log(`Tracked post impression: post=${postId}, user=${userId || 'anonymous'}, type=${impressionType}`);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error tracking post impression', error);
+      res.status(500).json({ message: 'Failed to track post impression' });
+    }
+  });
+
+  // Track search appearance
+  app.post('/api/analytics/search-appearance', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const searcherUserId = req.user?.id;
+      const { userId, searchQuery, searchType, position } = req.body;
+
+      if (!userId || !searchQuery || !searchType) {
+        return res.status(400).json({ message: 'User ID, search query, and search type are required' });
+      }
+
+      await storage.trackSearchAppearance({
+        userId,
+        searchQuery,
+        searchType,
+        position: position || null,
+        searcherUserId: searcherUserId || null,
+      });
+
+      console.log(`Tracked search appearance: user=${userId}, query="${searchQuery}", type=${searchType}`);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error tracking search appearance', error);
+      res.status(500).json({ message: 'Failed to track search appearance' });
     }
   });
 
@@ -3346,7 +7565,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.get('/api/users/id/:id/posts', async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
-      console.log(`[DEBUG] Getting posts for user ID: ${userId}`);
+      console.log(`Getting posts for user ID: ${userId}`);
       
       if (isNaN(userId)) {
         return res.status(400).json({ message: 'Invalid user ID' });
@@ -3358,10 +7577,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       const posts = await storage.getUserPosts(userId);
-      console.log(`[DEBUG] Found ${posts.length} posts for user ID ${userId}`);
+      console.log(`Found ${posts.length} posts for user ID ${userId}`);
       res.json(posts);
     } catch (error) {
-      console.error('Error getting user posts:', error);
+      console.error('Error getting user posts', error);
       res.status(500).json({ message: 'Failed to get user posts' });
     }
   });
@@ -3370,7 +7589,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.get('/api/users/id/:id/communities', async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
-      console.log(`[DEBUG] Getting communities for user ID: ${userId}`);
+      console.log(`Getting communities for user ID: ${userId}`);
       
       if (isNaN(userId)) {
         return res.status(400).json({ message: 'Invalid user ID' });
@@ -3382,30 +7601,514 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       // For now, return empty array as communities are being simplified
-      console.log(`[DEBUG] Returning empty communities array for user ID ${userId}`);
+      console.log(`Returning empty communities array for user ID ${userId}`);
       res.json([]);
     } catch (error) {
-      console.error('Error getting user communities:', error);
+      console.error('Error getting user communities', error);
       res.status(500).json({ message: 'Failed to get user communities' });
     }
   });
 
-  // Get user profile picture (fix the username handling)
-  app.get('/api/users/:username/profilePicture', unifiedIsAuthenticated, async (req, res) => {
+  // Get user profile picture (supports both username and userId) - PUBLIC endpoint
+  app.get('/api/users/:identifier/profilePicture', async (req, res) => {
     try {
-      const username = req.params.username;
-      console.log(`[DEBUG] Getting profile picture for username: ${username}`);
+      const identifier = req.params.identifier;
+      console.log(`[PROFILE-PICTURE] Getting profile picture for identifier: ${identifier}`);
       
-      const user = await storage.getUserByUsername(username);
+      let user;
+      if (isNaN(Number(identifier))) {
+        user = await storage.getUserByUsername(identifier);
+      } else {
+        user = await storage.getUser(parseInt(identifier));
+      }
       
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
       }
       
-      res.json({ avatar: user.avatar });
+      // Import cache header functions
+      const { setProfilePictureCacheHeaders, validateProfilePictureETag } = await import('./cache-headers');
+      
+      // Check if client has valid cached version
+      if (validateProfilePictureETag(req, res, user.id, user.avatarUpdatedAt)) {
+        // 304 response already sent by validateProfilePictureETag
+        return;
+      }
+      
+      const initials = user.name 
+        ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
+        : user.username.charAt(0).toUpperCase();
+      
+      let avatarUrl = user.avatar;
+      
+      // Clean handling: Return null for empty/whitespace-only avatars
+      if (!avatarUrl || avatarUrl.trim() === '') {
+        console.log(`[PROFILE-PICTURE] User ${user.id} has no avatar - returning null`);
+        
+        // Set cache headers even for null avatar
+        setProfilePictureCacheHeaders(res, user.id, user.avatarUpdatedAt);
+        
+        return res.json({ 
+          url: null,
+          username: user.username,
+          userId: user.id,
+          initials: initials,
+          avatarUpdatedAt: user.avatarUpdatedAt
+        });
+      }
+      
+      // Defensive fix: Ensure avatar URL has proper path prefix
+      // Handles both legacy (/public-objects/avatars/) and new (/public-objects/profile/) paths
+      if (!avatarUrl.startsWith('/') && !avatarUrl.startsWith('http')) {
+        console.warn(`[PROFILE-PICTURE] Found bare filename for user ${user.id}: ${avatarUrl}`);
+        // Check if it's a legacy filename pattern (starts with "avatar_" or "profile_" or "user-")
+        // Legacy files go to /public-objects/avatars/, new files go to /public-objects/profile/
+        const isLegacyPattern = avatarUrl.startsWith('avatar_') || avatarUrl.startsWith('user-');
+        const targetPath = isLegacyPattern ? '/public-objects/avatars/' : '/public-objects/profile/';
+        avatarUrl = `${targetPath}${avatarUrl}`;
+        console.log(`[PROFILE-PICTURE] Auto-corrected to: ${avatarUrl}`);
+      }
+      
+      // Leave existing full paths untouched - they may point to either
+      // /public-objects/avatars/ (legacy) or /public-objects/profile/ (new)
+      
+      // Add cache-busting query parameter using avatarUpdatedAt timestamp
+      if (user.avatarUpdatedAt) {
+        const timestamp = new Date(user.avatarUpdatedAt).getTime();
+        avatarUrl = `${avatarUrl}?v=${timestamp}`;
+      }
+      
+      // Set proper cache headers with ETag support
+      setProfilePictureCacheHeaders(res, user.id, user.avatarUpdatedAt);
+      
+      res.json({ 
+        url: avatarUrl,
+        username: user.username,
+        userId: user.id,
+        initials: initials,
+        avatarUpdatedAt: user.avatarUpdatedAt
+      });
     } catch (error) {
-      console.error('Error getting profile picture:', error);
+      console.error('[PROFILE-PICTURE] Error getting profile picture', error);
       res.status(500).json({ message: 'Failed to get profile picture' });
+    }
+  });
+
+  // Upload user profile picture (PROTECTED - Uses Object Storage with backup & retry - NO middleware)
+  app.post('/api/users/:identifier/profilePicture', async (req, res) => {
+    try {
+      const { identifier } = req.params;
+      const { imageData } = req.body;
+      
+      console.log(`[PROFILE-UPLOAD] Upload request for identifier: ${identifier}`);
+      
+      // Step 1: Manual authentication check (NO middleware)
+      const auth = await checkAuthentication(req);
+      if (!auth.authenticated || !auth.userId) {
+        return res.status(401).json({ message: auth.error || 'Authentication required' });
+      }
+
+      // Step 2: Manual rate limiting (NO middleware)
+      const minuteRateKey = `profile-upload:${auth.userId}:minute`;
+      const hourRateKey = `profile-upload:${auth.userId}:hour`;
+      
+      if (!rateLimiter.check(minuteRateKey, RateLimits.PROFILE_UPLOAD_MINUTE.maxRequests, RateLimits.PROFILE_UPLOAD_MINUTE.windowMs)) {
+        return res.status(429).json({ 
+          message: 'Too many upload requests. Please try again in a minute.',
+          retryAfter: rateLimiter.getResetTime(minuteRateKey)
+        });
+      }
+      
+      if (!rateLimiter.check(hourRateKey, RateLimits.PROFILE_UPLOAD_HOUR.maxRequests, RateLimits.PROFILE_UPLOAD_HOUR.windowMs)) {
+        return res.status(429).json({ 
+          message: 'Hourly upload limit reached. Please try again later.',
+          retryAfter: rateLimiter.getResetTime(hourRateKey)
+        });
+      }
+
+      // Step 3: Validate request body
+      if (!imageData) {
+        return res.status(400).json({ message: 'No image data provided' });
+      }
+
+      // Step 4: Find target user
+      let targetUser;
+      if (isNaN(Number(identifier))) {
+        targetUser = await storage.getUserByUsername(identifier);
+      } else {
+        targetUser = await storage.getUser(parseInt(identifier));
+      }
+      
+      if (!targetUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Step 5: Authorization check - users can only update their own profile picture
+      if (targetUser.id !== auth.userId) {
+        console.warn(`[PROFILE-UPLOAD] Unauthorized attempt: user ${auth.userId} tried to update user ${targetUser.id}`);
+        return res.status(403).json({ message: 'You can only update your own profile picture' });
+      }
+
+      // Step 6: Validate image format
+      if (!imageData.startsWith('data:image/')) {
+        return res.status(400).json({ message: 'Invalid image data format' });
+      }
+
+      const base64Data = imageData.split(',')[1];
+      if (!base64Data) {
+        return res.status(400).json({ message: 'Invalid image data' });
+      }
+
+      // Step 7: Validate image size
+      const buffer = Buffer.from(base64Data, 'base64');
+      const sizeInMB = buffer.length / (1024 * 1024);
+      if (sizeInMB > 5) {
+        return res.status(400).json({ message: 'Image size exceeds 5MB limit' });
+      }
+
+      // Step 8: Upload with new AvatarMediaService (includes thumbnails & sharded folders)
+      const { avatarMediaService } = await import('./avatar-media-service');
+      const result = await avatarMediaService.uploadAvatar(
+        targetUser.id,
+        buffer,
+        {
+          maxRetries: 3,
+          createBackup: true,
+          generateThumbnails: true
+        }
+      );
+
+      if (!result.success || !result.urls) {
+        console.error(`[PROFILE-UPLOAD] Upload failed for user ${targetUser.id}`, result.error);
+        return res.status(500).json({ 
+          message: result.error || 'Failed to upload profile picture',
+          details: 'The upload service encountered an error. Please try again.'
+        });
+      }
+
+      console.log(`[PROFILE-UPLOAD] Upload successful for user ${targetUser.id}`);
+      if (result.backupUrl) {
+        console.log(`[PROFILE-UPLOAD] Backup created: ${result.backupUrl}`);
+      }
+      if (result.degraded) {
+        console.warn(`[PROFILE-UPLOAD] Thumbnails not generated - service degraded`);
+      }
+
+      // Invalidate any cached profile picture data for both ID and username
+      // This ensures the next request gets fresh data
+      cacheService.delete(`profilePicture:${targetUser.id}`);
+      cacheService.delete(`profilePicture:${targetUser.username}`);
+      console.log(`[PROFILE-UPLOAD] Invalidated cache for user ${targetUser.id} (${targetUser.username})`);
+
+      const updatedUser = await storage.getUser(targetUser.id);
+      
+      res.json({ 
+        message: 'Profile picture updated successfully',
+        avatarUrl: result.urls.original,
+        thumbnails: result.urls.variants || null,
+        backupCreated: !!result.backupUrl,
+        degraded: result.degraded || false,
+        avatarUpdatedAt: updatedUser!.avatarUpdatedAt, // Critical: Include for cache busting
+        user: {
+          id: updatedUser!.id,
+          username: updatedUser!.username,
+          avatar: updatedUser!.avatar,
+          avatarUpdatedAt: updatedUser!.avatarUpdatedAt
+        }
+      });
+    } catch (error) {
+      console.error('[PROFILE-UPLOAD] Error uploading profile picture', error);
+      res.status(500).json({ 
+        message: 'Failed to upload profile picture',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Admin: List profile picture backups for a user
+  app.get('/api/admin/users/:userId/profile-backups', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const adminUser = req.user as any;
+      if (!adminUser || adminUser.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+
+      const { avatarMediaService } = await import('./avatar-media-service');
+      const backups = await avatarMediaService.listUserBackups(userId);
+
+      res.json({ 
+        userId,
+        backups,
+        count: backups.length
+      });
+    } catch (error) {
+      console.error('[ADMIN] Error listing profile backups', error);
+      res.status(500).json({ message: 'Failed to list backups' });
+    }
+  });
+
+  // Admin: Restore profile picture from backup
+  app.post('/api/admin/users/:userId/restore-backup', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const adminUser = req.user as any;
+      if (!adminUser || adminUser.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+
+      const { backupUrl } = req.body;
+      if (!backupUrl) {
+        return res.status(400).json({ message: 'Backup URL is required' });
+      }
+
+      const { avatarMediaService } = await import('./avatar-media-service');
+      const result = await avatarMediaService.restoreFromBackup(userId, backupUrl);
+
+      if (!result.success) {
+        return res.status(500).json({ 
+          message: result.error || 'Failed to restore backup'
+        });
+      }
+
+      res.json({ 
+        message: 'Profile picture restored successfully',
+        url: result.url
+      });
+    } catch (error) {
+      console.error('[ADMIN] Error restoring profile backup', error);
+      res.status(500).json({ message: 'Failed to restore backup' });
+    }
+  });
+
+  // Admin: Get profile picture protection health metrics
+  app.get('/api/admin/profile-protection/health', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const adminUser = req.user as any;
+      if (!adminUser || adminUser.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const { avatarMediaService } = await import('./avatar-media-service');
+      const metrics = avatarMediaService.getHealthMetrics();
+
+      res.json(metrics);
+    } catch (error) {
+      console.error('[ADMIN] Error getting health metrics', error);
+      res.status(500).json({ message: 'Failed to get health metrics' });
+    }
+  });
+
+  // Admin: List post media backups for a specific post
+  app.get('/api/admin/posts/:postId/media-backups', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const adminUser = req.user as any;
+      if (!adminUser || adminUser.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const postId = parseInt(req.params.postId);
+      if (isNaN(postId)) {
+        return res.status(400).json({ message: 'Invalid post ID' });
+      }
+
+      const { communityPostProtection } = await import('./community-post-protection');
+      const backups = await communityPostProtection.listBackups(postId);
+
+      res.json({ 
+        postId,
+        backups,
+        count: backups.length
+      });
+    } catch (error) {
+      console.error('[ADMIN] Error listing post media backups', error);
+      res.status(500).json({ message: 'Failed to list backups' });
+    }
+  });
+
+  // Admin: Restore post media from backup
+  app.post('/api/admin/posts/:postId/restore-media', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const adminUser = req.user as any;
+      if (!adminUser || adminUser.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const postId = parseInt(req.params.postId);
+      if (isNaN(postId)) {
+        return res.status(400).json({ message: 'Invalid post ID' });
+      }
+
+      const { backupFilename } = req.body;
+      if (!backupFilename) {
+        return res.status(400).json({ message: 'Backup filename is required' });
+      }
+
+      const { communityPostProtection } = await import('./community-post-protection');
+      const restoredUrl = await communityPostProtection.restoreFromBackup(postId, backupFilename);
+
+      if (!restoredUrl) {
+        return res.status(500).json({ 
+          message: 'Failed to restore media from backup'
+        });
+      }
+
+      res.json({ 
+        message: 'Post media restored successfully',
+        url: restoredUrl
+      });
+    } catch (error) {
+      console.error('[ADMIN] Error restoring post media backup', error);
+      res.status(500).json({ message: 'Failed to restore backup' });
+    }
+  });
+
+  // Admin: Get community post protection health metrics
+  app.get('/api/admin/post-protection/health', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const adminUser = req.user as any;
+      if (!adminUser || adminUser.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const { communityPostProtection } = await import('./community-post-protection');
+      const metrics = communityPostProtection.getHealthMetrics();
+
+      res.json(metrics);
+    } catch (error) {
+      console.error('[ADMIN] Error getting post protection health metrics', error);
+      res.status(500).json({ message: 'Failed to get health metrics' });
+    }
+  });
+
+  // Upload verification documents for KYC/AML compliance
+  app.post('/api/users/:identifier/verificationDocuments', unifiedIsAuthenticated, async (req, res) => {
+    try {
+      const { identifier } = req.params;
+      const { documents } = req.body;
+      
+      console.log(`[VERIFICATION-UPLOAD] Upload request for identifier: ${identifier}`);
+      
+      if (!documents || !Array.isArray(documents) || documents.length === 0) {
+        return res.status(400).json({ message: 'No documents provided' });
+      }
+
+      const authenticatedUserId = (req.user as any)?.id;
+      if (!authenticatedUserId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+
+      let targetUser;
+      if (isNaN(Number(identifier))) {
+        targetUser = await storage.getUserByUsername(identifier);
+      } else {
+        targetUser = await storage.getUser(parseInt(identifier));
+      }
+      
+      if (!targetUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      if (targetUser.id !== authenticatedUserId) {
+        return res.status(403).json({ message: 'You can only upload your own verification documents' });
+      }
+
+      const updateData: any = {};
+      const uploadedDocs: any = {};
+
+      for (const doc of documents) {
+        const { type, data } = doc;
+        
+        if (!data || !type) {
+          continue;
+        }
+
+        const base64Data = data.startsWith('data:') ? data.split(',')[1] : data;
+        if (!base64Data) {
+          continue;
+        }
+
+        const buffer = Buffer.from(base64Data, 'base64');
+        const sizeInMB = buffer.length / (1024 * 1024);
+        if (sizeInMB > 10) {
+          return res.status(400).json({ message: `Document ${type} exceeds 10MB limit` });
+        }
+
+        const timestamp = Date.now();
+        const extension = data.includes('data:application/pdf') ? 'pdf' : 
+                         data.includes('data:image/jpeg') ? 'jpg' :
+                         data.includes('data:image/png') ? 'png' :
+                         data.includes('data:application/msword') ? 'doc' : 'pdf';
+        
+        const filename = `verification_${type}_${targetUser.id}_${timestamp}.${extension}`;
+        const documentPath = `/public-objects/verification-documents/${filename}`;
+
+        try {
+          const { profilePictureProtection } = await import('./profile-picture-protection');
+          const result = await profilePictureProtection.uploadProfilePicture(
+            targetUser.id,
+            data,
+            {
+              maxRetries: 2,
+              retryDelay: 1000,
+              validateAfterUpload: false,
+              createBackup: false
+            }
+          );
+
+          if (result.success && result.url) {
+            switch (type) {
+              case 'proof_of_address':
+                updateData.proofOfAddressUrl = result.url;
+                uploadedDocs.proofOfAddressUrl = result.url;
+                break;
+              case 'source_of_income':
+                updateData.sourceOfIncomeDocumentUrl = result.url;
+                uploadedDocs.sourceOfIncomeDocumentUrl = result.url;
+                break;
+              case 'id_front':
+                updateData.idDocumentFrontUrl = result.url;
+                uploadedDocs.idDocumentFrontUrl = result.url;
+                break;
+              case 'id_back':
+                updateData.idDocumentBackUrl = result.url;
+                uploadedDocs.idDocumentBackUrl = result.url;
+                break;
+              case 'id_selfie':
+                updateData.idSelfieUrl = result.url;
+                uploadedDocs.idSelfieUrl = result.url;
+                break;
+            }
+          }
+        } catch (error) {
+          console.error(`[VERIFICATION-UPLOAD] Error uploading ${type}`, error);
+        }
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        await storage.updateUser(targetUser.id, updateData);
+        console.log(`[VERIFICATION-UPLOAD] Successfully uploaded ${Object.keys(updateData).length} documents for user ${targetUser.id}`);
+      }
+
+      res.json({ 
+        message: 'Verification documents uploaded successfully',
+        uploadedDocuments: uploadedDocs,
+        count: Object.keys(uploadedDocs).length
+      });
+    } catch (error) {
+      console.error('[VERIFICATION-UPLOAD] Error uploading verification documents', error);
+      res.status(500).json({ 
+        message: 'Failed to upload verification documents',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
@@ -3437,7 +8140,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(updatedUser);
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error('Error updating profile', error);
       res.status(500).json({ message: 'Failed to update profile' });
     }
   });
@@ -3466,7 +8169,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         res.json(posts);
       }
     } catch (error) {
-      console.error("Error getting feed:", error);
+      console.error('Error getting feed', error);
       res.status(500).json({ message: "Failed to get feed" });
     }
   });
@@ -3486,7 +8189,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       };
       res.json(stats);
     } catch (error) {
-      console.error("Error getting user stats:", error);
+      console.error('Error getting user stats', error);
       res.status(500).json({ message: "Failed to get user stats" });
     }
   });
@@ -3530,7 +8233,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         event: shareEvent
       });
     } catch (error) {
-      console.error("Error tracking share analytics:", error);
+      console.error('Error tracking share analytics', error);
       res.status(500).json({ message: "Failed to track share event" });
     }
   });
@@ -3547,7 +8250,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const emailTranslationService = EmailTranslationService.getInstance();
       
       // Determine user's preferred language (defaulting to EN if not provided)
-      const userLanguage = user.preferredLanguage || user.language || 'EN';
+      const userLanguage = user.preferredLanguage || 'EN';
       console.log(`[WELCOME-EMAIL] User language preference: ${userLanguage}`);
       
       // Translate welcome email content
@@ -3568,27 +8271,31 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       if (emailSent) {
         console.log(`[WELCOME-EMAIL] Welcome email sent successfully to ${user.email} in ${userLanguage}`);
       } else {
-        console.error(`[WELCOME-EMAIL] Failed to send welcome email to ${user.email}`);
+        console.error('Error occurred', `[WELCOME-EMAIL] Failed to send welcome email to ${user.email}`);
       }
     } catch (error) {
-      console.error(`[WELCOME-EMAIL] Error sending welcome email:`, error);
+      console.error(`[WELCOME-EMAIL] Error sending welcome email`, error);
       // Don't fail the registration if email sending fails
     }
   }
 
-  // Seed the database with initial data
-  await seedDatabase();
+  // NOTE: Database seeding and storage sync have been moved to post-startup tasks
+  // They now run asynchronously after the server starts listening to avoid blocking health checks
+  // See runPostStartupTasks() in server/index.ts
 
   // Authentication already set up earlier with setupAuth(app)
   
   // Direct handling of auth endpoints without redirects
   app.post("/api/register", async (req, res, next) => {
-    console.log("[DEBUG] Register request received at /api/register");
+    console.log('Register request received at /api/register');
     try {
       // Import the required dependencies
       const { promisify } = await import('util');
       const { scrypt, randomBytes } = await import('crypto');
       const { affiliateVerificationService } = await import('./services/affiliate-verification');
+      const { verificationService } = await import('./auth/verification-service');
+      const { EmailService } = await import('./email-service-enhanced');
+      const { createWelcomeEmail } = await import('./email-templates/welcome-email');
       
       // Define scryptAsync function
       const scryptAsync = promisify(scrypt);
@@ -3596,7 +8303,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Check for existing user
       const existingUser = await storage.getUserByUsername(req.body.username);
       if (existingUser) {
-        console.log('[DEBUG] Username already exists:', req.body.username);
         return res.status(400).json({ message: "Username already exists" });
       }
       
@@ -3605,129 +8311,648 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const buf = (await scryptAsync(req.body.password, salt, 64)) as Buffer;
       const hashedPassword = `${buf.toString("hex")}.${salt}`;
       
-      console.log('[DEBUG] Creating new user:', req.body.username);
+      
+      // Generate email verification token
+      const verificationToken = verificationService.generateToken();
+      console.log('Generated verification token for user');
       
       // Handle affiliate partner verification and attribution
       let affiliatePartnerId = null;
       if (req.body.affiliatePartnerCode) {
-        console.log('[DEBUG] Processing affiliate partner code:', req.body.affiliatePartnerCode);
         const affiliatePartner = await affiliateVerificationService.verifyPartnerCode(req.body.affiliatePartnerCode);
         if (affiliatePartner) {
           affiliatePartnerId = affiliatePartner.id;
-          console.log('[DEBUG] Valid affiliate partner found:', affiliatePartner.name, 'ID:', affiliatePartnerId);
         } else {
-          console.log('[DEBUG] Invalid affiliate partner code provided');
+          console.log('Invalid affiliate partner code provided');
         }
       }
       
-      // Create user
-      const user = await storage.createUser({
-        ...req.body,
-        password: hashedPassword,
-        affiliatePartner: req.body.affiliatePartnerCode || null, // Store the partner code directly
-        preferredLanguage: req.body.preferredLanguage || 'EN'
+      // Filter out empty string fields to avoid database enum errors
+      const userData: any = { ...req.body };
+      Object.keys(userData).forEach(key => {
+        if (userData[key] === '') {
+          delete userData[key];
+        }
       });
       
-      console.log('[DEBUG] User created successfully:', user.id);
+      // Create user with verification token and emailVerified set to false
+      const user = await storage.createUser({
+        ...userData,
+        password: hashedPassword,
+        affiliatePartner: req.body.affiliatePartnerCode || null,
+        preferredLanguage: normalizeLanguageCode(req.body.preferredLanguage),
+        verificationToken: verificationToken,
+        emailVerified: false
+      });
+      
       
       // Increment affiliate partner referral count if applicable
       if (affiliatePartnerId && req.body.affiliatePartnerCode) {
         try {
           await affiliateVerificationService.incrementReferralCount(req.body.affiliatePartnerCode);
-          console.log('[DEBUG] Affiliate partner referral count incremented');
+          console.log('Affiliate partner referral count incremented');
         } catch (error) {
-          console.error('[ERROR] Failed to increment affiliate referral count:', error);
+          console.error('Failed to increment affiliate referral count:', error);
           // Don't fail registration if this fails
         }
       }
       
-      // Login the user
-      req.login(user, (err) => {
+      // Login the user immediately after registration
+      req.login(user, async (err) => {
         if (err) {
-          console.error('[ERROR] Login after register failed:', err);
+          console.error('Login after register failed:', err);
           return next(err);
         }
-        console.log('[DEBUG] User registered and logged in successfully:', user.id);
         
-        // Send welcome email asynchronously
-        sendWelcomeEmail(user).catch(error => {
-          console.error('[WELCOME-EMAIL] Failed to send welcome email:', error);
-        });
+        // Send verification email asynchronously
+        try {
+          const baseUrl = getBaseUrl(req);
+          
+          const verificationLink = verificationService.generateVerificationUrl(
+            baseUrl,
+            verificationToken,
+            'email'
+          );
+          
+          const emailService = new EmailService();
+          const emailTemplate = createWelcomeEmail({
+            name: user.name,
+            username: user.username,
+            email: user.email,
+            verificationLink: verificationLink,
+            language: user.preferredLanguage || 'EN'
+          });
+          
+          await emailService.sendEmail({
+            to: user.email,
+            ...emailTemplate
+          });
+          
+        } catch (error) {
+          console.error('[VERIFICATION-EMAIL] Failed to send verification email', error);
+          // Don't fail registration if email sending fails
+        }
         
-        res.status(201).json(user);
+        // Sanitize user response - exclude sensitive fields
+        const { password, verificationToken: token, passwordResetToken, passwordResetExpires, twoFactorSecret, ...safeUser } = user;
+        
+        res.status(201).json(safeUser);
       });
     } catch (error) {
-      console.error('[ERROR] Registration failed:', error);
+      console.error('Registration failed:', error);
       res.status(500).json({ message: "Registration failed" });
     }
   });
   
-  // Direct handling of login to prevent redirect issues
-  app.post("/api/login", (req, res, next) => {
-    console.log("[DEBUG] Login request received at /api/login");
-    
-    // Use already-set-up passport directly from the import at the top of the file
-    import('passport').then(passportModule => {
-      // Get passport instance that was already configured by setupAuth(app)
-      const passport = passportModule.default;
+  // Email verification confirmation endpoint
+  app.post("/api/auth/verify-email/confirm", async (req: Request, res: Response) => {
+    console.log('Email verification request received');
+    try {
+      const { token } = req.body;
       
-      // Use the configured passport with the local strategy
-      passport.authenticate("local", (err: Error | null, user: any, info: { message: string } | undefined) => {
-        console.log('[DEBUG] Local authentication result:', err ? 'Error' : user ? 'Success' : 'Failed');
-        
-        if (err) {
-          console.error(`[ERROR] Login authentication error:`, err);
-          return next(err);
-        }
-        
-        if (!user) {
-          console.log(`[DEBUG] Login failed: ${info?.message || "Authentication failed"}`);
-          return res.status(401).json({ message: info?.message || "Authentication failed" });
-        }
-        
-        // Log the user in using the session
-        req.login(user, (loginErr) => {
-          if (loginErr) {
-            console.error('[ERROR] Session login error:', loginErr);
-            return next(loginErr);
+      if (!token) {
+        return res.status(400).json({ message: "Verification token is required" });
+      }
+      
+      // Security check: Reject tokens that look like bcrypt hashes
+      // Valid tokens should be 64-character hex strings, not hashes
+      if (token.startsWith('$2a$') || token.startsWith('$2b$') || token.startsWith('$2y$')) {
+        console.log('[SECURITY] Rejected verification attempt with bcrypt hash instead of plain token');
+        return res.status(400).json({ message: "Invalid verification token format" });
+      }
+      
+      // Validate token format - should be 64-character hex string
+      if (!/^[a-f0-9]{64}$/i.test(token)) {
+        console.log('[SECURITY] Rejected verification attempt with invalid token format');
+        return res.status(400).json({ message: "Invalid verification token format" });
+      }
+      
+      // Get all unverified users with verification tokens
+      const unverifiedUsers = await db.select()
+        .from(users)
+        .where(
+          and(
+            eq(users.emailVerified, false),
+            isNotNull(users.verificationToken)
+          )
+        );
+      
+      if (unverifiedUsers.length === 0) {
+        console.log('No unverified users found');
+        return res.status(400).json({ message: "Invalid verification token" });
+      }
+      
+      // Import verification service to use bcrypt comparison
+      const { verificationService } = await import('./auth/verification-service');
+      
+      // Find the user by comparing token with bcrypt
+      let matchedUser = null;
+      for (const user of unverifiedUsers) {
+        if (user.verificationToken) {
+          const verifyResult = await verificationService.verifyToken(
+            token,
+            user.verificationToken,
+            user.verificationTokenExpires
+          );
+          
+          if (verifyResult.isValid) {
+            matchedUser = user;
+            break;
           }
-          
-          // Remove sensitive data before sending the response
-          const { password, passwordResetToken, passwordResetExpires, verificationToken, ...userWithoutPassword } = user;
-          
-          console.log(`[DEBUG] Login successful for user: ${user.username}, ID: ${user.id}`);
-          console.log(`[DEBUG] Session ID after login: ${req.sessionID}`);
-          console.log(`[DEBUG] isAuthenticated after login: ${req.isAuthenticated()}`);
-          
-          // Return the user object without the password
-          return res.json(userWithoutPassword);
+        }
+      }
+      
+      if (!matchedUser) {
+        console.log('No user matched the verification token');
+        return res.status(400).json({ message: "Invalid verification token" });
+      }
+      
+      // Check if account is expired (more than 24 hours old and not verified)
+      const accountAge = Date.now() - new Date(matchedUser.createdAt!).getTime();
+      const twentyFourHours = 24 * 60 * 60 * 1000;
+      
+      if (accountAge > twentyFourHours) {
+        return res.status(400).json({ 
+          message: "Verification link has expired. Your temporary account has been inactive for more than 24 hours.",
+          expired: true
         });
-      })(req, res, next);
-    }).catch(error => {
-      console.error('[ERROR] Passport import error:', error);
-      res.status(500).json({ message: "Login failed due to server error" });
-    });
+      }
+      
+      // Update user to mark email as verified and clear verification token
+      await db.update(users)
+        .set({ 
+          emailVerified: true,
+          verificationToken: null,
+          verificationTokenExpires: null
+        })
+        .where(eq(users.id, matchedUser.id));
+      
+      
+      // Fetch the updated user data
+      const updatedUser = await db.select()
+        .from(users)
+        .where(eq(users.id, matchedUser.id))
+        .limit(1);
+      
+      if (updatedUser.length === 0) {
+        return res.status(500).json({ message: "Failed to fetch updated user data" });
+      }
+      
+      // Create session for auto-login using passport
+      req.login(updatedUser[0], (err) => {
+        if (err) {
+          console.error('Failed to create session after email verification:', err);
+          return res.status(500).json({ message: "Email verified but failed to create session" });
+        }
+        
+        console.log('Passport session created for auto-login after email verification');
+        
+        res.json({ 
+          message: "Email verified successfully",
+          success: true,
+          user: updatedUser[0]
+        });
+      });
+    } catch (error) {
+      console.error('Email verification failed:', error);
+      res.status(500).json({ message: "Email verification failed" });
+    }
   });
-  // Add security headers middleware for sensitive routes
-  app.use(addSecurityHeaders());
-  app.use(logoutStateChecker());
+  
+  // Cleanup expired unverified accounts endpoint (for admin/cron use)
+  app.post("/api/auth/cleanup-expired-accounts", async (req: Request, res: Response) => {
+    console.log('Cleanup expired accounts request received');
+    try {
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      
+      // Find and delete accounts that are:
+      // 1. More than 24 hours old
+      // 2. Email not verified
+      // 3. Have a verification token (indicating they haven't completed verification)
+      const expiredUsers = await db.select()
+        .from(users)
+        .where(
+          and(
+            eq(users.emailVerified, false),
+            isNotNull(users.verificationToken),
+            lte(users.createdAt, twentyFourHoursAgo)
+          )
+        );
+      
+      if (expiredUsers.length === 0) {
+        return res.json({ 
+          message: "No expired accounts found",
+          deletedCount: 0
+        });
+      }
+      
+      // Delete expired accounts
+      const expiredUserIds = expiredUsers.map(u => u.id);
+      await db.delete(users)
+        .where(inArray(users.id, expiredUserIds));
+      
+      console.log(`[CLEANUP] Deleted ${expiredUsers.length} expired unverified accounts`);
+      
+      res.json({ 
+        message: `Successfully cleaned up ${expiredUsers.length} expired accounts`,
+        deletedCount: expiredUsers.length
+      });
+    } catch (error) {
+      console.error('Failed to cleanup expired accounts:', error);
+      res.status(500).json({ message: "Failed to cleanup expired accounts" });
+    }
+  });
+  
+  // Resend verification email endpoint
+  app.post("/api/auth/verify-email/resend", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    console.log('Resend verification email request received');
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const userId = 'userId' in req.user ? req.user.userId : req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Check if there's an active proxy account
+      let targetEmail = user.email;
+      let targetName = user.name;
+      let targetUsername = user.username;
+      
+      const activeProxyAccountId = (req.session as any)?.activeProxyAccountId;
+      if (activeProxyAccountId) { try {
+          const proxyAccount = await storage.getProxyAccount(activeProxyAccountId);
+          if (proxyAccount && proxyAccount.parentUserId === userId && proxyAccount.email) {
+            targetEmail = proxyAccount.email;
+            targetName = proxyAccount.accountName;
+            targetUsername = proxyAccount.accountName;
+          }
+        } catch (error) {
+          console.error('[DEBUG] Error getting proxy account for verification', error);
+        }
+      }
+      
+      if (user.emailVerified) {
+        return res.status(400).json({ message: "Email already verified" });
+      }
+      
+      // Check if account is expired (more than 24 hours old)
+      const accountAge = Date.now() - new Date(user.createdAt!).getTime();
+      const twentyFourHours = 24 * 60 * 60 * 1000;
+      
+      if (accountAge > twentyFourHours) {
+        return res.status(400).json({ 
+          message: "Account has expired. Temporary accounts must be verified within 24 hours.",
+          expired: true
+        });
+      }
+      
+      // Generate new secure verification token with hash
+      const { verificationService } = await import('./auth/verification-service');
+      const { token: verificationToken, hashedToken, expiresAt } = await verificationService.generateSecureToken();
+      
+      // Update user with new hashed token and expiry
+      await db.update(users)
+        .set({ 
+          verificationToken: hashedToken,
+          verificationTokenExpires: expiresAt
+        })
+        .where(eq(users.id, user.id));
+      
+      // Send verification email using EmailService with DeepL translation
+      const { EmailService } = await import('./email-service-enhanced');
+      
+      const baseUrl = getBaseUrl(req);
+      
+      const verificationLink = verificationService.generateVerificationUrl(
+        baseUrl,
+        verificationToken,
+        'email'
+      );
+      
+      // Use user's preferred language (falls back to EN if not set)
+      const userLanguage = user.preferredLanguage || 'EN';
+      console.log(`[VERIFICATION-EMAIL] Sending email in language: ${userLanguage} to: ${targetEmail}`);
+      
+      // Use sendWelcomeEmail which includes DeepL auto-translation for all languages
+      const emailService = new EmailService();
+      await emailService.sendWelcomeEmail({
+        name: targetName,
+        username: targetUsername,
+        email: targetEmail,
+        verificationLink: verificationLink,
+        language: userLanguage
+      });
+      
+      
+      res.json({ 
+        message: "Verification email resent successfully",
+        success: true
+      });
+    } catch (error) {
+      console.error('Failed to resend verification email:', error);
+      res.status(500).json({ message: "Failed to resend verification email" });
+    }
+  });
+  
+  // Email change request endpoint - sends verification email to new address
+  app.post("/api/auth/change-email/request", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    console.log('Email change request received');
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const { newEmail } = req.body;
+      
+      if (!newEmail) {
+        return res.status(400).json({ message: "New email address is required" });
+      }
+      
+      // Validate email format
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+        return res.status(400).json({ message: "Invalid email format" });
+      }
+      
+      const userId = 'userId' in req.user ? req.user.userId : req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Check if new email is same as current
+      if (user.email === newEmail) {
+        return res.status(400).json({ message: "New email is the same as current email" });
+      }
+      
+      // Check if email is already in use by another user
+      const existingUser = await db.select()
+        .from(users)
+        .where(eq(users.email, newEmail))
+        .limit(1);
+      
+      if (existingUser.length > 0 && existingUser[0].id !== user.id) {
+        return res.status(400).json({ message: "Email is already in use" });
+      }
+      
+      // Generate new secure verification token with hash
+      const { verificationService } = await import('./auth/verification-service');
+      const { token: verificationToken, hashedToken, expiresAt } = await verificationService.generateSecureToken();
+      
+      // Store the pending email change with hashed token
+      // We'll use emailChangeToken and emailChangeTokenExpires fields
+      await db.update(users)
+        .set({ 
+          emailChangeToken: hashedToken,
+          emailChangeTokenExpires: expiresAt,
+          pendingEmail: newEmail
+        })
+        .where(eq(users.id, user.id));
+      
+      // Send verification email to the new address
+      const { EmailService } = await import('./email-service-enhanced');
+      const emailService = new EmailService();
+      
+      const baseUrl = getBaseUrl(req);
+      
+      // Generate verification link for email change
+      const verificationLink = verificationService.generateVerificationUrl(
+        baseUrl,
+        verificationToken,
+        'email'
+      );
+      
+      // Use user's preferred language
+      const userLanguage = user.preferredLanguage || 'EN';
+      console.log(`[EMAIL-CHANGE] Sending verification email to new address: ${newEmail} in language: ${userLanguage}`);
+      
+      // Send email change verification email
+      await emailService.sendEmailChangeVerification({
+        name: user.name,
+        username: user.username,
+        email: newEmail,
+        oldEmail: user.email,
+        verificationLink: verificationLink,
+        language: userLanguage
+      });
+      
+      
+      res.json({ 
+        message: "Verification email sent to new address",
+        success: true
+      });
+    } catch (error) {
+      console.error('Failed to send email change verification:', error);
+      res.status(500).json({ message: "Failed to send email change verification" });
+    }
+  });
+  
+  // Email change confirmation endpoint
+  app.post("/api/auth/change-email/confirm", async (req: Request, res: Response) => {
+    console.log('Email change confirmation request received');
+    try {
+      const { token } = req.body;
+      
+      if (!token) {
+        return res.status(400).json({ message: "Verification token is required" });
+      }
+      
+      // Security check: Reject tokens that look like bcrypt hashes
+      if (token.startsWith('$2a$') || token.startsWith('$2b$') || token.startsWith('$2y$')) {
+        console.log('[SECURITY] Rejected email change verification with bcrypt hash instead of plain token');
+        return res.status(400).json({ message: "Invalid verification token format" });
+      }
+      
+      // Validate token format - should be 64-character hex string
+      if (!/^[a-f0-9]{64}$/i.test(token)) {
+        console.log('[SECURITY] Rejected email change verification with invalid token format');
+        return res.status(400).json({ message: "Invalid verification token format" });
+      }
+      
+      // Get all users with pending email changes
+      const usersWithPendingChange = await db.select()
+        .from(users)
+        .where(
+          and(
+            isNotNull(users.emailChangeToken),
+            isNotNull(users.pendingEmail)
+          )
+        );
+      
+      if (usersWithPendingChange.length === 0) {
+        console.log('No pending email changes found');
+        return res.status(400).json({ message: "Invalid verification token" });
+      }
+      
+      // Import verification service to use bcrypt comparison
+      const { verificationService } = await import('./auth/verification-service');
+      
+      // Find the user by comparing token with bcrypt
+      let matchedUser = null;
+      for (const user of usersWithPendingChange) {
+        if (user.emailChangeToken) {
+          const verifyResult = await verificationService.verifyToken(
+            token,
+            user.emailChangeToken,
+            user.emailChangeTokenExpires
+          );
+          
+          if (verifyResult.isValid) {
+            matchedUser = user;
+            break;
+          }
+        }
+      }
+      
+      if (!matchedUser || !matchedUser.pendingEmail) {
+        console.log('No user matched the email change verification token');
+        return res.status(400).json({ message: "Invalid or expired verification token" });
+      }
+      
+      // Update user's email to the new pending email and clear tokens
+      await db.update(users)
+        .set({ 
+          email: matchedUser.pendingEmail,
+          emailChangeToken: null,
+          emailChangeTokenExpires: null,
+          pendingEmail: null
+        })
+        .where(eq(users.id, matchedUser.id));
+      
+      
+      res.json({ 
+        message: "Email changed successfully",
+        success: true,
+        newEmail: matchedUser.pendingEmail
+      });
+    } catch (error) {
+      console.error('Email change confirmation failed:', error);
+      res.status(500).json({ message: "Email change confirmation failed" });
+    }
+  });
+  
+  // DISABLED: Conflicting login route - use /api/auth/login instead
+  // app.post("/api/login", ...);
 
-  // Single comprehensive secure logout endpoint
-  app.post("/api/logout", createEnhancedLogout());
+  // Instant logout endpoint - returns immediately
+  app.post("/api/instant-logout", createInstantLogout());
 
-  // User endpoint for authentication checks  
-  app.get("/api/user", unifiedIsAuthenticated, (req, res) => {
-    console.log('[DEBUG] /api/user - Authenticated with unified auth');
-    res.json(req.user);
+  // Clean, instant logout endpoint (kept for backward compatibility)
+  app.post("/api/logout", createCleanLogout());
+
+  // User endpoint for authentication checks - allow unauthenticated requests to return status
+  app.get("/api/user", async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
+    console.log('/api/user - Checking authentication status');
+    
+    // Try to get user using the same logic as unifiedIsAuthenticated middleware
+    let user = null;
+    
+    // Check if already authenticated via middleware
+    if (req.user) {
+      user = req.user;
+    }
+    // Check passport session
+    else if (req.isAuthenticated && req.isAuthenticated()) {
+      user = req.user;
+    }
+    // Check session passport data directly
+    else if (req.session && typeof (req.session as any).passport !== 'undefined' && (req.session as any).passport.user) {
+      try {
+        const userId = (req.session as any).passport.user;
+        user = await storage.getUser(userId);
+      } catch (error) {
+        console.error('[DEBUG] Error retrieving user from session', error);
+      }
+    }
+    // Check for stored user session (fallback for messaging)
+    else if (req.session && (req.session as any).userId) {
+      try {
+        user = await storage.getUser((req.session as any).userId);
+      } catch (error) {
+        console.error('[DEBUG] Error retrieving user from fallback session', error);
+      }
+    }
+    
+    if (user) {
+      
+      // Check if user has an active proxy account
+      const activeProxyAccountId = (req.session as any)?.activeProxyAccountId;
+      if (activeProxyAccountId) {
+        try {
+          const proxyAccount = await storage.getProxyAccount(activeProxyAccountId);
+          
+          if (proxyAccount && proxyAccount.parentUserId === (user as any).id) {
+            // Return proxy account data as a user object
+            const proxyUserData = {
+              id: proxyAccount.id,
+              username: proxyAccount.accountName,
+              name: proxyAccount.accountName,
+              email: proxyAccount.email || (user as any).email, // Use proxy email if set, fallback to parent
+              avatar: (user as any).avatar,
+              role: (user as any).role,
+              isProxyAccount: true,
+              parentUserId: proxyAccount.parentUserId,
+              accountType: proxyAccount.accountType,
+              status: proxyAccount.status,
+            };
+            
+            return res.json(proxyUserData);
+          } else {
+            delete (req.session as any).activeProxyAccountId;
+          }
+        } catch (error) {
+          console.error('[DEBUG] /api/user - Error loading proxy account', error);
+          delete (req.session as any).activeProxyAccountId;
+        }
+      }
+      
+      res.json(user);
+    } else {
+      console.log('/api/user - No authenticated user');
+      // Return 200 OK with null user instead of 401 to avoid console errors
+      res.status(200).json(null);
+    }
+  });
+
+  // Get parent user data (for proxy accounts to see their parent)
+  app.get("/api/user/parent", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      
+      // Get the parent user (the actual authenticated user, not the proxy)
+      const parentUser = await storage.getUser(userId);
+      
+      if (!parentUser) {
+        return res.status(404).json({ message: 'Parent user not found' });
+      }
+      
+      res.json(parentUser);
+    } catch (error) {
+      console.error('Error getting parent user', error);
+      res.status(500).json({ message: 'Failed to get parent user' });
+    }
   });
 
   // Update user location
   app.patch("/api/user/location", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      if (!req.user?.id) {
+      if (!req.user) {
         return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
       }
 
+      const userId = 'userId' in req.user ? req.user.userId : req.user.id;
       const { city, country } = req.body;
 
       // Validate input
@@ -3735,13 +8960,18 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(400).json({ message: 'At least one location field (city or country) is required' });
       }
 
+      // Get current user data to preserve existing values
+      const currentUser = await storage.getUser(userId);
+      if (!currentUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
       // Update user location in database
-      await storage.updateUser(req.user.id, {
-        city: city || req.user.city,
-        country: country || req.user.country
+      await storage.updateUser(userId, {
+        city: city || currentUser.city,
+        country: country || currentUser.country
       });
 
-      console.log(`[DEBUG] Updated location for user ${req.user.id}: ${city}, ${country}`);
 
       // Return success response
       return res.json({
@@ -3750,7 +8980,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         location: { city, country }
       });
     } catch (error: any) {
-      console.error('Error updating user location:', error);
+      console.error('Error updating user location', error);
       return res.status(500).json({ message: 'Failed to update location' });
     }
   });
@@ -3774,7 +9004,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json({ message: "Dating feature activated successfully", datingEnabled: true });
     } catch (error) {
-      console.error("Error activating dating:", error);
+      console.error('Error activating dating', error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -3782,17 +9012,16 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Debug endpoint for testing authentication
   app.get("/api/auth/me", async (req: Request, res: Response) => {
     try {
-      console.log('[DEBUG] /api/auth/me called');
+      console.log('/api/auth/me called');
       
       if (req.user) {
-        console.log('[DEBUG] User found in session:', req.user);
         return res.json(req.user);
       } else {
-        console.log('[DEBUG] No user in session');
+        console.log('No user in session');
         return res.status(401).json({ message: 'Not authenticated' });
       }
     } catch (error) {
-      console.error('[ERROR] Error in /api/auth/me:', error);
+      console.error('Error in /api/auth/me:', error);
       return res.status(500).json({ message: 'Server error' });
     }
   });
@@ -3800,14 +9029,14 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Get user recommendations
   app.get('/api/users/recommendations', async (req, res) => {
     try {
-      console.log('[DEBUG] Getting user recommendations');
+      console.log('Getting user recommendations');
       
       // For now, return empty array as recommendations aren't fully implemented
       const recommendations: any[] = [];
-      console.log(`[DEBUG] Found ${recommendations.length} recommendations`);
+      console.log(`Found ${recommendations.length} recommendations`);
       res.json(recommendations);
     } catch (error) {
-      console.error('Error getting user recommendations:', error);
+      console.error('Error getting user recommendations', error);
       res.status(500).json({ message: 'Failed to get user recommendations' });
     }
   });
@@ -3822,11 +9051,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         .orderBy(cities.country);
       
       const countryList = countries.map(c => c.country);
-      console.log(`[DEBUG] Found ${countryList.length} countries in database`);
+      console.log(`Found ${countryList.length} countries in database`);
       
       res.json(countryList);
     } catch (error) {
-      console.error('Error fetching countries:', error);
+      console.error('Error fetching countries', error);
       res.status(500).json({ message: 'Failed to fetch countries' });
     }
   });
@@ -3836,7 +9065,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const { country } = req.params;
       const { search = '' } = req.query;
       
-      console.log(`[DEBUG] Fetching ALL cities for country: ${country}, search: ${search}`);
       
       let query = db
         .selectDistinct({ name: cities.name })
@@ -3845,25 +9073,28 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       // Add search filter if provided
       if (search && typeof search === 'string') {
-        query = query.where(
-          and(
-            eq(cities.country, country),
-            ilike(cities.name, `%${search}%`)
-          )
-        );
+        query = db
+          .selectDistinct({ name: cities.name })
+          .from(cities)
+          .where(
+            and(
+              eq(cities.country, country),
+              ilike(cities.name, `%${search}%`)
+            )
+          );
       }
       
       // Order cities alphabetically by name
       const citiesResult = await query
         .orderBy(cities.name);
       
-      console.log(`[DEBUG] Found ${citiesResult.length} unique cities for ${country}`);
+      console.log(`Found ${citiesResult.length} unique cities for ${country}`);
       
       // Return just the city names for the dropdown
       const cityNames = citiesResult.map(city => city.name);
       res.json(cityNames);
     } catch (error) {
-      console.error('Error fetching cities by country:', error);
+      console.error('Error fetching cities by country', error);
       res.status(500).json({ message: 'Failed to fetch cities' });
     }
   });
@@ -3904,7 +9135,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const { country } = req.params;
       const { q = '', limit = '15' } = req.query;
       
-      console.log(`[DEBUG] Enhanced search for country: ${country}, query: ${q}, limit: ${limit}`);
       
       if (!q || typeof q !== 'string' || q.length < 1) {
         res.json([]);
@@ -3960,11 +9190,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const uniqueResults = Array.from(new Set(allResults));
       const finalResults = uniqueResults.slice(0, parseInt(limit as string) || 15);
       
-      console.log(`[DEBUG] Enhanced search found ${finalResults.length} cities matching "${q}" for ${country}`);
+      console.log(`Enhanced search found ${finalResults.length} cities matching "${q}" for ${country}`);
       
       res.json(finalResults);
     } catch (error) {
-      console.error('Error searching cities:', error);
+      console.error('Error searching cities', error);
       res.status(500).json({ message: 'Failed to search cities' });
     }
   });
@@ -3979,11 +9209,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         .orderBy(cities.region);
       
       const regionList = regions.map(r => r.region);
-      console.log(`[DEBUG] Found ${regionList.length} regions in database (excluding Other)`);
+      console.log(`Found ${regionList.length} regions in database (excluding Other)`);
       
       res.json(regionList);
     } catch (error) {
-      console.error('Error fetching regions:', error);
+      console.error('Error fetching regions', error);
       res.status(500).json({ message: 'Failed to fetch regions' });
     }
   });
@@ -3992,7 +9222,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     try {
       const { region } = req.params;
       
-      console.log(`[DEBUG] Fetching countries for region: ${region}`);
+      console.log(`Fetching countries for region: ${region}`);
       
       const countries = await db
         .selectDistinct({ country: cities.country })
@@ -4001,11 +9231,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         .orderBy(cities.country);
       
       const countryList = countries.map(c => c.country);
-      console.log(`[DEBUG] Found ${countryList.length} countries in region ${region}`);
+      console.log(`Found ${countryList.length} countries in region ${region}`);
       
       res.json(countryList);
     } catch (error) {
-      console.error('Error fetching countries by region:', error);
+      console.error('Error fetching countries by region', error);
       res.status(500).json({ message: 'Failed to fetch countries by region' });
     }
   });
@@ -4016,18 +9246,18 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.get('/api/social/followers/:userId', async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
-      console.log(`[DEBUG] Getting followers for user: ${userId}`);
+      console.log(`Getting followers for user: ${userId}`);
       
       const followersCount = await storage.getFollowersCount(userId);
       const followingCount = await storage.getFollowingCount(userId);
       
-      console.log(`[DEBUG] Found ${followersCount} followers and ${followingCount} following for user ${userId}`);
+      console.log(`Found ${followersCount} followers and ${followingCount} following for user ${userId}`);
       res.json({ 
         followers: followersCount, 
         following: followingCount 
       });
     } catch (error) {
-      console.error('Error getting user followers:', error);
+      console.error('Error getting user followers', error);
       res.status(500).json({ message: 'Failed to get user followers' });
     }
   });
@@ -4038,7 +9268,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Check cache first
       const cached = queryCache.get('products:popular');
       if (cached) {
-        console.log('[DEBUG] Returning cached popular products');
+        console.log('Returning cached popular products');
         return res.json(cached);
       }
 
@@ -4055,8 +9285,122 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json(mappedPopularProducts);
     } catch (error) {
-      console.error('Error fetching popular products:', error);
+      console.error('Error fetching popular products', error);
       res.status(500).json({ message: 'Failed to fetch popular products' });
+    }
+  });
+
+  // Multi-language search products endpoint - searches across ALL marketplace types and languages - MUST be before /:identifier route
+  app.get('/api/products/search', async (req: Request, res: Response) => {
+    try {
+      const query = req.query.q as string || '';
+      const marketplaceType = req.query.marketplace as string || 'all';
+      const limit = parseInt(req.query.limit as string) || 50;
+      const userLanguage = req.query.language as string || (req.user && 'preferredLanguage' in req.user ? (req.user as any).preferredLanguage : 'EN') || 'EN';
+      
+      
+      if (!query || query.trim().length === 0) {
+        return res.json({ results: [], byMarketplace: {}, query: '', marketplaceFilter: marketplaceType, total: 0 });
+      }
+      
+      // Check cache first
+      const cachedResults = searchCacheService.getCachedResults(query, userLanguage, marketplaceType);
+      if (cachedResults) {
+        console.log(`[MultiLangSearch] Returning ${cachedResults.length} cached results`);
+        
+        // Group cached results by marketplace
+        const resultsByMarketplace: any = {
+          c2c: [],
+          b2c: [],
+          b2b: [],
+          raw: [],
+          rqst: [],
+          total: cachedResults.length
+        };
+        
+        cachedResults.forEach((product: any) => {
+          if (product.marketplace && resultsByMarketplace[product.marketplace]) {
+            resultsByMarketplace[product.marketplace].push(product);
+          }
+        });
+        
+        return res.json({
+          results: cachedResults,
+          byMarketplace: resultsByMarketplace,
+          query: query.trim(),
+          marketplaceFilter: marketplaceType,
+          total: cachedResults.length,
+          multiLanguage: true,
+          searchLanguage: userLanguage,
+          cached: true
+        });
+      }
+      
+      // Use multi-language search service
+      const searchResults = await multiLangSearchService.searchProducts(
+        query,
+        userLanguage,
+        { limit, marketplace: marketplaceType }
+      );
+      
+      console.log(`[MultiLangSearch] Found ${searchResults.length} products matching "${query}"`);
+      
+      // Map results to expected format
+      const mappedResults = searchResults.map(product => ({
+          id: product.id,
+        name: product.name,
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        currency: product.currency,
+        imageUrl: product.imageUrl,
+        category: product.category,
+        subcategory: product.subcategory,
+        marketplace: product.marketplace,
+        tags: product.tags,
+        collections: product.collections,
+        isOnSale: product.isOnSale,
+        createdAt: product.createdAt,
+        vendor: product.vendor,
+        relevanceScore: product.relevanceScore,
+        matchedLanguage: product.matchedLanguage
+      }));
+      
+      // Cache the results
+      searchCacheService.cacheSearchResults(query, userLanguage, mappedResults, marketplaceType);
+      
+      // Group results by marketplace type for better organization
+      const resultsByMarketplace: any = {
+        c2c: [],
+        b2c: [],
+        b2b: [],
+        raw: [],
+        rqst: [],
+        total: mappedResults.length
+      };
+      
+      mappedResults.forEach(product => {
+        if (product.marketplace && resultsByMarketplace[product.marketplace]) {
+          resultsByMarketplace[product.marketplace].push(product);
+        }
+      });
+      
+      // Return both flat results and grouped results
+      const response = {
+        results: mappedResults,
+        byMarketplace: resultsByMarketplace,
+        query: query.trim(),
+        marketplaceFilter: marketplaceType,
+        total: mappedResults.length,
+        multiLanguage: true,
+        searchLanguage: userLanguage,
+        cached: false
+      };
+      
+      res.json(response);
+    } catch (error) {
+      console.error('Error searching products', error);
+      res.status(500).json({ message: 'Failed to search products' });
     }
   });
 
@@ -4084,67 +9428,101 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Map database fields to expected frontend fields
       const mappedProduct = {
         ...product,
-        imageUrl: (product as any).image_url || product.imageUrl // Map image_url to imageUrl
+        imageUrl: (product as any).image_url || product.imageUrl, // Map image_url to imageUrl
+        productCode: (product as any).product_code || product.productCode // Map product_code to productCode
       };
       
       res.json(mappedProduct);
     } catch (error) {
-      console.error("Error getting product:", error);
+      console.error('Error getting product', error);
       res.status(500).json({ message: "Failed to get product" });
     }
   });
 
   // Product reviews endpoint
-  app.get('/api/products/:id/reviews', async (req: Request, res: Response) => {
+  app.get('/api/products/:identifier/reviews', async (req: Request, res: Response) => {
     try {
+      const identifier = req.params.identifier;
+      
+      // Check if identifier is a number (ID) or string (slug)
+      const isNumeric = /^\d+$/.test(identifier);
+      let product;
+      
+      if (isNumeric) {
+        const productId = parseInt(identifier);
+        product = await storage.getProduct(productId);
+      } else {
+        // Look up by slug
+        product = await storage.getProductBySlug(identifier);
+      }
+      
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      
+      const productReviews = await db
+        .select({
+          id: reviews.id,
+          userId: reviews.userId,
+          productId: reviews.productId,
+          rating: reviews.rating,
+          content: reviews.content,
+          createdAt: reviews.createdAt,
+          userName: users.name,
+          userAvatar: users.avatar,
+        })
+        .from(reviews)
+        .leftJoin(users, eq(reviews.userId, users.id))
+        .where(eq(reviews.productId, product.id))
+        .orderBy(desc(reviews.createdAt));
+      
+      res.json(productReviews);
+    } catch (error) {
+      console.error('Error getting product reviews', error);
+      res.status(500).json({ message: "Failed to get product reviews" });
+    }
+  });
+
+  // Create product review endpoint
+  app.post('/api/products/:id/reviews', async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
       const productId = parseInt(req.params.id);
       
       if (isNaN(productId)) {
         return res.status(400).json({ message: "Invalid product ID" });
       }
-      
-      // Return empty reviews array for now
-      res.json([]);
-    } catch (error) {
-      console.error("Error getting product reviews:", error);
-      res.status(500).json({ message: "Failed to get product reviews" });
-    }
-  });
 
-  // Search products endpoint
-  app.get('/api/products/search', async (req: Request, res: Response) => {
-    try {
-      const query = req.query.q as string || '';
-      console.log(`[DEBUG] Searching products for: "${query}"`);
-      
-      if (!query || query.trim().length === 0) {
-        return res.json([]);
+      const { rating, content } = req.body;
+
+      if (!rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ message: "Rating must be between 1 and 5" });
       }
-      
-      // Search products directly in the database
-      const searchResults = await db
-        .select()
-        .from(products)
-        .where(
-          or(
-            like(products.name, `%${query}%`),
-            like(products.description, `%${query}%`)
-          )
-        )
-        .limit(20);
-      
-      console.log(`[DEBUG] Found ${searchResults.length} products matching "${query}"`);
-      
-      // Map database fields to expected frontend fields
-      const mappedSearchResults = searchResults.map(product => ({
-        ...product,
-        imageUrl: (product as any).image_url || product.imageUrl // Map image_url to imageUrl
-      }));
-      
-      res.json(mappedSearchResults);
+
+      if (!content || content.trim().length === 0) {
+        return res.status(400).json({ message: "Review content is required" });
+      }
+
+      const product = await storage.getProduct(productId);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      const [review] = await db.insert(reviews).values({
+        userId: req.user!.id,
+        productId: productId,
+        vendorId: product.vendorId,
+        rating: rating,
+        content: content.trim(),
+      }).returning();
+
+      res.status(201).json(review);
     } catch (error) {
-      console.error('Error searching products:', error);
-      res.status(500).json({ message: 'Failed to search products' });
+      console.error('Error creating review', error);
+      res.status(500).json({ message: "Failed to create review" });
     }
   });
 
@@ -4152,7 +9530,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.get('/api/search/suggestions', async (req: Request, res: Response) => {
     try {
       const query = req.query.q as string || '';
-      console.log(`[DEBUG] Getting search suggestions for: "${query}"`);
+      console.log(`Getting search suggestions for: "${query}"`);
       
       if (!query || query.trim().length < 2) {
         return res.json([]);
@@ -4194,12 +9572,46 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         .limit(3);
 
       const suggestions = [...userSuggestions, ...productSuggestions];
-      console.log(`[DEBUG] Found ${suggestions.length} suggestions for "${query}"`);
+      console.log(`Found ${suggestions.length} suggestions for "${query}"`);
       
       res.json(suggestions);
     } catch (error) {
-      console.error('Error getting search suggestions:', error);
+      console.error('Error getting search suggestions', error);
       res.status(500).json({ message: 'Failed to get search suggestions' });
+    }
+  });
+
+  // Comprehensive community search endpoint
+  app.get('/api/search/community', async (req: Request, res: Response) => {
+    try {
+      const query = req.query.q as string || '';
+      const userId = (req.user as any)?.id;
+      
+      
+      if (!query || query.trim().length < 2) {
+        return res.json({
+          posts: [],
+          members: [],
+          events: [],
+          datingProfiles: [],
+          total: 0
+        });
+      }
+      
+      const results = await storage.comprehensiveSearch(query, userId);
+      
+      const total = results.posts.length + results.members.length + 
+                    results.events.length + results.datingProfiles.length;
+      
+      console.log(`Community search found ${total} total results`);
+      
+      res.json({
+        ...results,
+        total
+      });
+    } catch (error) {
+      console.error('Error in community search', error);
+      res.status(500).json({ message: 'Failed to perform community search' });
     }
   });
 
@@ -4210,7 +9622,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const vendors = await storage.getVendors();
       res.json(vendors);
     } catch (error) {
-      console.error("Error getting vendors:", error);
+      console.error('Error getting vendors', error);
       res.status(500).json({ message: "Failed to get vendors" });
     }
   });
@@ -4251,7 +9663,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.status(201).json(vendor);
     } catch (error) {
-      console.error("Error creating vendor:", error instanceof Error ? error.message : String(error));
       if ((error as any)?.code === '23505') { // PostgreSQL unique constraint violation
         return res.status(400).json({ 
           message: "You already have a vendor account of this type" 
@@ -4296,12 +9707,77 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
 
+      // BUSINESS ACCOUNT TYPE VALIDATION
+      // Only users with business account type can create business vendors
+      if (validatedData.vendorType === 'business') {
+        const user = await storage.getUser(userId);
+        if (!user || user.accountType !== 'business') {
+          return res.status(403).json({ 
+            message: "Only Business account holders can create a Business Vendor. Please upgrade your account to Business type first.",
+            errorCode: "BUSINESS_ACCOUNT_REQUIRED"
+          });
+        }
+      }
+
+      // PROFILE COMPLETENESS VALIDATION
+      // Check if user has completed personal information, compliance, and financial information
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      const missingFields = [];
+
+      // Personal Information Check
+      const personalInfoComplete = user.name && user.email && user.phone && user.shippingAddress && 
+                                    user.shippingCity && user.country && user.region && 
+                                    user.dateOfBirth && user.gender;
+      if (!personalInfoComplete) {
+        missingFields.push('personal_information');
+      }
+
+      // Compliance Documents Check
+      const complianceComplete = user.idDocumentFrontUrl && user.idDocumentBackUrl && 
+                                  user.proofOfAddressUrl && user.idSelfieUrl;
+      if (!complianceComplete) {
+        missingFields.push('compliance_documents');
+      }
+
+      // Financial Information Check
+      const financialComplete = user.bankName && user.bankAccountNumber && 
+                                 user.bankRoutingNumber && user.cardProofUrl;
+      if (!financialComplete) {
+        missingFields.push('financial_information');
+      }
+
+      if (missingFields.length > 0) {
+        return res.status(400).json({ 
+          message: "Please complete your profile before activating your vendor account.",
+          errorCode: "PROFILE_INCOMPLETE",
+          missingFields: missingFields
+        });
+      }
+
       // Auto-approve private vendors, require manual approval for business vendors
       const isApproved = validatedData.vendorType === 'private';
 
+      // Build vendor data with explicit values, using user profile as fallback for required fields
       const vendorData = {
-        userId,
-        ...validatedData,
+        userId: validatedData.userId,
+        vendorType: validatedData.vendorType,
+        storeName: validatedData.storeName,
+        description: validatedData.description || null,
+        website: validatedData.website || null,
+        // Required fields - use user profile data as defaults
+        businessName: validatedData.businessName || validatedData.storeName || user.name || 'Business',
+        businessType: validatedData.businessType || 'general',
+        email: validatedData.email || user.email || '',
+        phone: validatedData.phone || user.phone || '',
+        address: validatedData.address || user.shippingAddress || '',
+        city: validatedData.city || user.shippingCity || '',
+        state: validatedData.state || user.region || '',
+        zipCode: validatedData.zipCode || user.postalCode || '',
+        country: validatedData.country || user.country || '',
         isApproved,
         isActive: true
       };
@@ -4322,7 +9798,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           await sendVendorNotificationEmail(user, vendor, validatedData.vendorType, isApproved);
         }
       } catch (emailError) {
-        console.error('[VENDOR_REGISTER] Failed to send vendor notification:', emailError);
+        console.error('[VENDOR_REGISTER] Failed to send vendor notification', emailError);
         // Don't fail registration if email notification fails
       }
       
@@ -4338,7 +9814,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         vendorType: validatedData.vendorType
       });
     } catch (error: any) {
-      console.error("Error registering vendor:", error);
+      console.error('Error registering vendor', error);
       if (error.name === 'ZodError') {
         return res.status(400).json({ 
           message: "Invalid vendor registration data",
@@ -4372,7 +9848,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         canCreateBusiness: !vendorAccounts.some(v => v.vendorType === 'business')
       });
     } catch (error: any) {
-      console.error("Error fetching user vendor accounts:", error);
+      console.error('Error fetching user vendor accounts', error);
       res.status(500).json({ message: "Failed to fetch vendor accounts" });
     }
   });
@@ -4439,7 +9915,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json({ vendor: updatedVendor[0], message: 'Settings updated successfully' });
     } catch (error) {
-      console.error('Error updating vendor settings:', error);
+      console.error('Error updating vendor settings', error);
       res.status(500).json({ message: 'Failed to update settings' });
     }
   });
@@ -4465,7 +9941,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const users = await storage.searchUsersForStore(query);
       res.json(users);
     } catch (error: any) {
-      console.error("Error searching users:", error);
+      console.error('Error searching users', error);
       res.status(500).json({ error: "Failed to search users" });
     }
   });
@@ -4487,7 +9963,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const storeUsers = await storage.getStoreUsers(vendor.id);
       res.json(storeUsers);
     } catch (error: any) {
-      console.error("Error fetching store users:", error);
+      console.error('Error fetching store users', error);
       res.status(500).json({ error: "Failed to fetch store users" });
     }
   });
@@ -4525,7 +10001,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(storeUser);
     } catch (error: any) {
-      console.error("Error assigning user to store:", error);
+      console.error('Error assigning user to store', error);
       res.status(500).json({ error: "Failed to assign user to store" });
     }
   });
@@ -4557,7 +10033,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(updatedStoreUser);
     } catch (error: any) {
-      console.error("Error updating store user:", error);
+      console.error('Error updating store user', error);
       res.status(500).json({ error: "Failed to update store user" });
     }
   });
@@ -4580,7 +10056,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json({ success: true });
     } catch (error: any) {
-      console.error("Error removing user from store:", error);
+      console.error('Error removing user from store', error);
       res.status(500).json({ error: "Failed to remove user from store" });
     }
   });
@@ -4637,7 +10113,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(mappedVendorProducts);
     } catch (error) {
-      console.error('Error getting vendor products:', error);
+      console.error('Error getting vendor products', error);
       res.status(500).json({ message: 'Failed to get vendor products' });
     }
   });
@@ -4672,7 +10148,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           country: vendors.country,
           verificationStatus: vendors.verificationStatus,
           rating: vendors.rating,
-          totalSales: vendors.totalSales,
+          totalSales: vendors.totalSalesAmount,
           createdAt: vendors.createdAt,
           // User information
           userName: users.name,
@@ -4693,7 +10169,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const vendorProducts = await db
         .select({
           id: products.id,
-          title: products.title,
+          title: products.name,
           description: products.description,
           price: products.price,
           currency: products.currency,
@@ -4702,7 +10178,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           subcategory: products.subcategory,
           condition: products.condition,
           marketplace: products.marketplace,
-          stockQuantity: products.stockQuantity,
+          stockQuantity: products.inventory,
           createdAt: products.createdAt
         })
         .from(products)
@@ -4739,7 +10215,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         }
       });
     } catch (error) {
-      console.error('Error fetching vendor profile:', error);
+      console.error('Error fetching vendor profile', error);
       res.status(500).json({ message: 'Failed to fetch vendor profile' });
     }
   });
@@ -4797,7 +10273,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         }
       });
     } catch (error) {
-      console.error('Error fetching vendor products:', error);
+      console.error('Error fetching vendor products', error);
       res.status(500).json({ message: 'Failed to fetch vendor products' });
     }
   });
@@ -4836,7 +10312,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(vendorOrders);
     } catch (error) {
-      console.error('Error fetching vendor orders:', error);
+      console.error('Error fetching vendor orders', error);
       res.status(500).json({ message: 'Failed to fetch vendor orders' });
     }
   });
@@ -4874,7 +10350,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(vendorCustomers);
     } catch (error) {
-      console.error('Error fetching vendor customers:', error);
+      console.error('Error fetching vendor customers', error);
       res.status(500).json({ message: 'Failed to fetch vendor customers' });
     }
   });
@@ -4919,7 +10395,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(vendorStats);
     } catch (error) {
-      console.error('Error fetching vendor stats:', error);
+      console.error('Error fetching vendor stats', error);
       res.status(500).json({ message: 'Failed to fetch vendor stats' });
     }
   });
@@ -4972,7 +10448,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(summary);
     } catch (error) {
-      console.error('Error fetching vendor summary:', error);
+      console.error('Error fetching vendor summary', error);
       res.status(500).json({ message: 'Failed to fetch vendor summary' });
     }
   });
@@ -5010,7 +10486,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(discounts);
     } catch (error) {
-      console.error('Error fetching vendor discounts:', error);
+      console.error('Error fetching vendor discounts', error);
       res.status(500).json({ message: 'Failed to fetch vendor discounts' });
     }
   });
@@ -5042,7 +10518,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           city: vendor.city,
           country: vendor.country,
           user: {
-            id: vendor.userId,
+          id: vendor.userId,
             name: vendor.userName,
             email: vendor.userEmail,
           }
@@ -5052,8 +10528,31 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(vendorDetails);
     } catch (error) {
-      console.error("Error fetching vendor details:", error);
+      console.error('Error fetching vendor details', error);
       res.status(500).json({ message: "Failed to fetch vendor details" });
+    }
+  });
+
+  // Get current user's vendor information (MUST be before /api/vendors/:id)
+  app.get('/api/vendors/me', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      // Find vendor account for current user
+      const [vendor] = await db.select().from(vendors).where(eq(vendors.userId, userId));
+      
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor account not found" });
+      }
+
+      return res.json(vendor);
+    } catch (error) {
+      console.error('Error fetching current user vendor', error);
+      return res.status(500).json({ message: "Internal server error" });
     }
   });
 
@@ -5074,7 +10573,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json(vendor);
     } catch (error) {
-      console.error("Error getting vendor:", error);
+      console.error('Error getting vendor', error);
       res.status(500).json({ message: "Failed to get vendor" });
     }
   });
@@ -5104,31 +10603,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
       res.json(vendor);
     } catch (error) {
-      console.error("Error getting vendor by slug:", error);
+      console.error('Error getting vendor by slug', error);
       res.status(500).json({ message: "Failed to get vendor" });
-    }
-  });
-
-  // Get current user's vendor information
-  app.get('/api/vendors/me', unifiedIsAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const userId = (req.user as any)?.id;
-      
-      if (!userId) {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
-
-      // Find vendor account for current user
-      const [vendor] = await db.select().from(vendors).where(eq(vendors.userId, userId));
-      
-      if (!vendor) {
-        return res.status(404).json({ message: "Vendor account not found" });
-      }
-
-      return res.json(vendor);
-    } catch (error) {
-      console.error('Error fetching current user vendor:', error);
-      return res.status(500).json({ message: "Internal server error" });
     }
   });
 
@@ -5153,7 +10629,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       return res.json(vendor);
     } catch (error) {
-      console.error('Error fetching vendor details:', error);
+      console.error('Error fetching vendor details', error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -5229,7 +10705,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       return res.json(updatedVendor);
     } catch (error) {
-      console.error('Error updating vendor profile:', error);
+      console.error('Error updating vendor profile', error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -5269,23 +10745,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         eq(vendorPaymentInfo.vendorId, vendorId)
       );
 
-      const bankAccountData = {
-        accountHolderName,
-        bankName,
-        accountNumber,
-        sortCode,
-        iban,
-        swiftCode,
-        currency,
-        accountType
-      };
-
       let paymentInfo;
       if (existingPaymentInfo) {
         // Update existing payment info
         [paymentInfo] = await db.update(vendorPaymentInfo)
           .set({
-            bankAccountData: JSON.stringify(bankAccountData),
+            accountHolderName,
+            bankName,
+            accountNumber,
+            routingNumber: sortCode,
             updatedAt: new Date()
           })
           .where(eq(vendorPaymentInfo.vendorId, vendorId))
@@ -5295,16 +10763,19 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         [paymentInfo] = await db.insert(vendorPaymentInfo)
           .values({
             vendorId,
-            bankAccountData: JSON.stringify(bankAccountData),
-            paymentMethod: 'bank_transfer',
-            isActive: true
+            accountHolderName,
+            bankName,
+            accountNumber,
+            routingNumber: sortCode,
+            accountType: accountType as any,
+            preferredPaymentMethod: 'bank'
           })
           .returning();
       }
 
       return res.json({ success: true, message: "Bank account information updated successfully" });
     } catch (error) {
-      console.error('Error updating bank account information:', error);
+      console.error('Error updating bank account information', error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -5360,7 +10831,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       return res.json({ success: true, message: "Notification settings updated successfully" });
     } catch (error) {
-      console.error('Error updating notification settings:', error);
+      console.error('Error updating notification settings', error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -5481,7 +10952,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       });
       
     } catch (error) {
-      console.error('Error fetching shipping methods:', error);
+      console.error('Error fetching shipping methods', error);
       res.status(500).json({ message: 'Failed to fetch shipping methods' });
     }
   });
@@ -5628,17 +11099,20 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           } else {
             // For weights over 30kg, find the highest available tier and extrapolate
             let baseTier = matchingRate.tier_20_30kg || matchingRate.tier_10_20kg || matchingRate.tier_0_10kg;
-            let tierWeight = baseTier === matchingRate.tier_20_30kg ? 25 : (baseTier === matchingRate.tier_10_20kg ? 15 : 5);
-            const baseRate = baseTier / tierWeight;
-            totalCost = weightNum * baseRate;
-            ratePerKg = baseRate;
+            if (baseTier) {
+              let tierWeight = baseTier === matchingRate.tier_20_30kg ? 25 : (baseTier === matchingRate.tier_10_20kg ? 15 : 5);
+              const baseRate = baseTier / tierWeight;
+              totalCost = weightNum * baseRate;
+              ratePerKg = baseRate;
+            } else {
+              // Fallback if no tiers are available
+              ratePerKg = 5.0; // Default rate
+              totalCost = weightNum * ratePerKg;
+            }
           }
           totalCost += adminFeePerShipment;
         }
       } else {
-        console.log(`[SHIPPING] No matching rate found for: ${normalizedOfferingType} ${originCountry} → ${destinationCountry}, type: ${shippingType}`);
-        console.log('[SHIPPING] Available routes:', shippingData.map(r => `${r.offering_category} ${r.seller_location} → ${r.buyer_location} (${r.shipping_type})`));
-        console.log('[SHIPPING] Total shipping data entries:', shippingData.length);
         
         // Fallback to previous pricing structure for unsupported routes
         const fallbackRates = {
@@ -5666,12 +11140,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         shippingPartner,
         origin: `${originCity || ''}, ${originCountry}`.replace(/^,\s*/, ''),
         destination: `${destinationCity || ''}, ${destinationCountry}`.replace(/^,\s*/, ''),
-        pricingType: matchingRate ? (matchingRate.ratePerKg ? 'per-kg' : 'weight-tier') : 'fallback'
+        pricingType: matchingRate ? ((matchingRate as any).ratePerKg || (matchingRate as any).price_per_kg ? 'per-kg' : 'weight-tier') : 'fallback'
       };
 
       res.json(calculation);
     } catch (error) {
-      console.error("Error calculating shipping cost:", error);
+      console.error('Error calculating shipping cost', error);
       res.status(500).json({ message: "Failed to calculate shipping cost" });
     }
   });
@@ -5768,7 +11242,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json(mappedTrendingProducts);
     } catch (error) {
-      console.error('Error fetching trending products:', error);
+      console.error('Error fetching trending products', error);
       res.status(500).json({ message: 'Failed to fetch trending products' });
     }
   });
@@ -5792,6 +11266,18 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       const { action, vendorType } = req.body;
+
+      // BUSINESS ACCOUNT TYPE VALIDATION
+      // Only users with business account type can create business vendors
+      if (action === 'create-business') {
+        const user = await storage.getUser(userId);
+        if (!user || user.accountType !== 'business') {
+          return res.status(403).json({ 
+            message: "Only Business account holders can create a Business Vendor. Please upgrade your account to Business type first.",
+            errorCode: "BUSINESS_ACCOUNT_REQUIRED"
+          });
+        }
+      }
 
       // Get existing vendor accounts
       const existingVendors = await storage.getUserVendorAccounts(userId);
@@ -5841,7 +11327,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
       
     } catch (error) {
-      console.error("Error handling vendor management:", error);
+      console.error('Error handling vendor management', error);
       res.status(500).json({ message: "Failed to process vendor management request" });
     }
   });
@@ -5940,8 +11426,48 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Validate the product data
       const validatedProduct = insertProductSchema.parse(productData);
       
-      // Create the product with automatic product code generation
-      const newProduct = await storage.createProduct(validatedProduct);
+      // Generate product code with retry logic for collision avoidance
+      let newProduct;
+      let attempts = 0;
+      const maxAttempts = 5;
+      
+      while (attempts < maxAttempts) {
+        try {
+          const productCode = generateProductCode(
+            targetVendor.storeName || targetVendor.businessName,
+            validatedProduct.name,
+            finalMarketplace,
+            new Date()
+          );
+          
+          // Add product code to validated product
+          const productWithCode = {
+            ...validatedProduct,
+            productCode
+          };
+          
+          // Create the product with automatic product code generation
+          newProduct = await storage.createProduct(productWithCode);
+          
+          // Invalidate product caches after successful creation
+          CacheInvalidator.invalidateProduct();
+          
+          break; // Success - exit retry loop
+          
+        } catch (error: any) {
+          // Check if it's a unique constraint violation on productCode
+          if (error.code === '23505' && error.constraint?.includes('product_code')) {
+            attempts++;
+            if (attempts >= maxAttempts) {
+              throw new Error('Failed to generate unique product code after multiple attempts');
+            }
+            // Retry with a new code
+            continue;
+          }
+          // If it's not a product code collision, rethrow the error
+          throw error;
+        }
+      }
       
       res.status(201).json({
         ...newProduct,
@@ -5950,7 +11476,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         message: `Product successfully published to ${finalMarketplace.toUpperCase()} marketplace`
       });
     } catch (error) {
-      console.error('Error creating product:', error);
+      console.error('Error creating product', error);
       if (error instanceof Error) {
         res.status(400).json({ message: `Failed to create product: ${error.message}` });
       } else {
@@ -6005,9 +11531,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(404).json({ message: 'Product not found' });
       }
 
+      // Invalidate product caches after successful update
+      CacheInvalidator.invalidateProduct(productId);
+
       res.json(updatedProduct);
     } catch (error) {
-      console.error('Error updating product:', error);
+      console.error('Error updating product', error);
       res.status(500).json({ message: 'Failed to update product' });
     }
   });
@@ -6015,7 +11544,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Delete vendor product
   app.delete('/api/vendors/products/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id; // User is guaranteed to exist due to unifiedIsAuthenticated
+      const userId = req.user!.id as number; // User is guaranteed to exist due to unifiedIsAuthenticated
       const productId = parseInt(req.params.id);
       
       if (isNaN(productId)) {
@@ -6023,7 +11552,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       // Get vendor accounts for the user
-      const vendorAccounts = await storage.getUserVendorAccounts(userId);
+      const vendorAccounts = await storage.getUserVendorAccounts(userId as number);
       
       if (!vendorAccounts || vendorAccounts.length === 0) {
         return res.status(404).json({ message: "No vendor accounts found" });
@@ -6039,7 +11568,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       // Verify the product belongs to one of the user's vendor accounts
-      if (!vendorIds.includes(product.vendorId)) {
+      if (!product.vendorId || !vendorIds.includes(product.vendorId)) {
         return res.status(403).json({ message: 'You do not have permission to delete this product' });
       }
 
@@ -6050,9 +11579,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(500).json({ message: 'Failed to delete product due to database constraints' });
       }
       
+      // Invalidate product caches after successful deletion
+      CacheInvalidator.invalidateProduct(productId);
+      
       res.json({ message: 'Product deleted successfully' });
     } catch (error) {
-      console.error('Error deleting product:', error);
+      console.error('Error deleting product', error);
       res.status(500).json({ message: 'Failed to delete product' });
     }
   });
@@ -6072,11 +11604,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         results
       });
     } catch (error) {
-      console.error('Error in automatic commission charging:', error);
+      console.error('Error in automatic commission charging', error);
       res.status(500).json({ 
         success: false,
         message: 'Failed to process automatic commission charging',
-        error: error.message 
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
@@ -6100,10 +11632,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json(paymentData);
     } catch (error) {
-      console.error('Error generating payment URL:', error);
+      console.error('Error generating payment URL', error);
       res.status(500).json({ 
         message: 'Failed to generate payment URL',
-        error: error.message 
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
@@ -6121,11 +11653,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         suspensions
       });
     } catch (error) {
-      console.error('Error processing overdue charges:', error);
+      console.error('Error processing overdue charges', error);
       res.status(500).json({ 
         success: false,
         message: 'Failed to process overdue charges',
-        error: error.message 
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
@@ -6146,11 +11678,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         message: 'Commission payment processed successfully'
       });
     } catch (error) {
-      console.error('Error processing commission payment:', error);
+      console.error('Error processing commission payment', error);
       res.status(500).json({ 
         success: false,
         message: 'Failed to process commission payment',
-        error: error.message 
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
@@ -6191,7 +11723,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         testResults.tests.push({
           name: 'Monthly Commission Processing',
           status: 'failed',
-          error: error.message
+          error: error instanceof Error ? error.message : 'Unknown error'
         });
         testResults.summary.failed++;
       }
@@ -6214,7 +11746,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         testResults.tests.push({
           name: 'Automatic Commission Charging',
           status: 'failed',
-          error: error.message
+          error: error instanceof Error ? error.message : 'Unknown error'
         });
         testResults.summary.failed++;
       }
@@ -6240,7 +11772,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         testResults.tests.push({
           name: 'Commission Tier Calculation',
           status: 'failed',
-          error: error.message
+          error: error instanceof Error ? error.message : 'Unknown error'
         });
         testResults.summary.failed++;
       }
@@ -6260,7 +11792,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         testResults.tests.push({
           name: 'Payment Reminder System',
           status: 'failed',
-          error: error.message
+          error: error instanceof Error ? error.message : 'Unknown error'
         });
         testResults.summary.failed++;
       }
@@ -6283,14 +11815,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         testResults.tests.push({
           name: 'Overdue Charges Processing',
           status: 'failed',
-          error: error.message
+          error: error instanceof Error ? error.message : 'Unknown error'
         });
         testResults.summary.failed++;
       }
 
       testResults.summary.total = testResults.summary.passed + testResults.summary.failed;
       
-      console.log('[Commission Test] Test completed:', testResults.summary);
       
       res.json({
         success: true,
@@ -6298,11 +11829,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         results: testResults
       });
     } catch (error) {
-      console.error('Error running commission system test:', error);
+      console.error('Error running commission system test', error);
       res.status(500).json({ 
         success: false,
         message: 'Failed to run commission system test',
-        error: error.message 
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
@@ -6320,6 +11851,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // Simple unread message count endpoint (without category)
   app.get('/api/messages/unread/count', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
     try {
       if (!req.user?.id) {
         return res.status(401).json({ message: 'User not authenticated' });
@@ -6328,13 +11862,16 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const count = await storage.getUnreadMessageCount(userId);
       res.json({ count });
     } catch (error) {
-      console.error('Error getting unread message count:', error);
+      console.error('Error getting unread message count', error);
       res.status(500).json({ message: 'Failed to get unread message count' });
     }
   });
 
   // Get users for messaging (excluding current user)
   app.get('/api/messages/users', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
     try {
       if (!req.user?.id) {
         return res.status(401).json({ message: 'User not authenticated' });
@@ -6343,14 +11880,17 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const users = await storage.getUsersForMessaging(currentUserId);
       res.json(users);
     } catch (error) {
-      console.error('Error getting users for messaging:', error);
+      console.error('Error getting users for messaging', error);
       res.status(500).json({ message: 'Failed to get users' });
     }
   });
 
   // Send message endpoint with attachment support
   app.post('/api/messages', unifiedIsAuthenticated, async (req: Request, res: Response) => {
-    console.log('[DEBUG] Send message endpoint called');
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
+    console.log('Send message endpoint called');
     
     try {
       const { receiverId, content, attachmentUrl, attachmentType, category = 'marketplace' } = req.body;
@@ -6359,14 +11899,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(401).json({ message: 'Authentication required' });
       }
 
-      console.log('[DEBUG] Message send request:', {
-        senderId,
-        receiverId,
-        content: content?.substring(0, 50) + '...',
-        attachmentUrl,
-        attachmentType,
-        category
-      });
 
       if (!receiverId) {
         return res.status(400).json({ message: 'Receiver ID is required' });
@@ -6394,31 +11926,31 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         isRead: false
       };
 
-      console.log('[DEBUG] Creating message with data:', messageData);
 
       const message = await storage.createMessage(messageData);
 
-      console.log('[DEBUG] Message created successfully:', message.id);
 
       // Broadcast to WebSocket if available
       try {
         const { broadcastMessage } = await import('./websocket-handler');
         broadcastMessage(message, parseInt(receiverId));
-        console.log('[DEBUG] Message broadcasted via WebSocket');
+        console.log('Message broadcasted via WebSocket');
       } catch (wsError) {
-        console.log('[DEBUG] WebSocket broadcast failed (non-critical):', wsError instanceof Error ? wsError.message : String(wsError));
       }
 
       res.status(201).json(message);
     } catch (error) {
-      console.error('[ERROR] Failed to send message:', error);
+      console.error('Failed to send message:', error);
       res.status(500).json({ message: 'Failed to send message' });
     }
   });
 
   // DEDICATED OFFER SENDING ENDPOINT - for frontend compatibility
   app.post('/api/messages/send', unifiedIsAuthenticated, async (req: Request, res: Response) => {
-    console.log('[DEBUG] Send offer message endpoint called');
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
+    console.log('Send offer message endpoint called');
     
     try {
       const { receiverId, recipientId, content, attachmentUrl, attachmentType, category = 'marketplace' } = req.body;
@@ -6430,12 +11962,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Handle both receiverId and recipientId for compatibility
       const targetReceiverId = receiverId || recipientId;
 
-      console.log('[DEBUG] Offer message send request:', {
-        senderId,
-        receiverId: targetReceiverId,
-        content: content?.substring(0, 50) + '...',
-        category
-      });
 
       if (!targetReceiverId) {
         return res.status(400).json({ message: 'Receiver ID is required' });
@@ -6463,30 +11989,30 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         isRead: false
       };
 
-      console.log('[DEBUG] Creating offer message with data:', messageData);
 
       const message = await storage.createMessage(messageData);
 
-      console.log('[DEBUG] Offer message created successfully:', message.id);
 
       // Broadcast to WebSocket if available
       try {
         const { broadcastMessage } = await import('./websocket-handler');
         broadcastMessage(message, parseInt(targetReceiverId));
-        console.log('[DEBUG] Offer message broadcasted via WebSocket');
+        console.log('Offer message broadcasted via WebSocket');
       } catch (wsError) {
-        console.log('[DEBUG] WebSocket broadcast failed (non-critical):', wsError instanceof Error ? wsError.message : String(wsError));
       }
 
       res.status(201).json(message);
     } catch (error) {
-      console.error('[ERROR] Failed to send offer message:', error);
+      console.error('Failed to send offer message:', error);
       res.status(500).json({ message: 'Failed to send offer message' });
     }
   });
 
   // Category-specific messaging endpoints
   app.get('/api/messages/category/:category', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
     try {
       const category = req.params.category as 'marketplace' | 'community' | 'dating';
       const userId = (req as any).user.id;
@@ -6498,12 +12024,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const messages = await storage.getMessagesByCategory(userId, category);
       res.json(messages);
     } catch (error) {
-      console.error(`Error getting ${req.params.category} messages:`, error);
+      console.error(`Error getting ${req.params.category} messages`, error);
       res.status(500).json({ message: 'Failed to get messages' });
     }
   });
 
   app.get('/api/messages/conversations/:category', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
     try {
       const category = req.params.category as 'marketplace' | 'community' | 'dating';
       const userId = (req as any).user.id;
@@ -6515,12 +12044,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const conversations = await storage.getConversationsByCategory(userId, category);
       res.json(conversations);
     } catch (error) {
-      console.error(`Error getting ${req.params.category} conversations:`, error);
+      console.error(`Error getting ${req.params.category} conversations`, error);
       res.status(500).json({ message: 'Failed to get conversations' });
     }
   });
 
   app.get('/api/messages/unread/:category', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
     try {
       const category = req.params.category as 'marketplace' | 'community' | 'dating';
       const userId = (req as any).user.id;
@@ -6532,18 +12064,18 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const count = await storage.getUnreadCountByCategory(userId, category);
       res.json({ count });
     } catch (error) {
-      console.error(`Error getting ${req.params.category} unread count:`, error);
+      console.error(`Error getting ${req.params.category} unread count`, error);
       res.status(500).json({ message: 'Failed to get unread count' });
     }
   });
 
-  // Categories API endpoint
-  app.get('/api/categories', async (req: Request, res: Response) => {
+  // Categories API endpoint with caching
+  app.get('/api/categories', httpCacheMiddleware(cachePresets.categories), async (req: Request, res: Response) => {
     try {
       const categories = await storage.listCategories();
       res.json(categories);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error('Error fetching categories', error);
       res.status(500).json({ message: 'Failed to fetch categories' });
     }
   });
@@ -6602,33 +12134,16 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json(trendingCategories);
     } catch (error) {
-      console.error('Error fetching trending categories:', error);
+      console.error('Error fetching trending categories', error);
       res.status(500).json({ message: 'Failed to fetch trending categories' });
     }
   });
 
-  // Subscription status endpoint
-  app.get('/api/subscription/status', unifiedIsAuthenticated, async (req: Request, res: Response) => {
-    try {
-      if (!req.user?.id) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-      
-      const subscription = await storage.getUserSubscription(req.user.id);
-      
-      res.json({
-        status: subscription?.status || 'none',
-        type: subscription?.subscriptionType || 'none',
-        validUntil: subscription?.validUntil || null,
-        features: subscription?.features || []
-      });
-    } catch (error) {
-      console.error('Error getting subscription status:', error);
-      res.status(500).json({ message: 'Failed to get subscription status' });
-    }
-  });
 
   app.get('/api/messages/conversations', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
     try {
       if (!req.user?.id) {
         return res.status(401).json({ message: 'User not authenticated' });
@@ -6637,13 +12152,16 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const conversations = await storage.getUserConversations(userId);
       res.json(conversations);
     } catch (error) {
-      console.error('Error getting conversations:', error);
+      console.error('Error getting conversations', error);
       res.status(500).json({ message: 'Failed to get conversations' });
     }
   });
 
   // Get messages for a specific conversation
   app.get('/api/messages/conversation/:userId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
     try {
       if (!req.user?.id) {
         return res.status(401).json({ message: 'User not authenticated' });
@@ -6658,7 +12176,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const messages = await storage.getConversationMessages(currentUserId, otherUserId);
       res.json(messages);
     } catch (error) {
-      console.error('Error getting conversation messages:', error);
+      console.error('Error getting conversation messages', error);
       res.status(500).json({ message: 'Failed to get conversation messages' });
     }
   });
@@ -6666,6 +12184,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
 
   app.get('/api/messages/conversations/:userId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
     try {
       const currentUserId = req.user?.id;
       if (!currentUserId) {
@@ -6687,12 +12208,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         activeCall: null
       });
     } catch (error) {
-      console.error('Error getting messages:', error);
+      console.error('Error getting messages', error);
       res.status(500).json({ message: 'Failed to get messages' });
     }
   });
 
   app.post('/api/messages/conversations/:userId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
     try {
       const senderId = req.user?.id;
       if (!senderId) {
@@ -6717,12 +12241,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(message);
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Error sending message', error);
       res.status(500).json({ message: 'Failed to send message' });
     }
   });
 
   app.post('/api/messages/conversations', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
     try {
       const senderId = req.user?.id;
       if (!senderId) {
@@ -6753,12 +12280,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         message
       });
     } catch (error) {
-      console.error('Error starting conversation:', error);
+      console.error('Error starting conversation', error);
       res.status(500).json({ message: 'Failed to start conversation' });
     }
   });
 
   app.post('/api/messages/mark-read/:userId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
     try {
       const currentUserId = req.user?.id;
       if (!currentUserId) {
@@ -6774,12 +12304,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       await storage.markMessagesAsRead(currentUserId, otherUserId);
       res.json({ success: true });
     } catch (error) {
-      console.error('Error marking messages as read:', error);
+      console.error('Error marking messages as read', error);
       res.status(500).json({ message: 'Failed to mark messages as read' });
     }
   });
 
   app.delete('/api/messages/:messageId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
     try {
       const messageId = parseInt(req.params.messageId);
       const userId = req.user?.id;
@@ -6794,25 +12327,135 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       await storage.deleteMessage(messageId, userId);
       res.json({ success: true });
     } catch (error) {
-      console.error('Error deleting message:', error);
+      console.error('Error deleting message', error);
       res.status(500).json({ message: 'Failed to delete message' });
     }
   });
 
   app.delete('/api/messages/conversations/:userId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
     try {
-      const currentUserId = req.user!.id;
+      const currentUserId = req.user!.id as number;
       const otherUserId = parseInt(req.params.userId);
 
       if (isNaN(otherUserId)) {
         return res.status(400).json({ message: 'Invalid user ID' });
       }
 
-      await storage.clearConversation(currentUserId, otherUserId);
+      await storage.clearConversation(currentUserId as number, otherUserId as number);
       res.json({ success: true });
     } catch (error) {
-      console.error('Error clearing conversation:', error);
+      console.error('Error clearing conversation', error);
       res.status(500).json({ message: 'Failed to clear conversation' });
+    }
+  });
+
+  app.post('/api/users/block', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const blockerId = req.user!.id as number;
+      const { userId, reason } = req.body;
+
+      if (!userId) {
+        return res.status(400).json({ message: 'User ID is required' });
+      }
+
+      const blockedId = parseInt(userId);
+      if (isNaN(blockedId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+
+      const success = await storage.blockUser(blockerId, blockedId, reason);
+      res.json({ success });
+    } catch (error: any) {
+      console.error('Error blocking user', error);
+      res.status(500).json({ message: error.message || 'Failed to block user' });
+    }
+  });
+
+  app.post('/api/users/unblock', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const blockerId = req.user!.id as number;
+      const { userId } = req.body;
+
+      if (!userId) {
+        return res.status(400).json({ message: 'User ID is required' });
+      }
+
+      const blockedId = parseInt(userId);
+      if (isNaN(blockedId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+
+      const success = await storage.unblockUser(blockerId, blockedId);
+      res.json({ success });
+    } catch (error) {
+      console.error('Error unblocking user', error);
+      res.status(500).json({ message: 'Failed to unblock user' });
+    }
+  });
+
+  app.get('/api/users/blocked', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id as number;
+      const blockedUsers = await storage.getBlockedUsers(userId);
+      res.json(blockedUsers);
+    } catch (error) {
+      console.error('Error getting blocked users', error);
+      res.status(500).json({ message: 'Failed to get blocked users' });
+    }
+  });
+
+  app.get('/api/users/is-blocked/:userId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const blockerId = req.user!.id as number;
+      const blockedId = parseInt(req.params.userId);
+
+      if (isNaN(blockedId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+
+      const isBlocked = await storage.checkUserBlocked(blockerId, blockedId);
+      res.json({ isBlocked });
+    } catch (error) {
+      console.error('Error checking if user is blocked', error);
+      res.status(500).json({ message: 'Failed to check block status' });
+    }
+  });
+
+  app.post('/api/moderation/report', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const reporterId = req.user!.id as number;
+      const { subjectId, subjectType, reason, description } = req.body;
+
+      if (!subjectId || !subjectType || !reason) {
+        return res.status(400).json({ message: 'Subject ID, type, and reason are required' });
+      }
+
+      const report = await storage.createModerationReport({
+        reporterId,
+        subjectId: parseInt(subjectId),
+        subjectType,
+        reason,
+        description
+      });
+
+      res.json(report);
+    } catch (error) {
+      console.error('Error creating moderation report', error);
+      res.status(500).json({ message: 'Failed to create report' });
+    }
+  });
+
+  app.get('/api/moderation/my-reports', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id as number;
+      const reports = await storage.getUserModerationReports(userId);
+      res.json(reports);
+    } catch (error) {
+      console.error('Error getting user moderation reports', error);
+      res.status(500).json({ message: 'Failed to get reports' });
     }
   });
 
@@ -6831,38 +12474,16 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         marketplace
       } = req.query;
 
-      console.log('[DEBUG] Products API called with filters:', req.query);
 
       // Check cache first for performance optimization
       const cacheKey = `products:${JSON.stringify(req.query)}`;
       const cachedResult = queryCache.get(cacheKey);
       if (cachedResult) {
-        console.log('[DEBUG] Returning cached products result');
+        console.log('Returning cached products result');
         return res.json(cachedResult);
       }
 
-      // Join products with vendors table to get store names
-      let query = db
-        .select({
-          // Product fields
-          id: products.id,
-          vendorId: products.vendorId,
-          name: products.name,
-          description: products.description,
-          price: products.price,
-          discountPrice: products.discountPrice,
-          imageUrl: products.imageUrl,
-          category: products.category,
-          marketplace: products.marketplace,
-          inventory: products.inventory,
-          createdAt: products.createdAt,
-          // Vendor fields
-          vendorStoreName: vendors.storeName,
-          vendorBusinessName: vendors.businessName
-        })
-        .from(products)
-        .leftJoin(vendors, eq(products.vendorId, vendors.id));
-
+      // Build filter conditions
       const conditions = [];
 
       // Search filter
@@ -6887,9 +12508,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       // Marketplace filter
       if (marketplace && typeof marketplace === 'string') {
-        const validMarketplaces = ['c2c', 'b2c', 'b2b', 'rqst'];
+        const validMarketplaces = ['c2c', 'b2c', 'b2b', 'raw', 'rqst'];
         if (validMarketplaces.includes(marketplace)) {
-          conditions.push(eq(products.marketplace, marketplace));
+          conditions.push(eq(products.marketplace, marketplace as any));
         }
       }
 
@@ -6897,50 +12518,69 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       if (minPrice && typeof minPrice === 'string') {
         const min = parseFloat(minPrice);
         if (!isNaN(min)) {
-          conditions.push(sql`${products.price} >= ${min}`);
+          conditions.push(gte(products.price, min));
         }
       }
 
       if (maxPrice && typeof maxPrice === 'string') {
         const max = parseFloat(maxPrice);
         if (!isNaN(max)) {
-          conditions.push(sql`${products.price} <= ${max}`);
+          conditions.push(lte(products.price, max));
         }
       }
 
-      // Apply conditions if any
-      if (conditions.length > 0) {
-        const combinedCondition = conditions.reduce((acc, condition) => 
-          acc ? sql`${acc} AND ${condition}` : condition
-        );
-        query = query.where(combinedCondition);
-      }
+      // Combine conditions
+      const whereCondition = conditions.length > 0 
+        ? and(...conditions) 
+        : undefined;
 
-      // Apply sorting
+      // Determine order by
+      let orderByClause;
       if (sortBy && typeof sortBy === 'string') {
         switch (sortBy) {
           case 'price-low-high':
-            query = query.orderBy(products.price);
+            orderByClause = products.price;
             break;
           case 'price-high-low':
-            query = query.orderBy(sql`${products.price} DESC`);
+            orderByClause = desc(products.price);
             break;
           case 'newest':
-            query = query.orderBy(sql`${products.id} DESC`);
+            orderByClause = desc(products.id);
             break;
           case 'trending':
           default:
-            // Default ordering by id desc for trending
-            query = query.orderBy(sql`${products.id} DESC`);
+            orderByClause = desc(products.id);
             break;
         }
       } else {
-        query = query.orderBy(sql`${products.id} DESC`);
+        orderByClause = desc(products.id);
       }
 
-      const filteredProducts = await query;
+      // Execute query with all filters
+      const filteredProducts = await db
+        .select({
+          // Product fields
+          id: products.id,
+          vendorId: products.vendorId,
+          name: products.name,
+          description: products.description,
+          price: products.price,
+          discountPrice: products.discountPrice,
+          imageUrl: products.imageUrl,
+          category: products.category,
+          marketplace: products.marketplace,
+          inventory: products.inventory,
+          createdAt: products.createdAt,
+          // Vendor fields
+          vendorStoreName: vendors.storeName,
+          vendorBusinessName: vendors.businessName
+        })
+        .from(products)
+        .leftJoin(vendors, eq(products.vendorId, vendors.id))
+        .where(whereCondition)
+        .orderBy(orderByClause);
       
-      console.log(`[DEBUG] Found ${filteredProducts.length} products after filtering`);
+      console.log(`Found ${filteredProducts.length} products after filtering`);
       
       // Map database fields to expected frontend fields with vendor store name
       const mappedProducts = filteredProducts.map(product => ({
@@ -6954,33 +12594,60 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json(mappedProducts);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.error('Error fetching products', error);
       res.status(500).json({ message: 'Failed to fetch products' });
     }
   });
 
 
 
-  // Subscription status endpoint
-  app.get('/api/subscription/status', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+  // Subscription status endpoint - works for both authenticated and unauthenticated users
+  app.get('/api/subscription/status', optionalAuth, async (req: Request, res: Response) => {
     try {
       const userId = req.user?.id;
+      
+      // If user is not authenticated, return default state without error
       if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
+        console.log('[SUBSCRIPTION] No authenticated user - returning default state');
+        return res.json({
+          status: 'none',
+          type: 'none',
+          validUntil: null,
+          features: [],
+          hasSubscription: false,
+          subscriptionLevel: 'normal',
+          datingEnabled: false
+        });
       }
       
       const user = await storage.getUser(userId);
       if (!user) {
-        return res.status(404).json({ message: 'User not found' });
+        console.log('[SUBSCRIPTION] User not found - returning default state');
+        return res.json({
+          status: 'none',
+          type: 'none',
+          validUntil: null,
+          features: [],
+          hasSubscription: false,
+          subscriptionLevel: 'normal',
+          datingEnabled: false
+        });
       }
       
+      // Get subscription data
+      const subscription = await storage.getUserSubscription(userId);
+      
       res.json({
+        status: subscription?.status || 'none',
+        type: subscription?.subscriptionType || 'none',
+        validUntil: subscription?.validUntil || null,
+        features: subscription?.features || [],
         hasSubscription: user.datingSubscription !== null && user.datingSubscription !== 'normal',
         subscriptionLevel: user.datingSubscription || 'normal',
         datingEnabled: user.datingEnabled || false
       });
     } catch (error) {
-      console.error('Error fetching subscription status:', error);
+      console.error('Error fetching subscription status', error);
       res.status(500).json({ message: 'Failed to fetch subscription status' });
     }
   });
@@ -7000,7 +12667,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         res.status(404).json({ message: 'Post not found or unauthorized' });
       }
     } catch (error) {
-      console.error('Error deleting post:', error);
+      console.error('Error deleting post', error);
       res.status(500).json({ message: 'Failed to delete post' });
     }
   });
@@ -7030,7 +12697,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         message: "Image analyzed successfully"
       });
     } catch (error: any) {
-      console.error('Error analyzing product image:', error);
+      console.error('Error analyzing product image', error);
       res.status(500).json({ 
         message: "Failed to analyze image",
         error: error.message 
@@ -7056,7 +12723,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         message: "Description generated successfully"
       });
     } catch (error: any) {
-      console.error('Error generating description:', error);
+      console.error('Error generating description', error);
       res.status(500).json({ 
         message: "Failed to generate description",
         error: error.message 
@@ -7082,7 +12749,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         message: "Title generated successfully"
       });
     } catch (error: any) {
-      console.error('Error generating title:', error);
+      console.error('Error generating title', error);
       res.status(500).json({ 
         message: "Failed to generate title",
         error: error.message 
@@ -7108,7 +12775,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         message: "Price range suggested successfully"
       });
     } catch (error: any) {
-      console.error('Error suggesting price:', error);
+      console.error('Error suggesting price', error);
       res.status(500).json({ 
         message: "Failed to suggest price range",
         error: error.message 
@@ -7134,7 +12801,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         message: "SEO keywords generated successfully"
       });
     } catch (error: any) {
-      console.error('Error generating keywords:', error);
+      console.error('Error generating keywords', error);
       res.status(500).json({ 
         message: "Failed to generate keywords",
         error: error.message 
@@ -7172,7 +12839,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         message: "AI-assisted listing created successfully"
       });
     } catch (error: any) {
-      console.error('Error creating AI-assisted listing:', error);
+      console.error('Error creating AI-assisted listing', error);
       res.status(500).json({ 
         message: "Failed to create AI-assisted listing",
         error: error.message 
@@ -7204,7 +12871,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         message: "Smart reply generated successfully"
       });
     } catch (error: any) {
-      console.error('Error generating smart reply:', error);
+      console.error('Error generating smart reply', error);
       res.status(500).json({ 
         message: "Failed to generate smart reply",
         error: error.message 
@@ -7234,7 +12901,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         message: "Conversation summarized successfully"
       });
     } catch (error: any) {
-      console.error('Error summarizing conversation:', error);
+      console.error('Error summarizing conversation', error);
       res.status(500).json({ 
         message: "Failed to summarize conversation",
         error: error.message 
@@ -7265,7 +12932,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         message: "Smart reply generated successfully"
       });
     } catch (error: any) {
-      console.error('Error generating smart reply:', error);
+      console.error('Error generating smart reply', error);
       res.status(500).json({ 
         message: "Failed to generate smart reply",
         error: error.message 
@@ -7296,7 +12963,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         message: "Message translated successfully"
       });
     } catch (error: any) {
-      console.error('Error translating message:', error);
+      console.error('Error translating message', error);
       res.status(500).json({ 
         message: "Failed to translate message",
         error: error.message 
@@ -7326,7 +12993,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         message: "Message composed successfully"
       });
     } catch (error: any) {
-      console.error('Error composing message:', error);
+      console.error('Error composing message', error);
       res.status(500).json({ 
         message: "Failed to compose message",
         error: error.message 
@@ -7356,7 +13023,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         message: "Message translated successfully"
       });
     } catch (error: any) {
-      console.error('Error translating message:', error);
+      console.error('Error translating message', error);
       res.status(500).json({ 
         message: "Failed to translate message",
         error: error.message 
@@ -7386,7 +13053,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         message: "Content moderated successfully"
       });
     } catch (error: any) {
-      console.error('Error moderating content:', error);
+      console.error('Error moderating content', error);
       res.status(500).json({ 
         message: "Failed to moderate content",
         error: error.message 
@@ -7416,7 +13083,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         message: "Support response generated successfully"
       });
     } catch (error: any) {
-      console.error('Error generating support response:', error);
+      console.error('Error generating support response', error);
       res.status(500).json({ 
         message: "Failed to generate support response",
         error: error.message 
@@ -7444,7 +13111,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const ideas = await generateContentIdeas(topic, platform, targetAudience);
       res.json({ success: true, ideas });
     } catch (error: any) {
-      console.error('Content idea generation error:', error);
+      console.error('Content idea generation error', error);
       res.status(500).json({ message: 'Failed to generate content ideas', error: error.message });
     }
   });
@@ -7466,7 +13133,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const variations = await generateCaptionVariations(content, platforms);
       res.json({ success: true, variations });
     } catch (error: any) {
-      console.error('Caption variation generation error:', error);
+      console.error('Caption variation generation error', error);
       res.status(500).json({ message: 'Failed to generate caption variations', error: error.message });
     }
   });
@@ -7488,7 +13155,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const suggestions = await generateVisualSuggestions(contentType, brand, message);
       res.json({ success: true, suggestions });
     } catch (error: any) {
-      console.error('Visual suggestion generation error:', error);
+      console.error('Visual suggestion generation error', error);
       res.status(500).json({ message: 'Failed to generate visual suggestions', error: error.message });
     }
   });
@@ -7505,7 +13172,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const preferences = await analyzeUserPreferences(userId);
       res.json({ success: true, preferences });
     } catch (error: any) {
-      console.error('User preference analysis error:', error);
+      console.error('User preference analysis error', error);
       res.status(500).json({ message: 'Failed to analyze user preferences', error: error.message });
     }
   });
@@ -7527,7 +13194,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const feed = await generatePersonalizedFeed(userId, preferences);
       res.json({ success: true, feed });
     } catch (error: any) {
-      console.error('Personalized feed generation error:', error);
+      console.error('Personalized feed generation error', error);
       res.status(500).json({ message: 'Failed to generate personalized feed', error: error.message });
     }
   });
@@ -7550,7 +13217,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const audience = await analyzeTargetAudience(product, budget, goals);
       res.json({ success: true, audience });
     } catch (error: any) {
-      console.error('Target audience analysis error:', error);
+      console.error('Target audience analysis error', error);
       res.status(500).json({ message: 'Failed to analyze target audience', error: error.message });
     }
   });
@@ -7572,7 +13239,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const optimization = await optimizeAdCampaign(adContent, audience, performance);
       res.json({ success: true, optimization });
     } catch (error: any) {
-      console.error('Ad campaign optimization error:', error);
+      console.error('Ad campaign optimization error', error);
       res.status(500).json({ message: 'Failed to optimize ad campaign', error: error.message });
     }
   });
@@ -7595,7 +13262,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const moderation = await moderateContent(content, contentType);
       res.json({ success: true, moderation });
     } catch (error: any) {
-      console.error('Content moderation error:', error);
+      console.error('Content moderation error', error);
       res.status(500).json({ message: 'Failed to moderate content', error: error.message });
     }
   });
@@ -7618,7 +13285,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const sentiment = await analyzeSentiment(content, brand);
       res.json({ success: true, sentiment });
     } catch (error: any) {
-      console.error('Sentiment analysis error:', error);
+      console.error('Sentiment analysis error', error);
       res.status(500).json({ message: 'Failed to analyze sentiment', error: error.message });
     }
   });
@@ -7641,7 +13308,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const insights = await analyzeListeningData(mentions, brand, timeframe);
       res.json({ success: true, insights });
     } catch (error: any) {
-      console.error('Listening data analysis error:', error);
+      console.error('Listening data analysis error', error);
       res.status(500).json({ message: 'Failed to analyze listening data', error: error.message });
     }
   });
@@ -7663,7 +13330,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const mentions = await detectBrandMentions(content, brands);
       res.json({ success: true, mentions });
     } catch (error: any) {
-      console.error('Brand mention detection error:', error);
+      console.error('Brand mention detection error', error);
       res.status(500).json({ message: 'Failed to detect brand mentions', error: error.message });
     }
   });
@@ -7686,7 +13353,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const posts = await generateScheduledPosts(brand, contentThemes, platforms, postFrequency, timeframe);
       res.json({ success: true, posts });
     } catch (error: any) {
-      console.error('Scheduled post generation error:', error);
+      console.error('Scheduled post generation error', error);
       res.status(500).json({ message: 'Failed to generate scheduled posts', error: error.message });
     }
   });
@@ -7708,7 +13375,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const responses = await generateAutomatedResponses(brand, businessType, commonQuestions);
       res.json({ success: true, responses });
     } catch (error: any) {
-      console.error('Automated response generation error:', error);
+      console.error('Automated response generation error', error);
       res.status(500).json({ message: 'Failed to generate automated responses', error: error.message });
     }
   });
@@ -7730,7 +13397,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const automation = await setupAdCampaignAutomation(product, budget, duration, objectives);
       res.json({ success: true, automation });
     } catch (error: any) {
-      console.error('Ad campaign automation setup error:', error);
+      console.error('Ad campaign automation setup error', error);
       res.status(500).json({ message: 'Failed to setup ad campaign automation', error: error.message });
     }
   });
@@ -7752,7 +13419,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const result = await executeAutomatedTasks(userId, taskTypes);
       res.json({ success: true, result });
     } catch (error: any) {
-      console.error('Automated task execution error:', error);
+      console.error('Automated task execution error', error);
       res.status(500).json({ message: 'Failed to execute automated tasks', error: error.message });
     }
   });
@@ -7777,7 +13444,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const compatibility = await analyzeCompatibility(userProfile, candidateProfile);
       res.json({ success: true, compatibility });
     } catch (error: any) {
-      console.error('Compatibility analysis error:', error);
+      console.error('Compatibility analysis error', error);
       res.status(500).json({ message: 'Failed to analyze compatibility', error: error.message });
     }
   });
@@ -7799,7 +13466,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const insights = await generatePersonalityInsights(profile);
       res.json({ success: true, insights });
     } catch (error: any) {
-      console.error('Personality insights error:', error);
+      console.error('Personality insights error', error);
       res.status(500).json({ message: 'Failed to generate personality insights', error: error.message });
     }
   });
@@ -7822,7 +13489,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const suggestions = await generateProfileSuggestions(userInfo);
       res.json({ success: true, suggestions });
     } catch (error: any) {
-      console.error('Profile suggestions error:', error);
+      console.error('Profile suggestions error', error);
       res.status(500).json({ message: 'Failed to generate profile suggestions', error: error.message });
     }
   });
@@ -7844,7 +13511,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const recommendations = await analyzeProfilePhotos(photoDescriptions);
       res.json({ success: true, recommendations });
     } catch (error: any) {
-      console.error('Photo analysis error:', error);
+      console.error('Photo analysis error', error);
       res.status(500).json({ message: 'Failed to analyze photos', error: error.message });
     }
   });
@@ -7867,7 +13534,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const starters = await generateConversationStarters(matchProfile, context);
       res.json({ success: true, starters });
     } catch (error: any) {
-      console.error('Conversation starters error:', error);
+      console.error('Conversation starters error', error);
       res.status(500).json({ message: 'Failed to generate conversation starters', error: error.message });
     }
   });
@@ -7893,7 +13560,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       );
       res.json({ success: true, responses });
     } catch (error: any) {
-      console.error('Message response error:', error);
+      console.error('Message response error', error);
       res.status(500).json({ message: 'Failed to generate message responses', error: error.message });
     }
   });
@@ -7916,7 +13583,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const dateIdeas = await generatePersonalizedDateIdeas(userProfile, matchProfile, preferences);
       res.json({ success: true, dateIdeas });
     } catch (error: any) {
-      console.error('Date ideas error:', error);
+      console.error('Date ideas error', error);
       res.status(500).json({ message: 'Failed to generate date ideas', error: error.message });
     }
   });
@@ -7939,7 +13606,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const advice = await generateWingmanAdvice(userProfile, situation);
       res.json({ success: true, advice });
     } catch (error: any) {
-      console.error('Wingman advice error:', error);
+      console.error('Wingman advice error', error);
       res.status(500).json({ message: 'Failed to generate wingman advice', error: error.message });
     }
   });
@@ -7962,7 +13629,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const analysis = await analyzeEmotionalCompatibility(conversationHistory, userProfile, matchProfile);
       res.json({ success: true, analysis });
     } catch (error: any) {
-      console.error('Emotional analysis error:', error);
+      console.error('Emotional analysis error', error);
       res.status(500).json({ message: 'Failed to analyze emotional compatibility', error: error.message });
     }
   });
@@ -7989,7 +13656,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       );
       res.json({ success: true, response });
     } catch (error: any) {
-      console.error('Virtual partner error:', error);
+      console.error('Virtual partner error', error);
       res.status(500).json({ message: 'Failed to generate virtual partner response', error: error.message });
     }
   });
@@ -8022,7 +13689,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         message: "Message enhanced successfully"
       });
     } catch (error: any) {
-      console.error('Error enhancing message:', error);
+      console.error('Error enhancing message', error);
       res.status(500).json({ 
         message: "Failed to enhance message",
         error: error.message 
@@ -8034,6 +13701,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // Get orders notification count - counts orders that need user attention
   app.get('/api/orders/notifications/count', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -8061,13 +13731,16 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const count = notificationOrders[0]?.count || 0;
       res.json({ count });
     } catch (error) {
-      console.error('Error fetching orders notification count:', error);
+      console.error('Error fetching orders notification count', error);
       res.status(500).json({ message: 'Failed to fetch notification count' });
     }
   });
 
   // Get user's orders with optional status filter
   app.get('/api/orders', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -8082,7 +13755,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       const userOrders = await db.select({
-        id: orders.id,
+          id: orders.id,
 
         userId: orders.userId,
         totalAmount: orders.totalAmount,
@@ -8104,6 +13777,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // Get specific order details with items
   app.get('/api/orders/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -8128,7 +13804,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       // Get order items with product and vendor details
       const orderItemsResult = await db.select({
-        id: orderItems.id,
+          id: orderItems.id,
         quantity: orderItems.quantity,
         unitPrice: orderItems.unitPrice,
         discount: orderItems.discount,
@@ -8154,7 +13830,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         items: orderItemsResult
       });
     } catch (error) {
-      console.error('Error fetching order details:', error);
+      console.error('Error fetching order details', error);
       res.status(500).json({ message: 'Failed to fetch order details' });
     }
   });
@@ -8188,7 +13864,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.status(201).json(newReturn[0]);
     } catch (error) {
-      console.error('Error creating return request:', error);
+      console.error('Error creating return request', error);
       res.status(500).json({ message: 'Failed to create return request' });
     }
   });
@@ -8209,7 +13885,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       const userReturns = await db.select({
-        id: returns.id,
+          id: returns.id,
         reason: returns.reason,
         description: returns.description,
         status: returns.status,
@@ -8246,7 +13922,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         .orderBy(desc(returns.createdAt));
       res.json(userReturns);
     } catch (error) {
-      console.error('Error fetching user returns:', error);
+      console.error('Error fetching user returns', error);
       res.status(500).json({ message: 'Failed to fetch returns' });
     }
   });
@@ -8284,7 +13960,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(returnResult[0]);
     } catch (error) {
-      console.error('Error fetching return details:', error);
+      console.error('Error fetching return details', error);
       res.status(500).json({ message: 'Failed to fetch return details' });
     }
   });
@@ -8335,7 +14011,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(updatedReturn[0]);
     } catch (error) {
-      console.error('Error updating return status:', error);
+      console.error('Error updating return status', error);
       res.status(500).json({ message: 'Failed to update return status' });
     }
   });
@@ -8343,7 +14019,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Cancel return request (customer only, if status is 'requested')
   app.patch('/api/returns/:id/cancel', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (typeof userId !== 'number') {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
       const returnId = parseInt(req.params.id);
 
       if (isNaN(returnId)) {
@@ -8372,7 +14051,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(updatedReturn[0]);
     } catch (error) {
-      console.error('Error cancelling return:', error);
+      console.error('Error cancelling return', error);
       res.status(500).json({ message: 'Failed to cancel return' });
     }
   });
@@ -8387,13 +14066,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         
         if (user) {
           req.user = user;
-          console.log(`[DEBUG] Test login successful for user ${userId}`);
+          console.log(`Test login successful for user ${userId}`);
           res.json({ success: true, user });
         } else {
           res.status(404).json({ error: 'User not found' });
         }
       } catch (error) {
-        console.error('[ERROR] Test login failed:', error);
+        console.error('Test login failed:', error);
         res.status(500).json({ error: 'Test login failed' });
       }
     });
@@ -8401,31 +14080,43 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // Cart API routes
   app.get('/api/cart', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
     try {
       const userId = req.user?.id;
       if (!userId) {
+        console.log('[CART] GET /api/cart - No authenticated user');
         return res.status(401).json({ message: "Authentication required" });
       }
+      console.log(`[CART] GET /api/cart - Fetching cart for user ${userId}`);
       const cartItems = await storage.listCartItems(userId);
+      console.log(`[CART] GET /api/cart - Found ${cartItems.length} items for user ${userId}`);
       res.json(cartItems);
     } catch (error) {
-      console.error('Error fetching cart items:', error);
+      console.error('Error fetching cart items', error);
       res.status(500).json({ message: 'Failed to fetch cart items' });
     }
   });
 
   app.post('/api/cart', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
     try {
       const userId = req.user?.id;
       if (!userId) {
+        console.log('[CART] POST /api/cart - No authenticated user');
         return res.status(401).json({ message: "Authentication required" });
       }
+      console.log(`[CART] POST /api/cart - Adding product ${req.body.productId} for user ${userId}`);
       const cartData = insertCartSchema.parse({
         ...req.body,
         userId
       });
       
       const cartItem = await storage.addToCart(cartData);
+      console.log(`[CART] POST /api/cart - Successfully added cart item ${cartItem.id}`);
       
       // Get product details for notification
       const product = await storage.getProduct(cartData.productId);
@@ -8442,12 +14133,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json(cartItem);
     } catch (error) {
-      console.error('Error adding to cart:', error);
+      console.error('[CART] Error adding to cart', error);
       res.status(500).json({ message: 'Failed to add item to cart' });
     }
   });
 
   app.get('/api/cart/count', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -8456,12 +14150,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const count = await storage.countCartItems(userId);
       res.json({ count });
     } catch (error) {
-      console.error('Error counting cart items:', error);
+      console.error('Error counting cart items', error);
       res.status(500).json({ message: 'Failed to count cart items' });
     }
   });
 
   app.put('/api/cart/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
     try {
       const cartItemId = parseInt(req.params.id);
       const updates = req.body;
@@ -8477,12 +14174,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json(updatedItem);
     } catch (error) {
-      console.error('Error updating cart item:', error);
+      console.error('Error updating cart item', error);
       res.status(500).json({ message: 'Failed to update cart item' });
     }
   });
 
   app.delete('/api/cart/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
     try {
       const cartItemId = parseInt(req.params.id);
       
@@ -8497,8 +14197,76 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json({ success: true });
     } catch (error) {
-      console.error('Error removing cart item:', error);
+      console.error('Error removing cart item', error);
       res.status(500).json({ message: 'Failed to remove cart item' });
+    }
+  });
+
+  // Checkout API endpoints
+  app.post('/api/checkout/shipping-address', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const { 
+        firstName, 
+        surname, 
+        addressLine1, 
+        addressLine2, 
+        country, 
+        city, 
+        postalCode, 
+        isBusinessAddress, 
+        phoneCode, 
+        phone, 
+        saveToAddressBook 
+      } = req.body;
+      
+      // Validate required fields
+      if (!firstName || !surname || !addressLine1 || !city || !postalCode || !phone) {
+        return res.status(400).json({ 
+          message: 'Missing required fields',
+          required: ['firstName', 'surname', 'addressLine1', 'city', 'postalCode', 'phone']
+        });
+      }
+      
+      // Update user profile with shipping address if saveToAddressBook is true
+      if (saveToAddressBook) {
+        await db.update(users)
+          .set({
+            firstName,
+            surname,
+            shippingAddress: addressLine1,
+            city,
+            country,
+            shippingZipCode: postalCode,
+            phone: phone,
+          })
+          .where(eq(users.id, userId));
+      }
+      
+      // Return success with saved address data
+      res.json({ 
+        success: true, 
+        message: 'Shipping address saved successfully',
+        address: {
+          firstName,
+          surname,
+          addressLine1,
+          addressLine2,
+          city,
+          country,
+          postalCode,
+          phoneCode,
+          phone,
+          isBusinessAddress
+        }
+      });
+    } catch (error) {
+      console.error('Error saving shipping address', error);
+      res.status(500).json({ message: 'Failed to save shipping address' });
     }
   });
 
@@ -8538,7 +14306,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json({ success: true, liked: true, message: 'Product added to favorites' });
     } catch (error) {
-      console.error('Error adding product to favorites:', error);
+      console.error('Error adding product to favorites', error);
       res.status(500).json({ message: 'Failed to add product to favorites' });
     }
   });
@@ -8552,10 +14320,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(400).json({ message: 'Invalid product ID' });
       }
       
-      const success = await storage.unlikeProduct(userId, productId);
+      const success = await storage.unlikeProduct(userId!, productId);
       res.json({ success, liked: false, message: 'Product removed from favorites' });
     } catch (error) {
-      console.error('Error removing product from favorites:', error);
+      console.error('Error removing product from favorites', error);
       res.status(500).json({ message: 'Failed to remove product from favorites' });
     }
   });
@@ -8587,7 +14355,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         // Create notification for liking product
         await storage.createNotification({
           userId,
-          type: 'product_like',
+          type: 'like',
           title: 'Product Liked',
           content: `You liked "${product.name}"`,
           sourceId: product.id,
@@ -8597,7 +14365,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json({ success: true, liked: true });
     } catch (error) {
-      console.error('Error liking product:', error);
+      console.error('Error liking product', error);
       res.status(500).json({ message: 'Failed to like product' });
     }
   });
@@ -8617,7 +14385,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const success = await storage.unlikeProduct(userId, productId);
       res.json({ success, liked: false });
     } catch (error) {
-      console.error('Error unliking product:', error);
+      console.error('Error unliking product', error);
       res.status(500).json({ message: 'Failed to unlike product' });
     }
   });
@@ -8637,7 +14405,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const isLiked = await storage.checkProductLiked(userId, productId);
       res.json({ liked: isLiked });
     } catch (error) {
-      console.error('Error checking if product is liked:', error);
+      console.error('Error checking if product is liked', error);
       res.status(500).json({ message: 'Failed to check like status' });
     }
   });
@@ -8651,7 +14419,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const likedProducts = await storage.getUserLikedProducts(userId);
       res.json(likedProducts);
     } catch (error) {
-      console.error('Error getting liked products:', error);
+      console.error('Error getting liked products', error);
       res.status(500).json({ message: 'Failed to get liked products' });
     }
   });
@@ -8666,7 +14434,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const count = await storage.getUserLikedProductsCount(userId);
       res.json({ count });
     } catch (error) {
-      console.error('Error getting liked products count:', error);
+      console.error('Error getting liked products count', error);
       res.status(500).json({ message: 'Failed to get liked products count' });
     }
   });
@@ -8674,16 +14442,90 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Friend request routes
   app.post("/api/friends/request", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
+      console.log('[FRIEND-REQUEST] Received friend request:', {
+        body: req.body,
+        senderId: req.user?.id,
+        recipientId: req.body?.recipientId
+      });
+      
       const { recipientId, message } = req.body;
       const senderId = req.user?.id;
+      
+      if (!senderId) {
+        console.log('[FRIEND-REQUEST] Authentication required');
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+
+      if (!recipientId) {
+        console.log('[FRIEND-REQUEST] Recipient ID missing');
+        return res.status(400).json({ message: 'Recipient ID is required' });
+      }
+
+      // Prevent sending friend request to yourself
+      if (senderId === recipientId) {
+        console.log('[FRIEND-REQUEST] Cannot send request to self');
+        return res.status(400).json({ message: "Cannot send friend request to yourself" });
+      }
+
+      // Check if friend request already exists
+      console.log('[FRIEND-REQUEST] Checking for existing request');
+      const existingRequest = await storage.getFriendRequest(senderId, recipientId);
+      if (existingRequest) {
+        console.log('[FRIEND-REQUEST] Request already exists');
+        return res.status(400).json({ message: "Friend request already sent" });
+      }
+
+      // Create friend request
+      console.log('[FRIEND-REQUEST] Creating friend request');
+      const friendRequest = await storage.createFriendRequest({
+        senderId,
+        recipientId,
+        message: message || "Hi! I'd like to be friends."
+      });
+
+      console.log('[FRIEND-REQUEST] Friend request created successfully:', friendRequest);
+      res.json({ message: "Friend request sent successfully", friendRequest });
+    } catch (error) {
+      console.error('[FRIEND-REQUEST] Error sending friend request:', error);
+      res.status(500).json({ message: "Failed to send friend request" });
+    }
+  });
+
+  // Send friend request by user ID (URL parameter version)
+  app.post("/api/friends/request/:userId", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const recipientId = parseInt(req.params.userId);
+      const { message } = req.body || {};
+      const senderId = req.user?.id;
+      
       if (!senderId) {
         return res.status(401).json({ message: 'Authentication required' });
+      }
+
+      // Prevent sending friend request to yourself
+      if (senderId === recipientId) {
+        return res.status(400).json({ message: "Cannot send friend request to yourself" });
       }
 
       // Check if friend request already exists
       const existingRequest = await storage.getFriendRequest(senderId, recipientId);
       if (existingRequest) {
         return res.status(400).json({ message: "Friend request already sent" });
+      }
+
+      // Check if already friends
+      const existingFriendship = await db
+        .select()
+        .from(friendships)
+        .where(and(
+          eq(friendships.userId, senderId),
+          eq(friendships.friendId, recipientId),
+          eq(friendships.status, 'accepted')
+        ))
+        .limit(1);
+
+      if (existingFriendship.length > 0) {
+        return res.status(400).json({ message: "Already friends with this user" });
       }
 
       // Create friend request
@@ -8695,7 +14537,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json({ message: "Friend request sent successfully", friendRequest });
     } catch (error) {
-      console.error("Error sending friend request:", error);
+      console.error('Error sending friend request', error);
       res.status(500).json({ message: "Failed to send friend request" });
     }
   });
@@ -8709,7 +14551,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const requests = await storage.getFriendRequests(userId);
       res.json(requests);
     } catch (error) {
-      console.error("Error fetching friend requests:", error);
+      console.error('Error fetching friend requests', error);
       res.status(500).json({ message: "Failed to fetch friend requests" });
     }
   });
@@ -8725,7 +14567,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       await storage.acceptFriendRequest(requestId, userId);
       res.json({ message: "Friend request accepted" });
     } catch (error) {
-      console.error("Error accepting friend request:", error);
+      console.error('Error accepting friend request', error);
       res.status(500).json({ message: "Failed to accept friend request" });
     }
   });
@@ -8741,8 +14583,56 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       await storage.rejectFriendRequest(requestId, userId);
       res.json({ message: "Friend request rejected" });
     } catch (error) {
-      console.error("Error rejecting friend request:", error);
+      console.error('Error rejecting friend request', error);
       res.status(500).json({ message: "Failed to reject friend request" });
+    }
+  });
+
+  // Check friendship status with another user
+  app.get("/api/friends/status/:userId", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const currentUserId = req.user?.id;
+      const targetUserId = parseInt(req.params.userId);
+      
+      if (!currentUserId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+
+      // Check if they are already friends
+      const friendship = await db
+        .select()
+        .from(friendships)
+        .where(and(
+          eq(friendships.userId, currentUserId),
+          eq(friendships.friendId, targetUserId),
+          eq(friendships.status, 'accepted')
+        ))
+        .limit(1);
+
+      if (friendship.length > 0) {
+        return res.json({ status: 'accepted' });
+      }
+
+      // Check if there's a pending friend request
+      const pendingRequest = await db
+        .select()
+        .from(friendRequests)
+        .where(and(
+          eq(friendRequests.senderId, currentUserId),
+          eq(friendRequests.recipientId, targetUserId),
+          eq(friendRequests.status, 'pending')
+        ))
+        .limit(1);
+
+      if (pendingRequest.length > 0) {
+        return res.json({ status: 'pending', requestId: pendingRequest[0].id });
+      }
+
+      // No friendship or request
+      res.json({ status: 'none' });
+    } catch (error) {
+      console.error('Error checking friendship status', error);
+      res.status(500).json({ message: "Failed to check friendship status" });
     }
   });
 
@@ -8768,8 +14658,28 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(friends);
     } catch (error) {
-      console.error('Error fetching friends:', error);
+      console.error('Error fetching friends', error);
       res.status(500).json({ message: 'Failed to fetch friends' });
+    }
+  });
+
+  // Get pending friend requests count
+  app.get('/api/friends/pending/count', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).userId;
+
+      const pendingCount = await db
+        .select({ count: sql`count(*)` })
+        .from(friendRequests)
+        .where(and(
+          eq(friendRequests.recipientId, userId),
+          eq(friendRequests.status, 'pending')
+        ));
+
+      res.json({ count: Number(pendingCount[0]?.count || 0) });
+    } catch (error) {
+      console.error('Error fetching pending friend requests count', error);
+      res.status(500).json({ message: 'Failed to fetch pending friend requests count' });
     }
   });
   
@@ -8779,7 +14689,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const allChatrooms = await db.select().from(chatrooms).where(eq(chatrooms.isActive, true));
       res.json(allChatrooms);
     } catch (error) {
-      console.error('Error fetching chatrooms:', error);
+      console.error('Error fetching chatrooms', error);
       res.status(500).json({ message: 'Failed to fetch chatrooms' });
     }
   });
@@ -8838,7 +14748,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         chatroom: newChatroom[0] 
       });
     } catch (error) {
-      console.error('Error creating private room:', error);
+      console.error('Error creating private room', error);
       res.status(500).json({ message: 'Failed to create private room' });
     }
   });
@@ -8873,7 +14783,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(messages.reverse()); // Reverse to show chronological order
     } catch (error) {
-      console.error('Error fetching chatroom messages:', error);
+      console.error('Error fetching chatroom messages', error);
       res.status(500).json({ message: 'Failed to fetch messages' });
     }
   });
@@ -8935,7 +14845,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.status(201).json(messageWithUser[0]);
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Error sending message', error);
       res.status(500).json({ message: 'Failed to send message' });
     }
   });
@@ -8958,8 +14868,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const existingMember = await db
         .select()
         .from(chatroomMembers)
-        .where(eq(chatroomMembers.chatroomId, chatroomId))
-        .where(eq(chatroomMembers.userId, userId))
+        .where(and(
+          eq(chatroomMembers.chatroomId, chatroomId),
+          eq(chatroomMembers.userId, userId)
+        ))
         .limit(1);
 
       if (existingMember.length > 0) {
@@ -8974,7 +14886,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json({ message: 'Successfully joined chatroom' });
     } catch (error) {
-      console.error('Error joining chatroom:', error);
+      console.error('Error joining chatroom', error);
       res.status(500).json({ message: 'Failed to join chatroom' });
     }
   });
@@ -8998,12 +14910,14 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         })
         .from(chatroomMembers)
         .leftJoin(users, eq(chatroomMembers.userId, users.id))
-        .where(eq(chatroomMembers.chatroomId, chatroomId))
-        .where(eq(chatroomMembers.isOnline, true));
+        .where(and(
+          eq(chatroomMembers.chatroomId, chatroomId),
+          eq(chatroomMembers.isOnline, true)
+        ));
 
       res.json(activeUsers);
     } catch (error) {
-      console.error('Error fetching active users:', error);
+      console.error('Error fetching active users', error);
       res.status(500).json({ message: 'Failed to fetch active users' });
     }
   });
@@ -9011,7 +14925,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Dating profile endpoint - Enhanced authentication with fallback
   app.get('/api/dating-profile', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      console.log('[DEBUG] /api/dating-profile called');
+      console.log('/api/dating-profile called');
       
       const authenticatedUser = req.user;
       if (!authenticatedUser) {
@@ -9019,7 +14933,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
       
       const userId = authenticatedUser.id;
-      console.log('[DEBUG] Dating profile - Authenticated user:', userId);
+      if (!userId) {
+        return res.status(401).json({ message: 'Invalid user ID' });
+      }
       
       // Fetch actual dating profile from database
       const datingProfile = await storage.getDatingProfile(userId);
@@ -9029,12 +14945,64 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(404).json({ message: 'Dating profile not found' });
       }
 
-      console.log('[DEBUG] Dating profile - Returning profile for user:', userId, 'with gifts:', datingProfile.selectedGifts);
       return res.json(datingProfile);
         
     } catch (error) {
-      console.error('Error fetching dating profile:', error);
+      console.error('Error fetching dating profile', error);
       res.status(500).json({ message: 'Failed to fetch dating profile' });
+    }
+  });
+
+  // Get dating profile (using new endpoint path)
+  app.get('/api/dating/profile', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const authenticatedUser = req.user;
+      if (!authenticatedUser || !authenticatedUser.id) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      
+      const datingProfile = await storage.getDatingProfile(authenticatedUser.id);
+      
+      if (!datingProfile) {
+        return res.status(404).json({ message: 'Dating profile not found' });
+      }
+
+      return res.json(datingProfile);
+    } catch (error) {
+      console.error('Error fetching dating profile', error);
+      res.status(500).json({ message: 'Failed to fetch dating profile' });
+    }
+  });
+
+  // Toggle dating account active status
+  app.post('/api/dating/profile/toggle-active', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const authenticatedUser = req.user;
+      if (!authenticatedUser || !authenticatedUser.id) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      
+      const userId = authenticatedUser.id;
+      const datingProfile = await storage.getDatingProfile(userId);
+      
+      if (!datingProfile) {
+        return res.status(404).json({ message: 'Dating profile not found. Please create a profile first.' });
+      }
+
+      const newActiveStatus = !datingProfile.isActive;
+      const updatedProfile = await storage.updateDatingProfile(userId, { 
+        isActive: newActiveStatus 
+      });
+      
+      if (!updatedProfile) {
+        throw new Error('Failed to update dating profile');
+      }
+
+      console.log(`Dating profile ${newActiveStatus ? 'activated' : 'deactivated'} for user ${userId}`);
+      return res.json(updatedProfile);
+    } catch (error) {
+      console.error('Error toggling dating account status', error);
+      res.status(500).json({ message: 'Failed to update dating account status' });
     }
   });
 
@@ -9042,7 +15010,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.get('/api/dating-profile/:profileId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const profileId = parseInt(req.params.profileId);
-      console.log(`[DEBUG] Getting individual dating profile for ID: ${profileId}`);
+      console.log(`Getting individual dating profile for ID: ${profileId}`);
       
       if (!profileId || isNaN(profileId)) {
         return res.status(400).json({ message: 'Invalid profile ID' });
@@ -9060,11 +15028,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(404).json({ message: 'Dating profile not found' });
       }
 
-      console.log(`[DEBUG] Returning individual dating profile for ${profile.displayName}`);
+      console.log(`Returning individual dating profile for ${profile.displayName}`);
       res.json(profile);
       
     } catch (error) {
-      console.error('Error fetching individual dating profile:', error);
+      console.error('Error fetching individual dating profile', error);
       res.status(500).json({ message: 'Failed to fetch dating profile' });
     }
   });
@@ -9072,17 +15040,16 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // General dating profiles endpoint (returns Normal room profiles by default)
   app.get('/api/dating-profiles', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      console.log('[DEBUG] /api/dating-profiles called');
+      console.log('/api/dating-profiles called');
       
       const authenticatedUser = req.user;
       if (!authenticatedUser) {
-        console.log('[DEBUG] Dating profiles - No authentication found');
+        console.log('Dating profiles - No authentication found');
         return res.status(401).json({ 
           message: 'Unauthorized - No valid authentication' 
         });
       }
       
-      console.log('[DEBUG] Dating profiles - Authenticated user:', authenticatedUser.id);
 
       // Mock dating profiles (expanded with comprehensive data)
       const normalDatingProfiles = [
@@ -9243,42 +15210,37 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Filter out current user's profile
       const profiles = normalDatingProfiles.filter(profile => profile.userId !== authenticatedUser.id);
 
-      console.log(`[DEBUG] Dating profiles - Returning ${profiles.length} normal tier profiles`);
+      console.log(`Dating profiles - Returning ${profiles.length} normal tier profiles`);
       return res.json(profiles);
         
     } catch (error) {
-      console.error('Error fetching dating profiles:', error);
+      console.error('Error fetching dating profiles', error);
       res.status(500).json({ message: 'Failed to fetch dating profiles' });
     }
   });
 
   // Dating profiles by tier endpoint
-  app.get('/api/dating-profiles/:tier', async (req: Request, res: Response) => {
-    try {
-      console.log('[DEBUG] /api/dating-profiles/:tier called');
+  app.get('/api/dating-profiles/:tier', async (req: Request, res: Response) => { try {
+      console.log('/api/dating-profiles/:tier called');
       
-      let authenticatedUser = null;
+      let authenticatedUser: any = null;
       
       // Authentication check (same as dating-profile endpoint)
       try {
         if (req.user) {
           authenticatedUser = req.user;
-          console.log('[DEBUG] Dating profiles by tier - Session user found:', authenticatedUser.id);
-        } else {
-          // Try manual session check
+        } else { // Try manual session check
           const sessionUserId = req.session?.passport?.user;
           if (sessionUserId) {
             const user = await storage.getUser(sessionUserId);
             if (user) {
               authenticatedUser = user;
-              console.log('[DEBUG] Dating profiles by tier - Session fallback user found:', user.id);
             }
           }
         }
         
         // If no session auth, try Authorization header
-        if (!authenticatedUser) {
-          const authHeader = req.headers.authorization;
+        if (!authenticatedUser) { const authHeader = req.headers.authorization;
           if (authHeader && authHeader.startsWith('Bearer ')) {
             const token = authHeader.substring(7);
             try {
@@ -9287,17 +15249,16 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
                 const user = await storage.getUser(payload.userId);
                 if (user) {
                   authenticatedUser = user;
-                  console.log('[DEBUG] Dating profiles by tier - JWT user found:', user.id);
                 }
               }
             } catch (jwtError) {
-              console.log('[DEBUG] Dating profiles by tier - JWT verification failed');
+              console.log('Dating profiles by tier - JWT verification failed');
             }
           }
         }
         
         if (!authenticatedUser) {
-          console.log('[DEBUG] Dating profiles by tier - No authentication found');
+          console.log('Dating profiles by tier - No authentication found');
           return res.status(401).json({ 
             message: 'Unauthorized - No valid authentication' 
           });
@@ -9333,7 +15294,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         const datingProfiles: Record<string, any[]> = {
           normal: [
             {
-              id: 1,
+          id: 1,
               userId: 101,
               displayName: "Sarah M.",
               age: 28,
@@ -9348,7 +15309,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
               datingRoomTier: "normal"
             },
             {
-              id: 2,
+          id: 2,
               userId: 102,
               displayName: "Mike R.",
               age: 32,
@@ -9365,7 +15326,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           ],
           vip: [
             {
-              id: 3,
+          id: 3,
               userId: 103,
               displayName: "Alexandra K.",
               age: 29,
@@ -9380,7 +15341,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
               datingRoomTier: "vip"
             },
             {
-              id: 4,
+          id: 4,
               userId: 104,
               displayName: "James W.",
               age: 35,
@@ -9397,7 +15358,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           ],
           vvip: [
             {
-              id: 5,
+          id: 5,
               userId: 105,
               displayName: "Victoria S.",
               age: 31,
@@ -9412,7 +15373,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
               datingRoomTier: "vvip"
             },
             {
-              id: 6,
+          id: 6,
               userId: 106,
               displayName: "Richard H.",
               age: 38,
@@ -9432,18 +15393,18 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         // Filter out current user's profile
         const profiles = datingProfiles[tier].filter(profile => profile.userId !== authenticatedUser.id);
 
-        console.log(`[DEBUG] Dating profiles by tier - Returning ${profiles.length} profiles for tier: ${tier}`);
+        console.log(`Dating profiles by tier - Returning ${profiles.length} profiles for tier: ${tier}`);
         return res.json(profiles);
         
       } catch (authError) {
-        console.error('[DEBUG] Dating profiles by tier - Authentication error:', authError);
+        console.error('[DEBUG] Dating profiles by tier - Authentication error', authError);
         return res.status(401).json({ 
           message: 'Authentication error' 
         });
       }
       
     } catch (error) {
-      console.error('Error fetching dating profiles by tier:', error);
+      console.error('Error fetching dating profiles by tier', error);
       res.status(500).json({ message: 'Failed to fetch dating profiles' });
     }
   });
@@ -9451,30 +15412,26 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // General dating profiles endpoint (without tier parameter) - returns Normal room profiles by default
   app.get('/api/dating-profiles', async (req: Request, res: Response) => {
     try {
-      console.log('[DEBUG] /api/dating-profiles called');
+      console.log('/api/dating-profiles called');
       
-      let authenticatedUser = null;
+      let authenticatedUser: any = null;
       
       // Authentication check (same as dating-profiles/:tier endpoint)
       try {
         if (req.user) {
           authenticatedUser = req.user;
-          console.log('[DEBUG] Dating profiles - Session user found:', authenticatedUser.id);
-        } else {
-          // Try manual session check
+        } else { // Try manual session check
           const sessionUserId = req.session?.passport?.user;
           if (sessionUserId) {
             const user = await storage.getUser(sessionUserId);
             if (user) {
               authenticatedUser = user;
-              console.log('[DEBUG] Dating profiles - Session fallback user found:', user.id);
             }
           }
         }
         
         // If no session auth, try Authorization header
-        if (!authenticatedUser) {
-          const authHeader = req.headers.authorization;
+        if (!authenticatedUser) { const authHeader = req.headers.authorization;
           if (authHeader && authHeader.startsWith('Bearer ')) {
             const token = authHeader.substring(7);
             try {
@@ -9483,17 +15440,16 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
                 const user = await storage.getUser(payload.userId);
                 if (user) {
                   authenticatedUser = user;
-                  console.log('[DEBUG] Dating profiles - JWT user found:', user.id);
                 }
               }
             } catch (jwtError) {
-              console.log('[DEBUG] Dating profiles - JWT verification failed');
+              console.log('Dating profiles - JWT verification failed');
             }
           }
         }
         
         if (!authenticatedUser) {
-          console.log('[DEBUG] Dating profiles - No authentication found');
+          console.log('Dating profiles - No authentication found');
           return res.status(401).json({ 
             message: 'Unauthorized - No valid authentication' 
           });
@@ -9506,7 +15462,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         const datingProfiles: Record<string, any[]> = {
           normal: [
             {
-              id: 1,
+          id: 1,
               userId: 101,
               displayName: "Sarah M.",
               age: 28,
@@ -9525,7 +15481,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
               incomeRange: "£25,000 - £40,000"
             },
             {
-              id: 2,
+          id: 2,
               userId: 102,
               displayName: "Mike R.",
               age: 32,
@@ -9544,7 +15500,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
               incomeRange: "£30,000 - £45,000"
             },
             {
-              id: 3,
+          id: 3,
               userId: 103,
               displayName: "Emma T.",
               age: 26,
@@ -9563,7 +15519,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
               incomeRange: "£20,000 - £35,000"
             },
             {
-              id: 4,
+          id: 4,
               userId: 104,
               displayName: "David L.",
               age: 29,
@@ -9582,7 +15538,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
               incomeRange: "£35,000 - £50,000"
             },
             {
-              id: 5,
+          id: 5,
               userId: 105,
               displayName: "Lucy W.",
               age: 24,
@@ -9601,7 +15557,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
               incomeRange: "£15,000 - £25,000"
             },
             {
-              id: 6,
+          id: 6,
               userId: 106,
               displayName: "James K.",
               age: 35,
@@ -9622,7 +15578,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           ],
           vip: [
             {
-              id: 7,
+          id: 7,
               userId: 107,
               displayName: "Alexandra K.",
               age: 29,
@@ -9641,7 +15597,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
               incomeRange: "£150,000 - £250,000"
             },
             {
-              id: 8,
+          id: 8,
               userId: 108,
               displayName: "James W.",
               age: 35,
@@ -9660,7 +15616,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
               incomeRange: "£200,000 - £500,000"
             },
             {
-              id: 9,
+          id: 9,
               userId: 109,
               displayName: "Sophia R.",
               age: 31,
@@ -9679,7 +15635,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
               incomeRange: "£180,000 - £300,000"
             },
             {
-              id: 10,
+          id: 10,
               userId: 110,
               displayName: "Oliver H.",
               age: 33,
@@ -9700,7 +15656,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           ],
           vvip: [
             {
-              id: 11,
+          id: 11,
               userId: 111,
               displayName: "Victoria S.",
               age: 31,
@@ -9719,7 +15675,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
               incomeRange: "£2,000,000+"
             },
             {
-              id: 12,
+          id: 12,
               userId: 112,
               displayName: "Richard H.",
               age: 38,
@@ -9738,7 +15694,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
               incomeRange: "£10,000,000+"
             },
             {
-              id: 13,
+          id: 13,
               userId: 113,
               displayName: "Isabella M.",
               age: 27,
@@ -9757,7 +15713,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
               incomeRange: "£5,000,000+"
             },
             {
-              id: 14,
+          id: 14,
               userId: 114,
               displayName: "Alexander P.",
               age: 42,
@@ -9781,18 +15737,18 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         // Filter out current user's profile
         const profiles = datingProfiles[tier].filter(profile => profile.userId !== authenticatedUser.id);
 
-        console.log(`[DEBUG] Dating profiles - Returning ${profiles.length} profiles for default tier: ${tier}`);
+        console.log(`Dating profiles - Returning ${profiles.length} profiles for default tier: ${tier}`);
         return res.json(profiles);
         
       } catch (authError) {
-        console.error('[DEBUG] Dating profiles - Authentication error:', authError);
+        console.error('[DEBUG] Dating profiles - Authentication error', authError);
         return res.status(401).json({ 
           message: 'Authentication error' 
         });
       }
       
     } catch (error) {
-      console.error('Error fetching dating profiles:', error);
+      console.error('Error fetching dating profiles', error);
       res.status(500).json({ message: 'Failed to fetch dating profiles' });
     }
   });
@@ -9801,7 +15757,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.post('/api/dating-profile/gifts', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const { productId } = req.body;
-      const userId = req.user!.id;
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      const userId = req.user.id;
       
       if (!productId || isNaN(parseInt(productId))) {
         return res.status(400).json({ message: 'Valid product ID required' });
@@ -9839,7 +15798,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(500).json({ message: 'Failed to add gift' });
       }
     } catch (error) {
-      console.error('Error adding gift to dating profile:', error);
+      console.error('Error adding gift to dating profile', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
@@ -9875,12 +15834,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
               }
             }
           } catch (jwtError) {
-            console.log('[DEBUG] Dating profile gifts - JWT verification failed');
+            console.log('Dating profile gifts - JWT verification failed');
           }
         }
       }
       
-      if (!authenticatedUser) {
+      if (!authenticatedUser || !authenticatedUser.id) {
         return res.status(401).json({ message: 'Authentication required' });
       }
 
@@ -9888,7 +15847,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const gifts = await storage.getDatingProfileGifts(userId);
       res.json(gifts);
     } catch (error) {
-      console.error('Error getting dating profile gifts:', error);
+      console.error('Error getting dating profile gifts', error);
       res.status(500).json({ message: 'Failed to get gifts' });
     }
   });
@@ -9896,7 +15855,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.delete('/api/dating-profile/gifts/:productId', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const { productId } = req.params;
-      const userId = req.user!.id;
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      const userId = req.user.id;
       
       if (!productId || isNaN(parseInt(productId))) {
         return res.status(400).json({ message: 'Valid product ID required' });
@@ -9910,7 +15872,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         res.status(404).json({ message: 'Gift not found in profile' });
       }
     } catch (error) {
-      console.error('Error removing gift from dating profile:', error);
+      console.error('Error removing gift from dating profile', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
@@ -9928,14 +15890,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const searchTerm = q.trim().toLowerCase();
       let results = [];
       
-      console.log(`[DEBUG] Gift search - Query: "${searchTerm}", Type: ${type}, Limit: ${limit}`);
       
       // Search products if type is 'all' or 'products'
       if (type === 'all' || type === 'products') {
         try {
           const productResults = await db
             .select({
-              id: products.id,
+          id: products.id,
               name: products.name,
               description: products.description,
               price: products.price,
@@ -9943,7 +15904,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
               category: products.category,
               type: sql<string>`'product'`,
               vendor: {
-                id: vendors.id,
+          id: vendors.id,
                 storeName: vendors.storeName,
                 rating: vendors.rating
               }
@@ -9960,10 +15921,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
             .limit(parseInt(limit as string))
             .offset(parseInt(offset as string));
           
-          console.log(`[DEBUG] Gift search - Found ${productResults.length} products`);
+          console.log(`Gift search - Found ${productResults.length} products`);
           results.push(...productResults);
         } catch (productError) {
-          console.error('[DEBUG] Gift search - Product search error:', productError);
+          console.error('[DEBUG] Gift search - Product search error', productError);
         }
       }
       
@@ -9972,7 +15933,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         try {
           const eventResults = await storage.searchEvents(searchTerm, parseInt(limit as string));
           const formattedEventResults = eventResults.map(event => ({
-            id: event.id,
+          id: event.id,
             name: event.title,
             description: event.description,
             price: event.ticketPrice || 0,
@@ -9984,7 +15945,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           }));
           results.push(...formattedEventResults);
         } catch (eventError) {
-          console.log('Event search not available, skipping events');
         }
       }
       
@@ -9999,7 +15959,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       });
       
     } catch (error) {
-      console.error('Error in gift search:', error);
+      console.error('Error in gift search', error);
       res.status(500).json({ message: 'Search failed' });
     }
   });
@@ -10040,7 +16000,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       const clearoutApiKey = process.env.CLEAROUT_API_KEY;
       if (!clearoutApiKey) {
-        console.error('[EMAIL_VALIDATION] Clearout API key not configured');
         return res.status(503).json({
           valid: false,
           reason: 'Email validation service not configured. Please contact support.',
@@ -10054,7 +16013,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
 
-      console.log(`[EMAIL_VALIDATION] Validating email: ${email.substring(0, 3)}***`);
       console.log(`[EMAIL_VALIDATION] API Key present: ${clearoutApiKey ? 'Yes' : 'No'}`);
       console.log(`[EMAIL_VALIDATION] API Key length: ${clearoutApiKey?.length || 0}`);
       console.log(`[EMAIL_VALIDATION] App Token present: ${appToken ? 'Yes' : 'No'}`);
@@ -10091,7 +16049,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         } catch (error) {
           if (attempt < 3) {
             const delay = Math.pow(2, attempt) * 1000;
-            console.log(`[EMAIL_VALIDATION] Attempt ${attempt} failed, retrying in ${delay}ms`);
             await new Promise(resolve => setTimeout(resolve, delay));
             return makeRequest(attempt + 1);
           }
@@ -10102,7 +16059,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const clearoutResponse = await makeRequest();
 
       if (!clearoutResponse.ok) {
-        console.error(`[EMAIL_VALIDATION] Clearout API error: ${clearoutResponse.status}`);
+        console.error('Error occurred', `[EMAIL_VALIDATION] Clearout API error: ${clearoutResponse.status}`);
         
         return res.status(503).json({
           valid: false,
@@ -10119,7 +16076,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       const clearoutData = await clearoutResponse.json();
       console.log(`[EMAIL_VALIDATION] Clearout response status: ${clearoutData.status}`);
-      console.log(`[EMAIL_VALIDATION] Full Clearout response:`, JSON.stringify(clearoutData, null, 2));
 
       // Direct mapping from Clearout API response without fallbacks
       const result = {
@@ -10140,7 +16096,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       res.status(200).json(result);
 
     } catch (error) {
-      console.error('[EMAIL_VALIDATION] Error:', error);
+      console.error('[EMAIL_VALIDATION] Error', error);
       
       // Strict error handling - no fallbacks
       res.status(503).json({
@@ -10172,7 +16128,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       const trimmedName = name.trim();
       
-      console.log(`[NAME_VALIDATION] Validating name: ${trimmedName.substring(0, 3)}***`);
       
       // Perform inclusive validation - only flag obvious gibberish
       const validation = validateNameInclusive(trimmedName);
@@ -10192,7 +16147,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       res.status(200).json(result);
 
     } catch (error) {
-      console.error('[NAME_VALIDATION] Error:', error);
+      console.error('[NAME_VALIDATION] Error', error);
       
       res.status(500).json({
         status: 'error',
@@ -10333,7 +16288,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       ].filter(Boolean).slice(0, 8);
       
     } catch (error) {
-      console.error('Error generating suggestions:', error);
+      console.error('Error generating suggestions', error);
       return [];
     }
   }
@@ -10395,7 +16350,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
       
       // Update gift status
-      const newStatus = action === 'accept' ? 'accepted' : 'declined';
+      const newStatus = action === 'accept' ? 'accepted' : 'rejected';
       await db
         .update(giftPropositions)
         .set({ 
@@ -10407,12 +16362,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Create notifications for both users
       if (action === 'accept') {
         // Notify sender that gift was accepted
-        await db.insert(notifications).values({
+        await db.insert(notifications).values([{
           userId: gift.senderId,
           type: 'gift_accepted',
           content: `${authenticatedUser.name || authenticatedUser.username} accepted your gift: ${product.name}`,
           isRead: false
-        });
+        }]);
         
         // Create message to sender
         await db.insert(messages).values({
@@ -10424,12 +16379,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       } else {
         // Notify sender that gift was declined
-        await db.insert(notifications).values({
+        await db.insert(notifications).values([{
           userId: gift.senderId,
           type: 'gift_declined',
           content: `${authenticatedUser.name || authenticatedUser.username} declined your gift: ${product.name}`,
           isRead: false
-        });
+        }]);
         
         // Create message to sender
         await db.insert(messages).values({
@@ -10448,7 +16403,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       });
       
     } catch (error) {
-      console.error('Error responding to gift:', error);
+      console.error('Error responding to gift', error);
       res.status(500).json({ message: 'Failed to respond to gift' });
     }
   });
@@ -10492,7 +16447,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json(gifts);
     } catch (error) {
-      console.error('Error getting received gifts:', error);
+      console.error('Error getting received gifts', error);
       res.status(500).json({ message: 'Failed to get received gifts' });
     }
   });
@@ -10536,7 +16491,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json(gifts);
     } catch (error) {
-      console.error('Error getting sent gifts:', error);
+      console.error('Error getting sent gifts', error);
       res.status(500).json({ message: 'Failed to get sent gifts' });
     }
   });
@@ -10558,7 +16513,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
             console.log(`[AUTH] Session authentication successful for gift proposal: ${user.username} (ID: ${user.id})`);
           }
         } catch (error) {
-          console.error('[AUTH] Error with passport session authentication:', error);
+          console.error('[AUTH] Error with passport session authentication', error);
         }
       }
       
@@ -10581,12 +16536,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(404).json({ message: 'Product not found' });
       }
       
-      console.log('[DEBUG] Gift proposal - Product details:', {
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        type: typeof product.price
-      });
 
       // Check if recipient exists
       const recipient = await storage.getUser(recipientId);
@@ -10624,29 +16573,35 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json({ message: 'Gift proposition sent successfully', gift: giftProposition });
     } catch (error) {
-      console.error('Error creating gift proposition:', error);
+      console.error('Error creating gift proposition', error);
       res.status(500).json({ message: 'Failed to send gift proposition' });
     }
   });
 
   app.get('/api/gifts/sent', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      const userId = req.user.id;
       const sentGifts = await storage.getUserSentGifts(userId);
       res.json(sentGifts);
     } catch (error) {
-      console.error('Error getting sent gifts:', error);
+      console.error('Error getting sent gifts', error);
       res.status(500).json({ message: 'Failed to get sent gifts' });
     }
   });
 
   app.get('/api/gifts/received', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      const userId = req.user.id;
       const receivedGifts = await storage.getUserReceivedGifts(userId);
       res.json(receivedGifts);
     } catch (error) {
-      console.error('Error getting received gifts:', error);
+      console.error('Error getting received gifts', error);
       res.status(500).json({ message: 'Failed to get received gifts' });
     }
   });
@@ -10691,7 +16646,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         res.json({ message: 'Gift proposition accepted', gift: updatedGift });
       }
     } catch (error) {
-      console.error('Error responding to gift:', error);
+      console.error('Error responding to gift', error);
       res.status(500).json({ message: 'Failed to respond to gift proposition' });
     }
   });
@@ -10728,7 +16683,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(400).json({ message: 'Valid messageId and status (accepted/declined) required' });
       }
       
-      console.log(`[DEBUG] Processing gift response - messageId: ${messageId}, status: ${status}, userId: ${userId}`);
       
       // Get the message to extract gift information
       const message = await storage.getMessage(messageId);
@@ -10764,7 +16718,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         category: 'marketplace'
       });
       
-      console.log(`[DEBUG] Gift ${status} - Response message sent`);
+      console.log(`Gift ${status} - Response message sent`);
       
       res.json({
         success: true,
@@ -10774,7 +16728,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       });
       
     } catch (error) {
-      console.error('Error responding to gift:', error);
+      console.error('Error responding to gift', error);
       res.status(500).json({ message: 'Failed to respond to gift' });
     }
   });
@@ -10817,7 +16771,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         rate: toRate / fromRate
       });
     } catch (error) {
-      console.error('Error converting price:', error);
+      console.error('Error converting price', error);
       res.status(500).json({ message: 'Failed to convert price' });
     }
   });
@@ -10850,7 +16804,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(paymentInfo[0]);
     } catch (error) {
-      console.error('Error fetching vendor payment info:', error);
+      console.error('Error fetching vendor payment info', error);
       res.status(500).json({ error: 'Failed to fetch payment information' });
     }
   });
@@ -10894,9 +16848,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       res.status(201).json(newPaymentInfo[0]);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: 'Validation failed', details: error.errors });
+        return res.status(400).json({ error: 'Validation failed', details: error.issues });
       }
-      console.error('Error creating vendor payment info:', error);
+      console.error('Error creating vendor payment info', error);
       res.status(500).json({ error: 'Failed to create payment information' });
     }
   });
@@ -10932,9 +16886,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       res.json(updatedPaymentInfo[0]);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: 'Validation failed', details: error.errors });
+        return res.status(400).json({ error: 'Validation failed', details: error.issues });
       }
-      console.error('Error updating vendor payment info:', error);
+      console.error('Error updating vendor payment info', error);
       res.status(500).json({ error: 'Failed to update payment information' });
     }
   });
@@ -10965,7 +16919,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json({ message: 'Payment information deleted successfully' });
     } catch (error) {
-      console.error('Error deleting vendor payment info:', error);
+      console.error('Error deleting vendor payment info', error);
       res.status(500).json({ error: 'Failed to delete payment information' });
     }
   });
@@ -10980,7 +16934,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         timestamp: new Date()
       };
 
-      console.log('[GPC API] Status requested:', gpcData);
 
       res.json({
         detected: gpcData.detected,
@@ -10995,7 +16948,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         }
       });
     } catch (error) {
-      console.error('[GPC API] Error getting GPC status:', error);
+      console.error('[GPC API] Error getting GPC status', error);
       res.status(500).json({ 
         error: 'Failed to get GPC status',
         detected: false,
@@ -11084,7 +17037,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     // Record performance metrics
     translationOptimizer.recordRequest(startTime, false);
     const totalTime = Date.now() - startTime;
-    console.log(`[Performance] Unsupported language batch completed - ${uncachedTexts.length + cacheHitCount} texts (${cacheHitCount} cached, ${uncachedTexts.length} new) in ${totalTime}ms`);
 
     return res.json({ translations });
   }
@@ -11131,7 +17083,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           attendeeCount: 24,
           maxAttendees: 50,
           organizer: {
-            id: 1,
+          id: 1,
             name: "Alex Johnson",
             username: "alextech",
             avatar: null
@@ -11154,7 +17106,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           attendeeCount: 15,
           maxAttendees: 30,
           organizer: {
-            id: 2,
+          id: 2,
             name: "Sarah Green",
             username: "sarahgarden",
             avatar: null
@@ -11177,7 +17129,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           attendeeCount: 32,
           maxAttendees: 40,
           organizer: {
-            id: 3,
+          id: 3,
             name: "Mike Rodriguez",
             username: "mikebiz",
             avatar: null
@@ -11200,7 +17152,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           attendeeCount: 18,
           maxAttendees: 25,
           organizer: {
-            id: 4,
+          id: 4,
             name: "Emma Wilson",
             username: "emmawines",
             avatar: null
@@ -11223,7 +17175,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           attendeeCount: 24,
           maxAttendees: 30,
           organizer: {
-            id: 5,
+          id: 5,
             name: "David Chen",
             username: "davidevents",
             avatar: null
@@ -11320,7 +17272,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(filteredEvents);
     } catch (error) {
-      console.error('Error fetching events:', error);
+      console.error('Error fetching events', error);
       res.status(500).json({ message: 'Failed to fetch events' });
     }
   });
@@ -11334,8 +17286,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       // Mock event creation response
+      const user = req.user as any;
       const newEvent = {
-        id: Date.now(), // Simple ID generation for demo
+          id: Date.now(), // Simple ID generation for demo
         title,
         description: description || '',
         date,
@@ -11345,10 +17298,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         attendeeCount: 1, // Creator is automatically attending
         maxAttendees: maxAttendees || null,
         organizer: {
-          id: req.user!.id,
-          name: req.user!.name,
-          username: req.user!.username,
-          avatar: req.user!.avatar
+          id: user.id,
+          name: user.name || '',
+          username: user.username || '',
+          avatar: user.avatar || null
         },
         tags: Array.isArray(tags) ? tags : [],
         isAttending: true
@@ -11356,7 +17309,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.status(201).json(newEvent);
     } catch (error) {
-      console.error('Error creating event:', error);
+      console.error('Error creating event', error);
       res.status(500).json({ message: 'Failed to create event' });
     }
   });
@@ -11377,13 +17330,16 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         attendedAt: new Date().toISOString()
       });
     } catch (error) {
-      console.error('Error joining event:', error);
+      console.error('Error joining event', error);
       res.status(500).json({ message: 'Failed to join event' });
     }
   });
 
   app.post('/api/events/:id/buy-ticket', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
       const eventId = parseInt(req.params.id);
       
       if (isNaN(eventId)) {
@@ -11394,13 +17350,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       res.json({ 
         message: 'Ticket purchased successfully',
         eventId,
-        userId: req.user!.id,
+        userId: req.user.id,
         ticketId: `ticket_${Date.now()}`,
         purchasedAt: new Date().toISOString(),
         status: 'confirmed'
       });
     } catch (error) {
-      console.error('Error purchasing ticket:', error);
+      console.error('Error purchasing ticket', error);
       res.status(500).json({ message: 'Failed to purchase ticket' });
     }
   });
@@ -11408,8 +17364,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Event likes endpoints
   app.post('/api/events/:id/like', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
       const eventId = parseInt(req.params.id);
-      const userId = req.user!.id;
+      const userId = req.user.id;
       
       if (isNaN(eventId)) {
         return res.status(400).json({ message: 'Invalid event ID' });
@@ -11428,15 +17387,18 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         likedEvent
       });
     } catch (error) {
-      console.error('Error liking event:', error);
+      console.error('Error liking event', error);
       res.status(500).json({ message: 'Failed to like event' });
     }
   });
 
   app.delete('/api/events/:id/like', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
       const eventId = parseInt(req.params.id);
-      const userId = req.user!.id;
+      const userId = req.user.id;
       
       if (isNaN(eventId)) {
         return res.status(400).json({ message: 'Invalid event ID' });
@@ -11452,15 +17414,18 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         liked: false
       });
     } catch (error) {
-      console.error('Error unliking event:', error);
+      console.error('Error unliking event', error);
       res.status(500).json({ message: 'Failed to unlike event' });
     }
   });
 
   app.get('/api/events/:id/liked', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
       const eventId = parseInt(req.params.id);
-      const userId = req.user!.id;
+      const userId = req.user.id;
       
       if (isNaN(eventId)) {
         return res.status(400).json({ message: 'Invalid event ID' });
@@ -11469,41 +17434,81 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const isLiked = await storage.checkEventLiked(userId, eventId);
       res.json({ liked: isLiked });
     } catch (error) {
-      console.error('Error checking event like status:', error);
+      console.error('Error checking event like status', error);
       res.status(500).json({ message: 'Failed to check like status' });
     }
   });
 
   app.get('/api/user/liked-events', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      const userId = req.user.id;
       const likedEvents = await storage.getUserLikedEvents(userId);
       res.json(likedEvents);
     } catch (error) {
-      console.error('Error getting user liked events:', error);
+      console.error('Error getting user liked events', error);
       res.status(500).json({ message: 'Failed to get liked events' });
     }
   });
 
-  // User language preference endpoints
-  app.get('/api/user/language', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+  // User language preference endpoints with HTTP caching
+  app.get('/api/user/language', async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any)?.id;
+      
+      // If user is not authenticated, return null without caching
       if (!userId) {
-        return res.status(401).json({ message: 'User not authenticated' });
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+        return res.json({ 
+          language: null,
+          authenticated: false 
+        });
       }
 
       const [user] = await db.select().from(users).where(eq(users.id, userId));
       if (!user) {
-        return res.status(404).json({ message: 'User not found' });
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+        return res.json({ 
+          language: null,
+          authenticated: false 
+        });
       }
 
+      const language = user.preferredLanguage || 'EN';
+      
+      // Generate ETag from userId:language for conditional requests
+      const etag = `"${userId}:${language}"`;
+      
+      // Set HTTP caching headers (must be included in both 200 and 304 responses per RFC 9110)
+      const cacheHeaders = {
+        'Cache-Control': 'private, max-age=300, stale-while-revalidate=60',
+        'ETag': etag,
+        'Vary': 'Cookie' // Cache varies by authentication
+      };
+      
+      // Check if client has current version (HTTP 304 Not Modified)
+      if (req.headers['if-none-match'] === etag) {
+        // RFC 9110: 304 responses MUST include cache validators
+        res.set(cacheHeaders);
+        return res.status(304).end();
+      }
+      
+      // Set HTTP caching headers for authenticated users
+      // private = only client can cache, not CDN/proxy
+      // max-age=300 = cache for 5 minutes
+      // stale-while-revalidate=60 = serve stale for 1 minute while fetching fresh
+      res.set(cacheHeaders);
+
       res.json({ 
-        language: user.language || user.preferredLanguage || 'EN',
+        language,
+        authenticated: true,
         success: true 
       });
     } catch (error) {
-      console.error('Error fetching user language:', error);
+      console.error('Error fetching user language', error);
+      res.set('Cache-Control', 'no-store');
       res.status(500).json({ message: 'Internal server error' });
     }
   });
@@ -11520,26 +17525,28 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(400).json({ message: 'Valid language code required' });
       }
 
+      // Normalize language code to uppercase for consistency
+      const normalizedLanguage = normalizeLanguageCode(language);
+
       // Validate language code against supported languages (DeepL only)
       const supportedLanguages = ['EN', 'ES', 'FR', 'DE', 'IT', 'PT', 'RU', 'JA', 'ZH', 'KO', 'NL', 'PL', 'SV', 'DA', 'FI', 'NO', 'CS', 'HU', 'TR', 'AR'];
-      if (!supportedLanguages.includes(language)) {
+      if (!supportedLanguages.includes(normalizedLanguage)) {
         return res.status(400).json({ message: 'Unsupported language code' });
       }
 
       await db.update(users)
         .set({ 
-          language: language,
-          preferredLanguage: language // Keep both for backward compatibility
+          preferredLanguage: normalizedLanguage
         })
         .where(eq(users.id, userId));
 
       res.json({ 
-        language,
+        language: normalizedLanguage,
         success: true,
         message: 'Language preference updated successfully' 
       });
     } catch (error) {
-      console.error('Error updating user language:', error);
+      console.error('Error updating user language', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
@@ -11596,7 +17603,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         process.env.DEEPL_API_KEY_PREMIUM
       ].filter(key => key); // Remove null/undefined keys
 
-      console.log(`[Translation] Processing "${text.substring(0, 30)}${text.length > 30 ? '...' : ''}" → ${targetLanguage}`);
 
       if (apiKeys.length === 0) {
         return res.status(500).json({ message: 'DeepL API key not configured' });
@@ -11640,18 +17646,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
           // If quota exceeded or rate limited, try next key
           if (response.status === 456 || response.status === 429) {
-            console.log(`[Translation] Key quota exceeded, trying next key...`);
             continue;
           }
 
           // If authentication failed (403), try next key
           if (response.status === 403) {
-            console.log(`[Translation] Key authentication failed, trying next key...`);
             continue;
           }
 
           // For other errors, still try next key before giving up
-          console.log(`[Translation] Key failed with status ${response.status}, trying next key...`);
           continue;
 
         } catch (error) {
@@ -11662,7 +17665,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       if (!response || !response.ok) {
         const errorText = response ? await response.text() : 'No response received';
-        console.error('DeepL API error:', response?.status || 'No status', errorText);
         
         // If all API keys failed, return original text to maintain data integrity
         console.log(`[Translation] All API keys failed - returning original text for data integrity`);
@@ -11703,7 +17705,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       });
 
     } catch (error) {
-      console.error('Translation error:', error);
+      console.error('Translation error', error);
       res.status(500).json({ message: 'Internal server error during translation' });
     }
   });
@@ -11735,9 +17737,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.json({ translations: result });
       }
 
-      const translations = [];
-      const uncachedTexts = [];
-      const uncachedIndices = [];
+      const translations: any[] = [];
+      const uncachedTexts: string[] = [];
+      const uncachedIndices: number[] = [];
       let cacheHitCount = 0;
 
       // Advanced cache checking with optimizer
@@ -11825,10 +17827,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         batches.push(sortedTexts.slice(i, i + batchSize));
       }
 
-      console.log(`[Batch Translation] Processing ${batches.length} batches (size: ${batchSize}, parallel: ${parallelBatches})`);
 
       // Parallel processing function for high-performance translation
-      const processBatchParallel = async (batch, batchIndex) => {
+      const processBatchParallel = async (batch: Array<{text: string, originalIndex: number, length: number}>, batchIndex: number) => {
         // Try each API key until success
         for (const apiKey of apiKeys) {
           try {
@@ -11838,7 +17839,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
               'https://api.deepl.com/v2/translate';
 
             const formData = new URLSearchParams();
-            batch.forEach(item => formData.append('text', item.text));
+            batch.forEach((item: {text: string, originalIndex: number, length: number}) => formData.append('text', item.text));
             formData.append('target_lang', deeplTargetLang);
             formData.append('source_lang', 'EN');
 
@@ -11859,7 +17860,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
               const data = await response.json();
               if (data.translations && data.translations.length > 0) {
                 console.log(`[Batch ${batchIndex + 1}] Successfully authenticated with key ${apiKeys.indexOf(apiKey) + 1}`);
-                return data.translations.map((translation, index) => ({
+                return data.translations.map((translation: any, index: number) => ({
                   ...translation,
                   originalIndex: batch[index].originalIndex
                 }));
@@ -11867,17 +17868,14 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
             } else {
               // Handle DeepL API errors with intelligent fallback
               const errorText = await response.text();
-              console.error(`[Batch ${batchIndex + 1}] DeepL API error:`, response.status, errorText);
               
               // If quota exceeded or rate limited, try next key
               if (response.status === 456 || response.status === 429) {
-                console.log(`[Batch ${batchIndex + 1}] Key quota/rate limit exceeded, trying next key...`);
                 continue;
               }
 
               // If forbidden (403) or auth error, try next key
               if (response.status === 403) {
-                console.log(`[Batch ${batchIndex + 1}] Key authentication failed, trying next key...`);
                 continue;
               }
               
@@ -11892,7 +17890,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
             break;
 
           } catch (error) {
-            console.error(`[Batch ${batchIndex + 1}] Translation error with key:`, error);
+            console.error(`[Batch ${batchIndex + 1}] Translation error with key`, error);
             continue; // Try next key
           }
         }
@@ -11926,7 +17924,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
             await new Promise(resolve => setTimeout(resolve, 50));
           }
         } catch (error) {
-          console.error('Parallel processing error:', error);
+          console.error('Parallel processing error', error);
           // Process sequentially as fallback
           for (const batch of parallelChunk) {
             const result = await processBatchParallel(batch, 0);
@@ -11974,11 +17972,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Record performance metrics
       translationOptimizer.recordRequest(startTime, false);
       const totalTime = Date.now() - startTime;
-      console.log(`[Performance] Batch translation completed - ${texts.length} texts (${cacheHitCount} cached, ${uncachedTexts.length} new) in ${totalTime}ms`);
 
       res.json({ translations });
     } catch (error) {
-      console.error('Batch translation error:', error);
+      console.error('Batch translation error', error);
       // Fallback to original texts
       res.json({
         translations: req.body.texts.map((text: string) => ({
@@ -11999,7 +17996,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         message: `Translation system achieving ${stats.sub1SecondRate}% sub-1-second performance with ${stats.cacheHitRate}% cache hit rate`
       });
     } catch (error) {
-      console.error('Performance stats error:', error);
+      console.error('Performance stats error', error);
       res.status(500).json({ message: 'Error retrieving performance statistics' });
     }
   });
@@ -12007,8 +18004,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Dating room payment processing
   app.post('/api/dating-room/payment-intent', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
       const { tier } = req.body;
-      const userId = req.user!.id;
+      const userId = req.user.id;
 
       if (!tier || !['vip', 'vvip'].includes(tier)) {
         return res.status(400).json({ message: 'Invalid tier specified' });
@@ -12032,7 +18032,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Import Stripe only when needed
       const { default: Stripe } = await import('stripe');
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-        apiVersion: '2024-11-20.acacia',
+        // Use default API version from SDK
       });
 
       // Create payment intent
@@ -12048,7 +18048,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json({ clientSecret: paymentIntent.client_secret });
     } catch (error: any) {
-      console.error('Error creating dating room payment intent:', error);
+      console.error('Error creating dating room payment intent', error);
       res.status(500).json({ 
         message: 'Error creating payment intent: ' + error.message 
       });
@@ -12133,13 +18133,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         // Get user's cart items to understand preferences
         const userCartItems = await db
           .select({
-            productId: cart.productId,
+            productId: carts.productId,
             category: products.category,
             price: products.price
           })
-          .from(cart)
-          .innerJoin(products, eq(cart.productId, products.id))
-          .where(eq(cart.userId, userId));
+          .from(carts)
+          .innerJoin(products, eq(carts.productId, products.id))
+          .where(eq(carts.userId, userId));
 
         // Get user's liked products
         const userLikes = await db
@@ -12216,7 +18216,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return uniqueRecommendations;
 
       } catch (error) {
-        console.error('Error getting personalized recommendations:', error);
+        console.error('Error getting personalized recommendations', error);
         // Fallback to recent products
         const fallbackProducts = await db
           .select()
@@ -12238,7 +18238,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         // For now, we'll just log interactions
         // This could be enhanced with a dedicated interactions table in the future
       } catch (error) {
-        console.error('Error tracking user interaction:', error);
+        console.error('Error tracking user interaction', error);
       }
     }
   }
@@ -12260,7 +18260,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         timestamp: new Date().toISOString()
       });
     } catch (error) {
-      console.error("Error getting recommendations:", error);
+      console.error('Error getting recommendations', error);
       res.status(500).json({ message: "Failed to get recommendations" });
     }
   });
@@ -12279,7 +18279,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json({ success: true, message: "Interaction tracked successfully" });
     } catch (error) {
-      console.error("Error tracking interaction:", error);
+      console.error('Error tracking interaction', error);
       res.status(500).json({ message: "Failed to track interaction" });
     }
   });
@@ -12312,7 +18312,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         personalizationActive: true
       });
     } catch (error) {
-      console.error("Error getting user analytics:", error);
+      console.error('Error getting user analytics', error);
       res.status(500).json({ message: "Failed to get user analytics" });
     }
   });
@@ -12321,7 +18321,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.use('/api/validation', validationRoutes);
 
   // Add canonical URL headers for API responses
-  app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
+  app.use('/api', (req: Request, res: Response, next: NextFunction) => {
     const canonicalUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
     res.set('Link', `<${canonicalUrl}>; rel="canonical"`);
     next();
@@ -12374,7 +18374,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(revenueData);
     } catch (error) {
-      console.error('Error fetching revenue analytics:', error);
+      console.error('Error fetching revenue analytics', error);
       res.status(500).json({ error: 'Failed to fetch revenue analytics' });
     }
   });
@@ -12424,7 +18424,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         categories: categoryRevenue
       });
     } catch (error) {
-      console.error('Error fetching profit/loss analytics:', error);
+      console.error('Error fetching profit/loss analytics', error);
       res.status(500).json({ error: 'Failed to fetch profit/loss analytics' });
     }
   });
@@ -12483,7 +18483,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           .groupBy(orderItems.status)
       });
     } catch (error) {
-      console.error('Error fetching metrics analytics:', error);
+      console.error('Error fetching metrics analytics', error);
       res.status(500).json({ error: 'Failed to fetch metrics analytics' });
     }
   });
@@ -12532,7 +18532,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(competitors);
     } catch (error) {
-      console.error('Error fetching competitor analytics:', error);
+      console.error('Error fetching competitor analytics', error);
       res.status(500).json({ error: 'Failed to fetch competitor analytics' });
     }
   });
@@ -12572,7 +18572,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(leads);
     } catch (error) {
-      console.error('Error fetching leads analytics:', error);
+      console.error('Error fetching leads analytics', error);
       res.status(500).json({ error: 'Failed to fetch leads analytics' });
     }
   });
@@ -12611,7 +18611,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(reviewsData);
     } catch (error) {
-      console.error('Error fetching reviews analytics:', error);
+      console.error('Error fetching reviews analytics', error);
       res.status(500).json({ error: 'Failed to fetch reviews analytics' });
     }
   });
@@ -12684,7 +18684,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         geography: geoDistribution
       });
     } catch (error) {
-      console.error('Error fetching segmentation analytics:', error);
+      console.error('Error fetching segmentation analytics', error);
       res.status(500).json({ error: 'Failed to fetch segmentation analytics' });
     }
   });
@@ -12762,7 +18762,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         summary: summary[0] || {}
       });
     } catch (error) {
-      console.error('Error fetching lifetime value analytics:', error);
+      console.error('Error fetching lifetime value analytics', error);
       res.status(500).json({ error: 'Failed to fetch lifetime value analytics' });
     }
   });
@@ -12829,7 +18829,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         metrics: serviceMetrics
       });
     } catch (error) {
-      console.error('Error fetching service interactions:', error);
+      console.error('Error fetching service interactions', error);
       res.status(500).json({ error: 'Failed to fetch service interactions' });
     }
   });
@@ -12934,7 +18934,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(predictiveInsights);
     } catch (error) {
-      console.error('Error generating predictive insights:', error);
+      console.error('Error generating predictive insights', error);
       res.status(500).json({ error: 'Failed to generate predictive insights' });
     }
   });
@@ -13051,7 +19051,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(mlRecommendations);
     } catch (error) {
-      console.error('Error generating ML recommendations:', error);
+      console.error('Error generating ML recommendations', error);
       res.status(500).json({ error: 'Failed to generate ML recommendations' });
     }
   });
@@ -13146,7 +19146,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(trendAnalysis);
     } catch (error) {
-      console.error('Error generating trend analysis:', error);
+      console.error('Error generating trend analysis', error);
       res.status(500).json({ error: 'Failed to generate trend analysis' });
     }
   });
@@ -13284,7 +19284,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const badgeStats = await getVendorBadgeStats(vendorId);
       res.json(badgeStats);
     } catch (error) {
-      console.error('Error fetching vendor badge stats:', error);
+      console.error('Error fetching vendor badge stats', error);
       res.status(500).json({ error: 'Failed to fetch vendor badge stats' });
     }
   });
@@ -13304,7 +19304,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         message: 'Vendor badge updated successfully' 
       });
     } catch (error) {
-      console.error('Error updating vendor badge:', error);
+      console.error('Error updating vendor badge', error);
       res.status(500).json({ error: 'Failed to update vendor badge' });
     }
   });
@@ -13317,7 +19317,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         message: 'All vendor badges updated successfully' 
       });
     } catch (error) {
-      console.error('Error updating all vendor badges:', error);
+      console.error('Error updating all vendor badges', error);
       res.status(500).json({ error: 'Failed to update all vendor badges' });
     }
   });
@@ -13350,7 +19350,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(paymentInfo[0] || null);
     } catch (error) {
-      console.error("Error fetching vendor payment info:", error);
+      console.error('Error fetching vendor payment info', error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -13405,11 +19405,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(result[0]);
     } catch (error) {
-      console.error("Error saving vendor payment info:", error);
+      console.error('Error saving vendor payment info', error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
           message: "Validation error", 
-          errors: error.errors 
+          errors: error.issues 
         });
       }
       res.status(500).json({ message: "Internal server error" });
@@ -13440,7 +19440,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json({ message: "Payment information deleted successfully" });
     } catch (error) {
-      console.error("Error deleting vendor payment info:", error);
+      console.error('Error deleting vendor payment info', error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -13513,7 +19513,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json(customersWithStats);
     } catch (error) {
-      console.error('Error fetching vendor customers:', error);
+      console.error('Error fetching vendor customers', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
@@ -13538,7 +19538,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json(discounts);
     } catch (error) {
-      console.error('Error fetching vendor discounts:', error);
+      console.error('Error fetching vendor discounts', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
@@ -13562,12 +19562,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       });
       
       const [newDiscount] = await db.insert(vendorDiscounts)
-        .values(discountData)
+        .values([discountData])
         .returning();
       
       res.status(201).json(newDiscount);
     } catch (error) {
-      console.error('Error creating discount:', error);
+      console.error('Error creating discount', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
@@ -13595,16 +19595,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
       
       const updateData = insertVendorDiscountSchema.partial().parse(req.body);
-      updateData.updatedAt = new Date();
       
       const [updatedDiscount] = await db.update(vendorDiscounts)
-        .set(updateData)
+        .set({ ...updateData, updatedAt: new Date() })
         .where(eq(vendorDiscounts.id, discountId))
         .returning();
       
       res.json(updatedDiscount);
     } catch (error) {
-      console.error('Error updating discount:', error);
+      console.error('Error updating discount', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
@@ -13635,7 +19634,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json({ message: "Discount deleted successfully" });
     } catch (error) {
-      console.error('Error deleting discount:', error);
+      console.error('Error deleting discount', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
@@ -13662,7 +19661,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         .where(eq(discountUsages.discountId, discountId));
       
       const recentUsages = await db.select({
-        id: discountUsages.id,
+          id: discountUsages.id,
         userId: discountUsages.userId,
         orderId: discountUsages.orderId,
         discountAmount: discountUsages.discountAmount,
@@ -13682,7 +19681,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         recentUsages
       });
     } catch (error) {
-      console.error('Error fetching discount usage:', error);
+      console.error('Error fetching discount usage', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
@@ -13705,7 +19704,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json(campaigns);
     } catch (error) {
-      console.error('Error fetching promotional campaigns:', error);
+      console.error('Error fetching promotional campaigns', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
@@ -13728,12 +19727,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       });
       
       const [newCampaign] = await db.insert(promotionalCampaigns)
-        .values(campaignData)
+        .values([campaignData])
         .returning();
       
       res.status(201).json(newCampaign);
     } catch (error) {
-      console.error('Error creating promotional campaign:', error);
+      console.error('Error creating promotional campaign', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
@@ -13761,16 +19760,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
       
       const updateData = insertPromotionalCampaignSchema.partial().parse(req.body);
-      updateData.updatedAt = new Date();
       
       const [updatedCampaign] = await db.update(promotionalCampaigns)
-        .set(updateData)
+        .set({ ...updateData, updatedAt: new Date() })
         .where(eq(promotionalCampaigns.id, campaignId))
         .returning();
       
       res.json(updatedCampaign);
     } catch (error) {
-      console.error('Error updating promotional campaign:', error);
+      console.error('Error updating promotional campaign', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
@@ -13801,7 +19799,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json({ message: "Campaign deleted successfully" });
     } catch (error) {
-      console.error('Error deleting promotional campaign:', error);
+      console.error('Error deleting promotional campaign', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
@@ -13810,7 +19808,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.post('/api/discounts/validate', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const { code, vendorId, orderAmount, productIds } = req.body;
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      
+      if (typeof userId !== 'number') {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
       
       if (!code || !vendorId || !orderAmount) {
         return res.status(400).json({ message: "Missing required fields" });
@@ -13842,7 +19844,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
       
       // Check usage limits
-      if (discountData.usageLimit && discountData.usageCount >= discountData.usageLimit) {
+      const currentUsageCount = discountData.usageCount ?? 0;
+      if (discountData.usageLimit && currentUsageCount >= discountData.usageLimit) {
         return res.status(400).json({ message: "Discount code usage limit exceeded" });
       }
       
@@ -13895,7 +19898,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         finalAmount
       });
     } catch (error) {
-      console.error('Error validating discount code:', error);
+      console.error('Error validating discount code', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
@@ -13920,7 +19923,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(campaigns);
     } catch (error) {
-      console.error('Error fetching campaigns:', error);
+      console.error('Error fetching campaigns', error);
       res.status(500).json({ message: 'Failed to fetch campaigns' });
     }
   });
@@ -13940,12 +19943,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       const [newCampaign] = await db
         .insert(marketingCampaigns)
-        .values(campaignData)
+        .values([campaignData])
         .returning();
 
       res.status(201).json(newCampaign);
     } catch (error: any) {
-      console.error('Error creating campaign:', error);
+      console.error('Error creating campaign', error);
       if (error.issues) {
         return res.status(400).json({ message: 'Validation error', errors: error.issues });
       }
@@ -13978,7 +19981,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(updatedCampaign);
     } catch (error) {
-      console.error('Error updating campaign:', error);
+      console.error('Error updating campaign', error);
       res.status(500).json({ message: 'Failed to update campaign' });
     }
   });
@@ -14002,7 +20005,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json({ message: 'Campaign deleted successfully' });
     } catch (error) {
-      console.error('Error deleting campaign:', error);
+      console.error('Error deleting campaign', error);
       res.status(500).json({ message: 'Failed to delete campaign' });
     }
   });
@@ -14023,7 +20026,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(activities);
     } catch (error) {
-      console.error('Error fetching campaign activities:', error);
+      console.error('Error fetching campaign activities', error);
       res.status(500).json({ message: 'Failed to fetch activities' });
     }
   });
@@ -14043,12 +20046,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       const [newActivity] = await db
         .insert(campaignActivities)
-        .values(activityData)
+        .values([activityData])
         .returning();
 
       res.status(201).json(newActivity);
     } catch (error: any) {
-      console.error('Error creating activity:', error);
+      console.error('Error creating activity', error);
       if (error.issues) {
         return res.status(400).json({ message: 'Validation error', errors: error.issues });
       }
@@ -14085,7 +20088,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.status(201).json(newCampaignProducts);
     } catch (error) {
-      console.error('Error adding products to campaign:', error);
+      console.error('Error adding products to campaign', error);
       res.status(500).json({ message: 'Failed to add products to campaign' });
     }
   });
@@ -14124,7 +20127,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json(campaignProductsResult);
     } catch (error) {
-      console.error('Error fetching campaign products:', error);
+      console.error('Error fetching campaign products', error);
       res.status(500).json({ message: 'Failed to fetch campaign products' });
     }
   });
@@ -14151,7 +20154,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.status(201).json(newTouchpoint);
     } catch (error: any) {
-      console.error('Error creating touchpoint:', error);
+      console.error('Error creating touchpoint', error);
       if (error.issues) {
         return res.status(400).json({ message: 'Validation error', errors: error.issues });
       }
@@ -14167,30 +20170,30 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(400).json({ message: 'Invalid campaign ID' });
       }
 
-      const { period = 'daily', startDate, endDate } = req.query;
+      const { period = 'daily', startDate, endDate} = req.query;
 
-      let analyticsQuery = db
-        .select()
-        .from(campaignAnalytics)
-        .where(and(
-          eq(campaignAnalytics.campaignId, campaignId),
-          eq(campaignAnalytics.period, period as string)
-        ));
+      // Build where conditions
+      const whereConditions = [
+        eq(campaignAnalytics.campaignId, campaignId),
+        eq(campaignAnalytics.period, period as string)
+      ];
 
       if (startDate && endDate) {
-        analyticsQuery = analyticsQuery.where(
-          and(
-            gte(campaignAnalytics.date, startDate as string),
-            lte(campaignAnalytics.date, endDate as string)
-          )
+        whereConditions.push(
+          gte(campaignAnalytics.date, startDate as string),
+          lte(campaignAnalytics.date, endDate as string)
         );
       }
 
-      const analytics = await analyticsQuery.orderBy(desc(campaignAnalytics.date));
+      const analytics = await db
+        .select()
+        .from(campaignAnalytics)
+        .where(and(...whereConditions))
+        .orderBy(desc(campaignAnalytics.date));
 
       res.json(analytics);
     } catch (error) {
-      console.error('Error fetching campaign analytics:', error);
+      console.error('Error fetching campaign analytics', error);
       res.status(500).json({ message: 'Failed to fetch campaign analytics' });
     }
   });
@@ -14248,7 +20251,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         activityPerformance
       });
     } catch (error) {
-      console.error('Error fetching campaign performance:', error);
+      console.error('Error fetching campaign performance', error);
       res.status(500).json({ message: 'Failed to fetch campaign performance' });
     }
   });
@@ -14281,10 +20284,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(404).json({ message: "No vendor accounts found" });
       }
 
-      req.user = { ...req.user, vendor: vendorAccounts[0] };
+      (req as any).user = { ...req.user, vendor: vendorAccounts[0] };
       next();
     } catch (error) {
-      console.error('Vendor auth error:', error);
+      console.error('Vendor auth error', error);
       res.status(500).json({ message: 'Authentication error' });
     }
   };
@@ -14292,7 +20295,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Product Forecast Analytics
   app.get("/api/vendor/analytics/forecasts", requireVendorAuth, async (req, res) => {
     try {
-      const vendorId = req.user?.vendor?.id;
+      const vendorId = (req as any).user?.vendor?.id;
       if (!vendorId) {
         return res.status(400).json({ message: "Vendor not found" });
       }
@@ -14302,7 +20305,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json(forecasts);
     } catch (error) {
-      console.error('Error fetching product forecasts:', error);
+      console.error('Error fetching product forecasts', error);
       res.status(500).json({ message: 'Failed to fetch product forecasts' });
     }
   });
@@ -14310,7 +20313,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Market Trends Analytics
   app.get("/api/vendor/analytics/market-trends", requireVendorAuth, async (req, res) => {
     try {
-      const vendorId = req.user?.vendor?.id;
+      const vendorId = (req as any).user?.vendor?.id;
       if (!vendorId) {
         return res.status(400).json({ message: "Vendor not found" });
       }
@@ -14320,7 +20323,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json(trends);
     } catch (error) {
-      console.error('Error fetching market trends:', error);
+      console.error('Error fetching market trends', error);
       res.status(500).json({ message: 'Failed to fetch market trends' });
     }
   });
@@ -14328,7 +20331,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Conversion Rate Analytics
   app.get("/api/vendor/analytics/conversions", requireVendorAuth, async (req, res) => {
     try {
-      const vendorId = req.user?.vendor?.id;
+      const vendorId = (req as any).user?.vendor?.id;
       if (!vendorId) {
         return res.status(400).json({ message: "Vendor not found" });
       }
@@ -14338,7 +20341,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json(conversions);
     } catch (error) {
-      console.error('Error fetching conversion rates:', error);
+      console.error('Error fetching conversion rates', error);
       res.status(500).json({ message: 'Failed to fetch conversion rates' });
     }
   });
@@ -14346,7 +20349,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Demographics Analytics
   app.get("/api/vendor/analytics/demographics", requireVendorAuth, async (req, res) => {
     try {
-      const vendorId = req.user?.vendor?.id;
+      const vendorId = (req as any).user?.vendor?.id;
       if (!vendorId) {
         return res.status(400).json({ message: "Vendor not found" });
       }
@@ -14356,7 +20359,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json(demographics);
     } catch (error) {
-      console.error('Error fetching demographics:', error);
+      console.error('Error fetching demographics', error);
       res.status(500).json({ message: 'Failed to fetch demographics' });
     }
   });
@@ -14364,7 +20367,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Competitor Analysis
   app.get("/api/vendor/analytics/competitors", requireVendorAuth, async (req, res) => {
     try {
-      const vendorId = req.user?.vendor?.id;
+      const vendorId = (req as any).user?.vendor?.id;
       if (!vendorId) {
         return res.status(400).json({ message: "Vendor not found" });
       }
@@ -14373,7 +20376,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json(competitors);
     } catch (error) {
-      console.error('Error fetching competitor analysis:', error);
+      console.error('Error fetching competitor analysis', error);
       res.status(500).json({ message: 'Failed to fetch competitor analysis' });
     }
   });
@@ -14381,7 +20384,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Financial Summary
   app.get("/api/vendor/analytics/financial", requireVendorAuth, async (req, res) => {
     try {
-      const vendorId = req.user?.vendor?.id;
+      const vendorId = (req as any).user?.vendor?.id;
       if (!vendorId) {
         return res.status(400).json({ message: "Vendor not found" });
       }
@@ -14391,7 +20394,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json(financial);
     } catch (error) {
-      console.error('Error fetching financial summary:', error);
+      console.error('Error fetching financial summary', error);
       res.status(500).json({ message: 'Failed to fetch financial summary' });
     }
   });
@@ -14399,7 +20402,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Comprehensive Analytics Dashboard
   app.get("/api/vendor/analytics/dashboard", requireVendorAuth, async (req, res) => {
     try {
-      const vendorId = req.user?.vendor?.id;
+      const vendorId = (req as any).user?.vendor?.id;
       if (!vendorId) {
         return res.status(400).json({ message: "Vendor not found" });
       }
@@ -14448,7 +20451,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         inventoryAnalytics: inventory
       });
     } catch (error) {
-      console.error('Error fetching analytics dashboard:', error);
+      console.error('Error fetching analytics dashboard', error);
       res.status(500).json({ message: 'Failed to fetch analytics dashboard' });
     }
   });
@@ -14456,7 +20459,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Generate Sample Analytics Data
   app.post("/api/vendor/analytics/generate-sample", requireVendorAuth, async (req, res) => {
     try {
-      const vendorId = req.user?.vendor?.id;
+      const vendorId = (req as any).user?.vendor?.id;
       if (!vendorId) {
         return res.status(400).json({ message: "Vendor not found" });
       }
@@ -14465,7 +20468,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       res.json({ message: 'Sample analytics data generated successfully' });
     } catch (error) {
-      console.error('Error generating sample data:', error);
+      console.error('Error generating sample data', error);
       res.status(500).json({ message: 'Failed to generate sample data' });
     }
   });
@@ -14490,7 +20493,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const dashboard = await commissionService.getVendorCommissionDashboard(vendorId);
       res.json(dashboard);
     } catch (error) {
-      console.error('Error fetching commission dashboard:', error);
+      console.error('Error fetching commission dashboard', error);
       res.status(500).json({ message: 'Failed to fetch commission dashboard' });
     }
   });
@@ -14506,7 +20509,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const paymentLink = await commissionService.createPaymentLink(periodId);
       res.json(paymentLink);
     } catch (error) {
-      console.error('Error creating payment link:', error);
+      console.error('Error creating payment link', error);
       res.status(500).json({ message: 'Failed to create payment link' });
     }
   });
@@ -14524,7 +20527,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const paymentIntent = await commissionService.createCommissionPaymentIntent(periodId, gateway);
       res.json(paymentIntent);
     } catch (error) {
-      console.error('Error creating payment intent:', error);
+      console.error('Error creating payment intent', error);
       res.status(500).json({ message: 'Failed to create payment intent' });
     }
   });
@@ -14540,13 +20543,16 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const paymentMethods = await commissionService.getAvailablePaymentMethods(vendorId);
       res.json(paymentMethods);
     } catch (error) {
-      console.error('Error fetching payment methods:', error);
+      console.error('Error fetching payment methods', error);
       res.status(500).json({ message: 'Failed to fetch payment methods' });
     }
   });
 
   // Capture payment after completion
   app.post('/api/payments/:paymentId/capture', async (req: Request, res: Response) => {
+    // Add privacy and security headers for sensitive route
+    attachPrivacyHeaders(res, req);
+    
     try {
       const { paymentId } = req.params;
       const { gateway } = req.body;
@@ -14558,7 +20564,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const result = await commissionService.captureCommissionPayment(paymentId, gateway);
       res.json(result);
     } catch (error) {
-      console.error('Error capturing payment:', error);
+      console.error('Error capturing payment', error);
       res.status(500).json({ message: 'Failed to capture payment' });
     }
   });
@@ -14589,7 +20595,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const notification = await commissionService.checkPendingPaymentNotification(vendorId);
       res.json(notification);
     } catch (error) {
-      console.error('Error checking payment notification:', error);
+      console.error('Error checking payment notification', error);
       res.status(500).json({ message: 'Failed to check payment notification' });
     }
   });
@@ -14600,7 +20606,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       await commissionService.processMonthlyBilling();
       res.json({ success: true, message: 'Monthly billing processed successfully' });
     } catch (error) {
-      console.error('Error processing monthly billing:', error);
+      console.error('Error processing monthly billing', error);
       res.status(500).json({ message: 'Failed to process monthly billing' });
     }
   });
@@ -14615,7 +20621,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         blockedAccounts: blockedCount
       });
     } catch (error) {
-      console.error('Error processing overdue payments:', error);
+      console.error('Error processing overdue payments', error);
       res.status(500).json({ message: 'Failed to process overdue payments' });
     }
   });
@@ -14632,7 +20638,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const results = await commissionService.processMonthlyCommissions(month, year);
       res.json({ success: true, results });
     } catch (error) {
-      console.error('Error processing commissions:', error);
+      console.error('Error processing commissions', error);
       res.status(500).json({ message: 'Failed to process commissions' });
     }
   });
@@ -14643,7 +20649,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const results = await commissionService.sendPaymentReminders();
       res.json({ success: true, results });
     } catch (error) {
-      console.error('Error sending payment reminders:', error);
+      console.error('Error sending payment reminders', error);
       res.status(500).json({ message: 'Failed to send payment reminders' });
     }
   });
@@ -14654,7 +20660,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const results = await commissionService.suspendNonPayingVendors();
       res.json({ success: true, results });
     } catch (error) {
-      console.error('Error suspending vendors:', error);
+      console.error('Error suspending vendors', error);
       res.status(500).json({ message: 'Failed to suspend vendors' });
     }
   });
@@ -14673,7 +20679,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       try {
         event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
       } catch (err) {
-        console.log('Webhook signature verification failed.', err);
         return res.status(400).json({ message: 'Webhook signature verification failed' });
       }
 
@@ -14686,20 +20691,17 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       res.json({ received: true });
     } catch (error) {
-      console.error('Error handling webhook:', error);
+      console.error('Error handling webhook', error);
       res.status(500).json({ message: 'Webhook processing failed' });
     }
   });
 
   // Escrow.com API integration for secure payments
-  app.post('/api/escrow/create-transaction', async (req: Request, res: Response) => {
-    try {
+  app.post('/api/escrow/create-transaction', async (req: Request, res: Response) => { try {
       // Manual authentication check with fallback
       let authenticatedUser = null;
       
       // Try session authentication first
-      console.log('[ESCROW] Session data:', req.session);
-      console.log('[ESCROW] Session passport:', (req.session as any)?.passport);
       
       if (req.session && (req.session as any).passport && (req.session as any).passport.user) {
         try {
@@ -14710,7 +20712,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
             console.log(`[ESCROW] Session authentication successful: ${user.username} (ID: ${user.id})`);
           }
         } catch (error) {
-          console.error('[ESCROW] Error with passport session authentication:', error);
+          console.error('[ESCROW] Error with passport session authentication', error);
         }
       } else {
         // Try alternative session check
@@ -14723,7 +20725,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
               console.log(`[ESCROW] Alternative authentication successful: ${user.username} (ID: ${user.id})`);
             }
           } catch (error) {
-            console.error('[ESCROW] Error with alternative authentication:', error);
+            console.error('[ESCROW] Error with alternative authentication', error);
           }
         }
       }
@@ -14754,14 +20756,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       // Create transaction payload for Escrow.com
+      const currentUser = req.user as any;
       const transactionData = {
         parties: [
           {
             role: 'buyer',
             customer: {
-              first_name: req.user?.name?.split(' ')[0] || 'Buyer',
-              last_name: req.user?.name?.split(' ')[1] || 'User',
-              email: req.user?.email || buyerEmail,
+              first_name: currentUser?.name?.split(' ')[0] || 'Buyer',
+              last_name: currentUser?.name?.split(' ')[1] || 'User',
+              email: currentUser?.email || buyerEmail,
               phone: {
                 country_code: '+1',
                 national_number: '5551234567'
@@ -14799,7 +20802,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         description: description
       };
 
-      console.log('[ESCROW] Creating transaction with data:', JSON.stringify(transactionData, null, 2));
 
       // Make actual API call to Escrow.com
       try {
@@ -14818,7 +20820,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
         const escrowData = await escrowResponse.json();
         
-        console.log('[ESCROW] Transaction created successfully:', escrowData.id);
 
         res.json({
           success: true,
@@ -14828,7 +20829,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
 
       } catch (apiError) {
-        console.error('[ESCROW] API call failed:', apiError);
+        console.error('[ESCROW] API call failed', apiError);
         res.status(500).json({
           success: false,
           message: 'Failed to create escrow transaction with Escrow.com API',
@@ -14837,7 +20838,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
     } catch (error) {
-      console.error('[ESCROW] Error creating transaction:', error);
+      console.error('[ESCROW] Error creating transaction', error);
       res.status(500).json({
         success: false,
         message: 'Failed to create escrow transaction',
@@ -14851,26 +20852,20 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     try {
       const { event_type, transaction } = req.body;
       
-      console.log('[ESCROW WEBHOOK] Received event:', event_type, 'for transaction:', transaction?.id);
 
       // Handle different escrow events
-      switch (event_type) {
-        case 'transaction.updated':
-          console.log('[ESCROW WEBHOOK] Transaction updated:', transaction?.id);
+      switch (event_type) { case 'transaction.updated':
           break;
         case 'transaction.disputed':
-          console.log('[ESCROW WEBHOOK] Transaction disputed:', transaction?.id);
           break;
         case 'transaction.completed':
-          console.log('[ESCROW WEBHOOK] Transaction completed:', transaction?.id);
           break;
         default:
-          console.log('[ESCROW WEBHOOK] Unhandled event type:', event_type);
       }
 
       res.json({ success: true, message: 'Webhook processed' });
     } catch (error) {
-      console.error('[ESCROW WEBHOOK] Error processing webhook:', error);
+      console.error('[ESCROW WEBHOOK] Error processing webhook', error);
       res.status(500).json({ success: false, message: 'Webhook processing failed' });
     }
   });
@@ -14896,11 +20891,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         details: result
       });
     } catch (error) {
-      console.error('Test error report failed:', error);
+      console.error('Test error report failed', error);
       res.status(500).json({ 
         success: false, 
         message: 'Test failed', 
-        error: error.message 
+        error: error instanceof Error ? error.message : String(error)
       });
     }
   });
@@ -14927,7 +20922,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
     } catch (error: any) {
-      console.error('[EMAIL] SMTP diagnostic error:', error);
+      console.error('[EMAIL] SMTP diagnostic error', error);
       return res.status(500).json({
         status: 'error',
         message: 'Failed to test SMTP connection',
@@ -14940,7 +20935,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.post('/api/test-user-registration-email', async (req: Request, res: Response) => {
     try {
       const testUser = {
-        id: 999,
+          id: 999,
         username: 'testuser123',
         email: 'testuser@example.com',
         name: 'Test User Registration'
@@ -15004,7 +20999,7 @@ This is a test email from the Dedw3n marketplace system.
         testUser
       });
     } catch (error) {
-      console.error('[TEST] Failed to send user registration test email:', error);
+      console.error('[TEST] Failed to send user registration test email', error);
       res.status(500).json({
         success: false,
         message: 'Failed to send test user registration email',
@@ -15017,14 +21012,14 @@ This is a test email from the Dedw3n marketplace system.
   app.post('/api/test-vendor-registration-email', async (req: Request, res: Response) => {
     try {
       const testUser = {
-        id: 888,
+          id: 888,
         username: 'testvendor123',
         email: 'testvendor@example.com',
         name: 'Test Vendor Account'
       };
 
       const testVendor = {
-        id: 777,
+          id: 777,
         storeName: 'Test Marketplace Store',
         businessName: 'Test Business LLC'
       };
@@ -15040,7 +21035,7 @@ This is a test email from the Dedw3n marketplace system.
         isApproved: false
       });
     } catch (error) {
-      console.error('[TEST] Failed to send vendor registration test email:', error);
+      console.error('[TEST] Failed to send vendor registration test email', error);
       res.status(500).json({
         success: false,
         message: 'Failed to send test vendor registration email',
@@ -15052,7 +21047,10 @@ This is a test email from the Dedw3n marketplace system.
   // DELETE /api/vendors/store - Delete current vendor store
   app.delete("/api/vendors/store", unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (typeof userId !== 'number') {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
       
       // Get current vendor
       const [vendor] = await db.select().from(vendors).where(eq(vendors.userId, userId));
@@ -15079,7 +21077,7 @@ This is a test email from the Dedw3n marketplace system.
         redirectTo: "/"
       });
     } catch (error) {
-      console.error("Error deleting vendor store:", error);
+      console.error('Error deleting vendor store', error);
       res.status(500).json({ message: "Failed to delete vendor store" });
     }
   });
@@ -15116,7 +21114,7 @@ This is a test email from the Dedw3n marketplace system.
         });
       }
     } catch (error) {
-      console.error('Error verifying affiliate partner code:', error);
+      console.error('Error verifying affiliate partner code', error);
       return res.status(500).json({
         success: false,
         message: "Internal server error during verification"
@@ -15125,18 +21123,24 @@ This is a test email from the Dedw3n marketplace system.
   });
   app.get('/api/affiliate-partnership/profile', isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (typeof userId !== 'number') {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
       const partner = await storage.getAffiliatePartnerByUserId(userId);
       res.json(partner || null);
     } catch (error) {
-      console.error('Error getting affiliate partner profile:', error);
+      console.error('Error getting affiliate partner profile', error);
       res.status(500).json({ message: 'Failed to get affiliate partner profile' });
     }
   });
 
   app.post('/api/affiliate-partnership/apply', isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (typeof userId !== 'number') {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
       const user = req.user!;
       
       // Check if user already has a partnership
@@ -15148,13 +21152,14 @@ This is a test email from the Dedw3n marketplace system.
       // Generate unique referral code
       const referralCode = `REF${userId}${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
       
+      const currentUser = user as any;
       const partnerData = {
         userId,
         referralCode,
         commissionRate: req.body.commissionRate || 5.0,
-        partnerName: req.body.partnerName || user.name || user.username,
+        partnerName: req.body.partnerName || currentUser.name || currentUser.username,
         businessName: req.body.businessName,
-        contactEmail: req.body.contactEmail || user.email,
+        contactEmail: req.body.contactEmail || currentUser.email,
         contactPhone: req.body.contactPhone,
         website: req.body.website,
         description: req.body.description,
@@ -15183,7 +21188,7 @@ This is a test email from the Dedw3n marketplace system.
           <h3>User Details:</h3>
           <ul>
             <li><strong>User ID:</strong> ${userId}</li>
-            <li><strong>Username:</strong> ${user.username}</li>
+            <li><strong>Username:</strong> ${currentUser.username}</li>
             <li><strong>Referral Code:</strong> ${referralCode}</li>
             <li><strong>Commission Rate:</strong> ${partnerData.commissionRate}%</li>
           </ul>
@@ -15209,7 +21214,7 @@ Partner Information:
 
 User Details:
 - User ID: ${userId}
-- Username: ${user.username}
+- Username: ${currentUser.username}
 - Referral Code: ${referralCode}
 - Commission Rate: ${partnerData.commissionRate}%
 
@@ -15228,20 +21233,23 @@ Application submitted on ${new Date().toLocaleString()}
 
         console.log('[AFFILIATE] Email notification sent to love@dedw3n.com for new application');
       } catch (emailError) {
-        console.error('[AFFILIATE] Failed to send email notification:', emailError);
+        console.error('[AFFILIATE] Failed to send email notification', emailError);
         // Don't fail the request if email fails, just log the error
       }
       
       res.status(201).json(newPartner);
     } catch (error) {
-      console.error('Error creating affiliate partner:', error);
+      console.error('Error creating affiliate partner', error);
       res.status(500).json({ message: 'Failed to create affiliate partnership' });
     }
   });
 
   app.put('/api/affiliate-partnership/profile', isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (typeof userId !== 'number') {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
       const partner = await storage.getAffiliatePartnerByUserId(userId);
       
       if (!partner) {
@@ -15251,14 +21259,17 @@ Application submitted on ${new Date().toLocaleString()}
       const updatedPartner = await storage.updateAffiliatePartner(partner.id, req.body);
       res.json(updatedPartner);
     } catch (error) {
-      console.error('Error updating affiliate partner:', error);
+      console.error('Error updating affiliate partner', error);
       res.status(500).json({ message: 'Failed to update affiliate partnership' });
     }
   });
 
   app.get('/api/affiliate-partnership/referrals', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (typeof userId !== 'number') {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
       const partner = await storage.getAffiliatePartnerByUserId(userId);
       
       if (!partner) {
@@ -15268,7 +21279,7 @@ Application submitted on ${new Date().toLocaleString()}
       const referrals = await storage.getAffiliateReferrals(partner.id);
       res.json(referrals);
     } catch (error) {
-      console.error('Error getting affiliate referrals:', error);
+      console.error('Error getting affiliate referrals', error);
       res.status(500).json({ message: 'Failed to get affiliate referrals' });
     }
   });
@@ -15292,7 +21303,7 @@ Application submitted on ${new Date().toLocaleString()}
 
       res.json(partners);
     } catch (error) {
-      console.error('Error getting affiliate partners for admin:', error);
+      console.error('Error getting affiliate partners for admin', error);
       res.status(500).json({ message: 'Failed to get affiliate partners' });
     }
   });
@@ -15302,6 +21313,10 @@ Application submitted on ${new Date().toLocaleString()}
       const user = req.user!;
       if (user.role !== 'admin') {
         return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      if (typeof user.id !== 'number') {
+        return res.status(500).json({ message: 'User ID not found' });
       }
 
       const partnerId = parseInt(req.params.id);
@@ -15366,15 +21381,14 @@ The Dedw3n Team
             text: emailText
           });
 
-          console.log('[AFFILIATE] Approval email sent to:', partner.email);
         } catch (emailError) {
-          console.error('[AFFILIATE] Failed to send approval email:', emailError);
+          console.error('[AFFILIATE] Failed to send approval email', emailError);
         }
       }
 
       res.json({ message: 'Affiliate partner approved successfully' });
     } catch (error) {
-      console.error('Error approving affiliate partner:', error);
+      console.error('Error approving affiliate partner', error);
       res.status(500).json({ message: 'Failed to approve affiliate partner' });
     }
   });
@@ -15384,6 +21398,10 @@ The Dedw3n Team
       const user = req.user!;
       if (user.role !== 'admin') {
         return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      if (typeof user.id !== 'number') {
+        return res.status(500).json({ message: 'User ID not found' });
       }
 
       const partnerId = parseInt(req.params.id);
@@ -15449,15 +21467,14 @@ The Dedw3n Team
             text: emailText
           });
 
-          console.log('[AFFILIATE] Decline email sent to:', partner.email);
         } catch (emailError) {
-          console.error('[AFFILIATE] Failed to send decline email:', emailError);
+          console.error('[AFFILIATE] Failed to send decline email', emailError);
         }
       }
 
       res.json({ message: 'Affiliate partner declined successfully' });
     } catch (error) {
-      console.error('Error declining affiliate partner:', error);
+      console.error('Error declining affiliate partner', error);
       res.status(500).json({ message: 'Failed to decline affiliate partner' });
     }
   });
@@ -15478,15 +21495,14 @@ The Dedw3n Team
       }
 
       // Delete all related vendor associations first
-      await db.delete(vendorAffiliatePartners).where(eq(vendorAffiliatePartners.partnerId, partnerId));
+      await db.delete(vendorAffiliatePartners).where(eq(vendorAffiliatePartners.affiliatePartnerId, partnerId));
       
       // Delete the affiliate partner
       await db.delete(affiliatePartners).where(eq(affiliatePartners.id, partnerId));
 
-      console.log('[AFFILIATE] Partner deleted successfully:', partnerId);
       res.json({ message: 'Affiliate partner deleted successfully' });
     } catch (error) {
-      console.error('Error deleting affiliate partner:', error);
+      console.error('Error deleting affiliate partner', error);
       res.status(500).json({ message: 'Failed to delete affiliate partner' });
     }
   });
@@ -15518,10 +21534,9 @@ The Dedw3n Team
         .where(eq(affiliatePartners.id, partnerId))
         .returning();
 
-      console.log('[AFFILIATE] Partner updated successfully:', partnerId);
       res.json(updatedPartner);
     } catch (error) {
-      console.error('Error updating affiliate partner:', error);
+      console.error('Error updating affiliate partner', error);
       res.status(500).json({ message: 'Failed to update affiliate partner' });
     }
   });
@@ -15542,17 +21557,19 @@ The Dedw3n Team
         .values(partnerData)
         .returning();
 
-      console.log('[AFFILIATE] New partner created:', newPartner.id);
       res.status(201).json(newPartner);
     } catch (error) {
-      console.error('Error creating affiliate partner:', error);
+      console.error('Error creating affiliate partner', error);
       res.status(500).json({ message: 'Failed to create affiliate partner' });
     }
   });
 
   app.get('/api/affiliate-partnership/earnings', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (typeof userId !== 'number') {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
       const partner = await storage.getAffiliatePartnerByUserId(userId);
       
       if (!partner) {
@@ -15562,14 +21579,17 @@ The Dedw3n Team
       const earnings = await storage.getAffiliateEarnings(partner.id);
       res.json(earnings);
     } catch (error) {
-      console.error('Error getting affiliate earnings:', error);
+      console.error('Error getting affiliate earnings', error);
       res.status(500).json({ message: 'Failed to get affiliate earnings' });
     }
   });
 
   app.get('/api/affiliate-partnership/referral-link', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      if (typeof userId !== 'number') {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
       const partner = await storage.getAffiliatePartnerByUserId(userId);
       
       if (!partner) {
@@ -15579,7 +21599,7 @@ The Dedw3n Team
       const referralLink = await storage.generateReferralLink(partner.id);
       res.json({ referralLink });
     } catch (error) {
-      console.error('Error generating referral link:', error);
+      console.error('Error generating referral link', error);
       res.status(500).json({ message: 'Failed to generate referral link' });
     }
   });
@@ -15616,7 +21636,7 @@ The Dedw3n Team
 
       res.json(productsWithVendorInfo);
     } catch (error) {
-      console.error('Error fetching featured products:', error);
+      console.error('Error fetching featured products', error);
       res.status(500).json({ error: 'Failed to fetch featured products' });
     }
   });
@@ -15653,7 +21673,7 @@ The Dedw3n Team
 
       res.json(trendingPosts);
     } catch (error) {
-      console.error('Error fetching trending posts:', error);
+      console.error('Error fetching trending posts', error);
       res.status(500).json({ error: 'Failed to fetch trending posts' });
     }
   });
@@ -15690,7 +21710,7 @@ The Dedw3n Team
 
       res.json(communityPosts);
     } catch (error) {
-      console.error('Error fetching community posts:', error);
+      console.error('Error fetching community posts', error);
       res.status(500).json({ error: 'Failed to fetch community posts' });
     }
   });
@@ -15712,7 +21732,7 @@ The Dedw3n Team
       const result = await storage.likeDatingProfile(userId, likedId);
       res.json(result);
     } catch (error) {
-      console.error("Error liking dating profile:", error);
+      console.error('Error liking dating profile', error);
       res.status(500).json({ message: "Failed to like profile" });
     }
   });
@@ -15733,7 +21753,7 @@ The Dedw3n Team
       const result = await storage.passDatingProfile(userId, passedId);
       res.json({ passed: result });
     } catch (error) {
-      console.error("Error passing dating profile:", error);
+      console.error('Error passing dating profile', error);
       res.status(500).json({ message: "Failed to pass profile" });
     }
   });
@@ -15749,22 +21769,20 @@ The Dedw3n Team
       try {
         matches = await storage.getUserMatches(userId);
       } catch (dbError) {
-        console.log("Database error getting matches, returning mock data:", dbError.message);
-        matches = [];
       }
       
       // If no real matches or database error, return mock data for testing
       if (matches.length === 0) {
         const mockMatches = [
           {
-            id: 1,
+          id: 1,
             user1Id: userId,
             user2Id: 2,
             matchedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
             lastMessageAt: null,
             isActive: true,
             matchedWith: {
-              id: 2,
+          id: 2,
               username: 'sarah_jones',
               name: 'Sarah Jones',
               avatar: 'https://images.unsplash.com/photo-1494790108755-2616c179289e?w=150&h=150&fit=crop&crop=face',
@@ -15772,7 +21790,7 @@ The Dedw3n Team
               country: 'United Kingdom'
             },
             matchedProfile: {
-              id: 2,
+          id: 2,
               displayName: 'Sarah',
               age: 28,
               bio: 'Adventure seeker, coffee lover, and book enthusiast. Looking for someone to share life\'s beautiful moments with.',
@@ -15783,14 +21801,14 @@ The Dedw3n Team
             }
           },
           {
-            id: 2,
+          id: 2,
             user1Id: userId,
             user2Id: 3,
             matchedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
             lastMessageAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
             isActive: true,
             matchedWith: {
-              id: 3,
+          id: 3,
               username: 'emma_wilson',
               name: 'Emma Wilson',
               avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
@@ -15798,7 +21816,7 @@ The Dedw3n Team
               country: 'United Kingdom'
             },
             matchedProfile: {
-              id: 3,
+          id: 3,
               displayName: 'Emma',
               age: 25,
               bio: 'Creative soul with a passion for art and music. Love exploring new places and trying different cuisines.',
@@ -15809,14 +21827,14 @@ The Dedw3n Team
             }
           },
           {
-            id: 3,
+          id: 3,
             user1Id: userId,
             user2Id: 4,
             matchedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 1 week ago
             lastMessageAt: null,
             isActive: true,
             matchedWith: {
-              id: 4,
+          id: 4,
               username: 'sophia_brown',
               name: 'Sophia Brown',
               avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face',
@@ -15824,7 +21842,7 @@ The Dedw3n Team
               country: 'United Kingdom'
             },
             matchedProfile: {
-              id: 4,
+          id: 4,
               displayName: 'Sophia',
               age: 30,
               bio: 'Fitness enthusiast and nature lover. Enjoy outdoor activities and maintaining a healthy lifestyle. Seeking a genuine connection.',
@@ -15835,14 +21853,14 @@ The Dedw3n Team
             }
           },
           {
-            id: 4,
+          id: 4,
             user1Id: userId,
             user2Id: 5,
             matchedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
             lastMessageAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), // 12 hours ago
             isActive: true,
             matchedWith: {
-              id: 5,
+          id: 5,
               username: 'olivia_taylor',
               name: 'Olivia Taylor',
               avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face',
@@ -15850,7 +21868,7 @@ The Dedw3n Team
               country: 'United Kingdom'
             },
             matchedProfile: {
-              id: 5,
+          id: 5,
               displayName: 'Olivia',
               age: 26,
               bio: 'Tech professional by day, foodie by night. Love discovering hidden gems in the city and trying new restaurants.',
@@ -15867,7 +21885,7 @@ The Dedw3n Team
 
       res.json(matches);
     } catch (error) {
-      console.error("Error getting user matches:", error);
+      console.error('Error getting user matches', error);
       res.status(500).json({ message: "Failed to get matches" });
     }
   });
@@ -15904,7 +21922,7 @@ The Dedw3n Team
 
       res.json(datingProfiles);
     } catch (error) {
-      console.error('Error fetching dating profiles:', error);
+      console.error('Error fetching dating profiles', error);
       res.status(500).json({ error: 'Failed to fetch dating profiles' });
     }
   });
@@ -15939,11 +21957,14 @@ The Dedw3n Team
 
       res.json(upcomingEvents);
     } catch (error) {
-      console.error('Error fetching upcoming events:', error);
+      console.error('Error fetching upcoming events', error);
       res.status(500).json({ error: 'Failed to fetch upcoming events' });
     }
   });
-
+  
+  // TODO: Implement actual follow functionality with database
+  // TODO: Implement actual event attendance functionality with database
+  
   app.get('/api/marketplace/stats', async (req: Request, res: Response) => {
     try {
       const [productCount] = await db.select({ count: count() }).from(products);
@@ -15960,45 +21981,14 @@ The Dedw3n Team
 
       res.json(stats);
     } catch (error) {
-      console.error('Error fetching marketplace stats:', error);
+      console.error('Error fetching marketplace stats', error);
       res.status(500).json({ error: 'Failed to fetch marketplace stats' });
     }
   });
 
   // Mobile Landing Page Action Endpoints
-  app.post('/api/products/:id/like', unifiedIsAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const productId = parseInt(req.params.id);
-      const userId = req.user?.id;
-
-      if (!userId) {
-        return res.status(401).json({ error: 'Authentication required' });
-      }
-
-      // TODO: Implement actual like functionality with database
-      res.json({ success: true, message: 'Product liked successfully' });
-    } catch (error) {
-      console.error('Error liking product:', error);
-      res.status(500).json({ error: 'Failed to like product' });
-    }
-  });
-
-  app.post('/api/posts/:id/like', unifiedIsAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const postId = parseInt(req.params.id);
-      const userId = req.user?.id;
-
-      if (!userId) {
-        return res.status(401).json({ error: 'Authentication required' });
-      }
-
-      // TODO: Implement actual like functionality with database
-      res.json({ success: true, message: 'Post liked successfully' });
-    } catch (error) {
-      console.error('Error liking post:', error);
-      res.status(500).json({ error: 'Failed to like post' });
-    }
-  });
+  // Note: Product like endpoint is implemented at line ~9286
+  // Note: Post like/unlike endpoint is implemented at line ~3510
 
   app.post('/api/users/:id/follow', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
@@ -16012,7 +22002,7 @@ The Dedw3n Team
       // TODO: Implement actual follow functionality with database
       res.json({ success: true, message: 'User followed successfully' });
     } catch (error) {
-      console.error('Error following user:', error);
+      console.error('Error following user', error);
       res.status(500).json({ error: 'Failed to follow user' });
     }
   });
@@ -16029,14 +22019,732 @@ The Dedw3n Team
       // TODO: Implement actual event attendance functionality with database
       res.json({ success: true, message: 'Event attendance registered successfully' });
     } catch (error) {
-      console.error('Error registering for event:', error);
+      console.error('Error registering for event', error);
       res.status(500).json({ error: 'Failed to register for event' });
     }
   });
 
+  const objectStorageService = new ObjectStorageService();
 
-  // Catch-all handler for invalid API routes
-  app.use('/api/*', (req: Request, res: Response) => {
+  // Serve public assets from Object Storage
+  // This route serves files from the Object Storage public directory
+  app.use("/public-objects", async (req: Request, res: Response) => {
+    // Only handle GET requests
+    if (req.method !== 'GET') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+    
+    const filePath = req.path.slice(1); // Remove leading slash
+    
+    try {
+      // Add CORS headers for public assets (images, videos, etc.)
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Range');
+      res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges');
+      
+      // Validate file path to prevent path traversal
+      if (!filePath || filePath.includes('..') || filePath.startsWith('/')) {
+        return res.status(400).json({ error: "Invalid file path" });
+      }
+
+      const file = await objectStorageService.searchPublicObject(filePath);
+      if (!file) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      
+      objectStorageService.downloadObject(file, res);
+    } catch (error: any) {
+      // Log full error for debugging but return sanitized message to client
+      
+      // Don't expose internal errors or paths to client
+      return res.status(500).json({ error: "Unable to access file" });
+    }
+  });
+
+  // Serve private assets from Object Storage (requires authentication)
+  // This route serves protected files like message attachments and documents
+  app.use("/private-objects", unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    // Only handle GET requests
+    if (req.method !== 'GET') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+    
+    const filePath = req.path.slice(1); // Remove leading slash
+    
+    try {
+      // Verify user is authenticated (middleware should handle this, but double-check)
+      if (!req.user && !req.session?.passport?.user) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      // Validate file path to prevent path traversal
+      if (!filePath || filePath.includes('..') || filePath.startsWith('/')) {
+        return res.status(400).json({ error: "Invalid file path" });
+      }
+
+      // Get file from private storage
+      const privateDir = process.env.PRIVATE_OBJECT_DIR || '';
+      if (!privateDir) {
+        return res.status(503).json({ error: "Service temporarily unavailable" });
+      }
+
+      // Extract bucket name and construct object path
+      const bucketName = privateDir.split('/')[1];
+      const objectPath = `${privateDir.split('/').slice(2).join('/')}/${filePath}`;
+
+      const bucket = objectStorageClient.bucket(bucketName);
+      const file = bucket.file(objectPath);
+
+      // Check if file exists
+      const [exists] = await file.exists();
+      if (!exists) {
+        return res.status(404).json({ error: "File not found" });
+      }
+
+      // Stream the file
+      objectStorageService.downloadObject(file, res);
+    } catch (error: any) {
+      // Log full error for debugging but return sanitized message to client
+      
+      // Don't expose internal errors or paths to client
+      return res.status(500).json({ error: "Unable to access file" });
+    }
+  });
+
+  // Get all videos for content creators marketplace
+  app.get('/api/creators/videos', async (req: Request, res: Response) => {
+    try {
+      const { page = 1, limit = 12, creatorId, monetizationType } = req.query;
+      const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
+      
+      let whereConditions = [eq(videos.visibility, 'public')];
+      
+      if (creatorId) {
+        whereConditions.push(eq(videos.userId, parseInt(creatorId as string)));
+      }
+      
+      if (monetizationType && monetizationType !== 'all') {
+        const validMonetizationTypes = ['free', 'ppv', 'subscription'];
+        if (validMonetizationTypes.includes(monetizationType as string)) {
+          whereConditions.push(eq(videos.monetizationType, monetizationType as 'free' | 'ppv' | 'subscription'));
+        }
+      }
+      
+      const videoList = await db
+        .select({
+          id: videos.id,
+          title: videos.title,
+          description: videos.description,
+          thumbnailUrl: videos.thumbnailUrl,
+          duration: videos.duration,
+          views: videos.views,
+          likes: videos.likes,
+          price: videos.price,
+          currency: videos.currency,
+          monetizationType: videos.monetizationType,
+          isPremium: videos.isPremium,
+          previewUrl: videos.previewUrl,
+          createdAt: videos.createdAt,
+          creator: {
+          id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar
+          }
+        })
+        .from(videos)
+        .innerJoin(users, eq(videos.userId, users.id))
+        .where(and(...whereConditions))
+        .orderBy(desc(videos.createdAt))
+        .limit(parseInt(limit as string))
+        .offset(offset);
+      
+      res.json(videoList);
+    } catch (error) {
+      console.error('Error fetching creator videos', error);
+      res.status(500).json({ error: 'Failed to fetch videos' });
+    }
+  });
+
+  // Get specific video details
+  app.get('/api/creators/videos/:id', async (req: Request, res: Response) => {
+    try {
+      const videoId = parseInt(req.params.id);
+      const userId = req.user?.id;
+      
+      const video = await db
+        .select({
+          id: videos.id,
+          title: videos.title,
+          description: videos.description,
+          videoUrl: videos.videoUrl,
+          thumbnailUrl: videos.thumbnailUrl,
+          duration: videos.duration,
+          views: videos.views,
+          likes: videos.likes,
+          price: videos.price,
+          currency: videos.currency,
+          monetizationType: videos.monetizationType,
+          isPremium: videos.isPremium,
+          storageKey: videos.storageKey,
+          previewUrl: videos.previewUrl,
+          createdAt: videos.createdAt,
+          creator: {
+          id: users.id,
+            username: users.username,
+            name: users.name,
+            avatar: users.avatar
+          }
+        })
+        .from(videos)
+        .innerJoin(users, eq(videos.userId, users.id))
+        .where(eq(videos.id, videoId))
+        .limit(1);
+      
+      if (!video.length) {
+        return res.status(404).json({ error: 'Video not found' });
+      }
+      
+      const videoData = video[0];
+      
+      // Check if user has access to premium content
+      let hasAccess = false;
+      if (videoData.monetizationType === 'free') {
+        hasAccess = true;
+      } else if (userId) {
+        // Check if user is the creator
+        if (videoData.creator.id === userId) {
+          hasAccess = true;
+        } else {
+          // Check if user has purchased the video (PPV) or subscribed (subscription)
+          if (videoData.monetizationType === 'ppv') {
+            const purchase = await db
+              .select()
+              .from(videoPurchases)
+              .where(
+                and(
+                  eq(videoPurchases.userId, userId),
+                  eq(videoPurchases.videoId, videoId),
+                  eq(videoPurchases.status, 'completed')
+                )
+              )
+              .limit(1);
+            hasAccess = purchase.length > 0;
+          } else if (videoData.monetizationType === 'subscription') {
+            // Check active subscription to creator
+            const subscription = await db
+              .select()
+              .from(subscriptions)
+              .where(
+                and(
+                  eq(subscriptions.userId, userId),
+                  eq(subscriptions.creatorId, videoData.creator.id),
+                  eq(subscriptions.status, 'active'),
+                  gte(subscriptions.expiresAt, new Date())
+                )
+              )
+              .limit(1);
+            hasAccess = subscription.length > 0;
+          }
+        }
+      }
+      
+      // Increment view count
+      await db
+        .update(videos)
+        .set({ views: sql`${videos.views} + 1` })
+        .where(eq(videos.id, videoId));
+      
+      res.json({
+        ...videoData,
+        hasAccess,
+        videoUrl: hasAccess ? videoData.videoUrl : null,
+        storageKey: hasAccess ? videoData.storageKey : null
+      });
+    } catch (error) {
+      console.error('Error fetching video details', error);
+      res.status(500).json({ error: 'Failed to fetch video details' });
+    }
+  });
+
+  // Get creator profile
+  app.get('/api/creators/:creatorId', async (req: Request, res: Response) => {
+    try {
+      const creatorId = parseInt(req.params.creatorId);
+      
+      const creator = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          bio: users.bio,
+          avatar: users.avatar,
+          createdAt: users.createdAt
+        })
+        .from(users)
+        .where(eq(users.id, creatorId))
+        .limit(1);
+      
+      if (!creator.length) {
+        return res.status(404).json({ error: 'Creator not found' });
+      }
+      
+      // Get creator stats
+      const videoStats = await db
+        .select({
+          totalVideos: count(videos.id),
+          totalViews: sum(videos.views),
+          avgViews: avg(videos.views)
+        })
+        .from(videos)
+        .where(eq(videos.userId, creatorId));
+      
+      const subscriberCount = await db
+        .select({ count: count(subscriptions.id) })
+        .from(subscriptions)
+        .where(
+          and(
+            eq(subscriptions.creatorId, creatorId),
+            eq(subscriptions.status, 'active')
+          )
+        );
+      
+      res.json({
+        ...creator[0],
+        stats: {
+          ...videoStats[0],
+          subscribers: subscriberCount[0]?.count || 0
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching creator profile', error);
+      res.status(500).json({ error: 'Failed to fetch creator profile' });
+    }
+  });
+
+  // IP Geolocation endpoint with caching
+  app.get('/api/geolocation', async (req: Request, res: Response) => {
+    try {
+      const clientIp = req.headers['x-forwarded-for']?.toString().split(',')[0].trim() || 
+                       req.socket.remoteAddress || 
+                       '8.8.8.8';
+      
+      const ipToCheck = clientIp.includes('::1') || clientIp.includes('127.0.0.1') ? '8.8.8.8' : clientIp;
+      const cacheKey = `geolocation:${ipToCheck}`;
+      
+      const geolocationData = await cacheService.getOrFetch(
+        cacheKey,
+        async () => {
+          const response = await fetch(`https://ipapi.co/${ipToCheck}/json/`);
+          const data = await response.json();
+          
+          if (data.country_name && !data.error) {
+            return {
+              country: data.country_name,
+              countryCode: data.country_code,
+              city: data.city || 'Unknown',
+              region: data.region || 'Unknown'
+            };
+          } else {
+            return {
+              country: 'Unknown',
+              countryCode: 'XX',
+              city: 'Unknown',
+              region: 'Unknown'
+            };
+          }
+        },
+        CACHE_TTL.GEOLOCATION
+      );
+      
+      res.json(geolocationData);
+    } catch (error) {
+      console.error('Error fetching geolocation', error);
+      res.json({
+        country: 'Unknown',
+        countryCode: 'XX',
+        city: 'Unknown',
+        region: 'Unknown'
+      });
+    }
+  });
+
+  // Register file upload routes for messaging
+  registerFileUploadRoutes(app);
+
+  // Register call management routes for voice/video calling
+  registerCallRoutes(app);
+
+  // Register cryptocurrency payment routes
+  registerCryptoPaymentRoutes(app);
+
+  // Register calendar event file sharing routes
+  registerCalendarEventFileRoutes(app);
+
+  // Environment Diagnostic Endpoint - Compare APIs and Data Sources (Admin Only)
+  app.get('/api/diagnostic/environment', requireRole('admin'), async (req: Request, res: Response) => {
+    try {
+      // Check database connection and get basic stats
+      const userCount = await db.select({ count: count() }).from(users);
+      const productCount = await db.select({ count: count() }).from(products);
+      const orderCount = await db.select({ count: count() }).from(orders);
+      
+      // Get database connection info (without sensitive data)
+      const dbUrl = process.env.DATABASE_URL || '';
+      const dbHost = dbUrl.match(/@([^:\/]+)/)?.[1] || 'unknown';
+      const dbName = dbUrl.match(/\/([^?]+)(\?|$)/)?.[1] || 'unknown';
+      
+      // Environment detection
+      const environment = process.env.NODE_ENV || 'unknown';
+      const replitDomain = process.env.REPLIT_DOMAINS?.split(',')[0] || 'not-set';
+      const customDomain = process.env.CUSTOM_DOMAINS?.split(',')[0] || 'not-set';
+      
+      res.json({
+        environment: {
+          nodeEnv: environment,
+          isProduction: environment === 'production',
+          isDevelopment: environment === 'development',
+          replitDomain,
+          customDomain,
+          serverHost: req.hostname,
+          requestOrigin: req.headers.origin || 'no-origin-header',
+          corsEnabled: true
+        },
+        database: {
+          connected: true,
+          host: dbHost,
+          database: dbName,
+          dataSnapshot: {
+            users: userCount[0]?.count || 0,
+            products: productCount[0]?.count || 0,
+            orders: orderCount[0]?.count || 0
+          }
+        },
+        api: {
+          baseUrl: req.protocol + '://' + req.get('host'),
+          endpoints: {
+            users: '/api/users',
+            products: '/api/products',
+            orders: '/api/orders',
+            auth: '/api/auth/login'
+          }
+        },
+        cors: {
+          allowedOrigins: [
+            'https://dedw3n.com',
+            'https://www.dedw3n.com',
+            ...(process.env.ALLOWED_ORIGINS?.split(',') || []),
+            ...(process.env.CUSTOM_DOMAINS?.split(',') || []),
+            ...(process.env.REPLIT_DOMAINS?.split(',') || [])
+          ].filter(Boolean),
+          credentialsEnabled: true
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('[DIAGNOSTIC] Error generating environment diagnostic', error);
+      res.status(500).json({ 
+        error: 'Failed to generate diagnostic report',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Data Consistency Check Endpoint (Admin Only)
+  app.get('/api/diagnostic/data-check', requireRole('admin'), async (req: Request, res: Response) => {
+    try {
+      // Sample recent data to verify cross-environment consistency
+      const recentUsers = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          createdAt: users.createdAt
+        })
+        .from(users)
+        .orderBy(desc(users.id))
+        .limit(5);
+
+      const recentProducts = await db
+        .select({
+          id: products.id,
+          name: products.name,
+          vendorId: products.vendorId,
+          createdAt: products.createdAt
+        })
+        .from(products)
+        .orderBy(desc(products.id))
+        .limit(5);
+
+      res.json({
+        database: {
+          url: process.env.DATABASE_URL ? 'configured' : 'missing',
+          host: process.env.DATABASE_URL?.match(/@([^:\/]+)/)?.[1] || 'unknown'
+        },
+        sampleData: {
+          recentUserIds: recentUsers.map(u => u.id),
+          recentProductIds: recentProducts.map(p => p.id),
+          totalSampled: recentUsers.length + recentProducts.length
+        },
+        consistency: {
+          status: 'active',
+          note: 'Same DATABASE_URL ensures data consistency across all domains'
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('[DATA-CHECK] Error checking data consistency', error);
+      res.status(500).json({ 
+        error: 'Failed to check data consistency',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Error report endpoint
+  app.post('/api/error-reports', async (req: Request, res: Response) => {
+    try {
+      const { errorDetails, page, reportedAt } = req.body;
+      
+      // Log the error report for monitoring
+      
+      res.json({ 
+        success: true, 
+        message: 'Error report received successfully' 
+      });
+    } catch (error) {
+      console.error('Failed to process error report', error);
+      res.status(500).json({ 
+        error: 'Failed to process error report' 
+      });
+    }
+  });
+
+  // Financial Services Routes
+  app.get('/api/financial-services', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await getAuthenticatedUser(req);
+      if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const services = await storage.getFinancialServicesByUserId(user.id);
+      res.json(services);
+    } catch (error) {
+      console.error('Error fetching financial services', error);
+      res.status(500).json({ error: 'Failed to fetch financial services' });
+    }
+  });
+
+  app.post('/api/financial-services', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await getAuthenticatedUser(req);
+      if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const { serviceType, serviceName, applicationData, notes } = req.body;
+      
+      if (!serviceType || !serviceName) {
+        return res.status(400).json({ error: 'Service type and name are required' });
+      }
+
+      const newService = await storage.createFinancialService({
+        userId: user.id,
+        serviceType,
+        serviceName,
+        status: 'interested',
+        applicationData,
+        notes
+      });
+
+      res.status(201).json(newService);
+    } catch (error) {
+      console.error('Error creating financial service', error);
+      res.status(500).json({ error: 'Failed to create financial service' });
+    }
+  });
+
+  app.put('/api/financial-services/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await getAuthenticatedUser(req);
+      if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const serviceId = parseInt(req.params.id);
+      const { status, applicationData, notes } = req.body;
+
+      const updatedService = await storage.updateFinancialService(serviceId, user.id, {
+        status,
+        applicationData,
+        notes
+      });
+
+      if (!updatedService) {
+        return res.status(404).json({ error: 'Financial service not found' });
+      }
+
+      res.json(updatedService);
+    } catch (error) {
+      console.error('Error updating financial service', error);
+      res.status(500).json({ error: 'Failed to update financial service' });
+    }
+  });
+
+  app.delete('/api/financial-services/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await getAuthenticatedUser(req);
+      if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const serviceId = parseInt(req.params.id);
+      const deleted = await storage.deleteFinancialService(serviceId, user.id);
+
+      if (!deleted) {
+        return res.status(404).json({ error: 'Financial service not found' });
+      }
+
+      res.json({ success: true, message: 'Financial service deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting financial service', error);
+      res.status(500).json({ error: 'Failed to delete financial service' });
+    }
+  });
+
+  // Government Services Routes
+  app.get('/api/government-services', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await getAuthenticatedUser(req);
+      if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const services = await storage.getGovernmentServicesByUserId(user.id);
+      res.json(services);
+    } catch (error) {
+      console.error('Error fetching government services', error);
+      res.status(500).json({ error: 'Failed to fetch government services' });
+    }
+  });
+
+  app.post('/api/government-services', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await getAuthenticatedUser(req);
+      if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const { serviceType, serviceName, requestData, documentType, appointmentDate, notes } = req.body;
+      
+      if (!serviceType || !serviceName) {
+        return res.status(400).json({ error: 'Service type and name are required' });
+      }
+
+      const newService = await storage.createGovernmentService({
+        userId: user.id,
+        serviceType,
+        serviceName,
+        status: 'pending',
+        requestData,
+        documentType,
+        appointmentDate,
+        notes
+      });
+
+      res.status(201).json(newService);
+    } catch (error) {
+      console.error('Error creating government service', error);
+      res.status(500).json({ error: 'Failed to create government service' });
+    }
+  });
+
+  app.put('/api/government-services/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await getAuthenticatedUser(req);
+      if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const serviceId = parseInt(req.params.id);
+      const { status, requestData, documentType, appointmentDate, notes } = req.body;
+
+      const updatedService = await storage.updateGovernmentService(serviceId, user.id, {
+        status,
+        requestData,
+        documentType,
+        appointmentDate,
+        notes
+      });
+
+      if (!updatedService) {
+        return res.status(404).json({ error: 'Government service not found' });
+      }
+
+      res.json(updatedService);
+    } catch (error) {
+      console.error('Error updating government service', error);
+      res.status(500).json({ error: 'Failed to update government service' });
+    }
+  });
+
+  app.delete('/api/government-services/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await getAuthenticatedUser(req);
+      if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const serviceId = parseInt(req.params.id);
+      const deleted = await storage.deleteGovernmentService(serviceId, user.id);
+
+      if (!deleted) {
+        return res.status(404).json({ error: 'Government service not found' });
+      }
+
+      res.json({ success: true, message: 'Government service deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting government service', error);
+      res.status(500).json({ error: 'Failed to delete government service' });
+    }
+  });
+
+  // Video Upload API Routes
+  const { videoUploadService } = await import('./video-upload-service');
+  
+  // Validate video before upload
+  app.post('/api/videos/validate', unifiedIsAuthenticated, (req: Request, res: Response) => {
+    return videoUploadService.validateVideo(req, res);
+  });
+  
+  // Create resumable upload session
+  app.post('/api/videos/upload/session', unifiedIsAuthenticated, (req: Request, res: Response) => {
+    return videoUploadService.createUploadSession(req, res);
+  });
+  
+  // Upload video chunk (using multipart/form-data for binary upload)
+  app.post('/api/videos/upload/:sessionId/chunk', unifiedIsAuthenticated, videoUploadService.uploadChunkMiddleware, (req: Request, res: Response) => {
+    return videoUploadService.uploadChunk(req, res);
+  });
+  
+  // Get upload status
+  app.get('/api/videos/upload/:sessionId/status', unifiedIsAuthenticated, (req: Request, res: Response) => {
+    return videoUploadService.getUploadStatus(req, res);
+  });
+  
+  // Finalize upload
+  app.post('/api/videos/upload/:sessionId/finalize', unifiedIsAuthenticated, (req: Request, res: Response) => {
+    return videoUploadService.finalizeUpload(req, res);
+  });
+  
+  // Cancel upload session
+  app.delete('/api/videos/upload/:sessionId/cancel', unifiedIsAuthenticated, (req: Request, res: Response) => {
+    return videoUploadService.cancelUploadSession(req, res);
+  });
+
+  // Catch-all handler for invalid API routes (must be last!)
+  app.use('/api', (req: Request, res: Response) => {
     res.status(404).json({
       error: 'API endpoint not found',
       message: `The API endpoint ${req.path} does not exist`,
@@ -16044,12 +22752,32 @@ The Dedw3n Team
     });
   });
 
-  // Register file upload routes for messaging
-  registerFileUploadRoutes(app);
-
-  // Set up WebSocket server for messaging
+  // Set up WebSocket server for messaging (creates central upgrade dispatcher)
   console.log('[WebSocket] Setting up WebSocket server for messaging');
-  setupWebSocket(server);
+  // Import sessionStore and cookieSecret from auth module
+  const { sessionStore, cookieSecret } = await import('./auth');
+  if (!sessionStore || !cookieSecret) {
+    throw new Error('Session store or cookie secret not found - ensure setupAuth() is called before setupWebSocket()');
+  }
+  setupWebSocket(server, sessionStore, cookieSecret);
+
+  // Set up WebSocket server for video meetings
+  console.log('[Meeting-WebSocket] Setting up Meeting WebSocket server');
+  setupMeetingWebSocket(server);
+  
+  // Register meeting WebSocket with central dispatcher
+  const { getMeetingWebSocketServer } = await import('./meeting-websocket');
+  const { registerMeetingWebSocketServer } = await import('./websocket-handler');
+  const meetingWss = getMeetingWebSocketServer();
+  registerMeetingWebSocketServer(meetingWss);
+
+  // Initialize cache warmup for critical data
+  console.log('[Cache] Warming cache for critical data...');
+  const { createCacheWarmup } = await import('./cache-warmup');
+  const cacheWarmup = createCacheWarmup(storage);
+  cacheWarmup.warmCriticalData().catch((error) => {
+    console.error('[Cache] Cache warmup failed, but server will continue:', error);
+  });
 
   return server;
 }

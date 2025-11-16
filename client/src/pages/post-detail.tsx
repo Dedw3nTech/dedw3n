@@ -243,7 +243,7 @@ export default function PostDetail() {
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-2">Post Not Found</h1>
             <p className="text-muted-foreground mb-4">The post you're looking for doesn't exist or has been removed.</p>
-            <Button onClick={() => setLocation("/social")}>
+            <Button onClick={() => setLocation("/community")}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Feed
             </Button>
@@ -259,7 +259,7 @@ export default function PostDetail() {
         {/* Back button */}
         <Button 
           variant="ghost" 
-          onClick={() => setLocation("/social")}
+          onClick={() => setLocation("/community")}
           className="mb-4"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />

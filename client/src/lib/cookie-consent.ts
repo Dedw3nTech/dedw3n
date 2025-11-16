@@ -112,6 +112,31 @@ export function getConsentState(): CookieConsentState {
 }
 
 /**
+ * Get current consent state with authentication awareness
+ */
+export function getConsentStateWithAuth(isAuthenticated: boolean): CookieConsentState {
+  const storedConsent = getStoredConsent();
+  const firstVisit = isFirstVisit();
+  
+  // Always show banner if no consent is stored, regardless of auth status or visit history
+  const shouldShowBanner = storedConsent === null;
+  
+  console.log('[Cookie Consent] State check:', {
+    hasStoredConsent: storedConsent !== null,
+    isFirstVisit: firstVisit,
+    shouldShowBanner,
+    isAuthenticated
+  });
+  
+  return {
+    hasConsented: storedConsent !== null,
+    consent: storedConsent,
+    isFirstVisit: firstVisit,
+    showBanner: shouldShowBanner
+  };
+}
+
+/**
  * Apply cookie consent preferences to the application
  */
 export function applyCookieConsent(consent: CookieConsent): void {

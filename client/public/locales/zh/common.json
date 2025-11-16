@@ -83,6 +83,7 @@
     "password": "密码",
     "confirm_password": "确认密码",
     "forgot_password": "忘记密码？",
+    "forgot_password_link": "忘记密码？点击此处重置",
     "already_have_account": "已有账户？",
     "dont_have_account": "没有账户？",
     "create_account": "创建账户",

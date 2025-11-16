@@ -1,0 +1,33 @@
+How to improve website performance
+While there is no guaranteed blueprint for strong web performance, website owners can use the following best practices to help boost site speed and reliability:
+
+Optimize images
+Images often take the longest to load on a website since image files tend to be larger in size than HTML and CSS files. Luckily, image load time can be reduced via image optimization, which typically involves reducing its resolution and dimensions, and compressing the image file itself.
+
+Limit the number of HTTP requests
+Most webpages require browsers to make multiple HTTP requests for various assets on the page, including images, scripts, and CSS files. In fact, many webpages require dozens of these requests. Each request results in a round trip to and from the server hosting the resource, which can add to the overall load time for a webpage.
+
+Because of these potential issues, the total number of assets each page needs to load should be kept to a minimum. A speed test should help identify which HTTP requests are taking the most time.
+
+Use browser HTTP caching
+The browser cache is a temporary storage location where browsers save copies of static files so that they can load recently visited webpages more quickly. Developers can instruct browsers to cache elements of a webpage that will not change often. Instructions for browser caching go in the headers of HTTP responses from the hosting server. This greatly reduces the amount of data that the server needs to transfer to the browser, shortening load times for users who frequently visit certain pages.
+
+Remove unnecessary render-blocking JavaScript
+Webpages may have unnecessary code that loads before more important page content, slowing down the overall load time. This is especially common on large websites with many owners independently adding code and content. Web page owners can use a web performance tool to identify unnecessary code on poorly performing pages.
+
+Limit the use of external scripts
+Any scripted webpage elements that are loaded from somewhere else — such as external commenting systems, CTA buttons, CMS plugins, or lead-generation popups — need to be loaded each time a page loads.
+
+Depending on the size of the script, these can slow a webpage down, or cause the webpage to not load all at once (this is called 'content jumping' or 'layout shifting' and can be especially frustrating for mobile users, who often have to scroll to see the entire webpage).
+
+Limit redirect usage
+A redirect is when visitors to one webpage get forwarded to a different page instead. Redirects add a few fractions of a second, or sometimes even whole seconds, to page load times. Redirects are sometimes unavoidable, but they can be overused — and may accumulate over time on larger websites with multiple owners. Website owners should institute clear guidelines on redirect usage and periodically scan important web pages for unnecessary redirects.
+
+Minify CSS and JavaScript files
+Minifying code means removing anything that a computer doesn't need in order to understand and carry out the code, including code comments, whitespace, and unnecessary semicolons. This makes CSS and JavaScript files slightly smaller so that they load faster in the browser and take up less bandwidth. Although minification usually provides marginal performance improvements, it is still an important best practice.
+
+Use effective third-party services for important website functions
+Hosting: Even the best-designed website will load slowly if its origin server responds slowly to requests. Website owners should choose a server with an average response time of under 200 ms, and with a good record for reliability.
+DNS: DNS is a system that translates domains (e.g. example.com) into IP addresses — an important part of the page loading process. Website owners should choose DNS services that deliver results (‘resolve’) quickly and reliably, rather than relying on their web host’s DNS.
+Caching: The closer website content sits to the people requesting it, the faster they’ll be able to receive it. Website owners should use a content delivery network (CDN) to cache web content in many locations around the world, so user requests do not have to travel hundreds or thousands of miles (and across many autonomous networks) to reach the website’s origin server.
+Cybersecurity: DDoS attacks, malicious bots, and other cyber attacks can degrade a website’s performance. This topic is too broad to cover in detail here, but website owners should choose a web application security provider which filters out malicious traffic without slowing down legitimate traffic.

@@ -1,0 +1,15 @@
+Code and framework optimizations
+Use batch inserts: Instead of saving each record one by one, collect records and insert them in bulk to reduce the number of database queries.
+Disable query logging: If your framework (like Laravel) logs every query, this can consume memory. Disable this feature to speed up the process.
+Chunk large datasets: If you're seeding a very large number of records, split the data into smaller chunks and process each chunk individually to avoid memory issues and improve performance. 
+Data and environment optimizations
+Optimize file reading: If you are reading data from a file (like a CSV), stream the file line by line instead of loading the entire file into memory at once.
+Increase timeouts: If you are running your seeder in an environment with time limits (like AWS Lambda), increase the timeout setting to allow the process to complete.
+Check for external load: Ensure there is no excessive load on the server or disk delays that are not directly related to the seeding process itself. 
+Database-specific optimizations
+Check and optimize DAG configuration: For systems like SQL Server, ensure the Database Availability Group (DAG) configuration is optimal and not causing bottlenecks.
+Enable compression: For some systems like SQL Server, using compression during automatic seeding can reduce network bandwidth and potentially speed up the process, although it adds CPU overhead.
+Consider direct seeding: For certain scenarios, especially in SQL Server, "direct seeding" can save a significant amount of time compared to traditional restore methods. 
+General best practices
+Organize seed files: For better manageability, split large seed files into smaller, modular files (e.g., countries.sql, cities.sql). Many systems can process these files in a specific order.
+Automate seeding: Integrate seeding into your deployment pipeline to automate the process and avoid manual, error-prone steps. Tools like Docker Compose can help automate initialization for development environments

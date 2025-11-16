@@ -1,282 +1,136 @@
-import { createContext, ReactNode, useContext, useEffect, useRef } from "react";
+import { createContext, ReactNode, useContext, useEffect } from "react";
 import {
-  useQuery,
   useMutation,
   UseMutationResult,
 } from "@tanstack/react-query";
 import { User as SelectUser, InsertUser } from "@shared/schema";
 import { 
-  getQueryFn, 
   apiRequest, 
-  queryClient, 
-  getStoredAuthToken, 
-  setAuthToken, 
-  clearAuthToken
+  queryClient
 } from "../lib/queryClient";
-import { performUnifiedLogout, isUserLoggedOut, clearLogoutState } from "../utils/unified-logout-system";
-import { parseJwt, isTokenExpired, hasValidStructure } from "../lib/jwtUtils";
 import { 
   saveUserData, 
-  loadUserData, 
-  clearUserData, 
-  updateUserData 
+  clearUserData
 } from "../lib/userStorage";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { useTranslation } from "react-i18next";
+import { useMasterTranslation } from "@/hooks/use-master-translation";
+import { processError } from "@/lib/error-handler";
+import { useAuthToken } from "@/contexts/AuthTokenContext";
+import { useLazyUser } from "@/hooks/use-lazy-user";
 
 type AuthContextType = {
   user: SelectUser | null;
   isLoading: boolean;
   error: Error | null;
+  refetchUser: () => Promise<any>;
   loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
   logoutMutation: UseMutationResult<any, Error, void>;
-  registerMutation: UseMutationResult<SelectUser, Error, InsertUser & { captchaId?: string; captchaInput?: string; turnstileToken?: string }>;
+  registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
 };
 
-type LoginData = Pick<InsertUser, "username" | "password"> & { captchaId?: string; captchaInput?: string; turnstileToken?: string };
+type LoginData = Pick<InsertUser, "username" | "password">;
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  const { t } = useTranslation();
-  const tokenCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const { translateText } = useMasterTranslation();
+  const [, navigate] = useLocation();
   
-  // Query for getting the current user
+  const { hasValidToken, setToken, clearToken, status: tokenStatus } = useAuthToken();
+  
   const {
     data: user,
     error,
     isLoading,
     refetch
-  } = useQuery<SelectUser | undefined, Error>({
-    queryKey: ["/api/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+  } = useLazyUser({ 
+    enabled: hasValidToken,
+    refetchOnMount: false // Use cached data for instant page loads
   });
 
-  // Verify token on component mount and set up periodic checks
-  // Effect for token validation check
   useEffect(() => {
-    // Verify token on startup
-    verifyTokenValidity();
-    
-    // Set up periodic token verification (every 5 minutes)
-    tokenCheckIntervalRef.current = setInterval(() => {
-      verifyTokenValidity();
-    }, 5 * 60 * 1000);
-    
-    // Clean up on unmount
-    return () => {
-      if (tokenCheckIntervalRef.current) {
-        clearInterval(tokenCheckIntervalRef.current);
-      }
-    };
-  }, []);
-  
-  // Effect for loading stored user data on startup
+    if (tokenStatus === "unauthenticated" || tokenStatus === "expired") {
+      queryClient.setQueryData(["/api/user"], null);
+      clearUserData();
+    }
+  }, [tokenStatus]);
+
   useEffect(() => {
-    // Only attempt to load stored user data if we don't already have a user
-    if (!user && !isLoading) {
-      try {
-        // Try sessionStorage first (faster)
-        let storedUserData = sessionStorage.getItem('userData');
-        
-        // If not in sessionStorage, try localStorage
-        if (!storedUserData) {
-          storedUserData = localStorage.getItem('userData');
-        }
-        
-        if (storedUserData) {
-          const userData = JSON.parse(storedUserData);
-          
-          // Check if the stored data has a timestamp and isn't too old (24 hours)
-          const lastUpdated = new Date(userData.lastUpdated || 0);
-          const now = new Date();
-          const hoursSinceUpdate = (now.getTime() - lastUpdated.getTime()) / (1000 * 60 * 60);
-          
-          if (hoursSinceUpdate < 24) {
-            console.log('Found stored user data, restoring session:', {
-              id: userData.id,
-              username: userData.username,
-              lastUpdated: userData.lastUpdated
-            });
-            
-            // Update the user data in the cache
-            queryClient.setQueryData(["/api/user"], userData);
-            
-            // Immediately fetch fresh data to ensure we have the latest
-            refetch();
-          } else {
-            console.log('Stored user data is too old, not restoring');
-            // Clear old data
-            sessionStorage.removeItem('userData');
-            localStorage.removeItem('userData');
-          }
-        }
-      } catch (error) {
-        console.error('Error loading stored user data:', error);
-      }
-    }
-  }, [user, isLoading]);
-  
-  // Function to verify token validity
-  const verifyTokenValidity = () => {
-    const token = getStoredAuthToken();
-    
-    if (!token) {
-      // No token stored, nothing to validate
-      return;
-    }
-    
-    // Check if token has valid structure
-    if (!hasValidStructure(token)) {
-      console.error('Invalid token structure detected');
-      clearAuthToken();
-      queryClient.setQueryData(["/api/user"], null);
-      return;
-    }
-    
-    // Check if token is expired
-    if (isTokenExpired(token)) {
-      console.warn('Token has expired, logging out');
-      clearAuthToken();
-      queryClient.setQueryData(["/api/user"], null);
-      // Silently handle expiration without showing error toast
-      return;
-    }
-    
-    // Token is valid, ensure we have user data
-    if (!user) {
+    if (tokenStatus === "authenticated" && !user && !isLoading) {
       refetch();
     }
-  };
+  }, [tokenStatus, user, isLoading, refetch]);
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
       try {
-        // Add debugger statement before login request
-        debugger; // For Node.js debugging as suggested in nodejs.org/api/debugger.html
-        console.log('Login attempt with credentials (username only):', credentials.username);
+        console.log('[LOGIN] Starting login for user:', credentials.username);
         
         const res = await apiRequest("POST", "/api/auth/login", credentials);
         
-        // Add debugger to inspect response
-        debugger; // For Node.js debugging
-        console.log('Login response status:', res.status);
-        
-        // Ensure session cookies are saved by the browser
-        if (res.ok) {
-          // For session-based auth, clear any logged out flags
-          clearLogoutState();
-          
-          // Try to parse the response as JSON
-          let data;
-          try {
-            const responseText = await res.text();
-            console.log('Raw response text:', responseText);
-            
-            // Only try to parse as JSON if the response is not empty
-            if (responseText && responseText.trim()) {
-              try {
-                data = JSON.parse(responseText);
-                console.log('Parsed response data:', data);
-              } catch (parseError) {
-                console.error('Error parsing JSON response:', parseError);
-                // If parsing fails, use the response text as a string value
-                data = { message: responseText };
-              }
-            } else {
-              // Handle empty response by creating a basic user object
-              console.log('Empty response from server, using default success value');
-              data = { success: true };
-            }
-          } catch (textError) {
-            console.error('Error reading response text:', textError);
-            // Fallback for when we can't read the response body
-            data = { success: true };
-          }
-          
-          // If using JWT tokens and the response contains a token
-          if (data && data.token) {
-            // Store the token in localStorage
-            setAuthToken(data.token);
-            console.log('Auth token stored successfully');
-          }
-          
-          return data;
-        } else {
-          const errorText = await res.text();
-          throw new Error(errorText || `Login failed with status: ${res.status}`);
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({ message: res.statusText }));
+          throw new Error(errorData.message || `Login failed with status: ${res.status}`);
         }
+        
+        const data = await res.json();
+        console.log('[LOGIN] Received response from server');
+        
+        if (data.token) {
+          setToken(data.token);
+          console.log('[LOGIN] JWT token stored');
+        }
+        
+        return data;
       } catch (error: any) {
-        // Add debugger on error
-        debugger; // For Node.js debugging
-        console.error("Login error:", error);
+        console.error("[LOGIN] Login error:", error);
         throw new Error(error.message || "Login failed. Please try again.");
       }
     },
-    onSuccess: (response) => {
-      // Add debugger to inspect response data in the success callback
-      debugger; // For Node.js debugging
-      console.log('Login success, response data:', response);
+    onSuccess: async (response) => {
+      console.log('[LOGIN] Processing successful login response');
       
-      // Clear any logged out flags
-      clearLogoutState();
-      
-      // Extract user from response (might be nested in user property or directly in response)
-      // Handle various response structures safely
-      let user;
-      
-      if (response) {
-        if (response.user) {
-          user = response.user;
-        } else if (response.id) { 
-          // Response is the user object directly
-          user = response;
-        } else {
-          // We need to refetch the user data as the response doesn't contain user info
-          console.log('Response does not contain user data, refetching...');
-          refetch();
-          return; // Exit early and let the refetch handle updating the UI
-        }
-      } else {
-        console.warn('Empty response in onSuccess handler');
-        refetch();
+      if (response?.requiresMFA || response?.requires2FA) {
+        console.log('[LOGIN] MFA required, not redirecting - handled inline');
         return;
       }
       
-      // Update the user data in the cache
-      queryClient.setQueryData(["/api/user"], user);
+      let user = response?.user || (response?.id ? response : null);
       
-      // Store user data in persistent storage for cross-session persistence
-      console.log('Storing authenticated user data to persistent storage:', {
-        id: user.id,
-        username: user.username || '(no username)',
-      });
-      
-      try {
-        // Save the user data to both localStorage and sessionStorage
-        saveUserData(user);
-      } catch (error) {
-        console.error('Error saving user data to storage:', error);
+      if (!user) {
+        console.log('[LOGIN] No user data in response, waiting for session sync');
+        await new Promise(resolve => setTimeout(resolve, 100));
+        const result = await refetch();
+        user = result.data;
+        
+        if (!user) {
+          console.error('[LOGIN] Failed to retrieve user data after login');
+          throw new Error('Login succeeded but failed to retrieve user data');
+        }
       }
       
-      // Immediately refetch user data to ensure we have the latest
-      refetch();
+      queryClient.setQueryData(["/api/user"], user);
       
-      toast({
-        title: t('auth.login_successful') || "Login successful",
-        description: t('auth.welcome_back', { name: user?.name || user?.username || 'user' }) || 
-          `Welcome back, ${user?.name || user?.username || 'user'}!`,
-      });
+      console.log('[LOGIN] User authenticated:', user.username);
+      try {
+        saveUserData(user);
+      } catch (error) {
+        console.error('[LOGIN] Error saving user data:', error);
+      }
+      
+      console.log('[LOGIN] Login flow complete, user state ready');
     },
     onError: (error: Error) => {
-      // Clear any existing token on login failure
-      clearAuthToken();
+      clearToken();
+      const errorReport = processError(error);
       toast({
-        title: t('auth.login_failed') || "Login failed",
-        description: error.message,
+        title: translateText("Login failed"),
+        description: errorReport.userMessage,
         variant: "destructive",
+        errorType: `${errorReport.category} Error - ${errorReport.code}`,
+        errorMessage: errorReport.technicalDetails,
       });
     },
   });
@@ -284,197 +138,129 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const registerMutation = useMutation({
     mutationFn: async (credentials: InsertUser & { captchaId?: string; captchaInput?: string }) => {
       try {
-        // Add debugger statement before registration request
-        debugger; // For Node.js debugging
         console.log('Registration attempt with credentials (username only):', credentials.username);
         
         const res = await apiRequest("POST", "/api/auth/register", credentials);
         
-        // Add debugger to inspect response
-        debugger; // For Node.js debugging
         console.log('Registration response status:', res.status);
         
-        // Ensure session cookies are saved by the browser
         if (res.ok) {
-          // For session-based auth, clear any logged out flags
-          clearLogoutState();
-          
-          // Try to parse the response as JSON
           let data;
           try {
             const responseText = await res.text();
             console.log('Raw registration response text:', responseText);
             
-            // Only try to parse as JSON if the response is not empty
             if (responseText && responseText.trim()) {
               try {
                 data = JSON.parse(responseText);
                 console.log('Parsed registration response data:', data);
               } catch (parseError) {
                 console.error('Error parsing JSON response:', parseError);
-                // If parsing fails, use the response text as a string value
                 data = { message: responseText };
               }
             } else {
-              // Handle empty response by creating a basic user object
               console.log('Empty response from server, using default success value');
               data = { success: true };
             }
           } catch (textError) {
             console.error('Error reading response text:', textError);
-            // Fallback for when we can't read the response body
             data = { success: true };
           }
           
-          // If using JWT tokens and the response contains a token
-          if (data && data.token) {
-            // Store the token in localStorage
-            setAuthToken(data.token);
-            console.log('Auth token stored successfully after registration');
+          if (data.token) {
+            setToken(data.token);
           }
           
-          return data;
+          const user = data.user || data;
+          
+          if (user.id) {
+            queryClient.setQueryData(["/api/user"], user);
+            try {
+              saveUserData(user);
+            } catch (error) {
+              console.error('Error saving user data:', error);
+            }
+          }
+          
+          return user;
         } else {
-          const errorText = await res.text();
-          throw new Error(errorText || `Registration failed with status: ${res.status}`);
+          const errorData = await res.json().catch(() => ({ message: res.statusText }));
+          throw new Error(errorData.message || `Registration failed with status: ${res.status}`);
         }
       } catch (error: any) {
-        // Add debugger on error
-        debugger; // For Node.js debugging
         console.error("Registration error:", error);
         throw new Error(error.message || "Registration failed. Please try again.");
       }
     },
-    onSuccess: (response) => {
-      // Add debugger to inspect response data in the success callback
-      debugger; // For Node.js debugging
-      console.log('Registration success, response data:', response);
-      
-      // Clear any logged out flags
-      clearLogoutState();
-      
-      // Extract user from response (might be nested in user property or directly in response)
-      // Handle various response structures safely
-      let user;
-      
-      if (response) {
-        if (response.user) {
-          user = response.user;
-        } else if (response.id) { 
-          // Response is the user object directly
-          user = response;
-        } else {
-          // We need to refetch the user data as the response doesn't contain user info
-          console.log('Response does not contain user data, refetching...');
-          refetch();
-          return; // Exit early and let the refetch handle updating the UI
-        }
-      } else {
-        console.warn('Empty response in onSuccess handler');
-        refetch();
-        return;
-      }
-      
-      // Update the user data in the cache
-      queryClient.setQueryData(["/api/user"], user);
-      
-      // Store user data in persistent storage for cross-session persistence
-      console.log('Storing newly registered user data to persistent storage:', {
-        id: user.id,
-        username: user.username || '(no username)',
-      });
-      
-      try {
-        // Save the user data to both localStorage and sessionStorage
-        saveUserData(user);
-      } catch (error) {
-        console.error('Error saving user data to storage:', error);
-      }
-      
-      // Immediately refetch user data to ensure we have the latest
-      refetch();
-      
+    onSuccess: (user) => {
       toast({
-        title: t('auth.registration_successful') || "Registration successful",
-        description: t('auth.welcome', { name: user?.name || user?.username || 'user' }) || 
-          `Welcome, ${user?.name || user?.username || 'user'}!`,
+        title: translateText("Registration successful"),
+        description: translateText("Welcome to Dedw3n! Please verify your email."),
+        variant: "default",
       });
     },
     onError: (error: Error) => {
-      // Clear any existing token on registration failure
-      clearAuthToken();
+      const errorReport = processError(error);
       toast({
-        title: t('auth.registration_failed') || "Registration failed",
-        description: error.message,
+        title: translateText("Registration failed"),
+        description: errorReport.userMessage,
         variant: "destructive",
+        errorType: `${errorReport.category} Error - ${errorReport.code}`,
+        errorMessage: errorReport.technicalDetails,
       });
     },
   });
 
-  // Get location setter from wouter for proper navigation
-  const [, setLocation] = useLocation();
-
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      console.log('[FAST-LOGOUT] Starting client logout process');
-      
       try {
-        console.log('[FAST-LOGOUT] Auto-login disabled');
+        console.log('[LOGOUT] Initiating logout process');
+        
+        await apiRequest("POST", "/api/logout");
+        
+        console.log('[LOGOUT] Server logout successful');
       } catch (error) {
+        console.error("[LOGOUT] Logout error:", error);
       }
+    },
+    onSuccess: async () => {
+      console.log('[LOGOUT] Clearing client-side state');
       
-      // Set logged out flag to prevent immediate re-authentication
-      performUnifiedLogout();
+      clearToken();
+      clearUserData();
+      queryClient.setQueryData(["/api/user"], null);
+      queryClient.clear();
       
-      // Fire logout request without waiting (let it complete in background)
-      apiRequest("POST", "/api/logout", undefined, {
-        headers: { 'X-User-Logged-Out': 'true' }
-      }).catch(error => {
-        console.warn('[FAST-LOGOUT] Server logout error (non-blocking):', error);
+      console.log('[LOGOUT] Client state cleared');
+      
+      toast({
+        title: translateText("Logged out successfully"),
+        description: translateText("You have been logged out."),
+        variant: "default",
       });
       
-      // Return immediately for fast user experience
-      return { success: true };
-    },
-    onSuccess: () => {
-      console.log('[FAST-LOGOUT] Client cleanup starting');
+      await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Immediate cleanup without complex operations
-      clearAuthToken();
-      clearUserData();
-      queryClient.setQueryData(["/api/user"], null);
-      queryClient.clear();
-      
-      // Clear any authentication state from session storage
-      try {
-        sessionStorage.clear();
-        // Only clear specific auth-related items from localStorage to preserve other settings
-        localStorage.removeItem('userData');
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('jwt_token');
-      } catch (error) {
-        console.warn('[FAST-LOGOUT] Error clearing storage:', error);
-      }
-      
-      // Navigate immediately
-      setLocation("/logout-success");
-      
-      console.log('[FAST-LOGOUT] Client logout completed');
+      console.log('[LOGOUT] Redirecting to login page');
+      window.location.href = '/auth';
     },
     onError: (error: Error) => {
-      console.warn('[FAST-LOGOUT] Logout error (non-blocking):', error);
+      console.error("[LOGOUT] Logout failed:", error);
       
-      // Even on error, perform cleanup and redirect
-      clearAuthToken();
+      clearToken();
       clearUserData();
       queryClient.setQueryData(["/api/user"], null);
       queryClient.clear();
       
-      try {
-      } catch (error) {
-      }
+      toast({
+        title: translateText("Logout completed"),
+        description: translateText("Session cleared. Redirecting to login."),
+        variant: "default",
+      });
       
-      setLocation("/logout-success");
+      setTimeout(() => {
+        window.location.href = '/auth';
+      }, 100);
     },
   });
 
@@ -484,6 +270,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: user ?? null,
         isLoading,
         error,
+        refetchUser: refetch,
         loginMutation,
         logoutMutation,
         registerMutation,

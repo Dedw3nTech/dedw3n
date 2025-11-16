@@ -730,7 +730,7 @@ export default function AddProduct() {
         } catch (uploadError) {
           console.error('❌ Image upload failed:', uploadError);
           // Use fallback image if upload fails
-          finalImageUrl = '/attached_assets/D3 black logo.png';
+          finalImageUrl = '/attached_assets/D3%20black%20logo.png';
         }
       }
       
@@ -739,7 +739,7 @@ export default function AddProduct() {
         ...data,
         name: data.name, // Use the correct 'name' field from schema
         // Use uploaded image URL or fallback
-        imageUrl: finalImageUrl || '/attached_assets/D3 black logo.png',
+        imageUrl: finalImageUrl || '/attached_assets/D3%20black%20logo.png',
         // All fields properly mapped from schema
       };
       

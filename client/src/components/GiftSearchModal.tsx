@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, Search, Heart, Calendar, MapPin, Package } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { useMasterTranslation } from '@/hooks/use-master-translation';
 
 interface SearchResult {
   id: number;
@@ -40,7 +40,7 @@ interface GiftSearchModalProps {
 }
 
 export function GiftSearchModal({ isOpen, onClose, onSelectGift, selectedGifts }: GiftSearchModalProps) {
-  const { t } = useTranslation();
+  const { translateText } = useMasterTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -147,48 +147,13 @@ export function GiftSearchModal({ isOpen, onClose, onSelectGift, selectedGifts }
     return usdAmount * exchangeRates[toCurrency];
   };
 
-  const translateText = (text: string): string => {
-    // Auto-translate product names and descriptions based on user locale
-    const userLocale = navigator.language || 'en-US';
-    const languageCode = userLocale.split('-')[0];
-    
-    if (languageCode === 'en') return text;
-    
-    // Basic translation dictionary (in production, this would use a translation API)
-    const translations: { [key: string]: { [key: string]: string } } = {
-      'fr': {
-        'Ergonomic Office Chair': 'Chaise de Bureau Ergonomique',
-        'Premium Wireless': 'Sans Fil Premium',
-        'Home & Garden': 'Maison et Jardin',
-        'Electronics': 'Électronique',
-        'Fashion & Apparel': 'Mode et Vêtements'
-      },
-      'es': {
-        'Ergonomic Office Chair': 'Silla de Oficina Ergonómica',
-        'Premium Wireless': 'Inalámbrico Premium',
-        'Home & Garden': 'Hogar y Jardín',
-        'Electronics': 'Electrónicos',
-        'Fashion & Apparel': 'Moda y Ropa'
-      },
-      'de': {
-        'Ergonomic Office Chair': 'Ergonomischer Bürostuhl',
-        'Premium Wireless': 'Premium Drahtlos',
-        'Home & Garden': 'Haus und Garten',
-        'Electronics': 'Elektronik',
-        'Fashion & Apparel': 'Mode und Bekleidung'
-      }
-    };
-    
-    return translations[languageCode]?.[text] || text;
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Heart className="h-5 w-5 text-pink-500" />
-            {t('dating.gifts.search_title', 'Search Gifts')}
+            {translateText('Search Gifts')}
           </DialogTitle>
         </DialogHeader>
 
@@ -200,7 +165,7 @@ export function GiftSearchModal({ isOpen, onClose, onSelectGift, selectedGifts }
               <Input
                 ref={inputRef}
                 type="text"
-                placeholder={t('dating.gifts.search_placeholder', 'Search for gifts, products, or events...')}
+                placeholder={translateText('Search for gifts, products, or events...')}
                 value={searchTerm}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 className="pl-10"
@@ -213,7 +178,7 @@ export function GiftSearchModal({ isOpen, onClose, onSelectGift, selectedGifts }
               <div className="absolute top-full left-0 right-0 z-50 bg-background border rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
                 <div className="p-2 border-b">
                   <span className="text-sm text-muted-foreground">
-                    {t('dating.gifts.suggestions', 'Suggestions')}
+                    {translateText('Suggestions')}
                   </span>
                 </div>
                 {searchData.suggestions.map((suggestion, index) => (
@@ -236,7 +201,7 @@ export function GiftSearchModal({ isOpen, onClose, onSelectGift, selectedGifts }
               size="sm"
               onClick={() => setSelectedType('all')}
             >
-              {t('dating.gifts.filter_all', 'All')}
+              {translateText('All')}
             </Button>
             <Button
               variant={selectedType === 'products' ? 'default' : 'outline'}
@@ -245,7 +210,7 @@ export function GiftSearchModal({ isOpen, onClose, onSelectGift, selectedGifts }
               className="flex items-center gap-1"
             >
               <Package className="h-3 w-3" />
-              {t('dating.gifts.filter_products', 'Products')}
+              {translateText('Products')}
             </Button>
             <Button
               variant={selectedType === 'events' ? 'default' : 'outline'}
@@ -254,7 +219,7 @@ export function GiftSearchModal({ isOpen, onClose, onSelectGift, selectedGifts }
               className="flex items-center gap-1"
             >
               <Calendar className="h-3 w-3" />
-              {t('dating.gifts.filter_events', 'Events')}
+              {translateText('Events')}
             </Button>
           </div>
 
@@ -263,25 +228,25 @@ export function GiftSearchModal({ isOpen, onClose, onSelectGift, selectedGifts }
             {isLoading && debouncedSearch.length >= 2 && (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin" />
-                <span className="ml-2">{t('common.searching', 'Searching...')}</span>
+                <span className="ml-2">{translateText('Searching...')}</span>
               </div>
             )}
 
             {error && (
               <div className="text-center py-8 text-destructive">
-                {t('common.error_occurred', 'An error occurred while searching')}
+                {translateText('An error occurred while searching')}
               </div>
             )}
 
             {searchData && searchData.results.length === 0 && debouncedSearch.length >= 2 && !isLoading && (
               <div className="text-center py-8 text-muted-foreground">
-                {t('dating.gifts.no_results', 'No gifts found for your search')}
+                {translateText('No gifts found for your search')}
               </div>
             )}
 
             {debouncedSearch.length < 2 && (
               <div className="text-center py-8 text-muted-foreground">
-                {t('dating.gifts.start_typing', 'Start typing to search for gifts...')}
+                {translateText('Start typing to search for gifts...')}
               </div>
             )}
 
@@ -343,7 +308,7 @@ export function GiftSearchModal({ isOpen, onClose, onSelectGift, selectedGifts }
 
                         {gift.vendor && (
                           <div className="text-xs text-muted-foreground">
-                            {t('common.by', 'By')} {translateText(gift.vendor.storeName)}
+                            {translateText('By')} {translateText(gift.vendor.storeName)}
                             {gift.vendor.rating && (
                               <span className="ml-1">⭐ {gift.vendor.rating.toFixed(1)}</span>
                             )}

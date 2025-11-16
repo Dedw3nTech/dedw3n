@@ -7,6 +7,7 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { formatCurrency } from '@/lib/currencyConverter';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useMasterTranslation } from '@/hooks/use-master-translation';
 
 interface WalletPaymentFormProps {
   amount: number;
@@ -31,6 +32,7 @@ export const WalletPaymentForm = ({
   const [, setLocation] = useLocation();
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
+  const { translateText } = useMasterTranslation();
 
   const handlePayWithWallet = async () => {
     if (amount > walletBalance) {
@@ -83,7 +85,7 @@ export const WalletPaymentForm = ({
     } catch (error: any) {
       setErrorMessage(error.message || 'An unexpected error occurred');
       toast({
-        title: 'Payment Error',
+        title: translateText('Error'),
         description: error.message || 'An unexpected error occurred',
         variant: 'destructive',
       });

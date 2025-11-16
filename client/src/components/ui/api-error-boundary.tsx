@@ -1,12 +1,10 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, RefreshCcw, Home, Wifi, WifiOff } from 'lucide-react';
+import { Home } from 'lucide-react';
 import { queryClient } from '@/lib/queryClient';
-import { useNavigate } from '@/hooks/use-navigate';
-import { ReportButton } from '@/components/ui/report-button';
+import { ErrorDisplay } from '@/components/ui/error-display';
 
-interface Props {
+interface ApiErrorBoundaryProps {
   children: ReactNode;
   queryKey?: unknown[];
   className?: string;
@@ -14,36 +12,41 @@ interface Props {
   fallback?: ReactNode;
 }
 
-interface State {
+interface ApiErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
-  isOffline: boolean;
 }
 
-/**
- * A specialized error boundary for API errors.
- * Provides functionality to retry API requests and navigate home.
- */
-export class ApiErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
+const isNetworkError = (error: Error): boolean => {
+  return error.message.includes('offline') || 
+         error.message.includes('Failed to fetch') ||
+         error.message.includes('Network request failed');
+};
+
+const HomeNavigationButton = ({ onClick }: { onClick: () => void }) => {
+  return (
+    <Button 
+      variant="outline" 
+      onClick={onClick}
+      className="flex items-center gap-2"
+      data-testid="button-navigate-home"
+    >
+      <Home className="h-4 w-4" />
+      Go to Home
+    </Button>
+  );
+};
+
+export class ApiErrorBoundary extends Component<ApiErrorBoundaryProps, ApiErrorBoundaryState> {
+  constructor(props: ApiErrorBoundaryProps) {
     super(props);
     this.state = {
       hasError: false,
-      error: null,
-      isOffline: false
+      error: null
     };
   }
 
-  static getDerivedStateFromError(error: Error): Partial<State> {
-    // Update state so the next render will show the fallback UI
-    if (error.message.includes('offline') || error.message.includes('Failed to fetch')) {
-      return {
-        hasError: true,
-        error,
-        isOffline: true
-      };
-    }
-    
+  static getDerivedStateFromError(error: Error): Partial<ApiErrorBoundaryState> {
     return {
       hasError: true,
       error
@@ -51,99 +54,55 @@ export class ApiErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // You can log the error to an error reporting service here
     console.error('Error caught by ApiErrorBoundary:', error);
     console.error('Component stack:', errorInfo.componentStack);
   }
 
-  resetError = (): void => {
+  private resetError = (): void => {
     this.setState({
       hasError: false,
-      error: null,
-      isOffline: false
+      error: null
     });
   };
 
-  refetchData = (): void => {
-    // If a query key is provided, invalidate it to trigger a refetch
+  private handleRetry = (): void => {
     if (this.props.queryKey) {
       queryClient.invalidateQueries({ queryKey: this.props.queryKey });
     }
-    
     this.resetError();
   };
 
-  // Custom component with access to hooks that wraps the NavigateToHome functionality
-  NavigateToHomeComponent = () => {
-    const navigate = useNavigate();
-    
-    const handleClick = () => {
-      this.resetError();
-      navigate.navigate('/');
-    };
-    
-    return (
-      <Button 
-        variant="outline" 
-        onClick={handleClick}
-        className="flex items-center gap-2"
-      >
-        <Home className="h-4 w-4" />
-        Go to Home
-      </Button>
-    );
+  private handleNavigateHome = (): void => {
+    this.resetError();
+    window.location.href = '/';
   };
 
   render(): ReactNode {
-    const { hasError, error, isOffline } = this.state;
-    const { className, showHomeButton = true, fallback } = this.props;
+    const { hasError, error } = this.state;
+    const { className, showHomeButton = true, fallback, children } = this.props;
     
-    if (hasError) {
-      // If a custom fallback is provided, use it
-      if (fallback) {
-        return fallback;
-      }
-
-      // Otherwise, render the default error UI
-      return (
-        <div className={`p-6 space-y-4 ${className || ''}`}>
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4 mr-2" />
-            <AlertTitle>
-              {isOffline ? 'Network Error' : 'API Error'}
-            </AlertTitle>
-            <AlertDescription className="mt-2">
-              {isOffline 
-                ? 'Unable to connect to the server. Please check your internet connection and try again.'
-                : error?.message || 'An unexpected API error occurred'}
-            </AlertDescription>
-          </Alert>
-          
-          <div className="flex flex-wrap justify-center gap-3">
-            <Button 
-              onClick={this.refetchData}
-              className="flex items-center gap-2"
-            >
-              {isOffline 
-                ? <WifiOff className="h-4 w-4" />
-                : <RefreshCcw className="h-4 w-4" />
-              }
-              {isOffline ? 'Try Again' : 'Retry Request'}
-            </Button>
-            
-            {showHomeButton && <this.NavigateToHomeComponent />}
-            
-            <ReportButton 
-              errorType={isOffline ? "Network Error" : "API Error"}
-              errorMessage={error?.message || 'An unexpected API error occurred'}
-              variant="outline"
-              size="default"
-            />
-          </div>
-        </div>
-      );
+    if (!hasError) {
+      return children;
     }
 
-    return this.props.children;
+    if (fallback) {
+      return fallback;
+    }
+
+    return (
+      <div className={`p-6 max-w-2xl mx-auto ${className}`}>
+        <ErrorDisplay
+          error={error || 'API request failed'}
+          title="Error"
+          showRefresh={true}
+          onRefresh={this.handleRetry}
+        />
+        {showHomeButton && (
+          <div className="flex justify-center mt-4">
+            <HomeNavigationButton onClick={this.handleNavigateHome} />
+          </div>
+        )}
+      </div>
+    );
   }
 }

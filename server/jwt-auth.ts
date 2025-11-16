@@ -5,11 +5,28 @@ import { InsertAuthToken, User } from '@shared/schema';
 
 // Default token expiration in seconds (24 hours)
 const TOKEN_EXPIRES_IN = 86400;
-// Get the token secret from environment variable with fallback for development
-const TOKEN_SECRET = process.env.TOKEN_SECRET || 'dedw3n-development-secret-key-for-jwt-authentication-do-not-use-in-production';
+
+// SECURITY: Require TOKEN_SECRET in production, fail fast if missing
+if (!process.env.TOKEN_SECRET && process.env.NODE_ENV === 'production') {
+  console.error('[CRITICAL ERROR] TOKEN_SECRET environment variable is not set in production!');
+  console.error('[CRITICAL ERROR] This is a critical security vulnerability - tokens cannot be securely issued.');
+  console.error('[CRITICAL ERROR] Please set TOKEN_SECRET in your environment secrets immediately.');
+  throw new Error('TOKEN_SECRET environment variable is required in production');
+}
+
+// Get the token secret from environment variable with secure fallback for development only
+const TOKEN_SECRET = process.env.TOKEN_SECRET || 
+  (process.env.NODE_ENV === 'development' 
+    ? 'dedw3n-development-secret-key-for-jwt-authentication-do-not-use-in-production'
+    : '');
+
+// Validate secret is not empty (should never happen with above checks, but safety check)
+if (!TOKEN_SECRET) {
+  throw new Error('TOKEN_SECRET is required but not set');
+}
 
 // Log the token secret source for debugging (without exposing the actual secret)
-console.log(`[AUTH] Using token secret from ${process.env.TOKEN_SECRET ? 'environment variable' : 'fallback value'}`);
+console.log(`[AUTH] Using token secret from ${process.env.TOKEN_SECRET ? 'environment variable' : 'development fallback'}`);
 
 // Declare module express-session with a custom user object
 declare module 'express-serve-static-core' {
@@ -78,7 +95,8 @@ function generateSecureToken(payload: TokenPayload): string {
 }
 
 /**
- * Verifies and decodes a token
+ * Verifies token signature and expiration (synchronous, does NOT check database)
+ * Use verifyTokenWithDatabase() for full verification including revocation check
  */
 export function verifyToken(token: string): TokenPayload | null {
   try {
@@ -112,6 +130,46 @@ export function verifyToken(token: string): TokenPayload | null {
     return payload;
   } catch (error) {
     console.error('Token verification failed:', error);
+    return null;
+  }
+}
+
+/**
+ * Verifies and decodes a token with database revocation check
+ * SECURITY: Always use this for authentication - checks token is not revoked
+ */
+export async function verifyTokenWithDatabase(token: string): Promise<TokenPayload | null> {
+  try {
+    // First verify signature and expiration
+    const payload = verifyToken(token);
+    if (!payload) {
+      return null;
+    }
+    
+    // CRITICAL: Check database to ensure token hasn't been revoked
+    const authToken = await storage.getAuthToken(token);
+    if (!authToken) {
+      console.warn('[SECURITY] Token not found in database - possibly forged or cleaned up');
+      return null;
+    }
+    
+    // Check if token has been revoked
+    if (authToken.isRevoked) {
+      console.warn('[SECURITY] Token has been revoked');
+      return null;
+    }
+    
+    // Check database expiration (double-check against payload)
+    if (new Date(authToken.expiresAt) < new Date()) {
+      console.warn('[SECURITY] Token expired according to database');
+      // Auto-revoke expired token
+      await storage.revokeAuthToken(authToken.id, 'Token expired');
+      return null;
+    }
+    
+    return payload;
+  } catch (error) {
+    console.error('Token verification with database failed:', error);
     return null;
   }
 }
@@ -166,7 +224,8 @@ export async function generateToken(
 }
 
 /**
- * Middleware to authenticate tokens
+ * Middleware to authenticate tokens with full database verification
+ * SECURITY: Uses verifyTokenWithDatabase to check revocation status
  */
 export function authenticate(req: Request, res: Response, next: NextFunction) {
   // Get token from Authorization header or query parameter
@@ -181,35 +240,28 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
   
   // Store raw token for later use
   req.token = token;
-  
-  // Verify token using our custom verification
-  const payload = verifyToken(token);
-  if (!payload) {
-    return res.status(403).json({ message: 'Invalid token' });
-  }
     
   (async () => {
     try {
-      // Check if token exists in database and is not revoked
+      // SECURITY: Use database verification to check revocation
+      const payload = await verifyTokenWithDatabase(token);
+      if (!payload) {
+        return res.status(403).json({ message: 'Invalid or revoked token' });
+      }
+      
+      // Get full token record for additional context
       const authToken = await storage.getAuthToken(token);
       if (!authToken) {
+        // Should never happen if verifyTokenWithDatabase passed, but safety check
         return res.status(401).json({ message: 'Token not found' });
       }
       
-      if (authToken.isRevoked) {
-        return res.status(401).json({ message: 'Token has been revoked' });
-      }
-      
-      // Check if the token has expired
-      if (new Date(authToken.expiresAt) < new Date()) {
-        await storage.revokeAuthToken(authToken.id, 'Token expired');
-        return res.status(401).json({ message: 'Token expired' });
-      }
-      
       // Update token's last active timestamp (don't await to prevent slowing down requests)
-      storage.updateTokenLastActive(authToken.id);
+      storage.updateTokenLastActive(authToken.id).catch(err => {
+        console.error('[AUTH] Failed to update token last active:', err);
+      });
       
-      // Store payload for route handlers
+      // Store payload and token record for route handlers
       req.user = payload;
       req.authToken = authToken;
       
@@ -297,254 +349,6 @@ export async function cleanupExpiredTokens(): Promise<void> {
  * @param app Express application
  */
 export function setupJwtAuth(app: any): void {
-  // Login route
-  app.post('/api/auth/login', async (req: Request, res: Response) => {
-    try {
-      const { username, password } = req.body;
-      
-      if (!username || !password) {
-        return res.status(400).json({ message: 'Username and password are required' });
-      }
-      
-      // Validate credentials
-      const user = await storage.getUserByUsername(username);
-      if (!user) {
-        return res.status(401).json({ message: 'Invalid credentials' });
-      }
-      
-      // Check if account is locked
-      if (user.isLocked) {
-        return res.status(403).json({ message: 'Account is locked. Please contact support.' });
-      }
-      
-      // Verify password (implement password verification)
-      const isPasswordValid = await verifyPassword(password, user.password);
-      
-      if (!isPasswordValid) {
-        // Increment failed login attempts
-        await storage.incrementLoginAttempts(user.id);
-        
-        // Check if we should lock the account
-        const updatedUser = await storage.getUser(user.id);
-        if (updatedUser && updatedUser.failedLoginAttempts && updatedUser.failedLoginAttempts >= 5) {
-          await storage.lockUserAccount(user.id, true);
-          return res.status(403).json({ 
-            message: 'Account locked due to too many failed attempts. Please contact support.' 
-          });
-        }
-        
-        return res.status(401).json({ message: 'Invalid credentials' });
-      }
-      
-      // Reset failed login attempts on successful login
-      await storage.resetLoginAttempts(user.id);
-      
-      // Update last login timestamp
-      await storage.updateUser(user.id, { lastLogin: new Date() });
-      
-      // Generate authentication token
-      const deviceInfo = {
-        clientId: req.body.clientId || '',
-        deviceType: req.headers['user-agent'] || 'unknown',
-        ipAddress: req.ip || ''
-      };
-      
-      const { token, expiresAt } = await generateToken(user.id, user.role, deviceInfo);
-      
-      // Return the token
-      res.json({
-        user: {
-          id: user.id,
-          username: user.username,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          isVendor: user.isVendor
-        },
-        token,
-        expiresAt
-      });
-      
-    } catch (error) {
-      console.error('Login error:', error);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  });
-  
-  // Logout route - DISABLED to prevent conflicts with fast logout system
-  // Use /api/logout instead (handled by fast-logout.ts)
-  /*
-  app.post('/api/auth/logout', authenticate, async (req: Request, res: Response) => {
-    try {
-      if (!req.token) {
-        return res.status(400).json({ message: 'No active session' });
-      }
-      
-      const success = await revokeToken(req.token, 'User logout');
-      if (success) {
-        return res.json({ message: 'Logged out successfully' });
-      } else {
-        return res.status(500).json({ message: 'Failed to logout properly' });
-      }
-    } catch (error) {
-      console.error('Logout error:', error);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  });
-  */
-  
-  // Get current user - COMMENTED OUT as this is now handled by unified auth in routes.ts
-  /*
-  app.get('/api/auth/me', authenticate, (req: Request, res: Response) => {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
-    
-    // If the user data comes from token payload
-    if ('userId' in req.user) {
-      // Need to get full user data from DB since token just has basic info
-      storage.getUser(req.user.userId)
-        .then(user => {
-          if (user) {
-            res.json({
-              id: user.id,
-              username: user.username,
-              name: user.name,
-              email: user.email,
-              role: user.role,
-              isVendor: user.isVendor,
-              bio: user.bio,
-              avatar: user.avatar
-            });
-          } else {
-            res.status(404).json({ message: 'User not found' });
-          }
-        })
-        .catch(err => {
-          console.error('Error fetching user details:', err);
-          res.status(500).json({ message: 'Internal server error' });
-        });
-    } else {
-      // Already have full user object
-      const user = req.user;
-      res.json({
-        id: user.id,
-        username: user.username,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        isVendor: user.isVendor,
-        bio: user.bio,
-        avatar: user.avatar
-      });
-    }
-  });
-  */
-  
-  // Refresh token
-  app.post('/api/auth/refresh', authenticate, async (req: Request, res: Response) => {
-    try {
-      if (!req.user || !('userId' in req.user)) {
-        return res.status(401).json({ message: 'Invalid session' });
-      }
-      
-      // Revoke current token
-      if (req.token) {
-        await revokeToken(req.token, 'Token refresh');
-      }
-      
-      // Generate new token
-      const deviceInfo = {
-        clientId: req.body.clientId || '',
-        deviceType: req.headers['user-agent'] || 'unknown',
-        ipAddress: req.ip || ''
-      };
-      
-      const { token, expiresAt } = await generateToken(
-        req.user.userId, 
-        req.user.role, 
-        deviceInfo
-      );
-      
-      res.json({ token, expiresAt });
-    } catch (error) {
-      console.error('Token refresh error:', error);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  });
-  
-  // List active sessions
-  app.get('/api/auth/sessions', authenticate, requireRole('user'), async (req: Request, res: Response) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({ message: 'Not authenticated' });
-      }
-      
-      const userId = 'userId' in req.user ? req.user.userId : req.user.id;
-      const sessions = await storage.getActiveUserSessions(userId);
-      
-      res.json(sessions);
-    } catch (error) {
-      console.error('Error fetching sessions:', error);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  });
-  
-  // Revoke specific session
-  app.delete('/api/auth/sessions/:tokenId', authenticate, requireRole('user'), async (req: Request, res: Response) => {
-    try {
-      const { tokenId } = req.params;
-      
-      if (!req.user) {
-        return res.status(401).json({ message: 'Not authenticated' });
-      }
-      
-      const userId = 'userId' in req.user ? req.user.userId : req.user.id;
-      
-      // Convert tokenId to number as our storage method requires a number
-      const tokenIdNum = parseInt(tokenId, 10);
-      if (isNaN(tokenIdNum)) {
-        return res.status(400).json({ message: 'Invalid token ID format' });
-      }
-      
-      const success = await storage.revokeSpecificToken(userId, tokenIdNum);
-      
-      if (success) {
-        res.json({ message: 'Session revoked successfully' });
-      } else {
-        res.status(404).json({ message: 'Session not found or already revoked' });
-      }
-    } catch (error) {
-      console.error('Error revoking session:', error);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  });
-  
-  // Revoke all sessions (except current)
-  app.delete('/api/auth/sessions', authenticate, requireRole('user'), async (req: Request, res: Response) => {
-    try {
-      if (!req.user || !req.token) {
-        return res.status(401).json({ message: 'Not authenticated' });
-      }
-      
-      const userId = 'userId' in req.user ? req.user.userId : req.user.id;
-      
-      // Get the current auth token to exclude it
-      const currentAuthToken = req.authToken;
-      
-      if (!currentAuthToken) {
-        return res.status(400).json({ message: 'Current session not found' });
-      }
-      
-      await storage.revokeAllUserTokensExcept(userId, currentAuthToken.id);
-      
-      res.json({ message: 'All other sessions revoked successfully' });
-    } catch (error) {
-      console.error('Error revoking all sessions:', error);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  });
-  
-  // Schedule cleanup of expired tokens (once a day)
-  setInterval(cleanupExpiredTokens, 24 * 60 * 60 * 1000);
+  // DISABLED: All JWT authentication routes disabled to prevent conflicts with session-based auth
+  console.log('[JWT-AUTH] JWT authentication system disabled - using session-based authentication instead');
 }

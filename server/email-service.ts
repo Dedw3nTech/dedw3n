@@ -2,14 +2,20 @@ import nodemailer from 'nodemailer';
 
 let transporter: nodemailer.Transporter | null = null;
 
-// SMTP Configuration
+// SMTP Configuration - Requires environment variables
+if (!process.env.BREVO_SMTP_USER || !process.env.BREVO_SMTP_PASS) {
+  console.error('[EMAIL] FATAL: BREVO_SMTP_USER and BREVO_SMTP_PASS environment variables are required');
+  console.error('[EMAIL] Please set these environment variables in Replit Secrets');
+  throw new Error('SMTP credentials not configured - set BREVO_SMTP_USER and BREVO_SMTP_PASS');
+}
+
 const smtpConfig = {
   host: 'smtp-relay.brevo.com',
   port: 587,
   secure: false, // true for 465, false for other ports
   auth: {
-    user: '8e7c36001@smtp-brevo.com',
-    pass: '2txLA0d4vNUbYgZj'
+    user: process.env.BREVO_SMTP_USER,
+    pass: process.env.BREVO_SMTP_PASS
   }
 };
 
@@ -33,8 +39,8 @@ initializeSmtp();
 
 export function setBrevoApiKey(apiKey: string): boolean {
   // For backward compatibility with existing admin interface
-  // SMTP credentials are now hardcoded, so this just returns true
-  console.log('[EMAIL] SMTP configuration is now hardcoded, API key setting ignored');
+  // SMTP credentials are now managed via environment variables
+  console.log('[EMAIL] SMTP configuration uses environment variables, API key setting ignored');
   return true;
 }
 

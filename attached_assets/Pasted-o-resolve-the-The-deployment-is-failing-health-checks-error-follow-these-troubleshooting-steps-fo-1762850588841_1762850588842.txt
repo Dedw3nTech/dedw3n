@@ -1,0 +1,19 @@
+o resolve the "The deployment is failing health checks" error, follow these troubleshooting steps focusing on the default / endpoint: 
+1. Verify Application Status and Configuration 
+Check Application Logs: The most crucial first step is to review your application's deployment and runtime logs. The error message specifically suggests this for more information. The logs should indicate why the application isn't starting correctly, responding with an error (e.g., 4xx or 5xx status codes), or timing out.
+Ensure the / Endpoint is Implemented: Confirm that your application code explicitly defines and handles the default / route and is configured to return an HTTP status code between 200 and 299 when healthy.
+Verify the Listening Port: Ensure your application is listening on the correct network interface and port that the deployment environment expects (often specified by an environment variable like PORT, e.g., 8080). It should listen on 0.0.0.0 or be empty, not localhost, to be reachable externally.
+Manual Health Check: If possible, run the application locally or in a test environment and manually send a request to the / endpoint using a tool like curl to verify the response status code and time. 
+2. Address Performance and Timeout Issues
+Optimize the / Endpoint: The health check endpoint should respond as soon as possible. Avoid expensive or long-running operations (like database connections or complex calculations) on this specific route; defer them to a different, more specific health check route (e.g., /health) if needed.
+Increase Health Check Timeout (If necessary): If logs show the application takes longer to start up or respond than the default health check timeout (typically a few seconds), you can try increasing the timeout interval in your deployment configuration. This is only a temporary fix if the underlying performance issue isn't resolved.
+Monitor Resource Usage: High CPU or memory utilization can cause the application to become unresponsive. Monitor your application's metrics; you might need to allocate more resources or scale out your instances. 
+3. Check Network and Security Configurations 
+Security Groups/Firewalls: Verify that the security groups, network access control lists (ACLs), or operating system-level firewalls allow inbound traffic on the health check port from the load balancer or health check service.
+HTTPS Redirects: If you have HTTPS redirection enabled, ensure your health checks are sent over HTTPS, or modify the health check to expect the redirect status code (e.g., 301/302) or allow anonymous access to the health check path. 
+Summary of Actions
+Potential Issue 	Resolution
+Application not running or listening on the correct port/interface	Check logs, ensure the app is running, and confirm it's listening on the correct IP/Port (e.g., 0.0.0.0).
+/ endpoint is not implemented or returns an error (4xx/5xx)	Implement the / endpoint to return a 200 status code.
+Application is slow to respond	Optimize the / endpoint code or increase the health check timeout in the deployment settings.
+Network configuration blocking health check traffic	Verify security groups and network ACLs allow traffic on the health check port.

@@ -46,7 +46,7 @@ export function CookieConsentBanner() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <Card className="max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border-2 border-gray-200 bg-white">
         <CardHeader className="pb-4">
           <div className="flex flex-col items-center mb-4">

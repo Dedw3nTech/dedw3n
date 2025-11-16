@@ -83,6 +83,7 @@
     "password": "كلمة المرور",
     "confirm_password": "تأكيد كلمة المرور",
     "forgot_password": "نسيت كلمة المرور؟",
+    "forgot_password_link": "نسيت كلمة المرور؟ انقر هنا لإعادة تعيينها",
     "already_have_account": "لديك حساب بالفعل؟",
     "dont_have_account": "ليس لديك حساب؟",
     "create_account": "إنشاء حساب",
@@ -181,5 +182,122 @@
     "payment_success": "تم الدفع بنجاح!",
     "payment_failed": "فشل الدفع",
     "order_confirmed": "تم تأكيد الطلب"
+  },
+  "giftcards": {
+    "title": "بطاقات الهدايا",
+    "page_title": "بطاقات الهدايا ديدوين",
+    "description": "قدم الهدية المثالية مع بطاقة هدايا ديدوين. اختر بين البطاقات الرقمية أو الفيزيائية.",
+    "purchase": "شراء بطاقة هدايا",
+    "redeem": "استبدال بطاقة الهدايا",
+    "check_balance": "فحص الرصيد",
+    "my_gift_cards": "بطاقات الهدايا الخاصة بي",
+    "give_gift": "امنح هدية الاختيار",
+    "perfect_gift": "مثالية لأي مناسبة",
+    "instant_delivery": "التسليم الرقمي الفوري متاح",
+    "no_expiry": "بدون تاريخ انتهاء",
+    "amounts": {
+      "select_amount": "اختر المبلغ",
+      "custom_amount": "مبلغ مخصص",
+      "minimum": "الحد الأدنى 10 دولار",
+      "maximum": "الحد الأقصى 1000 دولار",
+      "currency": "دولار أمريكي"
+    },
+    "types": {
+      "digital": "بطاقة هدايا رقمية",
+      "physical": "بطاقة هدايا فيزيائية",
+      "email": "التسليم عبر البريد الإلكتروني",
+      "mail": "التسليم عبر البريد"
+    },
+    "purchase_form": {
+      "recipient_name": "اسم المستلم",
+      "recipient_email": "بريد المستلم الإلكتروني",
+      "sender_name": "اسمك",
+      "personal_message": "رسالة شخصية",
+      "message_placeholder": "اكتب رسالة شخصية...",
+      "delivery_date": "تاريخ التسليم",
+      "delivery_method": "طريقة التسليم",
+      "preview": "معاينة البطاقة",
+      "add_to_cart": "أضف إلى السلة",
+      "buy_now": "اشتري الآن"
+    },
+    "redeem_form": {
+      "gift_card_code": "رمز بطاقة الهدايا",
+      "code_placeholder": "أدخل رمز بطاقة الهدايا الخاصة بك",
+      "redeem_button": "استبدل بطاقة الهدايا",
+      "apply_to_order": "تطبيق على الطلب الحالي",
+      "check_balance_button": "فحص الرصيد فقط"
+    },
+    "balance": {
+      "current_balance": "الرصيد الحالي",
+      "remaining_balance": "الرصيد المتبقي",
+      "used_amount": "المبلغ المستخدم",
+      "transaction_history": "سجل المعاملات",
+      "date_purchased": "تاريخ الشراء",
+      "date_expires": "تنتهي في",
+      "never_expires": "لا تنتهي أبداً"
+    },
+    "status": {
+      "active": "نشطة",
+      "redeemed": "مستبدلة بالكامل",
+      "expired": "منتهية الصلاحية",
+      "pending": "في الانتظار",
+      "cancelled": "ملغاة"
+    },
+    "messages": {
+      "purchase_success": "تم شراء بطاقة الهدايا بنجاح!",
+      "redeem_success": "تم استبدال بطاقة الهدايا بنجاح!",
+      "balance_applied": "تم تطبيق رصيد بطاقة الهدايا على طلبك",
+      "invalid_code": "رمز بطاقة هدايا غير صحيح",
+      "expired_card": "هذه البطاقة منتهية الصلاحية",
+      "already_redeemed": "تم استبدال هذه البطاقة بالكامل",
+      "insufficient_balance": "رصيد بطاقة الهدايا غير كافي",
+      "email_sent": "تم إرسال بريد بطاقة الهدايا بنجاح",
+      "code_required": "يرجى إدخال رمز بطاقة الهدايا"
+    },
+    "terms": {
+      "title": "الشروط والأحكام",
+      "no_refund": "بطاقات الهدايا غير قابلة للاسترداد",
+      "no_exchange": "لا يمكن استبدال بطاقات الهدايا بالنقد",
+      "marketplace_only": "صالحة فقط لمشتريات متجر ديدوين",
+      "fraud_protection": "البطاقات المفقودة أو المسروقة لا يمكن استبدالها",
+      "balance_check": "تحقق من رصيدك في أي وقت على هذه الصفحة"
+    },
+    "common": {
+      "amount": "المبلغ",
+      "code": "الرمز",
+      "date": "التاريخ",
+      "status": "الحالة",
+      "actions": "الإجراءات",
+      "view": "عرض",
+      "print": "طباعة",
+      "email": "بريد إلكتروني",
+      "copy_code": "نسخ الرمز",
+      "download": "تحميل",
+      "share": "مشاركة"
+    },
+    "help": {
+      "how_to_use": "كيفية استخدام بطاقات الهدايا",
+      "purchase_guide": "كيفية الشراء",
+      "redeem_guide": "كيفية الاستبدال",
+      "contact_support": "الاتصال بالدعم",
+      "faq": "الأسئلة الشائعة"
+    },
+    "designs": {
+      "classic_blue": "الأزرق الكلاسيكي",
+      "elegant_gold": "الذهبي الأنيق",
+      "festive_red": "الأحمر الاحتفالي",
+      "modern_purple": "البنفسجي العصري",
+      "nature_green": "الأخضر الطبيعي",
+      "luxury_black": "الأسود الفاخر",
+      "premium_silver": "الفضي المميز",
+      "exclusive_diamond": "الماسي الحصري",
+      "customize": "تخصيص"
+    },
+    "validation": {
+      "card_number_16_digits": "رقم البطاقة يجب أن يكون 16 رقماً",
+      "pin_4_digits": "الرقم السري يجب أن يكون 4 أرقام",
+      "enter_amount": "أدخل المبلغ",
+      "continue": "متابعة"
+    }
   }
 }

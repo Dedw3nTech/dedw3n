@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { db } from './db';
-import { users, products, orders, cartItems, categories } from '@shared/schema';
+import { users, products, orders, carts, categories } from '@shared/schema';
 import { eq, desc, and, inArray, sql, count, avg, ne, gt, lt } from 'drizzle-orm';
 
 // Simplified AI personalization engine that works with existing schema
@@ -79,18 +79,18 @@ export class AIPersonalizationEngine {
   // Get user's cart items (current interests)
   private async getUserCartItems(userId: number): Promise<any[]> {
     try {
-      const cartItems = await db
+      const userCarts = await db
         .select({
-          productId: cartItems.productId,
+          productId: carts.productId,
           categoryId: products.category,
           price: products.price,
-          quantity: cartItems.quantity
+          quantity: carts.quantity
         })
-        .from(cartItems)
-        .innerJoin(products, eq(cartItems.productId, products.id))
-        .where(eq(cartItems.userId, userId));
+        .from(carts)
+        .innerJoin(products, eq(carts.productId, products.id))
+        .where(eq(carts.userId, userId));
 
-      return cartItems;
+      return userCarts;
     } catch (error) {
       console.error('Error getting cart items:', error);
       return [];
@@ -145,7 +145,7 @@ export class AIPersonalizationEngine {
         .where(
           and(
             inArray(products.category, preferredCategories),
-            gt(products.stock, 0) // Only in-stock products
+            gt(products.inventory, 0) // Only in-stock products
           )
         )
         .orderBy(desc(products.views), desc(products.createdAt))
@@ -183,12 +183,12 @@ export class AIPersonalizationEngine {
         .from(products)
         .where(
           and(
-            gt(products.price, minPrice.toString()),
-            lt(products.price, maxPrice.toString()),
-            gt(products.stock, 0)
+            gt(sql`CAST(${products.price} AS DECIMAL)`, minPrice),
+            lt(sql`CAST(${products.price} AS DECIMAL)`, maxPrice),
+            gt(products.inventory, 0)
           )
         )
-        .orderBy(desc(products.views))
+        .orderBy(desc(products.createdAt))
         .limit(10);
 
       return priceRangeProducts.map(product => ({
@@ -207,9 +207,9 @@ export class AIPersonalizationEngine {
     try {
       // Find users with similar cart items (simplified approach)
       const userCartItems = await db
-        .select({ productId: cartItems.productId })
-        .from(cartItems)
-        .where(eq(cartItems.userId, userId));
+        .select({ productId: carts.productId })
+        .from(carts)
+        .where(eq(carts.userId, userId));
 
       if (userCartItems.length === 0) {
         return [];
@@ -220,14 +220,14 @@ export class AIPersonalizationEngine {
       // Find other users who have similar items in cart
       const similarUserItems = await db
         .select({
-          userId: cartItems.userId,
-          productId: cartItems.productId
+          userId: carts.userId,
+          productId: carts.productId
         })
-        .from(cartItems)
+        .from(carts)
         .where(
           and(
-            inArray(cartItems.productId, productIds),
-            ne(cartItems.userId, userId)
+            inArray(carts.productId, productIds),
+            ne(carts.userId, userId)
           )
         )
         .limit(50);
@@ -281,10 +281,10 @@ export class AIPersonalizationEngine {
         .where(
           and(
             inArray(products.category, userCategories),
-            gt(products.stock, 0)
+            gt(products.inventory, 0)
           )
         )
-        .orderBy(desc(products.views), desc(products.createdAt))
+        .orderBy(desc(products.createdAt))
         .limit(8);
 
       return popularProducts.map(product => ({
@@ -304,8 +304,8 @@ export class AIPersonalizationEngine {
       const popularProducts = await db
         .select()
         .from(products)
-        .where(gt(products.stock, 0))
-        .orderBy(desc(products.views), desc(products.createdAt))
+        .where(gt(products.inventory, 0))
+        .orderBy(desc(products.createdAt))
         .limit(limit);
 
       return popularProducts.map(product => ({
@@ -367,31 +367,30 @@ export class AIPersonalizationEngine {
   }
 }
 
-// Middleware to track product views automatically
-export function trackProductViewMiddleware() {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const userId = (req as any).user?.id;
-      const productId = parseInt(req.params.id);
+// Utility function to track product views
+// Call this directly in product view handlers
+export function trackProductView(
+  userId: number | undefined,
+  productId: number,
+  userAgent: string | undefined,
+  referrer: string | undefined
+): void {
+  try {
+    if (userId && productId) {
+      const aiEngine = new AIPersonalizationEngine();
       
-      if (userId && productId) {
-        const aiEngine = new AIPersonalizationEngine();
-        
-        // Track view asynchronously
-        setImmediate(() => {
-          aiEngine.trackUserInteraction(userId, productId, 'view', {
-            userAgent: req.headers['user-agent'],
-            timestamp: new Date(),
-            referrer: req.headers.referer
-          });
+      // Track view asynchronously
+      setImmediate(() => {
+        aiEngine.trackUserInteraction(userId, productId, 'view', {
+          userAgent,
+          timestamp: new Date(),
+          referrer
         });
-      }
-    } catch (error) {
-      console.error('Error in track product view middleware:', error);
+      });
     }
-    
-    next();
-  };
+  } catch (error) {
+    console.error('Error tracking product view:', error);
+  }
 }
 
 export const aiPersonalizationEngine = new AIPersonalizationEngine();

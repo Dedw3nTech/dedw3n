@@ -1,14 +1,8 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { useLanguage, supportedLanguages, type Language } from '@/contexts/LanguageContext';
-import { ChevronDown, Globe, Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Globe, Loader2 } from 'lucide-react';
 import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 
 interface LanguageSwitcherProps {
@@ -24,12 +18,9 @@ export function LanguageSwitcher({
 }: LanguageSwitcherProps) {
   const { selectedLanguage, setSelectedLanguage, isLoading } = useLanguage();
   const [isChanging, setIsChanging] = useState(false);
-  const { toast } = useToast();
 
-  // Translation texts for language switcher
+  // Translation texts for language switcher (only UI texts needed now)
   const languageSwitcherTexts = [
-    "Language Changed",
-    "Site language changed to",
     "Choose Language", 
     "Select your preferred language"
   ];
@@ -55,13 +46,7 @@ export function LanguageSwitcher({
     // Save to localStorage for persistence
     localStorage.setItem('dedw3n-language', language.code);
     
-    // Show success message with translation
-    toast({
-      title: t("Language Changed") || "Language Changed",
-      description: `${t("Site language changed to") || "Site language changed to"} ${language.nativeName}`,
-      duration: 2000,
-    });
-    
+    // Language change is now clean and fast without any popup notification
     setIsChanging(false);
   };
 
@@ -76,8 +61,8 @@ export function LanguageSwitcher({
   // Icon-only variant
   if (variant === 'icon-only') {
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+      <Sheet>
+        <SheetTrigger asChild>
           <Button 
             variant="ghost" 
             size="sm" 
@@ -91,78 +76,85 @@ export function LanguageSwitcher({
               <Globe className="h-4 w-4" />
             )}
           </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <div className="p-2 text-xs font-medium text-muted-foreground border-b mb-1">
-            {t("Choose Language") || "Choose Language"}
+        </SheetTrigger>
+        <SheetContent side="right" className="w-[300px] sm:w-[350px] flex flex-col">
+          <SheetHeader>
+            <SheetTitle>{t("Choose Language") || "Choose Language"}</SheetTitle>
+          </SheetHeader>
+          <div className="mt-6 space-y-1 overflow-y-auto flex-1 pr-2">
+            {supportedLanguages.map((language) => (
+              <SheetClose key={language.code} asChild>
+                <button
+                  onClick={() => handleLanguageChange(language)}
+                  className="w-full flex items-center justify-between px-3 py-3 rounded-md hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{language.flag}</span>
+                    <div className="flex flex-col text-left">
+                      <span className="font-medium text-sm">{language.name}</span>
+                      <span className="text-xs text-gray-500">{language.nativeName}</span>
+                    </div>
+                  </div>
+                  {selectedLanguage.code === language.code && (
+                    <div className="w-2 h-2 bg-black rounded-full" />
+                  )}
+                </button>
+              </SheetClose>
+            ))}
           </div>
-          {supportedLanguages.map((language) => (
-            <DropdownMenuItem
-              key={language.code}
-              onClick={() => handleLanguageChange(language)}
-              className="flex items-center justify-between cursor-pointer"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-lg">{language.flag}</span>
-                <div className="flex flex-col">
-                  <span className="font-medium">{language.name}</span>
-                  <span className="text-xs text-muted-foreground">{language.nativeName}</span>
-                </div>
-              </div>
-              {selectedLanguage.code === language.code && (
-                <div className="w-2 h-2 bg-primary rounded-full" />
-              )}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+        </SheetContent>
+      </Sheet>
     );
   }
 
   // Compact variant
   if (variant === 'compact') {
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+      <Sheet>
+        <SheetTrigger asChild>
           <span 
-            className={`text-xs font-medium cursor-pointer flex items-center gap-1 language-switcher ${className}`}
+            className={`text-xs font-medium cursor-pointer flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-100 transition-colors language-switcher ${className ? className : 'text-black'}`}
             style={{ fontSize: '12px' }}
             data-language-selector="true"
+            data-testid="button-language-selector"
           >
             {isChanging ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className={`h-4 w-4 animate-spin ${className ? '' : 'text-black'}`} />
             ) : (
-              <>
-                <span className="text-blue-600">{selectedLanguage.code}</span>
-                <ChevronDown className="h-3 w-3 text-white" />
-              </>
+              <span>{selectedLanguage.code}</span>
             )}
           </span>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          {supportedLanguages.map((language) => (
-            <DropdownMenuItem
-              key={language.code}
-              onClick={() => handleLanguageChange(language)}
-              className="flex items-center justify-between cursor-pointer"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-sm">{language.name}</span>
-              </div>
-              {selectedLanguage.code === language.code && (
-                <div className="w-2 h-2 bg-primary rounded-full" />
-              )}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+        </SheetTrigger>
+        <SheetContent side="right" className="w-[300px] sm:w-[350px] flex flex-col">
+          <SheetHeader>
+            <SheetTitle>Select Language</SheetTitle>
+          </SheetHeader>
+          <div className="mt-6 space-y-1 overflow-y-auto flex-1 pr-2">
+            {supportedLanguages.map((language) => (
+              <SheetClose key={language.code} asChild>
+                <button
+                  onClick={() => handleLanguageChange(language)}
+                  className="w-full flex items-center justify-between px-3 py-3 rounded-md hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">{language.name}</span>
+                  </div>
+                  {selectedLanguage.code === language.code && (
+                    <div className="w-2 h-2 bg-black rounded-full" />
+                  )}
+                </button>
+              </SheetClose>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
     );
   }
 
   // Default variant
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+    <Sheet>
+      <SheetTrigger asChild>
         <Button 
           variant="outline" 
           className={`h-10 px-3 language-switcher ${className}`}
@@ -172,36 +164,36 @@ export function LanguageSwitcher({
           {isChanging ? (
             <Loader2 className="h-4 w-4 animate-spin mr-2" />
           ) : (
-            <>
-              <span className="font-medium">{selectedLanguage.nativeName}</span>
-              <ChevronDown className="h-4 w-4 ml-2" />
-            </>
+            <span className="font-medium">{selectedLanguage.nativeName}</span>
           )}
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64">
-        <div className="p-3 text-sm font-medium text-muted-foreground border-b mb-1">
-          {t("Select your preferred language") || "Select your preferred language"}
+      </SheetTrigger>
+      <SheetContent side="right" className="w-[300px] sm:w-[350px] flex flex-col">
+        <SheetHeader>
+          <SheetTitle>{t("Select your preferred language") || "Select your preferred language"}</SheetTitle>
+        </SheetHeader>
+        <div className="mt-6 space-y-1 overflow-y-auto flex-1 pr-2">
+          {supportedLanguages.map((language) => (
+            <SheetClose key={language.code} asChild>
+              <button
+                onClick={() => handleLanguageChange(language)}
+                className="w-full flex items-center justify-between px-3 py-3 rounded-md hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">{language.flag}</span>
+                  <div className="flex flex-col text-left">
+                    <span className="font-medium text-sm">{language.name}</span>
+                    <span className="text-xs text-gray-500">{language.nativeName}</span>
+                  </div>
+                </div>
+                {selectedLanguage.code === language.code && (
+                  <div className="w-2 h-2 bg-black rounded-full" />
+                )}
+              </button>
+            </SheetClose>
+          ))}
         </div>
-        {supportedLanguages.map((language) => (
-          <DropdownMenuItem
-            key={language.code}
-            onClick={() => handleLanguageChange(language)}
-            className="flex items-center justify-between cursor-pointer p-3"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-xl">{language.flag}</span>
-              <div className="flex flex-col">
-                <span className="font-medium">{language.name}</span>
-                <span className="text-sm text-muted-foreground">{language.nativeName}</span>
-              </div>
-            </div>
-            {selectedLanguage.code === language.code && (
-              <div className="w-2 h-2 bg-primary rounded-full" />
-            )}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </SheetContent>
+    </Sheet>
   );
 }

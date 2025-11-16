@@ -194,6 +194,9 @@
     "copyright": "© 2025 Marché Global. Tous droits réservés.",
     "follow_us": "Suivez-nous"
   },
+  "pages": {
+    "tips_tricks": "Conseils et Astuces"
+  },
   "misc": {
     "loading": "Chargement...",
     "error": "Erreur",

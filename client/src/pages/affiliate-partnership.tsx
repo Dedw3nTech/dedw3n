@@ -87,7 +87,7 @@ export default function AffiliatePartnership() {
 
   // Translatable texts
   const texts = useMemo(() => [
-    "Affiliate Partnership Dashboard",
+    "Affiliate Partnership",
     "Apply to Become Partner",
     "Partner Details",
     "Performance Metrics",
@@ -125,13 +125,44 @@ export default function AffiliatePartnership() {
     "Silver", 
     "Gold",
     "Platinum",
-    "Diamond"
+    "Diamond",
+    "Authentication Required",
+    "Please log in to access the affiliate partnership program.",
+    "Join our affiliate program to earn commissions by referring new users and vendors to our platform.",
+    "Fill out the form below to apply for our affiliate partnership program.",
+    "Auto-filled from your profile",
+    "Select specialization",
+    "Marketing",
+    "Technology",
+    "Logistics",
+    "Content Creation",
+    "Social Media",
+    "Other",
+    "Tell us about your background and why you'd be a great affiliate partner...",
+    "Submitting...",
+    "Details",
+    "Tier",
+    "Partner Code",
+    "Generating...",
+    "Track your referred users and their activity",
+    "Loading referrals...",
+    "No referrals yet. Start sharing your referral link to earn commissions!",
+    "Joined",
+    "spent",
+    "No purchases yet",
+    "View your commission earnings and transaction history",
+    "Loading earnings...",
+    "No earnings yet. Start referring users to begin earning commissions!",
+    "View your payment history and upcoming payouts",
+    "Payment history will be available once you start earning commissions.",
+    "Partner Information",
+    "Your affiliate partnership details"
   ], []);
 
   const { translations } = useMasterBatchTranslation(texts, 'high');
 
   const t = useMemo(() => ({
-    title: translations[0] || "Affiliate Partnership Dashboard",
+    title: translations[0] || "Affiliate Partnership",
     applyToBecome: translations[1] || "Apply to Become Partner",
     partnerDetails: translations[2] || "Partner Details",
     performanceMetrics: translations[3] || "Performance Metrics",
@@ -169,7 +200,38 @@ export default function AffiliatePartnership() {
     silver: translations[35] || "Silver",
     gold: translations[36] || "Gold",
     platinum: translations[37] || "Platinum",
-    diamond: translations[38] || "Diamond"
+    diamond: translations[38] || "Diamond",
+    authRequired: translations[39] || "Authentication Required",
+    authDescription: translations[40] || "Please log in to access the affiliate partnership program.",
+    subtitle: translations[41] || "Join our affiliate program to earn commissions by referring new users and vendors to our platform.",
+    formDescription: translations[42] || "Fill out the form below to apply for our affiliate partnership program.",
+    autoFilled: translations[43] || "Auto-filled from your profile",
+    selectSpecialization: translations[44] || "Select specialization",
+    marketing: translations[45] || "Marketing",
+    technology: translations[46] || "Technology",
+    logistics: translations[47] || "Logistics",
+    contentCreation: translations[48] || "Content Creation",
+    socialMedia: translations[49] || "Social Media",
+    other: translations[50] || "Other",
+    descriptionPlaceholder: translations[51] || "Tell us about your background and why you'd be a great affiliate partner...",
+    submitting: translations[52] || "Submitting...",
+    details: translations[53] || "Details",
+    tier: translations[54] || "Tier",
+    partnerCode: translations[55] || "Partner Code",
+    generating: translations[56] || "Generating...",
+    trackReferrals: translations[57] || "Track your referred users and their activity",
+    loadingReferrals: translations[58] || "Loading referrals...",
+    noReferrals: translations[59] || "No referrals yet. Start sharing your referral link to earn commissions!",
+    joined: translations[60] || "Joined",
+    spent: translations[61] || "spent",
+    noPurchases: translations[62] || "No purchases yet",
+    viewEarnings: translations[63] || "View your commission earnings and transaction history",
+    loadingEarnings: translations[64] || "Loading earnings...",
+    noEarnings: translations[65] || "No earnings yet. Start referring users to begin earning commissions!",
+    viewPayments: translations[66] || "View your payment history and upcoming payouts",
+    paymentAvailable: translations[67] || "Payment history will be available once you start earning commissions.",
+    partnerInfo: translations[68] || "Partner Information",
+    partnershipDetails: translations[69] || "Your affiliate partnership details"
   }), [translations]);
 
   // Form states
@@ -191,8 +253,8 @@ export default function AffiliatePartnership() {
         partnerName: user.name || user.username || '',
         contactEmail: user.email || '',
         contactPhone: user.phone || '',
-        website: user.website || '',
-        businessName: user.businessName || user.company || ''
+        website: '',
+        businessName: ''
       }));
     }
   }, [user]);
@@ -218,10 +280,7 @@ export default function AffiliatePartnership() {
   // Create affiliate partner application
   const createPartnerMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      return await apiRequest('/api/affiliate-partnership/apply', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
+      return await apiRequest('POST', '/api/affiliate-partnership/apply', data);
     },
     onSuccess: () => {
       toast({
@@ -250,10 +309,9 @@ export default function AffiliatePartnership() {
 
   // Generate referral link
   const generateLinkMutation = useMutation({
-    mutationFn: async () => {
-      return await apiRequest('/api/affiliate/generate-link', {
-        method: 'POST',
-      });
+    mutationFn: async (): Promise<{ referralLink: string }> => {
+      const response = await apiRequest('GET', '/api/affiliate-partnership/referral-link', undefined);
+      return response.json();
     },
     onSuccess: (data: { referralLink: string }) => {
       navigator.clipboard.writeText(data.referralLink);
@@ -302,8 +360,8 @@ export default function AffiliatePartnership() {
       <div className="container mx-auto px-4 py-8">
         <Card>
           <CardHeader>
-            <CardTitle>Authentication Required</CardTitle>
-            <CardDescription>Please log in to access the affiliate partnership program.</CardDescription>
+            <CardTitle>{t.authRequired}</CardTitle>
+            <CardDescription>{t.authDescription}</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -315,7 +373,7 @@ export default function AffiliatePartnership() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">{t.title}</h1>
         <p className="text-muted-foreground">
-          Join our affiliate program to earn commissions by referring new users and vendors to our platform.
+          {t.subtitle}
         </p>
       </div>
 
@@ -323,12 +381,11 @@ export default function AffiliatePartnership() {
         // Application Form
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UserPlus className="h-5 w-5" />
+            <CardTitle>
               {t.applyToBecome}
             </CardTitle>
             <CardDescription>
-              Fill out the form below to apply for our affiliate partnership program.
+              {t.formDescription}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -340,12 +397,12 @@ export default function AffiliatePartnership() {
                     id="partnerName"
                     value={formData.partnerName}
                     onChange={(e) => setFormData({ ...formData, partnerName: e.target.value })}
-                    disabled={!!formData.partnerName && (user?.name || user?.username)}
-                    className={!!formData.partnerName && (user?.name || user?.username) ? "bg-gray-100 text-gray-600" : ""}
+                    disabled={!!formData.partnerName && !!(user?.name || user?.username)}
+                    className={!!formData.partnerName && !!(user?.name || user?.username) ? "bg-gray-100 text-gray-600" : ""}
                     required
                   />
-                  {!!formData.partnerName && (user?.name || user?.username) && (
-                    <p className="text-xs text-muted-foreground mt-1">Auto-filled from your profile</p>
+                  {!!formData.partnerName && !!(user?.name || user?.username) && (
+                    <p className="text-xs text-muted-foreground mt-1">{t.autoFilled}</p>
                   )}
                 </div>
                 <div>
@@ -354,12 +411,9 @@ export default function AffiliatePartnership() {
                     id="businessName"
                     value={formData.businessName}
                     onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
-                    disabled={!!formData.businessName && (user?.businessName || user?.company)}
-                    className={!!formData.businessName && (user?.businessName || user?.company) ? "bg-gray-100 text-gray-600" : ""}
+                    disabled={false}
+                    className={""}
                   />
-                  {!!formData.businessName && (user?.businessName || user?.company) && (
-                    <p className="text-xs text-muted-foreground mt-1">Auto-filled from your profile</p>
-                  )}
                 </div>
                 <div>
                   <Label htmlFor="contactEmail">{t.contactEmail} *</Label>
@@ -368,12 +422,12 @@ export default function AffiliatePartnership() {
                     type="email"
                     value={formData.contactEmail}
                     onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
-                    disabled={!!formData.contactEmail && user?.email}
-                    className={!!formData.contactEmail && user?.email ? "bg-gray-100 text-gray-600" : ""}
+                    disabled={!!formData.contactEmail && !!user?.email}
+                    className={!!formData.contactEmail && !!user?.email ? "bg-gray-100 text-gray-600" : ""}
                     required
                   />
-                  {!!formData.contactEmail && user?.email && (
-                    <p className="text-xs text-muted-foreground mt-1">Auto-filled from your profile</p>
+                  {!!formData.contactEmail && !!user?.email && (
+                    <p className="text-xs text-muted-foreground mt-1">{t.autoFilled}</p>
                   )}
                 </div>
                 <div>
@@ -382,11 +436,11 @@ export default function AffiliatePartnership() {
                     id="contactPhone"
                     value={formData.contactPhone}
                     onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
-                    disabled={!!formData.contactPhone && user?.phone}
-                    className={!!formData.contactPhone && user?.phone ? "bg-gray-100 text-gray-600" : ""}
+                    disabled={!!formData.contactPhone && !!user?.phone}
+                    className={!!formData.contactPhone && !!user?.phone ? "bg-gray-100 text-gray-600" : ""}
                   />
-                  {!!formData.contactPhone && user?.phone && (
-                    <p className="text-xs text-muted-foreground mt-1">Auto-filled from your profile</p>
+                  {!!formData.contactPhone && !!user?.phone && (
+                    <p className="text-xs text-muted-foreground mt-1">{t.autoFilled}</p>
                   )}
                 </div>
                 <div>
@@ -396,26 +450,23 @@ export default function AffiliatePartnership() {
                     type="url"
                     value={formData.website}
                     onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                    disabled={!!formData.website && user?.website}
-                    className={!!formData.website && user?.website ? "bg-gray-100 text-gray-600" : ""}
+                    disabled={false}
+                    className={""}
                   />
-                  {!!formData.website && user?.website && (
-                    <p className="text-xs text-muted-foreground mt-1">Auto-filled from your profile</p>
-                  )}
                 </div>
                 <div>
                   <Label htmlFor="specialization">{t.specialization}</Label>
                   <Select value={formData.specialization} onValueChange={(value) => setFormData({ ...formData, specialization: value })}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select specialization" />
+                      <SelectValue placeholder={t.selectSpecialization} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="marketing">Marketing</SelectItem>
-                      <SelectItem value="technology">Technology</SelectItem>
-                      <SelectItem value="logistics">Logistics</SelectItem>
-                      <SelectItem value="content">Content Creation</SelectItem>
-                      <SelectItem value="social-media">Social Media</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      <SelectItem value="marketing">{t.marketing}</SelectItem>
+                      <SelectItem value="technology">{t.technology}</SelectItem>
+                      <SelectItem value="logistics">{t.logistics}</SelectItem>
+                      <SelectItem value="content">{t.contentCreation}</SelectItem>
+                      <SelectItem value="social-media">{t.socialMedia}</SelectItem>
+                      <SelectItem value="other">{t.other}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -427,16 +478,18 @@ export default function AffiliatePartnership() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={4}
-                  placeholder="Tell us about your background and why you'd be a great affiliate partner..."
+                  placeholder={t.descriptionPlaceholder}
                 />
               </div>
-              <Button 
-                type="submit" 
-                disabled={createPartnerMutation.isPending}
-                className="w-full md:w-auto"
-              >
-                {createPartnerMutation.isPending ? "Submitting..." : t.submitApplication}
-              </Button>
+              <div className="flex justify-end">
+                <Button 
+                  type="submit" 
+                  disabled={createPartnerMutation.isPending}
+                  className="w-full md:w-auto bg-black hover:bg-gray-800 text-white"
+                >
+                  {createPartnerMutation.isPending ? t.submitting : t.submitApplication}
+                </Button>
+              </div>
             </form>
           </CardContent>
         </Card>
@@ -448,7 +501,7 @@ export default function AffiliatePartnership() {
             <TabsTrigger value="referrals">{t.referrals}</TabsTrigger>
             <TabsTrigger value="earnings">{t.earnings}</TabsTrigger>
             <TabsTrigger value="payments">{t.payments}</TabsTrigger>
-            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="details">{t.details}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -468,7 +521,7 @@ export default function AffiliatePartnership() {
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    {t[affiliatePartner.tier as keyof typeof t]} Tier
+                    {t[affiliatePartner.tier as keyof typeof t]} {t.tier}
                   </p>
                 </CardContent>
               </Card>
@@ -521,7 +574,7 @@ export default function AffiliatePartnership() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Partner Code</p>
+                    <p className="text-sm font-medium text-muted-foreground">{t.partnerCode}</p>
                     <p className="font-mono text-sm bg-gray-100 p-2 rounded">{affiliatePartner.affiliateCode}</p>
                   </div>
                   <div>
@@ -545,7 +598,7 @@ export default function AffiliatePartnership() {
                     disabled={generateLinkMutation.isPending}
                     className="mr-3"
                   >
-                    {generateLinkMutation.isPending ? "Generating..." : t.generateLink}
+                    {generateLinkMutation.isPending ? t.generating : t.generateLink}
                   </Button>
                   <Button variant="outline">
                     {t.sharePartnership}
@@ -559,14 +612,14 @@ export default function AffiliatePartnership() {
             <Card>
               <CardHeader>
                 <CardTitle>{t.referralManagement}</CardTitle>
-                <CardDescription>Track your referred users and their activity</CardDescription>
+                <CardDescription>{t.trackReferrals}</CardDescription>
               </CardHeader>
               <CardContent>
                 {referralsLoading ? (
-                  <div className="text-center py-8">Loading referrals...</div>
+                  <div className="text-center py-8">{t.loadingReferrals}</div>
                 ) : referrals.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    No referrals yet. Start sharing your referral link to earn commissions!
+                    {t.noReferrals}
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -580,7 +633,7 @@ export default function AffiliatePartnership() {
                             <p className="font-medium">{referral.referredUser.name}</p>
                             <p className="text-sm text-muted-foreground">@{referral.referredUser.username}</p>
                             <p className="text-xs text-muted-foreground">
-                              Joined {formatDistanceToNow(new Date(referral.createdAt), { addSuffix: true })}
+                              {t.joined} {formatDistanceToNow(new Date(referral.createdAt), { addSuffix: true })}
                             </p>
                           </div>
                         </div>
@@ -588,8 +641,8 @@ export default function AffiliatePartnership() {
                           <p className="font-semibold">£{referral.totalCommissionEarned.toFixed(2)}</p>
                           <p className="text-sm text-muted-foreground">
                             {referral.totalPurchaseAmount > 0 
-                              ? `£${referral.totalPurchaseAmount.toFixed(2)} spent`
-                              : 'No purchases yet'
+                              ? `£${referral.totalPurchaseAmount.toFixed(2)} ${t.spent}`
+                              : t.noPurchases
                             }
                           </p>
                           <Badge variant={referral.status === 'active' ? 'default' : 'secondary'}>
@@ -608,14 +661,14 @@ export default function AffiliatePartnership() {
             <Card>
               <CardHeader>
                 <CardTitle>{t.commissionTracking}</CardTitle>
-                <CardDescription>View your commission earnings and transaction history</CardDescription>
+                <CardDescription>{t.viewEarnings}</CardDescription>
               </CardHeader>
               <CardContent>
                 {earningsLoading ? (
-                  <div className="text-center py-8">Loading earnings...</div>
+                  <div className="text-center py-8">{t.loadingEarnings}</div>
                 ) : earnings.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    No earnings yet. Start referring users to begin earning commissions!
+                    {t.noEarnings}
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -656,11 +709,11 @@ export default function AffiliatePartnership() {
             <Card>
               <CardHeader>
                 <CardTitle>{t.paymentHistory}</CardTitle>
-                <CardDescription>View your payment history and upcoming payouts</CardDescription>
+                <CardDescription>{t.viewPayments}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-8 text-muted-foreground">
-                  Payment history will be available once you start earning commissions.
+                  {t.paymentAvailable}
                 </div>
               </CardContent>
             </Card>
@@ -669,8 +722,8 @@ export default function AffiliatePartnership() {
           <TabsContent value="details" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Partner Information</CardTitle>
-                <CardDescription>Your affiliate partnership details</CardDescription>
+                <CardTitle>{t.partnerInfo}</CardTitle>
+                <CardDescription>{t.partnershipDetails}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

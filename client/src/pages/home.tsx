@@ -335,9 +335,9 @@ export default function Home() {
     <div className="min-h-screen">
       {/* Hero Section with Unified Background */}
       <HeroBackground 
-        src={isMobile ? "/attached_assets/coming soon web app mobile_1756964116626.png" : "/attached_assets/coming soon_1756963751096.png"}
+        src={isMobile ? "/attached_assets/coming%20soon%20web%20app%20mobile_1758821892697.png" : `/attached_assets/coming%20soon%20carte%20blanche_1761364163382.png?v=${Date.now()}`}
         className="relative w-full min-h-screen flex items-center justify-center hero-mobile-optimized"
-        alt={isMobile ? "Coming Soon - Dedw3n Mobile App" : "Coming Soon - Dedw3n"}
+        alt={isMobile ? "Coming Soon - Dedw3n Mobile App" : "Carte Blanche - Coming Soon"}
         onError={() => console.error('Failed to load hero image in home page')}
         onLoad={() => console.log('Home hero image loaded successfully')}
       />

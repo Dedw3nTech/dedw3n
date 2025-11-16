@@ -13,7 +13,7 @@ export function WeightUnitSelector() {
             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
         }`}
       >
-        KG
+        kg
       </button>
       <span className="text-xs text-gray-400">|</span>
       <button
@@ -24,7 +24,7 @@ export function WeightUnitSelector() {
             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
         }`}
       >
-        LBS
+        lbs
       </button>
     </div>
   );

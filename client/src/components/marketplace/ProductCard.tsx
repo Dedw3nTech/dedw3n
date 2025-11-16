@@ -23,26 +23,57 @@ export default function ProductCard({ product }: ProductCardProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cart/count"] });
-      toast({
-        title: "Added to cart",
-        description: `${product.name} has been added to your cart.`,
-      });
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      const errorMessage = error?.message || "Failed to add product to cart. Please try again.";
       toast({
         title: "Error",
-        description: "Failed to add product to cart. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     },
   });
 
-  const toggleFavorite = () => {
-    setIsFavorite(!isFavorite);
-    toast({
-      title: isFavorite ? "Removed from favorites" : "Added to favorites",
-      description: `${product.name} has been ${isFavorite ? "removed from" : "added to"} your favorites.`,
-    });
+  const toggleFavoriteMutation = useMutation({
+    mutationFn: async () => {
+      if (isFavorite) {
+        return apiRequest("DELETE", `/api/favorites/${product.id}`);
+      } else {
+        return apiRequest("POST", `/api/favorites/${product.id}`);
+      }
+    },
+    onSuccess: (data: any) => {
+      setIsFavorite(!isFavorite);
+      queryClient.invalidateQueries({ queryKey: ["/api/favorites"] });
+      toast({
+        title: data?.message || (isFavorite ? "Removed from favorites" : "Added to favorites"),
+        description: `${product.name} has been ${isFavorite ? "removed from" : "added to"} your favorites.`,
+      });
+    },
+    onError: (error: any) => {
+      const isAuthError = error?.status === 401 || 
+                         error?.message?.includes("Unauthorized") || 
+                         error?.message?.includes("Authentication required");
+      
+      if (isAuthError) {
+        toast({
+          title: "Login Required",
+          description: "To add products to your favourites, please log in.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error?.message || "Failed to update favorites. Please try again.",
+          variant: "destructive",
+        });
+      }
+    },
+  });
+
+  const toggleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleFavoriteMutation.mutate();
   };
 
   const handleAddToCart = () => {
@@ -71,10 +102,17 @@ export default function ProductCard({ product }: ProductCardProps) {
         )}
         
         <button 
-          className={`absolute top-2 right-2 p-1.5 bg-white rounded-full ${isFavorite ? 'text-primary' : 'text-gray-700 hover:text-primary'}`}
+          className={`absolute top-2 right-2 p-1.5 bg-white rounded-full ${isFavorite ? 'text-primary' : 'text-gray-700 hover:text-primary'} disabled:opacity-50`}
           onClick={toggleFavorite}
+          disabled={toggleFavoriteMutation.isPending}
+          data-testid={`button-favorite-${product.id}`}
+          data-no-login
         >
-          <i className={`${isFavorite ? 'ri-heart-fill' : 'ri-heart-line'}`}></i>
+          {toggleFavoriteMutation.isPending ? (
+            <i className="ri-loader-4-line animate-spin"></i>
+          ) : (
+            <i className={`${isFavorite ? 'ri-heart-fill' : 'ri-heart-line'}`}></i>
+          )}
         </button>
       </div>
       

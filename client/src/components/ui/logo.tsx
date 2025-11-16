@@ -1,63 +1,47 @@
 import { FC } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Link } from 'wouter';
-// Logo paths for different variants
-const logoImages = {
-  transparent: "/dedw3n-logo-transparent.png",
-  black: "/dedw3n-logo-black.png",
-  navigation: "/dedw3n-navigation-logo.png",
-  default: "/dedw3n-main-logo.png"
-};
+import logoImage from "@assets/transparent logo_1762919206444.png";
 
 interface LogoProps {
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   withText?: boolean;
   className?: string;
-  variant?: 'transparent' | 'black' | 'navigation' | 'default';
 }
 
-const Logo: FC<LogoProps> = ({ size = 'md', withText = true, className = '', variant = 'default' }) => {
-  const { t } = useTranslation();
-  
+const Logo: FC<LogoProps> = ({ size = 'md', withText = true, className = '' }) => {
   const sizeClass = {
-    sm: 'h-10',    // small
-    md: 'h-14',    // medium
-    lg: 'h-20',    // large
-    xl: 'h-21'     // extra large (1.5x medium)
+    sm: 'h-20',
+    md: 'h-35',
+    lg: 'h-40',
+    xl: 'h-40',
+    '2xl': 'h-80'
   };
 
-  // Select the appropriate logo based on variant
-  const getLogoSource = () => {
-    switch (variant) {
-      case 'transparent':
-        return logoImages.transparent;
-      case 'black':
-        return logoImages.black;
-      case 'navigation':
-        return logoImages.navigation;
-      case 'default':
-      default:
-        return logoImages.default;
-    }
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    window.location.href = '/';
   };
 
   return (
-    <Link href="/">
-      <div className={`flex items-center cursor-pointer ${className}`}>
-        <img 
-          src={getLogoSource()} 
-          alt="Dedw3n" 
-          className={`${sizeClass[size]} w-auto object-contain`}
-        />
-        {withText && (
-          <div className="ml-2 flex items-center -mt-1">
-            <span className="font-bold text-white text-xl">
-              Dedw3n
-            </span>
-          </div>
-        )}
-      </div>
-    </Link>
+    <button 
+      className={`flex items-center cursor-pointer border-none bg-transparent p-0 ${className}`}
+      onClick={handleLogoClick}
+      data-testid="logo-button"
+      type="button"
+    >
+      <img 
+        src={logoImage} 
+        alt="Dedw3n - Go to home page" 
+        className={`${sizeClass[size]} w-auto object-contain`}
+        data-testid="logo-image"
+      />
+      {withText && (
+        <div className="ml-2 flex items-center -mt-1">
+          <span className="font-bold text-white text-xl">
+            Dedw3n
+          </span>
+        </div>
+      )}
+    </button>
   );
 };
 

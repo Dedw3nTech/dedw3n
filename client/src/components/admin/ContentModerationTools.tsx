@@ -735,7 +735,7 @@ export default function ContentModerationTools() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      flaggedContent.map((item) => (
+                      flaggedContent.map((item: FlaggedItem) => (
                         <TableRow key={item.id}>
                           <TableCell className="font-medium">{item.id}</TableCell>
                           <TableCell className="capitalize">{item.contentType}</TableCell>
@@ -815,7 +815,7 @@ export default function ContentModerationTools() {
                     <p>No flagged images found</p>
                   </div>
                 ) : (
-                  flaggedImages.map((item) => (
+                  flaggedImages.map((item: FlaggedItem) => (
                     <Card key={item.id} className="overflow-hidden">
                       <CardContent className="p-0">
                         <div className="relative">
@@ -912,7 +912,7 @@ export default function ContentModerationTools() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      allowList.map((item) => (
+                      allowList.map((item: AllowListItem) => (
                         <TableRow key={item.id}>
                           <TableCell className="font-medium">{item.term}</TableCell>
                           <TableCell className="capitalize">{item.category}</TableCell>
@@ -1052,7 +1052,7 @@ export default function ContentModerationTools() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      blockList.map((item) => (
+                      blockList.map((item: BlockListItem) => (
                         <TableRow key={item.id}>
                           <TableCell className="font-medium">{item.term}</TableCell>
                           <TableCell className="capitalize">{item.category}</TableCell>
@@ -1252,7 +1252,7 @@ export default function ContentModerationTools() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      reports.map((report) => (
+                      reports.map((report: Report) => (
                         <TableRow key={report.id}>
                           <TableCell className="font-medium">{report.id}</TableCell>
                           <TableCell className="capitalize">{report.contentType}</TableCell>

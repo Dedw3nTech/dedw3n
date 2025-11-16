@@ -4,6 +4,7 @@ import {
   messages, users,
   type Message, type InsertMessage 
 } from '@shared/schema';
+import { logger } from './logger';
 
 /**
  * Get a specific message by ID
@@ -60,7 +61,7 @@ export async function getConversationMessages(userId1: number, userId2: number):
  */
 export async function getUserConversations(userId: number): Promise<any[]> {
   try {
-    console.log(`[DEBUG] Getting conversations for user ${userId}`);
+    logger.debug('Getting conversations for user', { userId }, 'api');
     
     // Get all messages where the user is either sender or receiver
     const userMessages = await db
@@ -72,7 +73,7 @@ export async function getUserConversations(userId: number): Promise<any[]> {
       ))
       .orderBy(messages.createdAt);
 
-    console.log(`[DEBUG] Found ${userMessages.length} messages for user ${userId}`);
+    logger.debug('Found messages for user', { userId, count: userMessages.length }, 'api');
 
     // Get unique user IDs that this user has conversed with
     const conversationUserIds = new Set<number>();
@@ -81,7 +82,7 @@ export async function getUserConversations(userId: number): Promise<any[]> {
       conversationUserIds.add(otherUserId);
     });
 
-    console.log(`[DEBUG] Conversation user IDs:`, Array.from(conversationUserIds));
+    logger.debug('Identified conversation participants', { userId, participantCount: conversationUserIds.size }, 'api');
 
     // Build conversations summary
     const conversations: any[] = [];
@@ -93,11 +94,11 @@ export async function getUserConversations(userId: number): Promise<any[]> {
         .where(eq(users.id, otherUserId));
 
       if (!otherUser) {
-        console.log(`[DEBUG] User ${otherUserId} not found, skipping conversation`);
+        logger.debug('User not found, skipping conversation', { otherUserId }, 'api');
         continue;
       }
 
-      console.log(`[DEBUG] Building conversation with user ${otherUserId} (${otherUser.username})`);
+      logger.debug('Building conversation', { userId, otherUserId, username: otherUser.username }, 'api');
 
       // Get messages between these users
       const conversationMessages = await db
@@ -147,11 +148,11 @@ export async function getUserConversations(userId: number): Promise<any[]> {
         messageCount: conversationMessages.length
       };
       
-      console.log(`[DEBUG] Created conversation:`, conversation);
+      logger.debug('Created conversation', { userId, otherUserId, messageCount: conversationMessages.length, unreadCount }, 'api');
       conversations.push(conversation);
     }
 
-    console.log(`[DEBUG] Total conversations created: ${conversations.length}`);
+    logger.debug('Total conversations created', { userId, count: conversations.length }, 'api');
 
     // Sort by latest message date
     return conversations.sort((a, b) => {
@@ -160,7 +161,7 @@ export async function getUserConversations(userId: number): Promise<any[]> {
       return dateB - dateA; // Descending order (newest first)
     });
   } catch (error) {
-    console.error('[DEBUG] Error in getUserConversations:', error);
+    logger.error('Failed to get user conversations', { userId }, error as Error, 'api');
     return [];
   }
 }
@@ -314,7 +315,7 @@ export async function clearConversation(userId1: number, userId2: number): Promi
     
     return true;
   } catch (error) {
-    console.error("Error clearing conversation:", error);
+    logger.error('Failed to clear conversation', { userId1, userId2 }, error as Error, 'api');
     return false;
   }
 }

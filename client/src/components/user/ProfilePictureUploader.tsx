@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
-import { Camera, Upload, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Camera, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { UserAvatar } from '@/components/ui/user-avatar';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 import { 
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -37,22 +37,45 @@ export function ProfilePictureUploader({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  // Reset upload complete status after a delay
+  const translationTexts = [
+    'Change Picture',
+    'Preview',
+    'Uploading...',
+    'Processing...',
+    'Cancel',
+    'Upload',
+    'File Too Large',
+    'The selected image exceeds the maximum allowed size of 5MB. Please choose a smaller file or compress the current one.',
+    'OK',
+    'Invalid File Type',
+    'Please select a valid image file (JPG, PNG, GIF, etc). The file you selected is not recognized as an image.',
+    'Upload failed',
+    'Profile picture updated successfully!',
+    'Failed to upload profile picture',
+    'Authentication required',
+    'Too many upload requests',
+    'Server error occurred'
+  ];
+
+  const { translations } = useMasterBatchTranslation(translationTexts, 'instant');
+  
+  const t: Record<string, string> = {};
+  translationTexts.forEach((text, index) => {
+    t[text] = translations[index] || text;
+  });
+
   useEffect(() => {
     if (uploadComplete) {
-      const timer = setTimeout(() => {
-        setUploadComplete(false);
-      }, 3000);
+      const timer = setTimeout(() => setUploadComplete(false), 3000);
       return () => clearTimeout(timer);
     }
   }, [uploadComplete]);
 
-  // Simulate upload progress
   useEffect(() => {
     if (isUploading && uploadProgress < 90) {
       const timer = setTimeout(() => {
         setUploadProgress(prev => Math.min(prev + Math.random() * 15, 90));
-      }, 300);
+      }, 200);
       return () => clearTimeout(timer);
     }
   }, [isUploading, uploadProgress]);
@@ -61,33 +84,40 @@ export function ProfilePictureUploader({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Reset states
     setShowFileSizeWarning(false);
     setShowFileTypeWarning(false);
     setUploadProgress(0);
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       setShowFileTypeWarning(true);
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setShowFileSizeWarning(true);
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
-    // Create preview
     const reader = new FileReader();
     reader.onload = (e) => {
-      setPreviewImage(e.target?.result as string);
+      const dataUrl = e.target?.result as string;
+      if (dataUrl) {
+        setPreviewImage(dataUrl);
+      }
     };
+    
+    reader.onerror = () => {
+      toast({
+        title: t['Upload failed'] || 'Upload failed',
+        description: 'Failed to read the image file',
+        variant: 'destructive'
+      });
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+    
     reader.readAsDataURL(file);
-  };
-
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
   };
 
   const uploadImage = async () => {
@@ -95,60 +125,179 @@ export function ProfilePictureUploader({
     
     try {
       setIsUploading(true);
-      setUploadProgress(10); // Start progress
+      setUploadProgress(10);
       
-      // Use the identifier (username or userId) to update the profile picture
-      const identifier = username || userId;
+      // Always prefer numeric userId, encode username if that's all we have
+      const identifier = userId ? userId.toString() : encodeURIComponent(username || '');
       
       const response = await apiRequest('POST', `/api/users/${identifier}/profilePicture`, {
         imageData: previewImage
       });
       
-      setUploadProgress(95); // Almost complete
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to upload profile picture');
-      }
-      
+      setUploadProgress(95);
       const data = await response.json();
       
       setUploadProgress(100);
       setUploadComplete(true);
-      
-      toast({
-        title: 'Profile picture updated',
-        description: 'Your profile picture has been updated successfully',
-      });
-      
-      // Reset preview
       setPreviewImage(null);
       
-      // Callback with new avatar URL
-      if (onUploadSuccess) {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      
+      toast({
+        title: t['Profile picture updated successfully!'] || 'Profile picture updated successfully!',
+        variant: 'default'
+      });
+      
+      if (onUploadSuccess && data.avatarUrl) {
         onUploadSuccess(data.avatarUrl);
       }
       
-      // Invalidate queries to refresh avatar display across the app
-      queryClient.invalidateQueries({ 
-        queryKey: [`/api/users/${userId}/profilePicture`] 
+      // Comprehensive cache invalidation using predicate to catch ALL avatar-related queries
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey;
+          if (!Array.isArray(key) || key.length === 0) return false;
+          
+          try {
+            // Check all segments of the query key for avatar-related endpoints
+            // Handle non-serializable keys by walking the array
+            let keyString = '';
+            for (const segment of key) {
+              if (typeof segment === 'string') {
+                keyString += segment.toLowerCase() + ' ';
+              } else if (typeof segment === 'number') {
+                keyString += segment + ' ';
+              } else {
+                // Try to stringify, but catch errors for non-serializable objects
+                try {
+                  keyString += JSON.stringify(segment).toLowerCase() + ' ';
+                } catch {
+                  // Skip non-serializable segments
+                  continue;
+                }
+              }
+            }
+            
+            // Invalidate all queries that might contain user avatar data
+            return (
+              // Current user queries
+              keyString.includes('/api/user') ||
+              
+              // User-specific queries
+              keyString.includes('/api/users') ||
+              
+              // Feed and social queries
+              keyString.includes('/api/feed') ||
+              keyString.includes('/api/posts') ||
+              keyString.includes('/api/social') ||
+              
+              // Social graph
+              keyString.includes('/api/friends') ||
+              keyString.includes('/api/followers') ||
+              keyString.includes('/api/following') ||
+              keyString.includes('/api/connections') ||
+              
+              // Messaging and chat
+              keyString.includes('/api/messages') ||
+              keyString.includes('/api/chatrooms') ||
+              keyString.includes('/api/conversations') ||
+              
+              // Search and lists
+              keyString.includes('/api/search') ||
+              keyString.includes('platform-users') ||
+              
+              // Admin and proxy accounts
+              keyString.includes('/api/admin') ||
+              keyString.includes('/api/proxy') ||
+              
+              // Dating
+              keyString.includes('/api/dating') ||
+              keyString.includes('/api/matches') ||
+              
+              // Comments (which show user avatars)
+              keyString.includes('/api/comments') ||
+              
+              // Any query that explicitly references profiles or avatars
+              keyString.includes('profile') ||
+              keyString.includes('avatar')
+            );
+          } catch (error) {
+            // If anything fails, don't invalidate this query
+            console.error('[ProfilePictureUploader] Error in invalidation predicate:', error);
+            return false;
+          }
+        }
       });
       
-      if (username) {
-        queryClient.invalidateQueries({ 
-          queryKey: [`/api/users/${username}/profilePicture`] 
+      // Dispatch custom event to trigger UserAvatar cache version update
+      window.dispatchEvent(new Event('avatar-updated'));
+      
+      // Optionally update query data directly for immediate visual feedback
+      if (data.avatarUrl) {
+        queryClient.setQueryData(['/api/user'], (oldData: any) => {
+          if (!oldData) return oldData;
+          return { ...oldData, avatar: data.avatarUrl, avatarUpdatedAt: new Date().toISOString() };
+        });
+        
+        queryClient.setQueryData([`/api/users/${identifier}/profilePicture`], {
+          url: data.avatarUrl,
+          userId,
+          username,
+          avatarUpdatedAt: new Date().toISOString()
         });
       }
       
     } catch (error) {
-      console.error('Error uploading profile picture:', error);
+      console.error('[ProfilePictureUploader] Upload error:', error);
+      
+      let errorTitle = t['Upload failed'] || 'Upload failed';
+      let errorDescription = t['Failed to upload profile picture'] || 'Failed to upload profile picture';
+      
+      if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+        
+        if (message.includes('authentication') || message.includes('unauthorized') || message.includes('401')) {
+          errorTitle = t['Authentication required'] || 'Authentication required';
+          errorDescription = 'Please log in again and try uploading';
+        } else if (message.includes('too many') || message.includes('rate limit') || message.includes('429')) {
+          errorTitle = t['Too many upload requests'] || 'Too many upload requests';
+          errorDescription = error.message;
+        } else if (message.includes('server') || message.includes('500')) {
+          errorTitle = t['Server error occurred'] || 'Server error occurred';
+          errorDescription = 'Please try again in a moment';
+        } else {
+          errorDescription = error.message;
+        }
+      }
+      
       toast({
-        title: 'Upload failed',
-        description: error instanceof Error ? error.message : 'Failed to upload profile picture',
+        title: errorTitle,
+        description: errorDescription,
         variant: 'destructive'
       });
+      
+      setPreviewImage(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      
     } finally {
       setIsUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
+  const cancelUpload = () => {
+    setPreviewImage(null);
+    setUploadProgress(0);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -159,9 +308,10 @@ export function ProfilePictureUploader({
           <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-primary/20 hover:border-primary/50 transition-colors cursor-pointer">
             <img 
               src={previewImage} 
-              alt="Preview" 
+              alt={t['Preview'] || 'Preview'} 
               className="w-full h-full object-cover"
-              onClick={triggerFileInput}
+              onClick={!isUploading ? triggerFileInput : undefined}
+              loading="eager"
             />
           </div>
         ) : (
@@ -170,7 +320,7 @@ export function ProfilePictureUploader({
             username={username} 
             size="xl"
             className={`cursor-pointer border-2 ${uploadComplete ? 'border-green-500' : 'border-primary/20 hover:border-primary/50'} transition-colors`}
-            onClick={triggerFileInput}
+            onClick={!isUploading ? triggerFileInput : undefined}
           />
         )}
         
@@ -180,7 +330,7 @@ export function ProfilePictureUploader({
           </div>
         )}
         
-        {!uploadComplete && (
+        {!uploadComplete && !isUploading && (
           <div 
             className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 
                      flex items-center justify-center rounded-full transition-opacity cursor-pointer"
@@ -196,29 +346,22 @@ export function ProfilePictureUploader({
           className="hidden"
           accept="image/*"
           onChange={handleFileSelect}
+          disabled={isUploading}
         />
       </div>
       
       {previewImage && (
         <div className="flex flex-col items-center gap-3 w-full">
-          <div className="rounded-full w-24 h-24 overflow-hidden border-2 border-primary">
-            <img 
-              src={previewImage} 
-              alt="Preview" 
-              className="w-full h-full object-cover"
-            />
-          </div>
-          
           {isUploading && (
             <div className="w-full max-w-xs">
               <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-primary transition-all duration-300 ease-out"
+                  className="h-full bg-black transition-all duration-300 ease-out"
                   style={{ width: `${uploadProgress}%` }}
                 ></div>
               </div>
               <p className="text-xs text-muted-foreground text-center mt-1">
-                {uploadProgress < 100 ? 'Uploading...' : 'Processing...'}
+                {uploadProgress < 100 ? (t['Uploading...'] || 'Uploading...') : (t['Processing...'] || 'Processing...')}
               </p>
             </div>
           )}
@@ -228,17 +371,19 @@ export function ProfilePictureUploader({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPreviewImage(null)}
+                onClick={cancelUpload}
+                data-testid="button-cancel-upload"
               >
-                Cancel
+                {t['Cancel'] || 'Cancel'}
               </Button>
               
               <Button
                 size="sm"
                 onClick={uploadImage}
+                className="bg-black hover:bg-gray-800 text-white"
+                data-testid="button-upload-picture"
               >
-                <Upload className="mr-2 h-4 w-4" />
-                Upload
+                {t['Upload'] || 'Upload'}
               </Button>
             </div>
           )}
@@ -250,49 +395,46 @@ export function ProfilePictureUploader({
           variant="outline" 
           size="sm"
           onClick={triggerFileInput}
+          data-testid="button-change-picture"
         >
           <Camera className="mr-2 h-4 w-4" />
-          Change Picture
+          {t['Change Picture'] || 'Change Picture'}
         </Button>
       )}
       
-      {/* File size warning dialog */}
       <AlertDialog open={showFileSizeWarning} onOpenChange={setShowFileSizeWarning}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center">
-              <AlertCircle className="mr-2 h-5 w-5 text-destructive" />
-              File Too Large
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              {t['File Too Large'] || 'File Too Large'}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              The selected image exceeds the maximum allowed size of 5MB. 
-              Please choose a smaller file or compress the current one.
+              {t['The selected image exceeds the maximum allowed size of 5MB. Please choose a smaller file or compress the current one.'] || 'The selected image exceeds the maximum allowed size of 5MB. Please choose a smaller file or compress the current one.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setShowFileSizeWarning(false)}>
-              OK
+              {t['OK'] || 'OK'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
       
-      {/* File type warning dialog */}
       <AlertDialog open={showFileTypeWarning} onOpenChange={setShowFileTypeWarning}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center">
-              <AlertCircle className="mr-2 h-5 w-5 text-destructive" />
-              Invalid File Type
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              {t['Invalid File Type'] || 'Invalid File Type'}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Please select a valid image file (JPG, PNG, GIF, etc).
-              The file you selected is not recognized as an image.
+              {t['Please select a valid image file (JPG, PNG, GIF, etc). The file you selected is not recognized as an image.'] || 'Please select a valid image file (JPG, PNG, GIF, etc). The file you selected is not recognized as an image.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setShowFileTypeWarning(false)}>
-              OK
+              {t['OK'] || 'OK'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -300,5 +442,3 @@ export function ProfilePictureUploader({
     </div>
   );
 }
-
-export default ProfilePictureUploader;

@@ -1,12 +1,12 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, Bell, Settings, Users, Heart, Star, Plus, PlusCircle, ShoppingCart, Store, LogOut, Calendar } from "lucide-react";
+import { MessageSquare, Bell, Settings, Users, Heart, Star, Plus, PlusCircle, ShoppingCart, Store, Calendar, Bookmark, FileText } from "lucide-react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import { useCallback } from "react";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 interface User {
   id: number;
@@ -18,23 +18,58 @@ interface User {
 }
 
 export function ProfileSideCard() {
-  const { data: user, isLoading } = useQuery<User>({
+  const { data: user, isLoading} = useQuery<User>({
     queryKey: ['/api/user'],
     retry: false,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes - rely on cache invalidation for updates
+    refetchOnMount: false, // Don't refetch on mount - use cache invalidation instead
+    refetchOnWindowFocus: false, // Don't refetch on focus - rely on cache invalidation
   });
+
+  // Fetch unread message count
+  const { data: unreadMessagesData } = useQuery<{ unreadCount: number }>({
+    queryKey: ['/api/messages/unread-count'],
+    retry: false,
+    staleTime: 30 * 1000, // Cache for 30 seconds
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+  });
+
+  // Fetch unread notifications count (includes comments and reactions)
+  const { data: unreadNotificationsData } = useQuery<{ count: number }>({
+    queryKey: ['/api/notifications/unread/count'],
+    retry: false,
+    staleTime: 30 * 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+  });
+
+  // Fetch pending friend requests count
+  const { data: pendingFriendRequestsData } = useQuery<{ count: number }>({
+    queryKey: ['/api/friends/pending/count'],
+    retry: false,
+    staleTime: 30 * 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+  });
+
+  // Calculate total count
+  const totalCount = 
+    (unreadMessagesData?.unreadCount || 0) + 
+    (unreadNotificationsData?.count || 0) + 
+    (pendingFriendRequestsData?.count || 0);
 
   // Profile card texts for translation
   const profileTexts = [
-    "Open to Date", "Notifications", "Messages", "Events", "Settings", 
-    "Vendor Panel", "Dating Panel", "Log Out", "View Full Profile", 
+    "Open to Date", "Notifications", "Messages", "Friend Requests", "Saved", "Drafts", "Events", "Settings", 
+    "Vendor Panel", "Dating Panel", "View Full Profile", 
     "Sell Product/Service", "Trending Events", "Tech Startup Meetup",
     "London • Tonight 7 PM", "Free", "attending", "Coffee & Code",
     "Manchester • Tomorrow 10 AM", "Art Gallery Opening", "Birmingham • This Weekend",
-    "View All Events", "Quick Links", "About", "Help", "Privacy", "Terms",
-    "Contact", "Careers", "Download App", "Download on the", "App Store",
-    "Get it on", "Google Play", "Dedw3n Ltd.", "All rights reserved.",
-    "Dedw3n Ltd. is a British Company registered in England, Wales and Scotland under registration number 15930281, whose registered office is situated 50 Essex Street, London, England, WC2R3JF.",
-    "Our bank is registered with HSBC UK IBAN GB79 HBUK 4003 2782 3984 94(BIC BUKGB4B), our sole official website is www.dedw3n.com."
+    "View All Events", "Quick Links", "About Us", "Careers", "Contact", 
+    "FAQ", "Tips & Tricks", "Terms of Service", "Privacy Policy", "Cookie Policy",
+    "Download App", "Download on the", "App Store", "Get it on", "Google Play",
+    "© 2025 Dedw3n. All rights reserved.", "View Profile"
   ];
 
   const { translations: profileTranslations } = useMasterBatchTranslation(profileTexts, 'normal');
@@ -52,8 +87,8 @@ export function ProfileSideCard() {
 
   if (isLoading) {
     return (
-      <Card className="w-full">
-        <CardContent className="p-4">
+      <Card className="w-full bg-white">
+        <CardContent className="p-4 bg-white">
           <div className="animate-pulse">
             <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-3"></div>
             <div className="h-4 bg-gray-200 rounded mb-2"></div>
@@ -75,25 +110,42 @@ export function ProfileSideCard() {
 
   const initials = user.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase() : user.username.substring(0, 2).toUpperCase();
 
+  // Utility function to truncate long text
+  const truncateText = (text: string, maxLength: number = 20): string => {
+    if (!text) return '';
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  };
+
   return (
     <div className="w-full">
-      <Card className="w-full">
-        <CardHeader className="pb-3">
-          <Link href="/wall" className="block">
-            <div className="flex flex-col items-center text-center cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors">
-              <Avatar className="h-16 w-16 mb-3">
-                <AvatarImage src={user.avatar} alt={user.name || user.username} />
-                <AvatarFallback className="text-lg font-semibold">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
+      <Card className="w-full bg-white">
+        <CardHeader className="pb-3 bg-white">
+          <Link href={`/profile/${user.username}`} className="block">
+            <div className="flex flex-col items-center text-center cursor-pointer rounded-lg p-2">
+              <div className="relative mb-3">
+                <UserAvatar 
+                  userId={user.id} 
+                  username={user.username} 
+                  size="xl"
+                />
+                {totalCount > 0 && (
+                  <div 
+                    className="absolute -top-1 -right-1 bg-black text-white rounded-full min-w-[36px] h-9 px-2 flex items-center justify-center text-sm font-semibold border-2 border-white"
+                    data-testid="badge-total-count"
+                    title={`${unreadMessagesData?.unreadCount || 0} messages, ${unreadNotificationsData?.count || 0} notifications, ${pendingFriendRequestsData?.count || 0} friend requests`}
+                  >
+                    {totalCount > 99 ? '99+' : totalCount}
+                  </div>
+                )}
+              </div>
               
-              <h3 className="font-semibold text-lg text-gray-900 hover:text-blue-600 transition-colors">
+              <h3 className="font-semibold text-lg text-black break-words w-full overflow-hidden text-ellipsis line-clamp-2" title={user.name || user.username}>
                 {user.name || user.username}
               </h3>
               
-              <p className="text-sm text-blue-500 mb-3 hover:text-blue-700 transition-colors">
-                @{user.username}
+              <p className="text-sm text-black mb-3 break-words w-full overflow-hidden text-ellipsis" title={`@${user.username}`}>
+                @{truncateText(user.username, 18)}
               </p>
               
               {user.datingEnabled && (
@@ -106,180 +158,86 @@ export function ProfileSideCard() {
           </Link>
         </CardHeader>
         
-        <CardContent className="space-y-3">
+        <CardContent className="px-0 py-3 bg-white">
           {/* Quick Actions */}
           <div className="space-y-2">
             <Button 
               asChild 
               variant="ghost" 
-              className="w-full justify-start h-10"
+              className="w-full justify-start h-auto min-h-10 text-left text-black px-6"
+            >
+              <Link href={`/profile/${user.username}`}>
+                <span className="break-words flex-1 overflow-hidden text-ellipsis whitespace-nowrap" title={getTranslation('View Profile')}>{getTranslation('View Profile')}</span>
+              </Link>
+            </Button>
+            
+            <Button 
+              asChild 
+              variant="ghost" 
+              className="w-full justify-start h-auto min-h-10 text-left text-black px-6"
             >
               <Link href="/notifications">
-                <Bell className="h-5 w-5 mr-3 text-gray-700 flex-shrink-0" />
-                {getTranslation('Notifications')}
+                <span className="break-words flex-1 overflow-hidden text-ellipsis whitespace-nowrap" title={getTranslation('Notifications')}>{getTranslation('Notifications')}</span>
               </Link>
             </Button>
             
             <Button 
               asChild 
               variant="ghost" 
-              className="w-full justify-start h-10"
+              className="w-full justify-start h-auto min-h-10 text-left text-black px-6"
             >
               <Link href="/messages">
-                <MessageSquare className="h-5 w-5 mr-3 text-gray-700 flex-shrink-0" />
-                {getTranslation('Messages')}
+                <span className="break-words flex-1 overflow-hidden text-ellipsis whitespace-nowrap" title={getTranslation('Messages')}>{getTranslation('Messages')}</span>
               </Link>
             </Button>
             
+            <Button 
+              asChild 
+              variant="ghost" 
+              className="w-full justify-start h-auto min-h-10 text-left text-black px-6"
+            >
+              <Link href="/friend-requests">
+                <span className="break-words flex-1 overflow-hidden text-ellipsis whitespace-nowrap flex items-center justify-between" title={getTranslation('Friend Requests')}>
+                  {getTranslation('Friend Requests')}
+                  {pendingFriendRequestsData && pendingFriendRequestsData.count > 0 && (
+                    <span 
+                      className="bg-black text-white rounded-full min-w-[20px] h-5 px-1.5 text-xs flex items-center justify-center ml-2"
+                      data-testid="badge-friend-requests-count"
+                    >
+                      {pendingFriendRequestsData.count > 99 ? '99+' : pendingFriendRequestsData.count}
+                    </span>
+                  )}
+                </span>
+              </Link>
+            </Button>
+            
+            <Button 
+              asChild 
+              variant="ghost" 
+              className="w-full justify-start h-auto min-h-10 text-left text-black px-6"
+            >
+              <Link href="/saved-posts">
+                <span className="break-words flex-1 overflow-hidden text-ellipsis whitespace-nowrap" title={getTranslation('Saved')}>{getTranslation('Saved')}</span>
+              </Link>
+            </Button>
 
             <Button 
               asChild 
               variant="ghost" 
-              className="w-full justify-start h-10"
+              className="w-full justify-start h-auto min-h-10 text-left text-black px-6"
             >
-              <Link href="/events">
-                <Calendar className="h-5 w-5 mr-3 text-gray-700 flex-shrink-0" />
-                {getTranslation('Events')}
+              <Link href="/drafts">
+                <span className="break-words flex-1 overflow-hidden text-ellipsis whitespace-nowrap" title={getTranslation('Drafts')}>{getTranslation('Drafts')}</span>
               </Link>
             </Button>
-            
+
             <Button 
               asChild 
               variant="ghost" 
-              className="w-full justify-start h-10"
+              className="w-full justify-start h-auto min-h-10 text-left text-black px-6"
             >
               <Link href="/settings">
-                <Settings className="h-5 w-5 mr-3 text-gray-700 flex-shrink-0" />
-                {getTranslation('Settings')}
-              </Link>
-            </Button>
-            
-            
-            <Button 
-              asChild 
-              variant="ghost" 
-              className="w-full justify-start h-10"
-            >
-              <Link href="/vendor-dashboard">
-                <Store className="h-5 w-5 mr-3 text-gray-700 flex-shrink-0" />
-                {getTranslation('Vendor Panel')}
-              </Link>
-            </Button>
-            
-            <Button 
-              asChild 
-              variant="ghost" 
-              className="w-full justify-start h-10"
-            >
-              <Link href="/dating-dashboard">
-                <Heart className="h-5 w-5 mr-3 text-gray-700 flex-shrink-0" />
-                {getTranslation('Dating Panel')}
-              </Link>
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start h-10 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-              onClick={() => {
-                // Handle logout
-                fetch('/api/logout', { method: 'POST' })
-                  .then(() => {
-                    window.location.href = '/';
-                  });
-              }}
-            >
-              <LogOut className="h-5 w-5 mr-3 text-blue-600 flex-shrink-0" />
-              {getTranslation('Log Out')}
-            </Button>
-          </div>
-
-          
-          {/* View Profile Button */}
-          <div className="pt-2">
-            <Button 
-              asChild 
-              variant="outline" 
-              className="w-full"
-            >
-              <Link href="/wall">
-                {getTranslation('View Full Profile')}
-              </Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Add Product/Service Button */}
-      <div className="mt-4">
-        <Button 
-          asChild 
-          variant="outline" 
-          className="w-full justify-start h-12 bg-black border-black text-white hover:bg-gray-800 hover:border-gray-800"
-        >
-          <Link href="/add-product" className="flex items-center gap-2">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-            </svg>
-            <span className="text-white font-bold">{getTranslation('Sell Product/Service')}</span>
-          </Link>
-        </Button>
-      </div>
-
-
-      {/* Trending Events & Meetups Card */}
-      <Card className="mt-4">
-        <CardHeader className="pb-3">
-          <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-            <svg className="h-4 w-4 text-black" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
-            </svg>
-            {getTranslation('Trending Events')}
-          </h3>
-        </CardHeader>
-        <CardContent className="p-6 pt-0 space-y-3 text-[14px]">
-          <div className="space-y-3">
-            <div className="rounded-lg p-3 border border-gray-200">
-              <div>
-                <h4 className="text-sm font-medium text-gray-900 line-clamp-1">{getTranslation('Tech Startup Meetup')}</h4>
-                <p className="text-xs text-gray-600 mt-1">{getTranslation('London • Tonight 7 PM')}</p>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">{getTranslation('Free')}</span>
-                  <span className="text-xs text-gray-500">50+ {getTranslation('attending')}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-lg p-3 border border-gray-200">
-              <div>
-                <h4 className="text-sm font-medium text-gray-900 line-clamp-1">{getTranslation('Coffee & Code')}</h4>
-                <p className="text-xs text-gray-600 mt-1">{getTranslation('Manchester • Tomorrow 10 AM')}</p>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">£5</span>
-                  <span className="text-xs text-gray-500">25+ {getTranslation('attending')}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-lg p-3 border border-gray-200">
-              <div>
-                <h4 className="text-sm font-medium text-gray-900 line-clamp-1">{getTranslation('Art Gallery Opening')}</h4>
-                <p className="text-xs text-gray-600 mt-1">{getTranslation('Birmingham • This Weekend')}</p>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">£15</span>
-                  <span className="text-xs text-gray-500">100+ {getTranslation('attending')}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-2 border-t border-gray-100">
-            <Button 
-              asChild 
-              variant="ghost" 
-              className="w-full justify-center h-8 text-xs text-black hover:text-gray-800 hover:bg-gray-50"
-            >
-              <Link href="/events">
-                {getTranslation('View All Events')}
+                <span className="break-words flex-1 overflow-hidden text-ellipsis whitespace-nowrap" title={getTranslation('Settings')}>{getTranslation('Settings')}</span>
               </Link>
             </Button>
           </div>
@@ -287,28 +245,30 @@ export function ProfileSideCard() {
       </Card>
 
       {/* Footer Information Card */}
-      <div className="bg-white rounded-lg shadow-sm border p-4 mt-4">
-        <div className="space-y-3">
+      <div className="bg-white rounded-lg shadow-sm border py-8 px-0 mt-8">
+        <div className="space-y-6 px-6">
           {/* Quick Links */}
           <div>
-            <h4 className="text-xs font-semibold text-gray-900 mb-2">{getTranslation('Quick Links')}</h4>
-            <div className="grid grid-cols-2 gap-1 text-xs">
-              <Link href="/about" className="text-gray-600 hover:text-blue-500">{getTranslation('About')}</Link>
-              <Link href="/help" className="text-gray-600 hover:text-blue-500">{getTranslation('Help')}</Link>
-              <Link href="/privacy" className="text-gray-600 hover:text-blue-500">{getTranslation('Privacy')}</Link>
-              <Link href="/terms" className="text-gray-600 hover:text-blue-500">{getTranslation('Terms')}</Link>
-              <Link href="/contact" className="text-gray-600 hover:text-blue-500">{getTranslation('Contact')}</Link>
-              <Link href="/careers" className="text-gray-600 hover:text-blue-500">{getTranslation('Careers')}</Link>
+            <h4 className="text-xs font-semibold text-black mb-4 overflow-hidden text-ellipsis whitespace-nowrap">{getTranslation('Quick Links')}</h4>
+            <div className="flex flex-col gap-2 text-xs">
+              <Link href="/about" className="block text-black py-2 hover:underline overflow-hidden text-ellipsis whitespace-nowrap" data-testid="link-about-us" title={getTranslation('About Us')}>{getTranslation('About Us')}</Link>
+              <Link href="/careers" className="block text-black py-2 hover:underline overflow-hidden text-ellipsis whitespace-nowrap" data-testid="link-careers" title={getTranslation('Careers')}>{getTranslation('Careers')}</Link>
+              <Link href="/contact" className="block text-black py-2 hover:underline overflow-hidden text-ellipsis whitespace-nowrap" data-testid="link-contact-us" title={getTranslation('Contact')}>{getTranslation('Contact')}</Link>
+              <Link href="/faq" className="block text-black py-2 hover:underline overflow-hidden text-ellipsis whitespace-nowrap" data-testid="link-faq" title={getTranslation('FAQ')}>{getTranslation('FAQ')}</Link>
+              <Link href="/tips-tricks" className="block text-black py-2 hover:underline overflow-hidden text-ellipsis whitespace-nowrap" data-testid="link-tips-tricks" title={getTranslation('Tips & Tricks')}>{getTranslation('Tips & Tricks')}</Link>
+              <Link href="/terms" className="block text-black py-2 hover:underline overflow-hidden text-ellipsis whitespace-nowrap" data-testid="link-terms" title={getTranslation('Terms of Service')}>{getTranslation('Terms of Service')}</Link>
+              <Link href="/privacy" className="block text-black py-2 hover:underline overflow-hidden text-ellipsis whitespace-nowrap" data-testid="link-privacy" title={getTranslation('Privacy Policy')}>{getTranslation('Privacy Policy')}</Link>
+              <Link href="/cookies" className="block text-black py-2 hover:underline overflow-hidden text-ellipsis whitespace-nowrap" data-testid="link-cookies" title={getTranslation('Cookie Policy')}>{getTranslation('Cookie Policy')}</Link>
             </div>
           </div>
 
           {/* App Downloads */}
           <div>
-            <h4 className="text-xs font-semibold text-gray-900 mb-2">{getTranslation('Download App')}</h4>
-            <div className="space-y-2">
+            <h4 className="text-xs font-semibold text-black mb-4">{getTranslation('Download App')}</h4>
+            <div className="space-y-4">
               <a href="https://apps.apple.com" target="_blank" rel="noopener noreferrer"
                  className="block hover:opacity-80 transition-opacity">
-                <svg width="120" height="35" viewBox="0 0 120 35" className="w-full h-auto">
+                <svg width="240" height="70" viewBox="0 0 120 35" className="w-full h-auto">
                   <rect width="120" height="35" rx="6" fill="#000000"/>
                   <text x="70" y="12" textAnchor="middle" fill="white" fontSize="8" fontWeight="300">{getTranslation('Download on the')}</text>
                   <text x="70" y="25" textAnchor="middle" fill="white" fontSize="14" fontWeight="600">{getTranslation('App Store')}</text>
@@ -320,7 +280,7 @@ export function ProfileSideCard() {
               </a>
               <a href="https://play.google.com" target="_blank" rel="noopener noreferrer"
                  className="block hover:opacity-80 transition-opacity">
-                <svg width="120" height="35" viewBox="0 0 120 35" className="w-full h-auto">
+                <svg width="240" height="70" viewBox="0 0 120 35" className="w-full h-auto">
                   <rect width="120" height="35" rx="6" fill="#000000"/>
                   <text x="70" y="12" textAnchor="middle" fill="white" fontSize="8" fontWeight="300">{getTranslation('Get it on')}</text>
                   <text x="70" y="25" textAnchor="middle" fill="white" fontSize="14" fontWeight="600">{getTranslation('Google Play')}</text>
@@ -354,18 +314,11 @@ export function ProfileSideCard() {
             </div>
           </div>
 
-          {/* Company Info */}
-          <div className="pt-2 border-t border-gray-100">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-semibold text-gray-900">{getTranslation('Dedw3n Ltd.')}</span>
-            </div>
-            <p className="text-xs text-gray-500 leading-relaxed">
-              {getTranslation('Dedw3n Ltd. is a British Company registered in England, Wales and Scotland under registration number 15930281, whose registered office is situated 50 Essex Street, London, England, WC2R3JF.')}
+          {/* Copyright */}
+          <div className="pt-4 border-t border-gray-200">
+            <p className="text-xs text-left text-black">
+              {getTranslation('© 2025 Dedw3n. All rights reserved.')}
             </p>
-            <p className="text-xs text-gray-500 leading-relaxed mt-2">
-              {getTranslation('Our bank is registered with HSBC UK IBAN GB79 HBUK 4003 2782 3984 94(BIC BUKGB4B), our sole official website is www.dedw3n.com.')}
-            </p>
-            <p className="text-xs text-gray-400 mt-1">© 2025 {getTranslation('Dedw3n Ltd.')} {getTranslation('All rights reserved.')}</p>
           </div>
         </div>
       </div>

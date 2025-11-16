@@ -1,15 +1,19 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 import { Request } from 'express';
 
 // Define upload directories
 const uploadDir = path.join(process.cwd(), 'public', 'uploads');
 const imageUploadDir = path.join(uploadDir, 'images');
 const videoUploadDir = path.join(uploadDir, 'videos');
+// Private directory for sensitive documents (not web accessible)
+const privateUploadDir = path.join(process.cwd(), 'private', 'uploads');
+const documentUploadDir = path.join(privateUploadDir, 'documents');
 
 // Ensure upload directories exist
-[uploadDir, imageUploadDir, videoUploadDir].forEach(dir => {
+[uploadDir, imageUploadDir, videoUploadDir, privateUploadDir, documentUploadDir].forEach(dir => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
@@ -19,26 +23,52 @@ const videoUploadDir = path.join(uploadDir, 'videos');
 const storage = multer.diskStorage({
   destination: function (req: Request, file: Express.Multer.File, cb) {
     // Choose destination folder based on mimetype
-    const dest = file.mimetype.startsWith('image/') ? imageUploadDir : videoUploadDir;
+    let dest = documentUploadDir; // Default to documents
+    
+    if (file.mimetype.startsWith('image/')) {
+      dest = imageUploadDir;
+    } else if (file.mimetype.startsWith('video/')) {
+      dest = videoUploadDir;
+    }
+    // Documents (PDF, DOC, DOCX, TXT) go to documentUploadDir
+    
     cb(null, dest);
   },
   filename: function (req: Request, file: Express.Multer.File, cb) {
-    // Create unique filename with timestamp
+    // Create cryptographically secure unique filename for document uploads
     const timestamp = Date.now();
-    const randomNum = Math.round(Math.random() * 1000);
+    const secureRandom = crypto.randomBytes(16).toString('hex');
     const ext = path.extname(file.originalname);
     
-    cb(null, `${file.fieldname}_${timestamp}_${randomNum}${ext}`);
+    // For documents (private), use crypto-secure naming to prevent guessing
+    const isDocument = !file.mimetype.startsWith('image/') && !file.mimetype.startsWith('video/');
+    if (isDocument) {
+      cb(null, `contact_${timestamp}_${secureRandom}${ext}`);
+    } else {
+      // For public files, still use some randomness for basic security
+      const publicRandom = crypto.randomBytes(8).toString('hex');
+      cb(null, `${file.fieldname}_${timestamp}_${publicRandom}${ext}`);
+    }
   }
 });
 
 // File filter function
 const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  // Check file types
-  if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
+  // Check file types - allow images, videos, documents, and text files
+  const allowedTypes = [
+    'image/', 'video/', // Images and videos
+    'application/pdf', // PDF files
+    'application/msword', // DOC files
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX files
+    'text/plain' // Text files
+  ];
+  
+  const isAllowed = allowedTypes.some(type => file.mimetype.startsWith(type) || file.mimetype === type);
+  
+  if (isAllowed) {
     cb(null, true);
   } else {
-    cb(new Error('Unsupported file type. Only images and videos are allowed'));
+    cb(new Error('Unsupported file type. Only images, videos, PDFs, Word documents, and text files are allowed'));
   }
 };
 
@@ -53,12 +83,14 @@ export const upload = multer({
 
 // Helper function to get the URL for the uploaded file
 export function getFileUrl(req: Request, file: Express.Multer.File): string {
-  // Build the full URL for the uploaded file
-  const relativePath = path.relative(process.cwd() + '/public', file.path);
-  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-  const host = req.get('host');
+  // Check if file is in private directory (documents)
+  if (file.path.includes(privateUploadDir)) {
+    // Private files should not have direct URLs - they need authorization
+    return `/api/secure-file/${path.basename(file.path)}`;
+  }
   
-  // Return URL with or without host depending on context
+  // Build the URL for public files (images/videos)
+  const relativePath = path.relative(process.cwd() + '/public', file.path);
   return `/${relativePath}`.replace(/\\/g, '/');
 }
 

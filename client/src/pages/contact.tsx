@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,27 +6,28 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mail, Phone, MapPin, Clock, Upload } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, Upload, Plus, Minus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
+import { useLoginPrompt } from "@/hooks/use-login-prompt";
 
 // Custom hook for Contact page Master Translation
 const useContactPageTranslation = () => {
   const contactTexts = useMemo(() => [
     // Page Headers & Titles (4 texts)
-    "Send us a Message", "Fill out the form below and we'll get back to you soon.",
-    "Contact Information", "You can also reach us through these channels",
+    "Contact us", "Contact Information",
+    "Customer Relations", "Customer Relations",
     
     // Form Fields & Labels (8 texts)
     "Name", "Your full name", "Email", "your@email.com",
     "Subject", "Select a category", "Message", "Tell us more about your inquiry...",
     
-    // Subject Categories (11 texts)
+    // Subject Categories (13 texts)
     "Marketplace", "Community", "Dating", "Shipping", "Payments",
-    "Complaints", "Legal", "Advertisement", "Partnership", "Technical Issues", "Tip",
+    "Complaints", "Legal", "Advertisement", "Partnership", "Network Partnership", "Technical Issues", "Tip", "Whistleblower",
     
-    // File Upload (3 texts)
-    "Upload File", "Selected:", "Upload File",
+    // File Upload (5 texts)
+    "Upload File", "Selected:", "Upload File", "Choose File", "no file selected",
     
     // Action Buttons & States (4 texts)
     "Send Message", "Sending...", "Message sent successfully!", "We'll get back to you soon!",
@@ -36,11 +37,11 @@ const useContactPageTranslation = () => {
     "Error sending message",
     
     // Contact Information (4 texts)
-    "Email", "Address", "Business Hours", "Open 24 hours",
+    "Customer Relations Email", "Global HQ Address", "Global Business hours", "Open 24 hours",
     
     // FAQ Section (6 texts)
     "Frequently Asked Questions", "How do I create an account?", "How do I list a product?",
-    "How do I connect with others?", "What dating features are available?", "Is my payment information secure?",
+    "How do I connect with others?", "Is my payment information secure?",
     
     // FAQ Answers (6 texts)
     "Visit our", "user registration page", "to create your account and start exploring our platform features.",
@@ -48,11 +49,12 @@ const useContactPageTranslation = () => {
     
     // FAQ Additional Answers (4 texts)
     "Explore our", "community platform", "to connect with other users, share experiences, and build your network.",
-    "Discover meaningful connections through our",
     
-    // FAQ Final Answers (3 texts)
-    "dating platform", "with advanced matching and communication features.",
-    "Yes, we use industry-standard encryption and never store your payment details directly on our servers."
+    // FAQ Final Answers (1 text)
+    "Yes, we use industry-standard encryption and never store your payment details directly on our servers.",
+    
+    // Disclaimer Text (5 texts)
+    "By sending your message, you agree to accept the", "General Terms and Conditions of Use", "and that your data will be processed in compliance with the", "Privacy Policy", "of Dedw3n."
   ], []);
   
   const { translations, isLoading } = useMasterBatchTranslation(contactTexts);
@@ -67,10 +69,10 @@ const useContactPageTranslation = () => {
     
     // Subject Categories
     marketplaceCategory, communityCategory, datingCategory, shippingCategory, paymentsCategory,
-    complaintsCategory, legalCategory, advertisementCategory, partnershipCategory, technicalCategory, tipCategory,
+    complaintsCategory, legalCategory, advertisementCategory, partnershipCategory, networkPartnershipCategory, technicalCategory, tipCategory, whistleblowerCategory,
     
     // File Upload
-    uploadFileLabel, selectedText, uploadFileText,
+    uploadFileLabel, selectedText, uploadFileText, chooseFileText, noFileSelectedText,
     
     // Action Buttons & States
     sendMessageBtn, sendingText, successTitle, successDescription,
@@ -83,7 +85,7 @@ const useContactPageTranslation = () => {
     
     // FAQ Section
     faqTitle, createAccountQuestion, listProductQuestion,
-    connectQuestion, datingFeaturesQuestion, paymentSecurityQuestion,
+    connectQuestion, paymentSecurityQuestion,
     
     // FAQ Answers
     visitOurText, userRegistrationText, createAccountDescription,
@@ -91,11 +93,12 @@ const useContactPageTranslation = () => {
     
     // FAQ Additional Answers
     exploreOurText, communityPlatformText, connectDescription,
-    discoverConnectionsText,
     
     // FAQ Final Answers
-    datingPlatformText, datingFeaturesDescription,
-    paymentSecurityAnswer
+    paymentSecurityAnswer,
+    
+    // Disclaimer Text
+    disclaimerStart, termsLinkText, disclaimerMiddle, privacyLinkText, disclaimerEnd
   ] = translations || contactTexts;
   
   return {
@@ -106,20 +109,22 @@ const useContactPageTranslation = () => {
     subjectLabel, categoryPlaceholder, messageLabel, messagePlaceholder,
     // Categories
     marketplaceCategory, communityCategory, datingCategory, shippingCategory, paymentsCategory,
-    complaintsCategory, legalCategory, advertisementCategory, partnershipCategory, technicalCategory, tipCategory,
+    complaintsCategory, legalCategory, advertisementCategory, partnershipCategory, networkPartnershipCategory, technicalCategory, tipCategory, whistleblowerCategory,
     // Upload & Actions
-    uploadFileLabel, selectedText, uploadFileText,
+    uploadFileLabel, selectedText, uploadFileText, chooseFileText, noFileSelectedText,
     sendMessageBtn, sendingText, successTitle, successDescription,
     // Errors
     failedTitle, failedDescription, errorTitle,
     // Contact Info
     emailContactLabel, addressLabel, businessHoursLabel, openHoursText,
     // FAQ
-    faqTitle, createAccountQuestion, listProductQuestion, connectQuestion, datingFeaturesQuestion, paymentSecurityQuestion,
+    faqTitle, createAccountQuestion, listProductQuestion, connectQuestion, paymentSecurityQuestion,
     visitOurText, userRegistrationText, createAccountDescription,
     goToOurText, marketplaceSectionText, listProductDescription,
-    exploreOurText, communityPlatformText, connectDescription, discoverConnectionsText,
-    datingPlatformText, datingFeaturesDescription, paymentSecurityAnswer,
+    exploreOurText, communityPlatformText, connectDescription,
+    paymentSecurityAnswer,
+    // Disclaimer
+    disclaimerStart, termsLinkText, disclaimerMiddle, privacyLinkText, disclaimerEnd,
     isLoading
   };
 };
@@ -134,7 +139,9 @@ export default function Contact() {
   const [titleUpload, setTitleUpload] = useState<File | null>(null);
   const [textUpload, setTextUpload] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [expandedFaq, setExpandedFaq] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
+  const { showLoginPrompt } = useLoginPrompt();
   
   // Master Translation for entire Contact page
   const {
@@ -142,16 +149,35 @@ export default function Contact() {
     nameLabel, nameePlaceholder, emailLabel, emailPlaceholder,
     subjectLabel, categoryPlaceholder, messageLabel, messagePlaceholder,
     marketplaceCategory, communityCategory, datingCategory, shippingCategory, paymentsCategory,
-    complaintsCategory, legalCategory, advertisementCategory, partnershipCategory, technicalCategory, tipCategory,
-    uploadFileLabel, selectedText, sendMessageBtn, sendingText, successTitle, successDescription,
+    complaintsCategory, legalCategory, advertisementCategory, partnershipCategory, networkPartnershipCategory, technicalCategory, tipCategory, whistleblowerCategory,
+    uploadFileLabel, selectedText, uploadFileText, chooseFileText, noFileSelectedText, sendMessageBtn, sendingText, successTitle, successDescription,
     failedTitle, failedDescription, errorTitle,
     emailContactLabel, addressLabel, businessHoursLabel, openHoursText,
-    faqTitle, createAccountQuestion, listProductQuestion, connectQuestion, datingFeaturesQuestion, paymentSecurityQuestion,
+    faqTitle, createAccountQuestion, listProductQuestion, connectQuestion, paymentSecurityQuestion,
     visitOurText, userRegistrationText, createAccountDescription,
     goToOurText, marketplaceSectionText, listProductDescription,
-    exploreOurText, communityPlatformText, connectDescription, discoverConnectionsText,
-    datingPlatformText, datingFeaturesDescription, paymentSecurityAnswer
+    exploreOurText, communityPlatformText, connectDescription,
+    paymentSecurityAnswer,
+    disclaimerStart, termsLinkText, disclaimerMiddle, privacyLinkText, disclaimerEnd
   } = useContactPageTranslation();
+
+  // Auto-populate fields when whistleblower is selected
+  useEffect(() => {
+    if (formData.subject === "Whistleblower") {
+      setFormData(prev => ({
+        ...prev,
+        name: "anonymous",
+        email: "system@dedw3n.com"
+      }));
+    }
+  }, [formData.subject]);
+
+  const toggleFaq = (faqKey: string) => {
+    setExpandedFaq(prev => ({
+      ...prev,
+      [faqKey]: !prev[faqKey]
+    }));
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -230,7 +256,7 @@ export default function Contact() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-white py-12 no-login-trigger">
       <div className="container mx-auto px-4 max-w-6xl">
 
 
@@ -239,9 +265,6 @@ export default function Contact() {
           <Card>
             <CardHeader>
               <CardTitle>{sendMessageTitle}</CardTitle>
-              <CardDescription>
-                {formDescription}
-              </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -256,6 +279,7 @@ export default function Contact() {
                       value={formData.name}
                       onChange={handleInputChange}
                       required
+                      className="contact-form-placeholder"
                     />
                   </div>
                   <div className="space-y-2">
@@ -268,6 +292,7 @@ export default function Contact() {
                       value={formData.email}
                       onChange={handleInputChange}
                       required
+                      className="contact-form-placeholder"
                     />
                   </div>
                 </div>
@@ -283,17 +308,19 @@ export default function Contact() {
                       <SelectValue placeholder={categoryPlaceholder} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Marketplace">{marketplaceCategory}</SelectItem>
-                      <SelectItem value="Community">{communityCategory}</SelectItem>
-                      <SelectItem value="Dating">{datingCategory}</SelectItem>
-                      <SelectItem value="Shipping">{shippingCategory}</SelectItem>
-                      <SelectItem value="Payments">{paymentsCategory}</SelectItem>
-                      <SelectItem value="Complaints">{complaintsCategory}</SelectItem>
-                      <SelectItem value="Legal">{legalCategory}</SelectItem>
                       <SelectItem value="Advertisement">{advertisementCategory}</SelectItem>
+                      <SelectItem value="Community">{communityCategory}</SelectItem>
+                      <SelectItem value="Complaints">{complaintsCategory}</SelectItem>
+                      <SelectItem value="Dating">{datingCategory}</SelectItem>
+                      <SelectItem value="Legal">{legalCategory}</SelectItem>
+                      <SelectItem value="Marketplace">{marketplaceCategory}</SelectItem>
+                      <SelectItem value="Network Partnership">{networkPartnershipCategory}</SelectItem>
                       <SelectItem value="Partnership">{partnershipCategory}</SelectItem>
+                      <SelectItem value="Payments">{paymentsCategory}</SelectItem>
+                      <SelectItem value="Shipping">{shippingCategory}</SelectItem>
                       <SelectItem value="Technical Issues">{technicalCategory}</SelectItem>
                       <SelectItem value="Tip">{tipCategory}</SelectItem>
+                      <SelectItem value="Whistleblower">{whistleblowerCategory}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -308,6 +335,7 @@ export default function Contact() {
                     value={formData.message}
                     onChange={handleInputChange}
                     required
+                    className="contact-form-placeholder"
                   />
                 </div>
 
@@ -317,13 +345,26 @@ export default function Contact() {
                       <Upload className="h-4 w-4" />
                       {uploadFileLabel}
                     </Label>
-                    <Input
-                      id="title-upload"
-                      type="file"
-                      onChange={(e) => handleFileChange(e, 'title')}
-                      accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
-                      className="cursor-pointer"
-                    />
+                    <div className="relative">
+                      <Input
+                        id="title-upload"
+                        type="file"
+                        onChange={(e) => handleFileChange(e, 'title')}
+                        accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                        className="sr-only"
+                      />
+                      <label
+                        htmlFor="title-upload"
+                        className="flex items-center justify-between w-full px-3 py-2 border border-gray-300 rounded-md cursor-pointer bg-white hover:bg-gray-50 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500"
+                      >
+                        <span className="text-gray-500">
+                          {titleUpload ? titleUpload.name : noFileSelectedText}
+                        </span>
+                        <span className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded">
+                          {chooseFileText}
+                        </span>
+                      </label>
+                    </div>
                     {titleUpload && (
                       <p className="text-sm text-gray-600">
                         {selectedText} {titleUpload.name}
@@ -337,9 +378,23 @@ export default function Contact() {
                   type="submit" 
                   className="w-full bg-black hover:bg-gray-800 text-white"
                   disabled={isSubmitting}
+                  data-testid="button-send-message"
                 >
                   {isSubmitting ? sendingText : sendMessageBtn}
                 </Button>
+                
+                {/* Disclaimer Text */}
+                <div className="mt-4 text-sm text-gray-600">
+                  {disclaimerStart}{" "}
+                  <Link href="/terms" className="text-blue-600 hover:underline">
+                    {termsLinkText}
+                  </Link>{" "}
+                  {disclaimerMiddle}{" "}
+                  <Link href="/privacy" className="text-blue-600 hover:underline">
+                    {privacyLinkText}
+                  </Link>{" "}
+                  {disclaimerEnd}
+                </div>
               </form>
             </CardContent>
           </Card>
@@ -349,39 +404,27 @@ export default function Contact() {
             <Card>
               <CardHeader>
                 <CardTitle>{contactInfoTitle}</CardTitle>
-                <CardDescription>
-                  {channelsDescription}
-                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex items-start space-x-4">
-                  <Mail className="h-6 w-6 text-primary mt-1" />
-                  <div>
-                    <h3 className="font-semibold">{emailContactLabel}</h3>
-                    <a href="mailto:love@dedw3n.com" className="text-blue-600 hover:underline">love@dedw3n.com</a>
-                  </div>
+                <div>
+                  <h3 className="font-semibold">{emailContactLabel}</h3>
+                  <a href="mailto:love@dedw3n.com" className="text-black hover:underline text-sm">love@dedw3n.com</a>
                 </div>
 
-                <div className="flex items-start space-x-4">
-                  <MapPin className="h-6 w-6 text-primary mt-1" />
-                  <div>
-                    <h3 className="font-semibold">{addressLabel}</h3>
-                    <p className="text-gray-600">
-                      50 Essex Street<br />
-                      London, England<br />
-                      WC2R 3JF
-                    </p>
-                  </div>
+                <div>
+                  <h3 className="font-semibold">{addressLabel}</h3>
+                  <p className="text-gray-600 text-sm">
+                    50 Essex Street<br />
+                    London, England<br />
+                    WC2R 3JF
+                  </p>
                 </div>
 
-                <div className="flex items-start space-x-4">
-                  <Clock className="h-6 w-6 text-primary mt-1" />
-                  <div>
-                    <h3 className="font-semibold">{businessHoursLabel}</h3>
-                    <p className="text-gray-600">
-                      {openHoursText}
-                    </p>
-                  </div>
+                <div>
+                  <h3 className="font-semibold">{businessHoursLabel}</h3>
+                  <p className="text-gray-600 text-sm">
+                    {openHoursText}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -392,34 +435,85 @@ export default function Contact() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <h4 className="font-semibold mb-2">{createAccountQuestion}</h4>
-                  <p className="text-sm text-gray-600">
-                    {visitOurText} <Link href="/register" className="text-blue-600 hover:underline">{userRegistrationText}</Link> {createAccountDescription}
-                  </p>
+                  <button
+                    onClick={() => toggleFaq('account')}
+                    className="flex items-center justify-between w-full text-left p-0 bg-transparent border-none cursor-pointer"
+                    data-testid="button-toggle-account-faq"
+                  >
+                    <h4 className="font-semibold">{createAccountQuestion}</h4>
+                    {expandedFaq.account ? (
+                      <Minus className="h-4 w-4 text-gray-600" />
+                    ) : (
+                      <Plus className="h-4 w-4 text-gray-600" />
+                    )}
+                  </button>
+                  {expandedFaq.account && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      {visitOurText} <button 
+                        onClick={() => showLoginPrompt('login')} 
+                        className="text-blue-600 hover:underline bg-transparent border-none p-0 cursor-pointer inline font-inherit"
+                      >
+                        {userRegistrationText}
+                      </button> {createAccountDescription}
+                    </p>
+                  )}
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-2">{listProductQuestion}</h4>
-                  <p className="text-sm text-gray-600">
-                    {goToOurText} <Link href="/products" className="text-blue-600 hover:underline">{marketplaceSectionText}</Link> {listProductDescription}
-                  </p>
+                  <button
+                    onClick={() => toggleFaq('product')}
+                    className="flex items-center justify-between w-full text-left p-0 bg-transparent border-none cursor-pointer"
+                    data-testid="button-toggle-product-faq"
+                  >
+                    <h4 className="font-semibold">{listProductQuestion}</h4>
+                    {expandedFaq.product ? (
+                      <Minus className="h-4 w-4 text-gray-600" />
+                    ) : (
+                      <Plus className="h-4 w-4 text-gray-600" />
+                    )}
+                  </button>
+                  {expandedFaq.product && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      {goToOurText} <Link href="/products" className="text-blue-600 hover:underline">{marketplaceSectionText}</Link> {listProductDescription}
+                    </p>
+                  )}
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-2">{connectQuestion}</h4>
-                  <p className="text-sm text-gray-600">
-                    {exploreOurText} <Link href="/wall" className="text-blue-600 hover:underline">{communityPlatformText}</Link> {connectDescription}
-                  </p>
+                  <button
+                    onClick={() => toggleFaq('connect')}
+                    className="flex items-center justify-between w-full text-left p-0 bg-transparent border-none cursor-pointer"
+                    data-testid="button-toggle-connect-faq"
+                  >
+                    <h4 className="font-semibold">{connectQuestion}</h4>
+                    {expandedFaq.connect ? (
+                      <Minus className="h-4 w-4 text-gray-600" />
+                    ) : (
+                      <Plus className="h-4 w-4 text-gray-600" />
+                    )}
+                  </button>
+                  {expandedFaq.connect && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      {exploreOurText} <Link href="/community" className="text-blue-600 hover:underline">{communityPlatformText}</Link> {connectDescription}
+                    </p>
+                  )}
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-2">{datingFeaturesQuestion}</h4>
-                  <p className="text-sm text-gray-600">
-                    {discoverConnectionsText} <Link href="/dating" className="text-blue-600 hover:underline">{datingPlatformText}</Link> {datingFeaturesDescription}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">{paymentSecurityQuestion}</h4>
-                  <p className="text-sm text-gray-600">
-                    {paymentSecurityAnswer}
-                  </p>
+                  <button
+                    onClick={() => toggleFaq('payment')}
+                    className="flex items-center justify-between w-full text-left p-0 bg-transparent border-none cursor-pointer"
+                    data-testid="button-toggle-payment-faq"
+                  >
+                    <h4 className="font-semibold">{paymentSecurityQuestion}</h4>
+                    {expandedFaq.payment ? (
+                      <Minus className="h-4 w-4 text-gray-600" />
+                    ) : (
+                      <Plus className="h-4 w-4 text-gray-600" />
+                    )}
+                  </button>
+                  {expandedFaq.payment && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      {paymentSecurityAnswer}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>

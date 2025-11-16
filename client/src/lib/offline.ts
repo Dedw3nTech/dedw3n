@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { warmUpOfflineCache, offlineCacheService, getCachedDataByUrl, setCachedDataByUrl } from './offline-cache-service';
 
 export interface QueuedRequest {
   id: string;
@@ -16,9 +17,11 @@ interface OfflineState {
   isInitialized: boolean;
   queuedRequests: QueuedRequest[];
   lastSyncedAt: number | null;
+  isWarmingCache: boolean;
+  lastCacheWarmUp: number | null;
   
   // Actions
-  setOnlineStatus: (status: boolean) => void;
+  setOnlineStatus: (status: boolean, warmCache?: boolean) => void;
   addQueuedRequest: (request: Omit<QueuedRequest, 'id' | 'timestamp' | 'attempts'>) => void;
   removeQueuedRequest: (id: string) => void;
   clearQueuedRequests: () => void;
@@ -26,6 +29,8 @@ interface OfflineState {
   processAllQueuedRequests: () => Promise<void>;
   setLastSyncedAt: (timestamp: number) => void;
   setInitialized: (initialized: boolean) => void;
+  triggerCacheWarmUp: () => Promise<void>;
+  setWarmingCache: (warming: boolean) => void;
 }
 
 export const useOfflineStore = create<OfflineState>()(
@@ -36,16 +41,55 @@ export const useOfflineStore = create<OfflineState>()(
       isInitialized: false,
       queuedRequests: [],
       lastSyncedAt: null,
+      isWarmingCache: false,
+      lastCacheWarmUp: null,
 
       // Actions
-      setOnlineStatus: (status: boolean) => {
+      setOnlineStatus: (status: boolean, warmCache: boolean = true) => {
         const wasOffline = !get().isOnline;
         set({ isOnline: status });
         
+        // If going offline manually, warm up the cache
+        if (!status && warmCache && navigator.onLine) {
+          console.log('[OfflineStore] User activated offline mode, warming cache');
+          get().triggerCacheWarmUp();
+        }
+        
         // If coming back online, try to process the queue
         if (status && wasOffline) {
+          console.log('[OfflineStore] Coming back online, processing queued requests');
           get().processAllQueuedRequests();
+          
+          // Invalidate stale caches after sync
+          setTimeout(() => {
+            offlineCacheService.clearExpired();
+          }, 1000);
         }
+      },
+
+      triggerCacheWarmUp: async () => {
+        if (get().isWarmingCache) {
+          console.log('[OfflineStore] Cache warm-up already in progress');
+          return;
+        }
+
+        set({ isWarmingCache: true });
+
+        try {
+          await warmUpOfflineCache();
+          set({ 
+            isWarmingCache: false,
+            lastCacheWarmUp: Date.now() 
+          });
+          console.log('[OfflineStore] Cache warm-up completed successfully');
+        } catch (error) {
+          console.error('[OfflineStore] Cache warm-up failed:', error);
+          set({ isWarmingCache: false });
+        }
+      },
+
+      setWarmingCache: (warming: boolean) => {
+        set({ isWarmingCache: warming });
       },
 
       addQueuedRequest: (request) => {
@@ -154,6 +198,7 @@ export const useOfflineStore = create<OfflineState>()(
       partialize: (state) => ({
         queuedRequests: state.queuedRequests,
         lastSyncedAt: state.lastSyncedAt,
+        lastCacheWarmUp: state.lastCacheWarmUp,
       }),
     }
   )
@@ -167,23 +212,35 @@ export function initializeOfflineDetection() {
     // Set initial online status
     setOnlineStatus(navigator.onLine);
     
-    // Listen for online/offline events
-    window.addEventListener('online', () => {
+    // Create event handlers that can be properly removed
+    const handleOnline = () => {
       setOnlineStatus(true);
-    });
+    };
     
-    window.addEventListener('offline', () => {
+    const handleOffline = () => {
       setOnlineStatus(false);
-    });
+    };
+    
+    // Listen for online/offline events
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
     
     // Mark as initialized
     setInitialized(true);
+    
+    // Return cleanup function
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }
+  
+  return () => {}; // Return empty cleanup for server-side
 }
 
 /**
  * Wraps a fetch request to handle offline mode
- * - If online, performs the fetch normally
+ * - If online, performs the fetch normally and caches the response
  * - If offline, queues write operations and returns cached data for read operations
  */
 export async function offlineAwareFetch(
@@ -192,12 +249,32 @@ export async function offlineAwareFetch(
 ): Promise<Response> {
   const { isOnline, addQueuedRequest } = useOfflineStore.getState();
   
-  // If we're online, just perform the fetch
+  // If we're online, just perform the fetch and cache successful responses
   if (isOnline) {
     try {
-      return fetch(url, options);
+      const response = await fetch(url, options);
+      
+      // Cache successful GET requests
+      if (response.ok && (options.method || 'GET') === 'GET') {
+        try {
+          const contentType = response.headers.get('Content-Type');
+          
+          // Only cache JSON responses
+          if (contentType && contentType.includes('application/json')) {
+            const clonedResponse = response.clone();
+            const data = await clonedResponse.json();
+            
+            // Use the centralized cache setter that handles key mapping
+            setCachedDataByUrl(url, data);
+          }
+        } catch (error) {
+          console.error('[OfflineAwareFetch] Error caching response:', error);
+        }
+      }
+      
+      return response;
     } catch (error) {
-      console.error('Fetch error:', error);
+      console.error('[OfflineAwareFetch] Fetch error:', error);
       throw error;
     }
   }
@@ -206,18 +283,19 @@ export async function offlineAwareFetch(
   const method = options.method || 'GET';
   
   if (method === 'GET') {
-    // For GET requests, try to get from cache
+    // For GET requests, try to get from offline cache service using key mapping
     try {
-      const cachedData = localStorage.getItem(`cache:${url}`);
+      const cachedData = getCachedDataByUrl(url);
       if (cachedData) {
+        console.log(`[OfflineAwareFetch] Serving from cache: ${url}`);
         // Return a mock Response object with the cached data
-        return new Response(cachedData, {
+        return new Response(JSON.stringify(cachedData), {
           status: 200,
           headers: new Headers({ 'Content-Type': 'application/json' }),
         });
       }
     } catch (error) {
-      console.error('Error reading from cache:', error);
+      console.error('[OfflineAwareFetch] Error reading from cache:', error);
     }
   } else {
     // For non-GET requests, queue them to be processed when online
@@ -229,6 +307,8 @@ export async function offlineAwareFetch(
       body,
     });
     
+    console.log(`[OfflineAwareFetch] Queued ${method} request: ${url}`);
+    
     // Return a mock successful response
     return new Response(JSON.stringify({ queued: true }), {
       status: 202, // Accepted
@@ -237,6 +317,7 @@ export async function offlineAwareFetch(
   }
   
   // If we got here, we're offline and couldn't get from cache
+  console.warn(`[OfflineAwareFetch] No cache available for: ${url}`);
   return new Response(JSON.stringify({ error: 'Currently offline' }), {
     status: 503, // Service Unavailable
     headers: new Headers({ 'Content-Type': 'application/json' }),

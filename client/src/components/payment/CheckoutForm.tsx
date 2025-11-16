@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { Loader2 } from 'lucide-react';
+import { useMasterTranslation } from '@/hooks/use-master-translation';
 
 interface CheckoutFormProps {
   onPaymentComplete?: () => void;
@@ -16,6 +17,7 @@ export const CheckoutForm = ({ onPaymentComplete }: CheckoutFormProps = {}) => {
   const [, setLocation] = useLocation();
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
+  const { translateText } = useMasterTranslation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +68,7 @@ export const CheckoutForm = ({ onPaymentComplete }: CheckoutFormProps = {}) => {
     } catch (err: any) {
       setErrorMessage(err.message || 'An unexpected error occurred');
       toast({
-        title: 'Payment Error',
+        title: translateText('Error'),
         description: err.message || 'An unexpected error occurred',
         variant: 'destructive',
       });

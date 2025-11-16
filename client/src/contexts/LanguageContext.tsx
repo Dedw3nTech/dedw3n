@@ -1,5 +1,8 @@
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect, useRef } from 'react';
 import { apiRequest } from '@/lib/queryClient';
+import PersistentTranslationCache from '@/lib/persistent-translation-cache';
+import { masterTranslationManager } from '@/hooks/use-master-translation';
+import { globalTranslationSeeds } from '@/lib/translationSeeds';
 
 export interface Language {
   code: string;
@@ -41,23 +44,109 @@ interface LanguageContextType {
   isTranslating: boolean;
   isLoading: boolean;
   updateUserLanguagePreference: (languageCode: string) => Promise<boolean>;
+  getCacheStats: () => any; // Cache statistics for monitoring
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-// Translation cache to avoid repeated API calls
-const translationCache = new Map<string, string>();
+// Persistent translation cache - survives page reloads
+const persistentCache = PersistentTranslationCache.getInstance();
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [selectedLanguage, setSelectedLanguage] = useState<Language>(supportedLanguages.find(lang => lang.code === 'EN') || supportedLanguages[0]); // Default to English
+  // Initialize immediately from localStorage for instant rendering (optimistic)
+  const getInitialLanguage = (): Language => {
+    const savedLanguage = localStorage.getItem('dedw3n-language');
+    if (savedLanguage) {
+      const language = supportedLanguages.find(lang => lang.code === savedLanguage);
+      if (language) return language;
+    }
+    return supportedLanguages.find(lang => lang.code === 'EN') || supportedLanguages[0];
+  };
+  
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>(getInitialLanguage());
   const [isTranslating, setIsTranslating] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Never block rendering
+  
+  // Track initial language to prevent overwriting user changes during load
+  const initialLanguageCode = useRef(getInitialLanguage().code);
+  const hasLoadedFromBackend = useRef(false);
+  
+  // Track which languages have had seeds preloaded to avoid duplicates
+  const preloadedLanguages = useRef(new Set<string>());
+  
+  // Deduplicate seeds once (avoid repeated Set creation)
+  const uniqueSeedsRef = useRef<string[]>(Array.from(new Set(globalTranslationSeeds)));
 
-  // Load user's language preference from backend or localStorage
+  // Register global component once on mount and unregister on unmount
   useEffect(() => {
+    const componentId = 'language-context/global-seed-preload';
+    masterTranslationManager.registerComponent(componentId);
+    
+    return () => {
+      masterTranslationManager.unregisterComponent(componentId);
+    };
+  }, []);
+
+  // Preload global translation seeds for a given language
+  const preloadTranslationSeeds = async (languageCode: string): Promise<void> => {
+    // Skip if English (no translation needed)
+    if (languageCode === 'EN') {
+      return;
+    }
+
+    // Skip if already preloaded for this language
+    if (preloadedLanguages.current.has(languageCode)) {
+      return;
+    }
+
+    const componentId = 'language-context/global-seed-preload';
+    
+    try {
+      console.log(`[Language Context] Preloading ${uniqueSeedsRef.current.length} translation seeds for ${languageCode}`);
+      
+      // Preload translations using high priority for instant availability
+      await new Promise<void>((resolve, reject) => {
+        masterTranslationManager.translateBatch(
+          uniqueSeedsRef.current,
+          languageCode,
+          'high', // High priority for critical UI strings
+          componentId,
+          (translations: Record<string, string>) => {
+            try {
+              // Store in persistent cache for survival across page reloads
+              Object.entries(translations).forEach(([text, translatedText]) => {
+                if (typeof text === 'string' && typeof translatedText === 'string') {
+                  persistentCache.set(text, languageCode, translatedText, 'EN', 'high');
+                }
+              });
+              
+              console.log(`[Language Context] Successfully preloaded ${Object.keys(translations).length} translation seeds for ${languageCode}`);
+              resolve();
+            } catch (cacheError) {
+              reject(cacheError);
+            }
+          }
+        );
+      });
+
+      // Mark this language as preloaded
+      preloadedLanguages.current.add(languageCode);
+    } catch (error) {
+      console.error(`[Language Context] Failed to preload translation seeds for ${languageCode}:`, error);
+      // Don't throw - gracefully degrade to on-demand translation
+    }
+  };
+
+  // Load user's language preference from backend AFTER initial render (non-blocking)
+  // Uses HTTP caching (ETag + Cache-Control) to minimize DB queries
+  useEffect(() => {
+    // Only load once on mount
+    if (hasLoadedFromBackend.current) return;
+    
     const loadLanguagePreference = async () => {
       try {
-        // First try to get from backend if user is logged in
+        // Non-blocking: fetch in background, update if different
+        // Browser will use cached response if ETag matches (HTTP 304)
         const response = await fetch('/api/user/language', {
           method: 'GET',
           credentials: 'include',
@@ -68,35 +157,41 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
         if (response.ok) {
           const data = await response.json();
-          console.log('[Language Context] Language from backend:', data.language);
-          const language = supportedLanguages.find(lang => lang.code === data.language);
-          if (language) {
-            console.log('[Language Context] Setting language from backend:', language.code, language.nativeName);
-            setSelectedLanguage(language);
-            localStorage.setItem('dedw3n-language', language.code);
-            setIsLoading(false);
-            return;
+          
+          // If user is authenticated and has a language preference
+          if (data.authenticated && data.language) {
+            const language = supportedLanguages.find(lang => lang.code === data.language);
+            
+            // CRITICAL: Only update if user hasn't changed language since mount
+            // This prevents race condition where backend overwrites manual user changes
+            setSelectedLanguage(current => {
+              // If current language matches initial, user hasn't changed it - safe to update from backend
+              if (current.code === initialLanguageCode.current && language && language.code !== current.code) {
+                console.log('[Language Context] Updating language from backend (cached):', language.code);
+                localStorage.setItem('dedw3n-language', language.code);
+                return language;
+              }
+              // User has changed language since mount - don't overwrite
+              return current;
+            });
           }
         }
+        hasLoadedFromBackend.current = true;
       } catch (error) {
-        console.log('User not authenticated, using local storage');
+        // Silent fail - already using localStorage/default language
+        console.log('[Language Context] Could not fetch from backend (using cached):', error);
+        hasLoadedFromBackend.current = true;
       }
-
-      // Fallback to localStorage
-      const savedLanguage = localStorage.getItem('dedw3n-language');
-      console.log('[Language Context] Saved language from localStorage:', savedLanguage);
-      if (savedLanguage) {
-        const language = supportedLanguages.find(lang => lang.code === savedLanguage);
-        if (language) {
-          console.log('[Language Context] Setting language from localStorage:', language.code, language.nativeName);
-          setSelectedLanguage(language);
-        }
-      }
-      setIsLoading(false);
     };
 
-    loadLanguagePreference();
+    // Run in background without blocking
+    void loadLanguagePreference();
   }, []);
+
+  // Preload translation seeds whenever language changes
+  useEffect(() => {
+    void preloadTranslationSeeds(selectedLanguage.code);
+  }, [selectedLanguage.code]);
 
   // Update user language preference in backend
   const updateUserLanguagePreference = async (languageCode: string): Promise<boolean> => {
@@ -118,23 +213,27 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   // Save language preference both locally and in backend
   const handleSetLanguage = async (language: Language) => {
     console.log(`[Language Context] Changing language from ${selectedLanguage.code} to ${language.code}`);
+    const oldLanguageCode = selectedLanguage.code;
+    
     setSelectedLanguage(language);
     localStorage.setItem('dedw3n-language', language.code);
     
     // Try to update in backend (will silently fail if user not authenticated)
     await updateUserLanguagePreference(language.code);
     
-    // Clear translation cache when language changes
-    translationCache.clear();
+    // Clear translation cache for old language to prevent stale entries
+    persistentCache.clearLanguage(oldLanguageCode);
+    console.log(`[Language Context] Cleared persistent cache for ${oldLanguageCode}`);
     
-    // Also clear Master Translation cache
+    // Clear Master Translation Manager cache for old language
     try {
-      const { clearTranslationCache } = await import('@/hooks/use-master-translation');
-      clearTranslationCache();
-      console.log('[Language Context] Cleared Master Translation cache');
+      masterTranslationManager.clearLanguageCache?.(oldLanguageCode);
+      console.log(`[Language Context] Cleared Master Translation cache for ${oldLanguageCode}`);
     } catch (error) {
       console.warn('[Language Context] Failed to clear Master Translation cache:', error);
     }
+    
+    // Note: Preloading for new language is handled by the useEffect hook
   };
 
   const translateText = async (text: string, targetLanguage?: string): Promise<string> => {
@@ -145,10 +244,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       return text;
     }
 
-    // Check cache first
-    const cacheKey = `${text}-${target}`;
-    if (translationCache.has(cacheKey)) {
-      return translationCache.get(cacheKey)!;
+    // Check persistent cache first (survives page reloads)
+    const cached = persistentCache.get(text, target);
+    if (cached) {
+      return cached;
     }
 
     setIsTranslating(true);
@@ -173,8 +272,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
       const translatedText = data.translations?.[0]?.translatedText || text;
       
-      // Cache the translation
-      translationCache.set(cacheKey, translatedText);
+      // Cache the translation in persistent storage
+      persistentCache.set(text, target, translatedText, 'EN', 'normal');
       
       return translatedText;
     } catch (error) {
@@ -183,6 +282,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsTranslating(false);
     }
+  };
+
+  // Get cache statistics for monitoring
+  const getCacheStats = () => {
+    return persistentCache.getStats();
   };
 
   // Backward compatibility alias for setLanguage
@@ -202,7 +306,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       translateText,
       isTranslating,
       isLoading,
-      updateUserLanguagePreference
+      updateUserLanguagePreference,
+      getCacheStats
     }}>
       {children}
     </LanguageContext.Provider>
@@ -221,7 +326,8 @@ export function useLanguage() {
       translateText: (text: string) => Promise.resolve(text),
       isTranslating: false,
       isLoading: false,
-      updateUserLanguagePreference: () => Promise.resolve(false)
+      updateUserLanguagePreference: () => Promise.resolve(false),
+      getCacheStats: () => ({ size: 0, languages: [], hitRate: 0, oldestEntry: 0, newestEntry: 0 })
     };
   }
   return context;

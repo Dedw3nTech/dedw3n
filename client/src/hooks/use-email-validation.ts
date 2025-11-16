@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
+import { useTypedTranslation } from './use-master-translation';
 
 interface EmailValidationResult {
   valid: boolean;
@@ -22,6 +23,7 @@ interface EmailValidationState {
 }
 
 export function useEmailValidation() {
+  const t = useTypedTranslation();
   const [state, setState] = useState<EmailValidationState>({
     isValidating: false,
     isValid: null,
@@ -40,7 +42,7 @@ export function useEmailValidation() {
     if (!isValidFormat) {
       return {
         valid: false,
-        reason: 'Invalid email format',
+        reason: t["Invalid email format"],
         syntax_valid: false,
         mx_valid: false,
         disposable: false,
@@ -73,10 +75,10 @@ export function useEmailValidation() {
     
     return {
       valid: isValidFormat && hasMxValid && !isDisposable,
-      reason: isDisposable ? 'Disposable email not allowed' : 
-              isRoleBased ? 'Role-based email not recommended' :
-              !hasMxValid ? 'Invalid domain format' : 
-              'Email format validated (offline mode)',
+      reason: isDisposable ? t["Disposable email not allowed"] : 
+              isRoleBased ? t["Role-based email not recommended"] :
+              !hasMxValid ? t["Invalid domain format"] : 
+              t["Email format validated (offline mode)"],
       syntax_valid: isValidFormat,
       mx_valid: hasMxValid,
       disposable: isDisposable,
@@ -85,7 +87,7 @@ export function useEmailValidation() {
       role_based: isRoleBased,
       confidence_score: 0.7 // Lower confidence for fallback validation
     };
-  }, []);
+  }, [t]);
 
   const validateEmail = useCallback(async (email: string) => {
     // Clear existing timer
@@ -139,8 +141,8 @@ export function useEmailValidation() {
             isValid: fallbackResult.valid,
             validationResult: fallbackResult,
             error: fallbackResult.valid ? 
-              'Email validated using basic checks (service temporarily unavailable)' :
-              fallbackResult.reason || 'Email validation failed'
+              t["Email validated using basic checks (service temporarily unavailable)"] :
+              fallbackResult.reason || t["Email validation failed"]
           });
           return;
         }
@@ -167,12 +169,12 @@ export function useEmailValidation() {
           isValid: fallbackResult.valid,
           validationResult: fallbackResult,
           error: fallbackResult.valid ? 
-            'Email validated using basic checks (service temporarily unavailable)' :
-            fallbackResult.reason || 'Email validation failed'
+            t["Email validated using basic checks (service temporarily unavailable)"] :
+            fallbackResult.reason || t["Email validation failed"]
         });
       }
     }, 500); // 500ms debounce
-  }, [performFallbackValidation]);
+  }, [performFallbackValidation, t]);
 
   const resetValidation = useCallback(() => {
     // Clear timers and abort requests
@@ -209,34 +211,34 @@ export function useEmailValidation() {
     if (!result.valid) {
       // Handle service errors first
       if (result.service_error) {
-        return result.reason || 'Email validation service temporarily unavailable. Basic format validation passed.';
+        return result.reason || t["Email validation service temporarily unavailable. Basic format validation passed."];
       }
       
       if (!result.syntax_valid) {
-        return 'Invalid email format';
+        return t["Invalid email format"];
       }
       if (!result.mx_valid) {
-        return 'Domain format appears invalid';
+        return t["Domain format appears invalid"];
       }
       if (result.disposable) {
-        return 'Disposable email addresses are not allowed';
+        return t["Disposable email addresses are not allowed"];
       }
       if (result.role_based) {
-        return 'Role-based email addresses are not recommended';
+        return t["Role-based email addresses are not recommended"];
       }
       if (!result.deliverable) {
-        return 'Email address may not be deliverable';
+        return t["Email address may not be deliverable"];
       }
-      return result.reason || 'Invalid email address';
+      return result.reason || t["Invalid email address"];
     }
 
     // Success message for fallback validation
     if (result.confidence_score && result.confidence_score < 1.0) {
-      return 'Email format validated (limited verification available)';
+      return t["Email format validated (limited verification available)"];
     }
 
     return null; // Valid email with full validation
-  }, [state.error, state.validationResult, state.isValid]);
+  }, [state.error, state.validationResult, state.isValid, t]);
 
   return {
     validateEmail,
