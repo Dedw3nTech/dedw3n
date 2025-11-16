@@ -907,8 +907,7 @@ export default function ProductDetail() {
                   {translateText('Report')}
                 </AccordionTrigger>
                 <AccordionContent className="text-sm text-gray-700 pb-4">
-                  <p className="mb-3">{translateText('Something Wrong with this product? Please Report')}</p>
-                  <Button
+                  <button
                     onClick={() => {
                       if (!user) {
                         toast({
@@ -920,13 +919,12 @@ export default function ProductDetail() {
                       }
                       setIsReportDialogOpen(true);
                     }}
-                    variant="outline"
-                    className="text-black border-black hover:bg-black hover:text-white"
+                    className="text-left text-sm text-gray-700 hover:text-black cursor-pointer transition-colors bg-transparent border-none p-0"
                     data-testid="button-open-report-dialog"
                   >
-                    <Flag className="mr-2 h-4 w-4" />
-                    {translateText('Report This Product')}
-                  </Button>
+                    {translateText('Something Wrong with this product?')}{' '}
+                    <span className="underline">{translateText('Please Report')}</span>
+                  </button>
                 </AccordionContent>
               </AccordionItem>
 
