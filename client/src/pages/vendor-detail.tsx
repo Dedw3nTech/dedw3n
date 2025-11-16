@@ -970,7 +970,7 @@ export default function VendorDetailPage() {
                   <div className="flex items-center gap-2">
                     <h1 className="text-2xl font-bold">{vendor.storeName}</h1>
                     <Link 
-                      href={`/members/${vendor.userId}`} 
+                      href={`/profile/${(vendor as any).username}`} 
                       className="text-muted-foreground hover:text-primary transition-colors"
                       data-testid="link-view-profile"
                       title={translateText("View Profile")}

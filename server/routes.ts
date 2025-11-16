@@ -10892,21 +10892,32 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
         return res.status(400).json({ message: "Invalid vendor slug" });
       }
       
-      // Get all vendors and find matching slug - query the database directly for better performance
-      const allVendors = await db.select().from(vendors);
+      // Get all vendors with user information
+      const allVendorsWithUsers = await db
+        .select({
+          vendor: vendors,
+          username: users.username
+        })
+        .from(vendors)
+        .leftJoin(users, eq(vendors.userId, users.id));
       
-      const vendor = allVendors.find(v => {
-        if (!v.storeName) {
+      const vendorMatch = allVendorsWithUsers.find(v => {
+        if (!v.vendor.storeName) {
           return false;
         }
-        const vendorSlug = v.storeName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const vendorSlug = v.vendor.storeName.toLowerCase().replace(/[^a-z0-9]/g, '');
         return vendorSlug === slug;
       });
       
-      if (!vendor) {
+      if (!vendorMatch) {
         return res.status(404).json({ message: "Vendor not found" });
       }
-      res.json(vendor);
+      
+      // Return vendor with username
+      res.json({
+        ...vendorMatch.vendor,
+        username: vendorMatch.username
+      });
     } catch (error) {
       console.error('Error getting vendor by slug', error);
       res.status(500).json({ message: "Failed to get vendor" });
