@@ -2164,10 +2164,9 @@ export default function AddProduct() {
                                 <FormControl>
                                   <Input 
                                     type="number" 
-                                    step="0.001"
+                                    step="any"
                                     min="0"
-                                    max="999.999"
-                                    placeholder="0.000" 
+                                    placeholder="0" 
                                     {...field} 
                                     onChange={(e) => {
                                       const value = e.target.value;
@@ -2175,7 +2174,7 @@ export default function AddProduct() {
                                         field.onChange(undefined);
                                       } else {
                                         const numValue = parseFloat(value);
-                                        // Allow up to 3 decimal places (0.999 max for grams)
+                                        // Allow up to 3 decimal places when user enters them
                                         const roundedValue = Math.round(numValue * 1000) / 1000;
                                         field.onChange(roundedValue);
                                       }
