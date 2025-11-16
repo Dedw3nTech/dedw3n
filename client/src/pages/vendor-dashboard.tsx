@@ -6,7 +6,6 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
   CardContent,
@@ -504,43 +503,81 @@ export default function VendorDashboard() {
         </Card>
       </div>
 
-      {/* Main Dashboard Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="products">
-            {productsText}
-          </TabsTrigger>
-          <TabsTrigger value="orders">
-            {t("Shipping & Orders")}
-          </TabsTrigger>
-          <TabsTrigger value="commission">
-            {t("Commission")}
-          </TabsTrigger>
-          <TabsTrigger value="settings">
-            {settingsText}
-          </TabsTrigger>
-        </TabsList>
+      {/* Main Dashboard Grid with Sidebar */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* Sidebar Navigation */}
+        <div className="lg:col-span-1">
+          <Card className="sticky top-6">
+            <CardContent className="p-4">
+              <nav className="space-y-2">
+                <button
+                  onClick={() => setActiveTab('products')}
+                  className={`w-full text-left px-4 py-3 rounded-md transition-colors ${
+                    activeTab === 'products'
+                      ? 'bg-black text-white'
+                      : 'hover:bg-gray-100 text-gray-700'
+                  }`}
+                  data-testid="tab-products"
+                >
+                  {productsText}
+                </button>
+                <button
+                  onClick={() => setActiveTab('orders')}
+                  className={`w-full text-left px-4 py-3 rounded-md transition-colors ${
+                    activeTab === 'orders'
+                      ? 'bg-black text-white'
+                      : 'hover:bg-gray-100 text-gray-700'
+                  }`}
+                  data-testid="tab-orders"
+                >
+                  {t("Shipping & Orders")}
+                </button>
+                <button
+                  onClick={() => setActiveTab('commission')}
+                  className={`w-full text-left px-4 py-3 rounded-md transition-colors ${
+                    activeTab === 'commission'
+                      ? 'bg-black text-white'
+                      : 'hover:bg-gray-100 text-gray-700'
+                  }`}
+                  data-testid="tab-commission"
+                >
+                  {t("Commission")}
+                </button>
+                <button
+                  onClick={() => setActiveTab('settings')}
+                  className={`w-full text-left px-4 py-3 rounded-md transition-colors ${
+                    activeTab === 'settings'
+                      ? 'bg-black text-white'
+                      : 'hover:bg-gray-100 text-gray-700'
+                  }`}
+                  data-testid="tab-settings"
+                >
+                  {settingsText}
+                </button>
+              </nav>
+            </CardContent>
+          </Card>
+        </div>
 
+        {/* Main Content Area */}
+        <div className="lg:col-span-4">
+          {activeTab === 'products' && (
+            <VendorProductManagement vendorId={vendorId!} />
+          )}
 
+          {activeTab === 'orders' && (
+            <VendorOrderManagement vendorId={vendorId!} />
+          )}
 
-        <TabsContent value="products">
-          <VendorProductManagement vendorId={vendorId!} />
-        </TabsContent>
+          {activeTab === 'commission' && (
+            <VendorCommissionDashboard vendorId={vendorId!} />
+          )}
 
-        <TabsContent value="orders">
-          <VendorOrderManagement vendorId={vendorId!} />
-        </TabsContent>
-
-
-
-        <TabsContent value="commission">
-          <VendorCommissionDashboard vendorId={vendorId!} />
-        </TabsContent>
-
-        <TabsContent value="settings">
-          <VendorSettings vendorId={vendorId!} />
-        </TabsContent>
-      </Tabs>
+          {activeTab === 'settings' && (
+            <VendorSettings vendorId={vendorId!} />
+          )}
+        </div>
+      </div>
 
       {/* Delete Store Modal */}
       <DeleteStoreModal
