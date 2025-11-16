@@ -17,8 +17,8 @@ export const AVATAR_PATHS = {
   OBJECT_STORAGE_BACKUPS_DIR: 'backups/avatars',
   
   // Sharded storage (for scalability)
-  OBJECT_STORAGE_PUBLIC_DIR: 'public/avatars',
-  OBJECT_STORAGE_PUBLIC_BACKUPS_DIR: 'public/backups/avatars',
+  OBJECT_STORAGE_PUBLIC_DIR: 'avatars',
+  OBJECT_STORAGE_PUBLIC_BACKUPS_DIR: 'backups/avatars',
 } as const;
 
 /**
