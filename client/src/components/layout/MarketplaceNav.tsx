@@ -14,9 +14,10 @@ import { apiRequest } from '@/lib/queryClient';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { UserAvatar } from '@/components/ui/user-avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Search, Store, ChevronDown, Bell, Users, Building2, Warehouse, Menu, X, User, Video, Plus, Package } from 'lucide-react';
+import { Search, Store, ChevronDown, Bell, Users, Building2, Warehouse, Menu, X, Video, Plus, Package } from 'lucide-react';
 
 interface MarketplaceNavProps {
   searchTerm?: string;
@@ -40,36 +41,6 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
   const searchRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const [isNavVisible, setIsNavVisible] = useState(true);
-  const [avatarError, setAvatarError] = useState(false);
-  
-  // Avatar cache management for stable cache-busting
-  const avatarCacheRef = useRef<{ avatar: string | null | undefined; token: number }>({
-    avatar: user?.avatar,
-    token: Date.now()
-  });
-  
-  // Update cache token only when avatar value changes
-  if (avatarCacheRef.current.avatar !== user?.avatar) {
-    avatarCacheRef.current = {
-      avatar: user?.avatar,
-      token: Date.now()
-    };
-  }
-  
-  // Reset avatar error when avatar changes (using effect to avoid render-phase state writes)
-  useEffect(() => {
-    setAvatarError(false);
-  }, [user?.avatar]);
-  
-  // Memoized avatar URL with stable cache-busting
-  const getAvatarUrl = useMemo(() => {
-    return (avatarUrl?: string | null) => {
-      if (!avatarUrl) return '';
-      const isLocalUrl = !avatarUrl.includes('http');
-      const cacheBuster = isLocalUrl ? `?v=${avatarCacheRef.current.token}` : '';
-      return `${avatarUrl}${cacheBuster}`;
-    };
-  }, [avatarCacheRef.current.token]);
   
   // Use external search term if provided, otherwise use local state
   const searchTerm = externalSearchTerm || localSearchTerm;
@@ -357,25 +328,26 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
                     {totalNotifications > 99 ? '99+' : totalNotifications}
                   </div>
                 )}
-                <button
+                <div
                   onClick={handleProfileClick}
-                  className="relative h-10 w-10 rounded-full overflow-hidden border-2 border-gray-200 hover:border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-full"
                   data-testid="button-profile-desktop"
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleProfileClick();
+                    }
+                  }}
                 >
-                  {user?.avatar && !avatarError ? (
-                    <img 
-                      src={getAvatarUrl(user.avatar)} 
-                      alt={user.name || user.username || 'Profile'}
-                      className="h-full w-full object-cover"
-                      key={user.avatar}
-                      onError={() => setAvatarError(true)}
-                    />
-                  ) : (
-                    <div className="h-full w-full bg-gray-200 flex items-center justify-center">
-                      <User className="h-5 w-5 text-gray-500" />
-                    </div>
-                  )}
-                </button>
+                  <UserAvatar
+                    userId={user.id}
+                    username={user.username}
+                    size="md"
+                    className="border-2 border-gray-200 hover:border-gray-300 transition-colors"
+                  />
+                </div>
               </div>
             )}
             {isAuthenticated && (
@@ -694,25 +666,26 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
                       {totalNotifications > 99 ? '99+' : totalNotifications}
                     </div>
                   )}
-                  <button
+                  <div
                     onClick={handleProfileClick}
-                    className="relative h-8 w-8 rounded-full overflow-hidden border-2 border-gray-200 hover:border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                    className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded-full"
                     data-testid="button-profile-mobile"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleProfileClick();
+                      }
+                    }}
                   >
-                    {user?.avatar && !avatarError ? (
-                      <img 
-                        src={getAvatarUrl(user.avatar)} 
-                        alt={user.name || user.username || 'Profile'}
-                        className="h-full w-full object-cover"
-                        key={user.avatar}
-                        onError={() => setAvatarError(true)}
-                      />
-                    ) : (
-                      <div className="h-full w-full bg-gray-200 flex items-center justify-center">
-                        <User className="h-4 w-4 text-gray-500" />
-                      </div>
-                    )}
-                  </button>
+                    <UserAvatar
+                      userId={user.id}
+                      username={user.username}
+                      size="sm"
+                      className="border-2 border-gray-200 hover:border-gray-300 transition-colors"
+                    />
+                  </div>
                 </div>
               )}
               {isAuthenticated && (
