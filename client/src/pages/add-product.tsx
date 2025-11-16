@@ -1107,12 +1107,12 @@ export default function AddProduct() {
       {/* Grid Layout with Sidebar */}
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
         {/* Left Sidebar - Section Navigation */}
-        <aside className="lg:sticky lg:top-24 lg:h-[calc(100vh-8rem)] overflow-y-auto">
-          <Card className="border-2">
+        <aside className="lg:sticky lg:top-24 lg:h-[calc(100vh-8rem)]">
+          <Card className="border-2 h-full flex flex-col">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg">{t("Select Section")}</CardTitle>
             </CardHeader>
-            <CardContent className="p-3">
+            <CardContent className="p-3 flex-1 overflow-y-auto">
               <nav className="space-y-1" role="navigation" aria-label="Section navigation">
                 {navigationSections.map((section) => {
                   const Icon = section.icon;
@@ -1135,20 +1135,6 @@ export default function AddProduct() {
                   );
                 })}
               </nav>
-            </CardContent>
-          </Card>
-
-          {/* Section Info */}
-          <Card className="mt-4 border-2 bg-gray-50">
-            <CardContent className="p-4">
-              <p className="text-xs text-gray-600">
-                {activeSection === 'marketplace' && t("Upload products to the Marketplace section")}
-                {activeSection === 'finance' && t("Upload financial products and services")}
-                {activeSection === 'government' && t("Upload government-related products and services")}
-                {activeSection === 'lifestyle' && t("Upload lifestyle products and services")}
-                {activeSection === 'services' && t("Upload professional services")}
-                {activeSection === 'community' && t("Upload community-related products")}
-              </p>
             </CardContent>
           </Card>
         </aside>
