@@ -906,7 +906,8 @@ export default function AddProduct() {
           });
           
           if (!uploadResponse.ok) {
-            throw new Error(`Upload failed: ${uploadResponse.statusText}`);
+            const errorData = await uploadResponse.json().catch(() => ({ message: 'Unknown error' }));
+            throw new Error(`Upload failed: ${errorData.message || uploadResponse.statusText}`);
           }
           
           const uploadResult = await uploadResponse.json();
@@ -914,10 +915,10 @@ export default function AddProduct() {
           
           // Use the uploaded image URL
           finalImageUrl = uploadResult.imageUrl;
-        } catch (uploadError) {
+        } catch (uploadError: any) {
           console.error('❌ Image upload failed:', uploadError);
-          // Use fallback image if upload fails
-          finalImageUrl = '/attached_assets/D3%20black%20logo.png';
+          // Show error to user and abort product creation
+          throw new Error(`Image upload failed: ${uploadError.message}. Please try again or use an image URL instead.`);
         }
       }
       

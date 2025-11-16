@@ -4029,6 +4029,79 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       });
     });
     
+    // Production image upload API for product images
+    app.post('/api/image/upload', async (req: Request, res: Response) => {
+      try {
+        res.setHeader('Content-Type', 'application/json');
+        
+        console.log('[IMAGE] Product image upload API called');
+        
+        if (!req.body.imageData) {
+          return res.status(400).json({ 
+            success: false,
+            message: "No image data provided"
+          });
+        }
+        
+        try {
+          const imageData = req.body.imageData;
+          const imageType = req.body.imageType || 'product';
+          
+          if (!imageData.startsWith('data:image/')) {
+            return res.status(400).json({
+              success: false,
+              message: "Invalid image format"
+            });
+          }
+          
+          const base64Data = imageData.split(',')[1];
+          const mimeType = imageData.split(';')[0].split(':')[1];
+          let fileExtension = 'png';
+          
+          if (mimeType) {
+            const parts = mimeType.split('/');
+            if (parts.length > 1) {
+              fileExtension = parts[1] === 'jpeg' ? 'jpg' : parts[1];
+            }
+          }
+          
+          const filename = `${imageType}_${Date.now()}.${fileExtension}`;
+          
+          if (!fs.existsSync('./public/uploads')) {
+            fs.mkdirSync('./public/uploads', { recursive: true });
+          }
+          if (!fs.existsSync('./public/uploads/products')) {
+            fs.mkdirSync('./public/uploads/products', { recursive: true });
+          }
+          
+          fs.writeFileSync(`./public/uploads/products/${filename}`, base64Data, 'base64');
+          const imageUrl = `/uploads/products/${filename}`;
+          
+          console.log(`[IMAGE] Product image successfully uploaded: ${imageUrl}`);
+          
+          return res.status(200).json({
+            success: true,
+            message: 'Image uploaded successfully',
+            imageUrl: imageUrl,
+            filename: filename
+          });
+          
+        } catch (error) {
+          console.error('[IMAGE] Failed to save product image:', error);
+          return res.status(500).json({ 
+            success: false,
+            message: 'Failed to save image' 
+          });
+        }
+      } catch (error) {
+        console.error('[IMAGE] Product image upload failed:', error);
+        res.status(500).json({ 
+          success: false,
+          message: 'Image upload failed' 
+        });
+      }
+    });
+    
     // Simple image upload API - no auth required for testing
     app.post('/api/image/upload-test', async (req: Request, res: Response) => {
       try {
