@@ -73,7 +73,19 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
     "FIND THE PERFECT GIFT",
     "Add A Service",
     "Add Service",
-    "Dr Congo"
+    "Dr Congo",
+    "POPULAR SERVICES",
+    "DOCUMENT SERVICES",
+    "QUICK ACCESS",
+    "Certificates",
+    "Passport Services",
+    "Drivers License",
+    "Visa Services",
+    "Permits & Licenses",
+    "Identity Documents",
+    "Legal Documents",
+    "Travel Documents",
+    "Government Portal"
   ], []);
 
   // Use optimized batch translation for optimal performance
@@ -102,7 +114,19 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
     findPerfectGiftText: translatedTexts[18] || navigationTexts[18],
     addAServiceText: translatedTexts[19] || navigationTexts[19],
     addServiceText: translatedTexts[20] || navigationTexts[20],
-    drCongoText: translatedTexts[21] || navigationTexts[21]
+    drCongoText: translatedTexts[21] || navigationTexts[21],
+    popularServicesText: translatedTexts[22] || navigationTexts[22],
+    documentServicesText: translatedTexts[23] || navigationTexts[23],
+    quickAccessText: translatedTexts[24] || navigationTexts[24],
+    certificatesText: translatedTexts[25] || navigationTexts[25],
+    passportServicesText: translatedTexts[26] || navigationTexts[26],
+    driversLicenseText: translatedTexts[27] || navigationTexts[27],
+    visaServicesText: translatedTexts[28] || navigationTexts[28],
+    permitsLicensesText: translatedTexts[29] || navigationTexts[29],
+    identityDocumentsText: translatedTexts[30] || navigationTexts[30],
+    legalDocumentsText: translatedTexts[31] || navigationTexts[31],
+    travelDocumentsText: translatedTexts[32] || navigationTexts[32],
+    governmentPortalText: translatedTexts[33] || navigationTexts[33]
   }), [translatedTexts, navigationTexts]);
 
   // Memoize navigation handlers to prevent infinite re-renders
@@ -624,6 +648,92 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
                       </div>
                     </div>
                   ))}
+                </div>
+              ) : isGovernmentPage ? (
+                <div className="grid grid-cols-3 gap-8">
+                  {/* Popular Services */}
+                  <div>
+                    <h3 className="text-xs font-bold mb-3 tracking-wide">{translatedLabels.popularServicesText}</h3>
+                    <div className="space-y-2.5">
+                      {[
+                        translatedLabels.certificatesText,
+                        translatedLabels.passportServicesText,
+                        translatedLabels.driversLicenseText,
+                        translatedLabels.visaServicesText
+                      ].map((item, index) => (
+                        <div
+                          key={index}
+                          onClick={() => {
+                            setSearchTerm(item);
+                            setShowSuggestions(false);
+                          }}
+                          className="flex items-center gap-2 cursor-pointer group"
+                        >
+                          <Search className="h-3.5 w-3.5 text-black" />
+                          <span className="text-xs underline hover:no-underline">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Document Services */}
+                  <div>
+                    <h3 className="text-xs font-bold mb-3 tracking-wide">{translatedLabels.documentServicesText}</h3>
+                    <div className="space-y-2.5">
+                      {[
+                        translatedLabels.identityDocumentsText,
+                        translatedLabels.legalDocumentsText,
+                        translatedLabels.travelDocumentsText
+                      ].map((item, index) => (
+                        <div
+                          key={index}
+                          onClick={() => {
+                            setSearchTerm(item);
+                            setShowSuggestions(false);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <span className="text-xs underline hover:no-underline">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Quick Access */}
+                  <div>
+                    <h3 className="text-xs font-bold mb-3 tracking-wide">{translatedLabels.quickAccessText}</h3>
+                    <div className="space-y-2.5">
+                      <div
+                        onClick={() => {
+                          setLocation('/dr-congo');
+                          setShowSuggestions(false);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        <span className="text-xs underline hover:no-underline">{translatedLabels.drCongoText}</span>
+                      </div>
+                      <div
+                        onClick={() => {
+                          setLocation('/government');
+                          setShowSuggestions(false);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        <span className="text-xs underline hover:no-underline">{translatedLabels.governmentPortalText}</span>
+                      </div>
+                      {canAddService && (
+                        <div
+                          onClick={() => {
+                            setLocation('/add-product?type=government-service');
+                            setShowSuggestions(false);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <span className="text-xs underline hover:no-underline">{translatedLabels.addAServiceText}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-3 gap-8">
