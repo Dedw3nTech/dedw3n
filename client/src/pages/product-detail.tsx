@@ -876,7 +876,16 @@ export default function ProductDetail() {
                   </p>
                   <div className="space-y-2">
                     <p>{translateText('Category')}: {product.category}</p>
-                    <p>{translateText('Weight')}: {formatWeight(5)}</p>
+                    {product.weight && (
+                      <p>
+                        {translateText('Weight')}: {formatWeight(product.weight)}
+                      </p>
+                    )}
+                    {product.dimensions && (
+                      <p>
+                        {translateText('Dimensions')}: {product.dimensions} {product.dimensionUnit || 'cm'}
+                      </p>
+                    )}
                     {product.inventory > 0 && (
                       <p className="text-green-600 font-medium">{translateText('In Stock')}</p>
                     )}
