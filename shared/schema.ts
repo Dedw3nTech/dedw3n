@@ -4329,6 +4329,41 @@ export type TicketMessage = typeof ticketMessages.$inferSelect;
 export type InsertTicketMessage = z.infer<typeof insertTicketMessageSchema>;
 
 // =====================================
+// Dr Congo Services
+// =====================================
+
+export const drCongoServiceTypeEnum = pgEnum('dr_congo_service_type', ['certificate', 'passport', 'supplementary_judgment']);
+
+export const drCongoServices = pgTable("dr_congo_services", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  serviceType: drCongoServiceTypeEnum("service_type").notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default('USD').notNull(),
+  images: text("images").array(),
+  status: varchar("status", { length: 20 }).default('active').notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  userIdIdx: index("dr_congo_services_user_id_idx").on(table.userId),
+  serviceTypeIdx: index("dr_congo_services_service_type_idx").on(table.serviceType),
+  statusIdx: index("dr_congo_services_status_idx").on(table.status),
+}));
+
+export const insertDrCongoServiceSchema = createInsertSchema(drCongoServices).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const selectDrCongoServiceSchema = createSelectSchema(drCongoServices);
+
+export type DrCongoService = typeof drCongoServices.$inferSelect;
+export type InsertDrCongoService = z.infer<typeof insertDrCongoServiceSchema>;
+
+// =====================================
 // User Analytics Tracking
 // =====================================
 

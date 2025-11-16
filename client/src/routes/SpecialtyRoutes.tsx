@@ -13,6 +13,7 @@ const ServicesPage = lazy(() => import('@/pages/services'));
 const ShippingCalculator = lazy(() => import('@/pages/shipping-calculator'));
 const PercentageCalculator = lazy(() => import('@/pages/percentage-calculator'));
 const GovernmentPage = lazy(() => import('@/pages/government'));
+const DrCongoPage = lazy(() => import('@/pages/dr-congo'));
 const FinancePage = lazy(() => import('@/pages/finance'));
 const CommissionPayment = lazy(() => import('@/pages/commission-payment'));
 const PawapayDepositCallback = lazy(() => import('@/pages/pawapay-deposit-callback'));
@@ -33,6 +34,11 @@ export function SpecialtyRoutes({ params }: any) {
       <Route path="/government">
         <SEOHead title="Government Services - Dedw3n" description="Access government services and information through Dedw3n's trusted platform." />
         <GovernmentPage />
+      </Route>
+      
+      <Route path="/dr-congo">
+        <SEOHead title="Dr Congo Services - Dedw3n" description="Access Dr Congo services including certificates, passports, and supplementary judgment documents through Dedw3n's trusted platform." />
+        <DrCongoPage />
       </Route>
       
       <Route path="/finance">

@@ -16,7 +16,7 @@ import { fileURLToPath } from 'url';
 import { storage } from "./storage";
 import { db } from "./db";
 import { eq, or, like, ilike, sql, and, ne, inArray, desc, count, sum, avg, isNull, gte, lte, between, notInArray, isNotNull } from "drizzle-orm";
-import { users, products, orders, vendors, carts, orderItems, reviews, messages, vendorPaymentInfo, insertVendorPaymentInfoSchema, vendorDiscounts, discountUsages, promotionalCampaigns, insertVendorDiscountSchema, insertDiscountUsageSchema, insertPromotionalCampaignSchema, returns, insertReturnSchema, marketingCampaigns, campaignActivities, campaignTouchpoints, campaignAnalytics, campaignProducts, insertMarketingCampaignSchema, insertCampaignActivitySchema, insertCampaignTouchpointSchema, insertCampaignAnalyticsSchema, storeUsers, cities, privateRoomInvitations, videos, videoPurchases, subscriptions, creatorEarnings, friendships, friendRequests, audioSessions, giftPropositions, notifications, moderationReports, insertModerationReportSchema, productReports, insertProductReportSchema, likedProducts, toastReports, insertToastReportSchema, affiliatePartners, vendorAffiliatePartners } from "@shared/schema";
+import { users, products, orders, vendors, carts, orderItems, reviews, messages, vendorPaymentInfo, insertVendorPaymentInfoSchema, vendorDiscounts, discountUsages, promotionalCampaigns, insertVendorDiscountSchema, insertDiscountUsageSchema, insertPromotionalCampaignSchema, returns, insertReturnSchema, marketingCampaigns, campaignActivities, campaignTouchpoints, campaignAnalytics, campaignProducts, insertMarketingCampaignSchema, insertCampaignActivitySchema, insertCampaignTouchpointSchema, insertCampaignAnalyticsSchema, storeUsers, cities, privateRoomInvitations, videos, videoPurchases, subscriptions, creatorEarnings, friendships, friendRequests, audioSessions, giftPropositions, notifications, moderationReports, insertModerationReportSchema, productReports, insertProductReportSchema, likedProducts, toastReports, insertToastReportSchema, affiliatePartners, vendorAffiliatePartners, drCongoServices } from "@shared/schema";
 
 import { setupAuth, hashPassword, comparePasswords } from "./auth";
 import { setupJwtAuth, verifyToken, revokeToken, generateToken } from "./jwt-auth";
@@ -23556,6 +23556,156 @@ The Dedw3n Team
     } catch (error) {
       console.error('Error deleting government service', error);
       res.status(500).json({ error: 'Failed to delete government service' });
+    }
+  });
+
+  // =====================================
+  // Dr Congo Services Routes
+  // =====================================
+  
+  app.get('/api/dr-congo-services', async (req: Request, res: Response) => {
+    try {
+      const { serviceType } = req.query;
+      
+      const whereConditions = [eq(drCongoServices.status, 'active')];
+      
+      if (serviceType && typeof serviceType === 'string') {
+        whereConditions.push(eq(drCongoServices.serviceType, serviceType as any));
+      }
+      
+      const services = await db
+        .select()
+        .from(drCongoServices)
+        .where(and(...whereConditions));
+      
+      res.json(services);
+    } catch (error) {
+      console.error('Error fetching Dr Congo services', error);
+      res.status(500).json({ error: 'Failed to fetch Dr Congo services' });
+    }
+  });
+
+  app.get('/api/dr-congo-services/:id', async (req: Request, res: Response) => {
+    try {
+      const serviceId = parseInt(req.params.id);
+      const [service] = await db
+        .select()
+        .from(drCongoServices)
+        .where(eq(drCongoServices.id, serviceId));
+      
+      if (!service) {
+        return res.status(404).json({ error: 'Service not found' });
+      }
+      
+      res.json(service);
+    } catch (error) {
+      console.error('Error fetching Dr Congo service', error);
+      res.status(500).json({ error: 'Failed to fetch Dr Congo service' });
+    }
+  });
+
+  app.post('/api/dr-congo-services', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await getAuthenticatedUser(req);
+      if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const { serviceType, title, description, price, currency, images } = req.body;
+      
+      if (!serviceType || !title || !description || !price) {
+        return res.status(400).json({ error: 'Service type, title, description, and price are required' });
+      }
+
+      const [newService] = await db.insert(drCongoServices).values({
+        userId: user.id,
+        serviceType,
+        title,
+        description,
+        price,
+        currency: currency || 'USD',
+        images: images || [],
+        status: 'active'
+      }).returning();
+
+      res.status(201).json(newService);
+    } catch (error) {
+      console.error('Error creating Dr Congo service', error);
+      res.status(500).json({ error: 'Failed to create Dr Congo service' });
+    }
+  });
+
+  app.put('/api/dr-congo-services/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await getAuthenticatedUser(req);
+      if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const serviceId = parseInt(req.params.id);
+      const { title, description, price, currency, images, status } = req.body;
+
+      const [service] = await db
+        .select()
+        .from(drCongoServices)
+        .where(eq(drCongoServices.id, serviceId));
+
+      if (!service) {
+        return res.status(404).json({ error: 'Service not found' });
+      }
+
+      if (service.userId !== user.id && user.role !== 'admin') {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+
+      const [updatedService] = await db
+        .update(drCongoServices)
+        .set({
+          title,
+          description,
+          price,
+          currency,
+          images,
+          status,
+          updatedAt: new Date()
+        })
+        .where(eq(drCongoServices.id, serviceId))
+        .returning();
+
+      res.json(updatedService);
+    } catch (error) {
+      console.error('Error updating Dr Congo service', error);
+      res.status(500).json({ error: 'Failed to update Dr Congo service' });
+    }
+  });
+
+  app.delete('/api/dr-congo-services/:id', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = await getAuthenticatedUser(req);
+      if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const serviceId = parseInt(req.params.id);
+      const [service] = await db
+        .select()
+        .from(drCongoServices)
+        .where(eq(drCongoServices.id, serviceId));
+
+      if (!service) {
+        return res.status(404).json({ error: 'Service not found' });
+      }
+
+      if (service.userId !== user.id && user.role !== 'admin') {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+
+      await db.delete(drCongoServices).where(eq(drCongoServices.id, serviceId));
+
+      res.json({ success: true, message: 'Service deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting Dr Congo service', error);
+      res.status(500).json({ error: 'Failed to delete Dr Congo service' });
     }
   });
 

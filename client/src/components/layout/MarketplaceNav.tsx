@@ -71,7 +71,8 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
     "NEW IN",
     "FIND THE PERFECT GIFT",
     "Add A Service",
-    "Add Service"
+    "Add Service",
+    "Dr Congo"
   ], []);
 
   // Use optimized batch translation for optimal performance
@@ -99,7 +100,8 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
     newInText: translatedTexts[17] || navigationTexts[17],
     findPerfectGiftText: translatedTexts[18] || navigationTexts[18],
     addAServiceText: translatedTexts[19] || navigationTexts[19],
-    addServiceText: translatedTexts[20] || navigationTexts[20]
+    addServiceText: translatedTexts[20] || navigationTexts[20],
+    drCongoText: translatedTexts[21] || navigationTexts[21]
   }), [translatedTexts, navigationTexts]);
 
   // Memoize navigation handlers to prevent infinite re-renders
@@ -891,6 +893,18 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
                   <span className="text-xs">{translatedLabels.realEstateText}</span>
                 </Button>
               )}
+
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-12"
+                onClick={() => {
+                  setLocation("/dr-congo");
+                  setIsSidebarOpen(false);
+                }}
+                data-testid="sidebar-button-dr-congo"
+              >
+                <span className="text-xs">{translatedLabels.drCongoText}</span>
+              </Button>
 
               <Button
                 variant={marketType === 'rqst' ? 'secondary' : 'ghost'}
