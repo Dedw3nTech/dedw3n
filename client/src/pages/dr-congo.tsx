@@ -3,6 +3,7 @@ import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileText, Book, Scale, IdCard } from 'lucide-react';
+import { MarketplaceNav } from '@/components/layout/MarketplaceNav';
 
 import certificateImage from "@assets/stock_images/passport_identificat_84d90351.jpg";
 import passportImage from "@assets/stock_images/professional_busines_7f598002.jpg";
@@ -70,47 +71,50 @@ export default function DrCongo() {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {services.map((service) => {
-            const Icon = service.icon;
-            return (
-              <Card
-                key={service.id}
-                className="group hover:shadow-lg transition-all duration-300 cursor-pointer border border-gray-200"
-                data-testid={`card-service-${service.id}`}
-              >
-                <CardContent className="p-0">
-                  <div className="relative h-48 overflow-hidden bg-gray-100">
-                    <img
-                      src={service.image}
-                      alt={service.name}
-                      className="w-full h-full object-cover"
-                      data-testid={`img-service-${service.id}`}
-                    />
-                  </div>
-                  <div className="p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Icon className="w-4 h-4 text-black" />
-                      <h3 className="text-base font-semibold text-black">{service.name}</h3>
+    <>
+      <MarketplaceNav />
+      <div className="min-h-screen bg-white">
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {services.map((service) => {
+              const Icon = service.icon;
+              return (
+                <Card
+                  key={service.id}
+                  className="group hover:shadow-lg transition-all duration-300 cursor-pointer border border-gray-200"
+                  data-testid={`card-service-${service.id}`}
+                >
+                  <CardContent className="p-0">
+                    <div className="relative h-48 overflow-hidden bg-gray-100">
+                      <img
+                        src={service.image}
+                        alt={service.name}
+                        className="w-full h-full object-cover"
+                        data-testid={`img-service-${service.id}`}
+                      />
                     </div>
-                    <p className="text-sm text-gray-600 mb-4">
-                      {service.description}
-                    </p>
-                    <Button
-                      className="w-full bg-black hover:bg-gray-800 text-white text-sm"
-                      data-testid={`button-request-${service.id}`}
-                    >
-                      {requestServiceText}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                    <div className="p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon className="w-4 h-4 text-black" />
+                        <h3 className="text-base font-semibold text-black">{service.name}</h3>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-4">
+                        {service.description}
+                      </p>
+                      <Button
+                        className="w-full bg-black hover:bg-gray-800 text-white text-sm"
+                        data-testid={`button-request-${service.id}`}
+                      >
+                        {requestServiceText}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

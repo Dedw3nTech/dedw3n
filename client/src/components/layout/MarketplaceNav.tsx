@@ -42,7 +42,7 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
   const navRef = useRef<HTMLDivElement>(null);
   const [isNavVisible, setIsNavVisible] = useState(true);
   
-  const isGovernmentPage = location === '/government';
+  const isGovernmentPage = location === '/government' || location === '/dr-congo';
   const canAddService = user?.role === 'admin' || user?.username === 'Serruti';
   
   // Use external search term if provided, otherwise use local state
