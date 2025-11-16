@@ -15,7 +15,6 @@ import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { WeightUnitProvider } from "@/contexts/WeightUnitContext";
 import { DimensionUnitProvider } from "@/hooks/use-dimension-unit";
-import { UnifiedRecaptchaProvider } from "@/components/UnifiedRecaptchaProvider";
 import { GPCProvider } from "@/components/GPCProvider";
 import { CookieConsentProvider } from "@/components/CookieConsentProvider";
 import { LowerCookieBanner } from "@/components/LowerCookieBanner";
@@ -509,7 +508,6 @@ function App() {
   // Using forceRefresh in a key forces re-rendering when language changes
   return (
     <QueryClientProvider client={queryClient} key={`query-provider-${forceRefresh}`}>
-      <UnifiedRecaptchaProvider>
         <GPCProvider>
           <CookieConsentProvider>
             <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
@@ -581,7 +579,6 @@ function App() {
             </ThemeProvider>
           </CookieConsentProvider>
         </GPCProvider>
-      </UnifiedRecaptchaProvider>
     </QueryClientProvider>
   );
 }

@@ -1,13 +1,4 @@
 import type { Express, Request, Response, NextFunction } from "express";
-
-// Extend Request interface for reCAPTCHA score
-declare global {
-  namespace Express {
-    interface Request {
-      recaptchaScore?: number;
-    }
-  }
-}
 import { createServer, type Server } from "http";
 import Stripe from "stripe";
 // WebSocket implementation moved to messaging-suite.ts
@@ -22,7 +13,7 @@ import { db } from "./db";
 import { eq, or, like, ilike, sql, and, ne, inArray, desc, count, sum, avg, isNull, gte, lte, between, notInArray, isNotNull } from "drizzle-orm";
 import { users, products, orders, vendors, carts, orderItems, reviews, messages, vendorPaymentInfo, insertVendorPaymentInfoSchema, vendorDiscounts, discountUsages, promotionalCampaigns, insertVendorDiscountSchema, insertDiscountUsageSchema, insertPromotionalCampaignSchema, returns, insertReturnSchema, marketingCampaigns, campaignActivities, campaignTouchpoints, campaignAnalytics, campaignProducts, insertMarketingCampaignSchema, insertCampaignActivitySchema, insertCampaignTouchpointSchema, insertCampaignAnalyticsSchema, storeUsers, cities, privateRoomInvitations } from "@shared/schema";
 
-import { setupAuth, hashPassword, verifyRecaptcha, comparePasswords } from "./auth";
+import { setupAuth, hashPassword, comparePasswords } from "./auth";
 import { setupJwtAuth, verifyToken, revokeToken } from "./jwt-auth";
 import { promisify } from "util";
 import { scrypt, randomBytes } from "crypto";
@@ -80,89 +71,6 @@ import {
   generateSEOKeywords, 
   createAIAssistedProduct 
 } from './ai-product-upload';
-
-import { handleRecaptchaVerification, requireRecaptcha, getRecaptchaConfig } from "./recaptcha";
-import { createAssessment, testAssessment } from "./recaptcha-enterprise";
-
-// reCAPTCHA Enterprise middleware
-const requireRecaptchaEnterprise = (action: string, minScore: number = 0.5) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    const { recaptchaToken } = req.body;
-    
-    // Handle development bypass
-    if (recaptchaToken === 'dev_bypass_token') {
-      const isDevelopment = process.env.NODE_ENV === 'development' || 
-                           req.headers.host?.includes('replit.dev') ||
-                           req.headers.host?.includes('localhost');
-      
-      if (isDevelopment) {
-        console.log(`[RECAPTCHA-ENTERPRISE] Development bypass for action: ${action}`);
-        return next();
-      }
-    }
-    
-    if (!recaptchaToken) {
-      return res.status(400).json({ 
-        message: "Security verification required",
-        code: "RECAPTCHA_REQUIRED"
-      });
-    }
-    
-    try {
-      const assessment = await createAssessment({
-        token: recaptchaToken,
-        recaptchaAction: action
-      });
-      
-      if (!assessment || !assessment.valid) {
-        console.log(`[RECAPTCHA-ENTERPRISE] ${action} verification failed - Error: ${assessment?.error || 'Unknown'}`);
-        
-        // Handle specific error types
-        if (assessment?.errorType === 'SERVER_ERROR') {
-          return res.status(500).json({ 
-            message: "Security verification temporarily unavailable. Please try again.",
-            code: "RECAPTCHA_SERVER_ERROR"
-          });
-        } else if (assessment?.errorType === 'INVALID_TOKEN') {
-          return res.status(400).json({ 
-            message: "Invalid security token. Please refresh and try again.",
-            code: "RECAPTCHA_INVALID_TOKEN"
-          });
-        } else if (assessment?.errorType === 'ACTION_MISMATCH') {
-          return res.status(400).json({ 
-            message: "Security verification mismatch. Please try again.",
-            code: "RECAPTCHA_ACTION_MISMATCH"
-          });
-        } else {
-          return res.status(400).json({ 
-            message: "Security verification failed. Please try again.",
-            code: "RECAPTCHA_FAILED"
-          });
-        }
-      }
-      
-      if (assessment.score < minScore) {
-        console.log(`[RECAPTCHA-ENTERPRISE] ${action} verification failed - Score too low: ${assessment.score} < ${minScore}`);
-        return res.status(400).json({ 
-          message: "Security verification failed due to suspicious activity. Please try again.",
-          code: "RECAPTCHA_LOW_SCORE",
-          riskScore: assessment.score,
-          minRequired: minScore
-        });
-      }
-      
-      console.log(`[RECAPTCHA-ENTERPRISE] ${action} verification passed - Score: ${assessment.score}`);
-      req.recaptchaScore = assessment.score;
-      next();
-    } catch (error) {
-      console.error(`[RECAPTCHA-ENTERPRISE] ${action} verification error:`, error);
-      return res.status(500).json({ 
-        message: "Security verification error",
-        code: "RECAPTCHA_ERROR"
-      });
-    }
-  };
-};
 
 import { 
   insertVendorSchema, insertProductSchema, insertPostSchema, insertCommentSchema, 
@@ -1959,7 +1867,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   setupJwtAuth(app);
   
   // Stripe payment intent creation
-  app.post("/api/create-payment-intent", requireRecaptchaEnterprise('checkout', 0.8), async (req: Request, res: Response) => {
+  app.post("/api/create-payment-intent", async (req: Request, res: Response) => {
     try {
       const { amount } = req.body;
       if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
@@ -2129,7 +2037,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.post('/api/contact', upload.fields([
     { name: 'titleUpload', maxCount: 1 },
     { name: 'textUpload', maxCount: 1 }
-  ]), requireRecaptchaEnterprise('contact', 0.7), async (req: Request, res: Response) => {
+  ]), async (req: Request, res: Response) => {
     try {
       const { name, email, subject, message } = req.body;
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
@@ -2347,120 +2255,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // reCAPTCHA Enterprise-protected login endpoint
-  app.post('/api/auth/login-with-recaptcha', async (req: Request, res: Response) => {
-    const { username, password, recaptchaToken } = req.body;
-    
-
-    try {
-      // Verify reCAPTCHA Enterprise first - fail early if invalid
-      let isRecaptchaValid = false;
-      let riskScore = 0;
-      
-      // Handle development bypass token
-      if (recaptchaToken === 'dev_bypass_token') {
-        console.log('[RECAPTCHA-ENTERPRISE] Development bypass token detected');
-        const isDevelopment = process.env.NODE_ENV === 'development' || 
-                             req.headers.host?.includes('replit.dev') ||
-                             req.headers.host?.includes('localhost');
-        
-        if (isDevelopment) {
-          console.log('[RECAPTCHA-ENTERPRISE] Development environment detected, allowing bypass');
-          isRecaptchaValid = true;
-          riskScore = 0.9; // High trust score for development
-        } else {
-          console.log('[RECAPTCHA-ENTERPRISE] Production environment detected, bypass not allowed');
-          isRecaptchaValid = false;
-        }
-      } else {
-        // Use reCAPTCHA Enterprise assessment
-        const assessment = await createAssessment({
-          token: recaptchaToken,
-          recaptchaAction: 'login'
-        });
-        
-        if (assessment && assessment.valid) {
-          riskScore = assessment.score;
-          // Accept tokens with score >= 0.5 (configurable threshold)
-          isRecaptchaValid = riskScore >= 0.5;
-          
-          console.log(`[RECAPTCHA-ENTERPRISE] Login assessment - Score: ${riskScore}, Valid: ${isRecaptchaValid}`);
-        } else {
-          console.log('[RECAPTCHA-ENTERPRISE] Assessment failed or invalid token');
-          isRecaptchaValid = false;
-        }
-      }
-      
-      if (!isRecaptchaValid) {
-        return res.status(400).json({ 
-          message: "Security verification failed. Please try again.",
-          code: "RECAPTCHA_FAILED",
-          riskScore: riskScore
-        });
-      }
-      
-      // Proceed with normal authentication
-      const user = await storage.getUserByUsername(username);
-      if (!user) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-      
-      // Check if account is locked
-      if (user.isLocked) {
-        return res.status(423).json({ 
-          message: "Account is locked. Please contact support.",
-          code: "ACCOUNT_LOCKED"
-        });
-      }
-      
-      // Verify password using the imported comparePasswords function
-      const isPasswordValid = await comparePasswords(password, user.password);
-      
-      if (!isPasswordValid) {
-        // Track failed login attempts
-        const failedAttempts = (user.failedLoginAttempts || 0) + 1;
-        
-        // Update failed attempts in database
-        try {
-          await storage.updateUser(user.id, { 
-            failedLoginAttempts: failedAttempts
-          });
-        } catch (updateError) {
-          // Failed attempt tracking error handled silently for security
-        }
-        
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-      
-      // Login the user using session
-      if (req.login && typeof req.login === 'function') {
-        req.login(user, (err) => {
-          if (err) {
-            return res.status(500).json({ message: "Login failed" });
-          }
-          
-          // Return user without password
-          const { password: _, ...userWithoutPassword } = user;
-          res.json(userWithoutPassword);
-        });
-      } else {
-        // Fallback: set session manually
-        if (req.session) {
-          (req.session as any).passport = { user: user.id };
-          req.user = user;
-          
-          // Return user without password
-          const { password: _, ...userWithoutPassword } = user;
-          res.json(userWithoutPassword);
-        } else {
-          return res.status(500).json({ message: "Session unavailable" });
-        }
-      }
-      
-    } catch (error) {
-      res.status(500).json({ message: "Login failed" });
-    }
-  });
 
   // reCAPTCHA Enterprise-protected registration endpoint  
   app.post('/api/auth/register-with-recaptcha', async (req: Request, res: Response) => {
@@ -2576,108 +2370,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       
       const success = setBrevoApiKey(apiKey.trim());
       
-      if (success) {
-        return res.json({ success: true, message: 'Brevo API key configured successfully' });
-      } else {
-        return res.status(400).json({ message: 'Invalid API key format' });
-      }
-    } catch (error) {
-      return res.status(500).json({ message: 'Failed to configure API key' });
-    }
-  });
-  
-  // Get notification settings
-  app.get('/api/notifications/settings', unifiedIsAuthenticated, async (req: Request, res: Response) => {
-    try {
-      if (!req.user?.id) {
-        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
-      }
-      
-      const settings = await storage.getNotificationSettings(req.user.id);
-      return res.json(settings);
-    } catch (error) {
-      return res.status(500).json({ message: 'Failed to fetch notification settings' });
-    }
-  });
-  
-  // Update notification setting
-  app.patch('/api/notifications/settings', unifiedIsAuthenticated, async (req: Request, res: Response) => {
-    try {
-      if (!req.user?.id) {
-        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
-      }
-      
-      const { type, channel, enabled } = req.body;
-      
-      if (!type || !channel || typeof enabled !== 'boolean') {
-        return res.status(400).json({ message: 'Invalid request. Required fields: type, channel, enabled' });
-      }
-      
-      const updatedSetting = await storage.updateNotificationSetting(
-        req.user.id,
-        type,
-        channel,
-        enabled
-      );
-      
-      if (!updatedSetting) {
-        return res.status(500).json({ message: 'Failed to update notification setting' });
-      }
-      
-      return res.json(updatedSetting);
-    } catch (error) {
-      return res.status(500).json({ message: 'Failed to update notification setting' });
-    }
-  });
-  
-
-  
-  // Page content API endpoints
-  app.get('/api/page/:id', (req: Request, res: Response) => {
-    const { id } = req.params;
-    const pageContent = pageContents[id];
-    
-    if (!pageContent) {
-      return res.status(404).json({ message: `Page content for '${id}' not found` });
-    }
-    
-    res.json(pageContent);
-  });
-  
-  // NOTE: Dynamic sitemap removed to avoid conflicts with static sitemap.xml file
-  // Using static sitemap.xml in public folder for consistency and SEO optimization
-
-  // Duplicate contact endpoint removed - using the full-featured one above with file upload support
-  
-  // Admin-only endpoint to view contact submissions (would add proper authentication in production)
-  app.get('/api/admin/contact-submissions', (req: Request, res: Response) => {
-    // In production, this would be protected by authentication and authorization
-    if (req.user?.role !== 'admin') {
-      return res.status(403).json({ message: "Unauthorized" });
-    }
-    
-    res.json(contactSubmissions);
-  });
-  
-  // Apply fraud prevention middleware globally
-  app.use(fraudRiskMiddleware);
-  
-  // Register fraud prevention routes
-  registerFraudPreventionRoutes(app);
-  
-  // Unified auth endpoint for getting current user
-  app.get('/api/auth/me', async (req: Request, res: Response) => {
-    console.log('[DEBUG] /api/auth/me - Authentication attempt');
-    console.log('[DEBUG] /api/auth/me - Session ID:', req.sessionID);
-    console.log('[DEBUG] /api/auth/me - Headers:', JSON.stringify(req.headers));
-    console.log('[DEBUG] /api/auth/me - isAuthenticated():', req.isAuthenticated());
-    console.log('[DEBUG] /api/auth/me - Session data:', req.session);
-    
-    // First check session authentication
-    if (req.isAuthenticated() && req.user) {
-      console.log('[DEBUG] /api/auth/me - User authenticated via session:', req.user ? `ID: ${(req.user as any).id}` : 'None');
-      return res.json(req.user);
-    }
     
     // If not authenticated via session, check JWT
     const authHeader = req.headers.authorization;
@@ -3291,7 +2983,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Stripe payment route for one-time payments
-  app.post("/api/create-payment-intent", requireRecaptchaEnterprise('checkout', 0.8), async (req, res) => {
+  app.post("/api/create-payment-intent", async (req, res) => {
     try {
       const { amount } = req.body;
       const paymentIntent = await stripe.paymentIntents.create({
@@ -4726,7 +4418,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Vendor Sub-Account registration endpoint with reCAPTCHA Enterprise protection
-  app.post('/api/vendors/register', requireRecaptchaEnterprise('vendor_register', 0.6), async (req: Request, res: Response) => {
+  app.post('/api/vendors/register', async (req: Request, res: Response) => {
     try {
       // Use the same authentication pattern as working endpoints
       let userId = (req.user as any)?.id;
@@ -7555,7 +7247,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Suggest price range based on product specs
-  app.post('/api/ai/suggest-price', requireRecaptchaEnterprise('get_price', 0.5), unifiedIsAuthenticated, async (req: Request, res: Response) => {
+  app.post('/api/ai/suggest-price', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -8878,7 +8570,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  app.post('/api/cart', requireRecaptchaEnterprise('cart_add', 0.6), unifiedIsAuthenticated, async (req: Request, res: Response) => {
+  app.post('/api/cart', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -10469,7 +10161,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Enhanced email validation endpoint with retry logic and app token support, protected by reCAPTCHA Enterprise
-  app.post('/api/validate-email', requireRecaptchaEnterprise('email_validation', 0.4), async (req: Request, res: Response) => {
+  app.post('/api/validate-email', async (req: Request, res: Response) => {
     try {
       const { email } = req.body;
       const appToken = req.headers['x-clearout-app-token'] as string;
@@ -11258,7 +10950,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     res.json(currencies);
   });
 
-  app.post('/api/convert-price', requireRecaptchaEnterprise('get_price', 0.4), (req: Request, res: Response) => {
+  app.post('/api/convert-price', (req: Request, res: Response) => {
     try {
       const { price, fromCurrency = 'USD', toCurrency } = req.body;
       
@@ -12469,7 +12161,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Dating room payment processing
-  app.post('/api/dating-room/payment-intent', requireRecaptchaEnterprise('payment_add', 0.8), unifiedIsAuthenticated, async (req: Request, res: Response) => {
+  app.post('/api/dating-room/payment-intent', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
       const { tier } = req.body;
       const userId = req.user!.id;
@@ -14976,7 +14668,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Create payment intent for commission payment with multiple gateways
-  app.post('/api/commission-periods/:periodId/payment-intent', requireRecaptchaEnterprise('payment_add', 0.8), async (req: Request, res: Response) => {
+  app.post('/api/commission-periods/:periodId/payment-intent', async (req: Request, res: Response) => {
     try {
       const periodId = parseInt(req.params.periodId);
       const { gateway = 'stripe' } = req.body;
@@ -15059,7 +14751,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Process monthly billing (admin endpoint with reCAPTCHA Enterprise protection)
-  app.post('/api/admin/process-monthly-billing', requireRecaptchaEnterprise('admin_billing', 0.8), async (req: Request, res: Response) => {
+  app.post('/api/admin/process-monthly-billing', async (req: Request, res: Response) => {
     try {
       await commissionService.processMonthlyBilling();
       res.json({ success: true, message: 'Monthly billing processed successfully' });
@@ -15070,7 +14762,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Process overdue payments and block accounts (admin endpoint with reCAPTCHA Enterprise protection)
-  app.post('/api/admin/process-overdue-payments', requireRecaptchaEnterprise('admin_overdue', 0.8), async (req: Request, res: Response) => {
+  app.post('/api/admin/process-overdue-payments', async (req: Request, res: Response) => {
     try {
       const blockedCount = await commissionService.processOverduePayments();
       res.json({ 
@@ -15085,7 +14777,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Process monthly commissions (admin only with reCAPTCHA Enterprise protection)
-  app.post('/api/admin/process-commissions', requireRecaptchaEnterprise('admin_commissions', 0.8), async (req: Request, res: Response) => {
+  app.post('/api/admin/process-commissions', async (req: Request, res: Response) => {
     try {
       const { month, year } = req.body;
       
@@ -15113,7 +14805,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Suspend non-paying vendors (admin only with reCAPTCHA Enterprise protection)
-  app.post('/api/admin/suspend-non-paying-vendors', requireRecaptchaEnterprise('admin_suspend', 0.9), async (req: Request, res: Response) => {
+  app.post('/api/admin/suspend-non-paying-vendors', async (req: Request, res: Response) => {
     try {
       const results = await commissionService.suspendNonPayingVendors();
       res.json({ success: true, results });
