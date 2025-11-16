@@ -1967,25 +1967,32 @@ export default function AddProduct() {
                   <FormField
                     control={form.control}
                     name="vatIncluded"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base">{t("VAT included in price")}</FormLabel>
-                          <p className="text-sm text-muted-foreground">
-                            {t("Enable to include VAT/tax")}
-                          </p>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
+                    render={({ field }) => {
+                      const isC2C = form.watch('marketplace') === 'c2c';
+                      return (
+                        <FormItem className={`flex flex-row items-center justify-between rounded-lg border p-4 ${isC2C ? 'opacity-50 bg-gray-50' : ''}`}>
+                          <div className="space-y-0.5">
+                            <FormLabel className={`text-base ${isC2C ? 'text-gray-400' : ''}`}>
+                              {t("VAT included in price")}
+                            </FormLabel>
+                            <p className={`text-sm ${isC2C ? 'text-gray-400' : 'text-muted-foreground'}`}>
+                              {isC2C ? t("Not applicable for Friend to Friend marketplace") : t("Enable to include VAT/tax")}
+                            </p>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={isC2C ? false : field.value}
+                              onCheckedChange={isC2C ? undefined : field.onChange}
+                              disabled={isC2C}
+                              className={isC2C ? 'cursor-not-allowed' : ''}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      );
+                    }}
                   />
                   
-                  {form.watch('vatIncluded') && (
+                  {form.watch('vatIncluded') && form.watch('marketplace') !== 'c2c' && (
                     <FormField
                       control={form.control}
                       name="vatRate"
