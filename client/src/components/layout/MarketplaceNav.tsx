@@ -127,7 +127,7 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
   // Memoize navigation handlers to prevent infinite re-renders
   const handleMarketNavigation = useCallback((type: string) => {
     setMarketType(type as MarketType);
-    setLocation("/marketplace");
+    setLocation(`/marketplace/${type}`);
   }, [setMarketType, setLocation]);
 
   const handlePageNavigation = useCallback((path: string) => {
