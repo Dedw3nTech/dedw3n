@@ -2254,56 +2254,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       return res.status(500).json({ message: "Test failed" });
     }
   });
-
-  // Configure Brevo API key
-  app.post('/api/brevo/configure', async (req: Request, res: Response) => {
-    try {
-      const { apiKey } = req.body;
-      
-      if (!apiKey || typeof apiKey !== 'string') {
-        return res.status(400).json({ message: 'API key is required' });
-      }
-      
-      const success = setBrevoApiKey(apiKey.trim());
-      
-    
-    // If not authenticated via session, check JWT
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.substring(7);
-      console.log('[DEBUG] /api/auth/me - Attempting JWT authentication with token:', token.substring(0, 10) + '...');
-      
-      try {
-        const payload = verifyToken(token);
-        if (payload) {
-          console.log('[DEBUG] /api/auth/me - JWT token is valid, payload:', payload);
-          
-          // Look up user from payload
-          const user = await storage.getUser(payload.userId);
-          if (user) {
-            console.log('[DEBUG] /api/auth/me - User found via JWT payload, ID:', user.id);
-            return res.json(user);
-          } else {
-            console.log('[DEBUG] /api/auth/me - User not found with ID from JWT payload:', payload.userId);
-          }
-        } else {
-          console.log('[DEBUG] /api/auth/me - Invalid JWT token');
-        }
-      } catch (error) {
-        console.error('[DEBUG] /api/auth/me - JWT verification error:', error);
-      }
-    }
-    
-    // If we get here, no valid authentication was found
-    console.log('[DEBUG] /api/auth/me - Authentication failed');
-    return res.status(401).json({ 
-      message: 'Unauthorized - No valid authentication',
-      authMethods: ['session', 'bearer'],
-      error: 'invalid_credentials',
-      sessionExists: !!req.session,
-      sessionID: req.sessionID
-    });
-  });
   
   // Debug endpoint for session information - no authentication required
   app.get('/api/debug/session', (req: Request, res: Response) => {
