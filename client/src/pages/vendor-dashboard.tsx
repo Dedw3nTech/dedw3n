@@ -429,9 +429,6 @@ export default function VendorDashboard() {
     <div className="container max-w-7xl py-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">{dashboardText}</h1>
-        <p className="text-muted-foreground">
-          {vendor.vendorType === 'private' ? t("Using Private Vendor account") : t("Using Business Vendor account")}
-        </p>
       </div>
 
       {/* Summary Cards */}
