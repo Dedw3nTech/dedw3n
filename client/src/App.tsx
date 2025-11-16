@@ -442,7 +442,13 @@ const lazyBundles = [
   },
   {
     Component: SpecialtyRoutes,
-    mounts: ['/affiliates/:rest*', '/partner/:rest*', '/creators/:rest*', '/video-demo', '/test-cookies']
+    mounts: [
+      '/government', '/dr-congo', '/finance', '/lifestyle', '/services',
+      '/shipping-calculator', '/percentage-calculator', '/commission-payment/:periodId',
+      '/dating', '/dating/:rest*', '/my-matches',
+      '/pawapay/:rest*', '/affiliates/:rest*', '/partner/:rest*', '/creators/:rest*',
+      '/video-demo', '/test-cookies'
+    ]
   }
 ];
 
