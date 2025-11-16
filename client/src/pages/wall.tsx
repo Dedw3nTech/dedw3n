@@ -122,7 +122,7 @@ export default function WallPage() {
   });
 
   // Fetch dating profile to check if "Show on Wall" is enabled
-  const { data: datingProfile } = useQuery({
+  const { data: datingProfile } = useQuery<{ showOnWall?: boolean } | null>({
     queryKey: ["/api/dating-profile"],
     enabled: !!user,
     retry: false, // Don't retry if user doesn't have a dating profile
