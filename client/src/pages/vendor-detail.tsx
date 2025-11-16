@@ -404,14 +404,6 @@ export default function VendorDetailPage() {
 
       {/* Main Content */}
       <div className="w-full">
-        {/* Products Section */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-2">{translateText("Products")}</h2>
-          <p className="text-muted-foreground">
-            {translateText("Browse all products from")} {vendor.storeName}
-          </p>
-        </div>
-        
         {isLoadingProducts ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {Array(8).fill(0).map((_, i) => (
