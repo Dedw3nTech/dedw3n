@@ -986,8 +986,8 @@ export default function VendorDetailPage() {
         </div>
       )}
 
-      <div className="container py-8">
-        {/* Vendor Info Top Bar */}
+      {/* Vendor Info Top Bar - Full Width */}
+      <div className="w-full py-8">
         <Card className="mb-8">
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row gap-6">
@@ -1027,8 +1027,10 @@ export default function VendorDetailPage() {
             </div>
           </CardContent>
         </Card>
+      </div>
 
-        {/* Products Section with Filters */}
+      {/* Products Section with Filters */}
+      <div className="container pb-8">
         <div className="flex justify-end items-center mb-4">
           {/* Mobile filter button */}
           <Sheet>
