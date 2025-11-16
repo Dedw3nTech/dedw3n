@@ -13,7 +13,6 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import {
   Package,
   Plus,
-  Edit,
   Trash2,
   Eye,
   Search,
@@ -385,23 +384,14 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
                     {getMarketplaceBadge(product.marketplace || 'c2c')}
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setLocation(`/add-product?edit=${product.id}`)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteMutation.mutate(product.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteMutation.mutate(product.id)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
