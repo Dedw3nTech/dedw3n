@@ -18610,6 +18610,465 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
     }
   });
 
+  // Comprehensive Vendor Analytics endpoint
+  app.get('/api/vendors/analytics', async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.query.vendorId as string);
+      const timeRange = req.query.timeRange as string || '30d';
+      
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ error: 'Invalid vendor ID' });
+      }
+
+      // Calculate date range
+      const now = new Date();
+      let startDate = new Date();
+      switch (timeRange) {
+        case '7d':
+          startDate.setDate(now.getDate() - 7);
+          break;
+        case '30d':
+          startDate.setDate(now.getDate() - 30);
+          break;
+        case '90d':
+          startDate.setDate(now.getDate() - 90);
+          break;
+        case '1y':
+          startDate.setFullYear(now.getFullYear() - 1);
+          break;
+        default:
+          startDate.setDate(now.getDate() - 30);
+      }
+
+      // Get overview metrics
+      const [overviewMetrics] = await db
+        .select({
+          totalRevenue: sql<number>`COALESCE(SUM(${orderItems.totalPrice}), 0)::numeric`,
+          totalOrders: sql<number>`COUNT(DISTINCT ${orderItems.orderId})::numeric`,
+          averageOrderValue: sql<number>`CASE WHEN COUNT(DISTINCT ${orderItems.orderId}) = 0 THEN 0 ELSE (SUM(${orderItems.totalPrice}) / COUNT(DISTINCT ${orderItems.orderId}))::numeric END`
+        })
+        .from(orderItems)
+        .innerJoin(orders, eq(orderItems.orderId, orders.id))
+        .where(
+          and(
+            eq(orderItems.vendorId, vendorId),
+            gte(orders.createdAt, startDate)
+          )
+        );
+
+      const [productCount] = await db
+        .select({ count: sql<number>`COUNT(*)::numeric` })
+        .from(products)
+        .where(eq(products.vendorId, vendorId));
+
+      const [customerCount] = await db
+        .select({ count: sql<number>`COUNT(DISTINCT ${orders.userId})::numeric` })
+        .from(orders)
+        .innerJoin(orderItems, eq(orders.id, orderItems.orderId))
+        .where(
+          and(
+            eq(orderItems.vendorId, vendorId),
+            gte(orders.createdAt, startDate)
+          )
+        );
+
+      const [totalViews] = await db
+        .select({ views: sql<number>`COALESCE(SUM(${products.viewCount}), 0)::numeric` })
+        .from(products)
+        .where(eq(products.vendorId, vendorId));
+
+      // Calculate conversion rate and repeat customer rate
+      const conversionRate = totalViews.views > 0 
+        ? ((overviewMetrics.totalOrders / totalViews.views) * 100) 
+        : 0;
+
+      const [repeatCustomers] = await db
+        .select({ count: sql<number>`COUNT(*)::numeric` })
+        .from(
+          db.select({ userId: orders.userId, orderCount: sql<number>`COUNT(*)` })
+            .from(orders)
+            .innerJoin(orderItems, eq(orders.id, orderItems.orderId))
+            .where(eq(orderItems.vendorId, vendorId))
+            .groupBy(orders.userId)
+            .having(sql`COUNT(*) > 1`)
+            .as('repeat_customers')
+        );
+
+      const repeatCustomerRate = customerCount.count > 0 
+        ? (repeatCustomers.count / customerCount.count) * 100 
+        : 0;
+
+      // Get revenue by period
+      const revenueByPeriod = await db
+        .select({
+          period: sql<string>`TO_CHAR(${orders.createdAt}, 'YYYY-MM-DD')`,
+          revenue: sql<number>`COALESCE(SUM(${orderItems.totalPrice}), 0)::numeric`,
+          orders: sql<number>`COUNT(DISTINCT ${orderItems.orderId})::numeric`,
+          profit: sql<number>`COALESCE(SUM(${orderItems.totalPrice} * 0.7), 0)::numeric`
+        })
+        .from(orderItems)
+        .innerJoin(orders, eq(orderItems.orderId, orders.id))
+        .where(
+          and(
+            eq(orderItems.vendorId, vendorId),
+            gte(orders.createdAt, startDate)
+          )
+        )
+        .groupBy(sql`TO_CHAR(${orders.createdAt}, 'YYYY-MM-DD')`)
+        .orderBy(sql`TO_CHAR(${orders.createdAt}, 'YYYY-MM-DD')`);
+
+      // Get product performance
+      const productPerformance = await db
+        .select({
+          productId: products.id,
+          productName: products.name,
+          revenue: sql<number>`COALESCE(SUM(${orderItems.totalPrice}), 0)::numeric`,
+          orders: sql<number>`COUNT(DISTINCT ${orderItems.orderId})::numeric`,
+          views: products.viewCount,
+          conversionRate: sql<number>`CASE WHEN ${products.viewCount} = 0 THEN 0 ELSE (COUNT(DISTINCT ${orderItems.orderId})::float / ${products.viewCount}::float * 100)::numeric END`,
+          profit: sql<number>`COALESCE(SUM(${orderItems.totalPrice} * 0.7), 0)::numeric`
+        })
+        .from(products)
+        .leftJoin(orderItems, eq(products.id, orderItems.productId))
+        .where(eq(products.vendorId, vendorId))
+        .groupBy(products.id, products.name, products.viewCount)
+        .orderBy(desc(sql`COALESCE(SUM(${orderItems.totalPrice}), 0)`))
+        .limit(10);
+
+      // Get category breakdown
+      const categoryBreakdown = await db
+        .select({
+          category: products.category,
+          revenue: sql<number>`COALESCE(SUM(${orderItems.totalPrice}), 0)::numeric`,
+          orders: sql<number>`COUNT(DISTINCT ${orderItems.orderId})::numeric`
+        })
+        .from(products)
+        .leftJoin(orderItems, eq(products.id, orderItems.productId))
+        .where(eq(products.vendorId, vendorId))
+        .groupBy(products.category);
+
+      const totalCategoryRevenue = categoryBreakdown.reduce((sum, cat) => sum + Number(cat.revenue), 0);
+      const categoryBreakdownWithPercentage = categoryBreakdown.map(cat => ({
+        ...cat,
+        percentage: totalCategoryRevenue > 0 ? (Number(cat.revenue) / totalCategoryRevenue * 100) : 0
+      }));
+
+      // Get top customers
+      const topCustomers = await db
+        .select({
+          customerId: orders.userId,
+          customerName: users.username,
+          totalSpent: sql<number>`SUM(${orderItems.totalPrice})::numeric`,
+          orderCount: sql<number>`COUNT(DISTINCT ${orders.id})::numeric`,
+          lastOrder: sql<string>`MAX(${orders.createdAt})::text`
+        })
+        .from(orders)
+        .innerJoin(orderItems, eq(orders.id, orderItems.orderId))
+        .innerJoin(users, eq(orders.userId, users.id))
+        .where(eq(orderItems.vendorId, vendorId))
+        .groupBy(orders.userId, users.username)
+        .orderBy(desc(sql`SUM(${orderItems.totalPrice})`))
+        .limit(5);
+
+      // Get customer retention data
+      const customerRetention = await db
+        .select({
+          period: sql<string>`TO_CHAR(${orders.createdAt}, 'YYYY-MM')`,
+          newCustomers: sql<number>`COUNT(DISTINCT CASE WHEN ${orders.id} = (SELECT MIN(id) FROM ${orders} o2 WHERE o2.user_id = ${orders.userId}) THEN ${orders.userId} END)::numeric`,
+          returningCustomers: sql<number>`COUNT(DISTINCT CASE WHEN ${orders.id} != (SELECT MIN(id) FROM ${orders} o2 WHERE o2.user_id = ${orders.userId}) THEN ${orders.userId} END)::numeric`
+        })
+        .from(orders)
+        .innerJoin(orderItems, eq(orders.id, orderItems.orderId))
+        .where(
+          and(
+            eq(orderItems.vendorId, vendorId),
+            gte(orders.createdAt, startDate)
+          )
+        )
+        .groupBy(sql`TO_CHAR(${orders.createdAt}, 'YYYY-MM')`)
+        .orderBy(sql`TO_CHAR(${orders.createdAt}, 'YYYY-MM')`);
+
+      // Get traffic analytics
+      const trafficAnalytics = await db
+        .select({
+          period: sql<string>`TO_CHAR(${orders.createdAt}, 'YYYY-MM-DD')`,
+          views: sql<number>`COALESCE(SUM(${products.viewCount}), 0)::numeric`,
+          uniqueVisitors: sql<number>`COUNT(DISTINCT ${orders.userId})::numeric`,
+          bounceRate: sql<number>`0::numeric`
+        })
+        .from(products)
+        .leftJoin(orderItems, eq(products.id, orderItems.productId))
+        .leftJoin(orders, eq(orderItems.orderId, orders.id))
+        .where(
+          and(
+            eq(products.vendorId, vendorId),
+            gte(orders.createdAt, startDate)
+          )
+        )
+        .groupBy(sql`TO_CHAR(${orders.createdAt}, 'YYYY-MM-DD')`)
+        .orderBy(sql`TO_CHAR(${orders.createdAt}, 'YYYY-MM-DD')`);
+
+      // Calculate comparison (growth rates)
+      const previousStartDate = new Date(startDate);
+      previousStartDate.setDate(previousStartDate.getDate() - (now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      const [previousMetrics] = await db
+        .select({
+          revenue: sql<number>`COALESCE(SUM(${orderItems.totalPrice}), 0)::numeric`,
+          orders: sql<number>`COUNT(DISTINCT ${orderItems.orderId})::numeric`
+        })
+        .from(orderItems)
+        .innerJoin(orders, eq(orderItems.orderId, orders.id))
+        .where(
+          and(
+            eq(orderItems.vendorId, vendorId),
+            gte(orders.createdAt, previousStartDate),
+            lt(orders.createdAt, startDate)
+          )
+        );
+
+      const [previousCustomers] = await db
+        .select({ count: sql<number>`COUNT(DISTINCT ${orders.userId})::numeric` })
+        .from(orders)
+        .innerJoin(orderItems, eq(orders.id, orderItems.orderId))
+        .where(
+          and(
+            eq(orderItems.vendorId, vendorId),
+            gte(orders.createdAt, previousStartDate),
+            lt(orders.createdAt, startDate)
+          )
+        );
+
+      const revenueGrowth = previousMetrics.revenue > 0 
+        ? ((Number(overviewMetrics.totalRevenue) - Number(previousMetrics.revenue)) / Number(previousMetrics.revenue)) * 100 
+        : 0;
+      const orderGrowth = previousMetrics.orders > 0 
+        ? ((Number(overviewMetrics.totalOrders) - Number(previousMetrics.orders)) / Number(previousMetrics.orders)) * 100 
+        : 0;
+      const customerGrowth = previousCustomers.count > 0 
+        ? ((Number(customerCount.count) - Number(previousCustomers.count)) / Number(previousCustomers.count)) * 100 
+        : 0;
+
+      res.json({
+        overview: {
+          totalRevenue: Number(overviewMetrics.totalRevenue),
+          totalOrders: Number(overviewMetrics.totalOrders),
+          totalProducts: Number(productCount.count),
+          totalCustomers: Number(customerCount.count),
+          averageOrderValue: Number(overviewMetrics.averageOrderValue),
+          conversionRate: Number(conversionRate),
+          repeatCustomerRate: Number(repeatCustomerRate),
+          totalViews: Number(totalViews.views)
+        },
+        revenueByPeriod: revenueByPeriod.map(r => ({
+          period: r.period,
+          revenue: Number(r.revenue),
+          orders: Number(r.orders),
+          profit: Number(r.profit)
+        })),
+        productPerformance: productPerformance.map(p => ({
+          productId: p.productId,
+          productName: p.productName,
+          revenue: Number(p.revenue),
+          orders: Number(p.orders),
+          views: p.views || 0,
+          conversionRate: Number(p.conversionRate),
+          profit: Number(p.profit)
+        })),
+        categoryBreakdown: categoryBreakdownWithPercentage.map(c => ({
+          category: c.category || 'Uncategorized',
+          revenue: Number(c.revenue),
+          orders: Number(c.orders),
+          percentage: Number(c.percentage.toFixed(1))
+        })),
+        customerInsights: {
+          topCustomers: topCustomers.map(c => ({
+            customerId: c.customerId,
+            customerName: c.customerName,
+            totalSpent: Number(c.totalSpent),
+            orderCount: Number(c.orderCount),
+            lastOrder: c.lastOrder
+          })),
+          customerRetention: customerRetention.map(c => ({
+            period: c.period,
+            newCustomers: Number(c.newCustomers),
+            returningCustomers: Number(c.returningCustomers)
+          }))
+        },
+        trafficAnalytics: trafficAnalytics.map(t => ({
+          period: t.period,
+          views: Number(t.views),
+          uniqueVisitors: Number(t.uniqueVisitors),
+          bounceRate: Number(t.bounceRate)
+        })),
+        comparison: {
+          revenueGrowth: Number(revenueGrowth.toFixed(1)),
+          orderGrowth: Number(orderGrowth.toFixed(1)),
+          customerGrowth: Number(customerGrowth.toFixed(1)),
+          conversionGrowth: 0
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching vendor analytics', error);
+      res.status(500).json({ error: 'Failed to fetch vendor analytics' });
+    }
+  });
+
+  // AI-Powered Suggestions endpoint
+  app.get('/api/vendors/:vendorId/suggestions', async (req: Request, res: Response) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ error: 'Invalid vendor ID' });
+      }
+
+      const suggestions = [];
+      let suggestionId = 1;
+
+      // Get vendor data for analysis
+      const [vendorStats] = await db
+        .select({
+          totalProducts: sql<number>`COUNT(DISTINCT ${products.id})::numeric`,
+          totalRevenue: sql<number>`COALESCE(SUM(${orderItems.totalPrice}), 0)::numeric`,
+          totalOrders: sql<number>`COUNT(DISTINCT ${orderItems.orderId})::numeric`,
+          avgPrice: sql<number>`AVG(${products.price})::numeric`,
+          totalViews: sql<number>`COALESCE(SUM(${products.viewCount}), 0)::numeric`
+        })
+        .from(products)
+        .leftJoin(orderItems, eq(products.id, orderItems.productId))
+        .where(eq(products.vendorId, vendorId))
+        .groupBy(products.vendorId);
+
+      // Get low stock products
+      const lowStockProducts = await db
+        .select({ count: sql<number>`COUNT(*)::numeric` })
+        .from(products)
+        .where(
+          and(
+            eq(products.vendorId, vendorId),
+            lte(products.stock, 5),
+            gt(products.stock, 0)
+          )
+        );
+
+      // Get out of stock products
+      const outOfStockProducts = await db
+        .select({ count: sql<number>`COUNT(*)::numeric` })
+        .from(products)
+        .where(
+          and(
+            eq(products.vendorId, vendorId),
+            eq(products.stock, 0)
+          )
+        );
+
+      // Suggestion 1: Inventory Management
+      if (lowStockProducts[0].count > 0 || outOfStockProducts[0].count > 0) {
+        suggestions.push({
+          id: suggestionId++,
+          type: 'inventory',
+          priority: 'high',
+          title: 'Restock Low Inventory Items',
+          description: `You have ${lowStockProducts[0].count} products running low on stock and ${outOfStockProducts[0].count} out of stock. Restock these items to avoid losing potential sales.`,
+          impact: 'Prevent 15-30% revenue loss from stockouts'
+        });
+      }
+
+      // Suggestion 2: Pricing Strategy
+      const conversionRate = vendorStats.totalViews > 0 ? (vendorStats.totalOrders / vendorStats.totalViews) * 100 : 0;
+      if (conversionRate < 2 && vendorStats.totalViews > 50) {
+        suggestions.push({
+          id: suggestionId++,
+          type: 'pricing',
+          priority: 'medium',
+          title: 'Optimize Your Pricing Strategy',
+          description: `Your conversion rate is ${conversionRate.toFixed(1)}%, which is below the 2-3% industry average. Consider reviewing your pricing to be more competitive.`,
+          impact: 'Increase sales by 20-40%'
+        });
+      }
+
+      // Suggestion 3: Product Variety
+      if (vendorStats.totalProducts < 10) {
+        suggestions.push({
+          id: suggestionId++,
+          type: 'product',
+          priority: 'medium',
+          title: 'Expand Your Product Catalog',
+          description: `You currently have ${vendorStats.totalProducts} products. Adding more variety can attract diverse customers and increase overall sales.`,
+          impact: 'Boost customer retention by 25%'
+        });
+      }
+
+      // Suggestion 4: Marketing - Low Views
+      if (vendorStats.totalViews < 100 && vendorStats.totalProducts > 0) {
+        suggestions.push({
+          id: suggestionId++,
+          type: 'marketing',
+          priority: 'high',
+          title: 'Increase Product Visibility',
+          description: 'Your products have low visibility. Add detailed descriptions, high-quality images, and use relevant keywords to improve discoverability.',
+          impact: 'Increase traffic by 50-100%'
+        });
+      }
+
+      // Suggestion 5: Customer Engagement
+      const avgOrderValue = vendorStats.totalOrders > 0 ? vendorStats.totalRevenue / vendorStats.totalOrders : 0;
+      if (avgOrderValue < 50 && vendorStats.totalOrders > 10) {
+        suggestions.push({
+          id: suggestionId++,
+          type: 'customer',
+          priority: 'low',
+          title: 'Implement Bundle Deals',
+          description: `Your average order value is ${avgOrderValue.toFixed(2)}. Create product bundles or offer discounts on multiple items to increase cart value.`,
+          impact: 'Increase average order value by 30%'
+        });
+      }
+
+      // Suggestion 6: Quality Images
+      const productsWithoutImages = await db
+        .select({ count: sql<number>`COUNT(*)::numeric` })
+        .from(products)
+        .where(
+          and(
+            eq(products.vendorId, vendorId),
+            or(
+              isNull(products.image),
+              eq(products.image, '')
+            )
+          )
+        );
+
+      if (productsWithoutImages[0].count > 0) {
+        suggestions.push({
+          id: suggestionId++,
+          type: 'product',
+          priority: 'high',
+          title: 'Add Product Images',
+          description: `${productsWithoutImages[0].count} of your products are missing images. Products with quality images sell 65% better than those without.`,
+          impact: 'Increase conversions by 65%'
+        });
+      }
+
+      // Default suggestion if no specific issues found
+      if (suggestions.length === 0) {
+        suggestions.push({
+          id: 1,
+          type: 'marketing',
+          priority: 'low',
+          title: 'Maintain Your Momentum',
+          description: 'Your store is performing well! Continue providing excellent customer service and quality products to maintain your success.',
+          impact: 'Sustain growth and customer satisfaction'
+        });
+      }
+
+      res.json(suggestions);
+    } catch (error) {
+      console.error('Error generating vendor suggestions', error);
+      res.status(500).json({ error: 'Failed to generate suggestions' });
+    }
+  });
+
   app.get('/api/vendors/:vendorId/analytics/leads', async (req: Request, res: Response) => {
     try {
       const vendorId = parseInt(req.params.vendorId);
