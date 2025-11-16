@@ -52,6 +52,8 @@ import {
 } from '@/components/ui/dialog';
 import { Loader2, Plus, Upload, X, Video as VideoIcon, CheckCircle, Landmark, Building, Coffee, Wrench, Store, Users, ChevronDown } from 'lucide-react';
 import CurrencyInput from '@/components/ui/currency-input';
+import { CurrencySelector } from '@/components/ui/currency-selector';
+import CurrencyConverter from '@/components/ui/currency-converter';
 import { VendorCreationDialog } from '@/components/VendorCreationDialog';
 import { cn } from '@/lib/utils';
 import { useDistanceUnit } from '@/hooks/use-distance-unit';
@@ -1914,8 +1916,12 @@ export default function AddProduct() {
 
               {/* Pricing Section */}
               <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>{t("Pricing")}</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <CurrencySelector />
+                    <CurrencyConverter />
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
@@ -2166,6 +2172,7 @@ export default function AddProduct() {
                                     type="number" 
                                     step="any"
                                     min="0"
+                                    max="10000000"
                                     placeholder="0" 
                                     {...field} 
                                     onChange={(e) => {
