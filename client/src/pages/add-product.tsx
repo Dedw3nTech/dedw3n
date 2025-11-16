@@ -268,7 +268,7 @@ const productSchema = z.object({
   bathrooms: z.string().optional(),
   propertyAge: z.string().optional(),
   // Dynamic category-specific fields
-  categoryFields: z.record(z.string()).optional(),
+  categoryFields: z.record(z.string(), z.string()).optional(),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
