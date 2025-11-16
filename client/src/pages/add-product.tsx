@@ -1056,47 +1056,41 @@ export default function AddProduct() {
     return `${basePath}?${currentParams.toString()}`;
   };
 
-  // Navigation sections with icons - memoized to prevent unnecessary re-renders
+  // Navigation sections - memoized to prevent unnecessary re-renders
   const navigationSections = useMemo(() => [
     {
       id: 'finance',
       label: t("Finance"),
-      icon: Landmark,
       href: getSectionHref('finance'),
       isActive: activeSection === 'finance',
     },
     {
       id: 'government',
       label: t("Government"),
-      icon: Building,
       href: getSectionHref('government'),
       isActive: activeSection === 'government',
     },
     {
       id: 'lifestyle',
       label: t("Lifestyle"),
-      icon: Coffee,
       href: getSectionHref('lifestyle'),
       isActive: activeSection === 'lifestyle',
     },
     {
       id: 'services',
       label: t("Services"),
-      icon: Wrench,
       href: getSectionHref('services'),
       isActive: activeSection === 'services',
     },
     {
       id: 'marketplace',
       label: t("Marketplace"),
-      icon: Store,
       href: getSectionHref('marketplace'),
       isActive: activeSection === 'marketplace',
     },
     {
       id: 'community',
       label: t("Community"),
-      icon: Users,
       href: getSectionHref('community'),
       isActive: activeSection === 'community',
     },
@@ -1114,26 +1108,22 @@ export default function AddProduct() {
             </CardHeader>
             <CardContent className="p-3 flex-1 overflow-y-auto">
               <nav className="space-y-1" role="navigation" aria-label="Section navigation">
-                {navigationSections.map((section) => {
-                  const Icon = section.icon;
-                  return (
-                    <Link
-                      key={section.id}
-                      href={section.href}
-                      data-testid={`section-${section.id}`}
-                      aria-current={section.isActive ? 'page' : undefined}
-                      className={cn(
-                        "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all",
-                        section.isActive
-                          ? "bg-black text-white shadow-md"
-                          : "text-gray-700 hover:bg-gray-100"
-                      )}
-                    >
-                      <Icon className="h-5 w-5 flex-shrink-0" />
-                      <span>{section.label}</span>
-                    </Link>
-                  );
-                })}
+                {navigationSections.map((section) => (
+                  <Link
+                    key={section.id}
+                    href={section.href}
+                    data-testid={`section-${section.id}`}
+                    aria-current={section.isActive ? 'page' : undefined}
+                    className={cn(
+                      "w-full block px-4 py-3 rounded-lg text-sm font-medium transition-all text-center",
+                      section.isActive
+                        ? "bg-black text-white shadow-md"
+                        : "text-gray-700 hover:bg-gray-100"
+                    )}
+                  >
+                    {section.label}
+                  </Link>
+                ))}
               </nav>
             </CardContent>
           </Card>
