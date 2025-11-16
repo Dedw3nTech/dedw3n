@@ -12819,6 +12819,14 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
         }
       }
 
+      // Vendor filter - CRITICAL: Only show products from the specified vendor
+      if (req.query.vendorId) {
+        const vendorId = parseInt(req.query.vendorId as string);
+        if (!isNaN(vendorId)) {
+          conditions.push(eq(products.vendorId, vendorId));
+        }
+      }
+
       // Price range filter
       if (minPrice && typeof minPrice === 'string') {
         const min = parseFloat(minPrice);
