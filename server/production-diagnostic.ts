@@ -302,8 +302,8 @@ export class ProductionDiagnostic {
     }
     
     // Check cookie configuration
+    // Match auth.ts logic: only enable secure cookies for actual HTTPS deployments
     const isHttps = process.env.REPLIT_DEPLOYMENT === '1' || 
-                    process.env.REPL_SLUG !== undefined ||
                     process.env.NODE_ENV === 'production';
     
     checks.push({

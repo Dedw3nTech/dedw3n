@@ -276,9 +276,9 @@ export function setupAuth(app: Express) {
   
   // Detect environment and set secure cookie settings
   const isProduction = process.env.NODE_ENV === 'production';
-  const isHttps = process.env.REPLIT_DEPLOYMENT === '1' || 
-                  process.env.REPL_SLUG !== undefined ||
-                  isProduction;
+  // Only enable secure cookies for actual HTTPS deployments (production or published deploys)
+  // Exclude REPL_SLUG check to allow mobile webview preview in development
+  const isHttps = process.env.REPLIT_DEPLOYMENT === '1' || isProduction;
   
   // Task 6: Enhanced cookie security with sameSite=strict for luxury e-commerce standards
   // WARNING: sameSite=strict prevents cross-domain cookie transmission
