@@ -3,7 +3,7 @@
  * 
  * This script fixes path mismatches in object storage:
  * - Handles both 'avatars/' and 'public/avatars/' variants
- * - Standardizes all paths to use 'public/avatars/' prefix
+ * - Standardizes all paths to use 'avatars/' prefix (corrected from public/avatars/)
  * - Preserves sharded folder structure
  * 
  * OPTIONS:
@@ -89,8 +89,8 @@ async function migrateAvatarPaths(mode: 'move' | 'clear'): Promise<MigrationStat
         and(
           isNotNull(users.avatar),
           or(
-            like(users.avatar, '/public-objects/avatars/%'),      // Wrong: missing 'public/' prefix
-            like(users.avatar, '/public-objects/public/avatars/%'), // Correct format
+            like(users.avatar, '/public-objects/avatars/%'),      // Correct format
+            like(users.avatar, '/public-objects/public/avatars/%'), // Wrong: has duplicate 'public/'
             like(users.avatar, '/public-objects/profile/%')       // Legacy: old folder name
           )
         )
@@ -116,18 +116,18 @@ async function migrateAvatarPaths(mode: 'move' | 'clear'): Promise<MigrationStat
         // Already correct - no migration needed
         console.log(`  ✓ Already in correct format (${AVATAR_PATHS.OBJECT_STORAGE_PUBLIC_DIR})`);
         continue;
-      } else if (currentObjectPath.startsWith(AVATAR_PATHS.OBJECT_STORAGE_DIR + '/')) {
-        // Missing 'public/' prefix - replace with full public path
+      } else if (currentObjectPath.startsWith('public/avatars/')) {
+        // Has duplicate 'public/' prefix - remove it
         targetObjectPath = currentObjectPath.replace(
-          AVATAR_PATHS.OBJECT_STORAGE_DIR + '/',
+          'public/avatars/',
           AVATAR_PATHS.OBJECT_STORAGE_PUBLIC_DIR + '/'
         );
+      } else if (currentObjectPath.startsWith('public/profile/')) {
+        // Legacy with public prefix - replace with correct path
+        targetObjectPath = currentObjectPath.replace('public/profile/', `${AVATAR_PATHS.OBJECT_STORAGE_PUBLIC_DIR}/`);
       } else if (currentObjectPath.startsWith('profile/')) {
         // Legacy 'profile' folder - replace with 'avatars'
         targetObjectPath = currentObjectPath.replace('profile/', `${AVATAR_PATHS.OBJECT_STORAGE_PUBLIC_DIR}/`);
-      } else if (currentObjectPath.startsWith('public/profile/')) {
-        // Legacy with public prefix - just rename folder
-        targetObjectPath = currentObjectPath.replace('public/profile/', `${AVATAR_PATHS.OBJECT_STORAGE_PUBLIC_DIR}/`);
       } else {
         console.log(`  ⚠ Unknown path format: ${currentObjectPath}`);
         stats.errors.push(`Unknown path format for user ${user.id}: ${currentObjectPath}`);
