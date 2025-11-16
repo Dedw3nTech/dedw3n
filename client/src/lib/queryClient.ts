@@ -4,18 +4,26 @@ import { offlineAwareFetch, useOfflineStore, cacheResponse, clearCache } from ".
 // API Base URL Configuration
 // Automatically determines the correct API base URL based on environment
 function getApiBaseUrl(): string {
-  // 1. Check environment variable first (production builds)
+  // In development, always use current origin to avoid CORS issues
+  // This handles both desktop and mobile Replit previews
+  const isDevelopment = import.meta.env.DEV || 
+                        import.meta.env.MODE === 'development' ||
+                        (typeof window !== 'undefined' && 
+                         (window.location.hostname === 'localhost' ||
+                          window.location.hostname.includes('replit.dev') ||
+                          window.location.hostname.includes('repl.co')));
+  
+  if (isDevelopment && typeof window !== 'undefined') {
+    // Use current origin in development to ensure API calls work
+    return window.location.origin;
+  }
+  
+  // In production builds, check environment variable
   if (import.meta.env.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL;
   }
   
-  // 2. For development/mobile: use current origin (works for both desktop and mobile)
-  // This ensures mobile previews connect to the correct server
-  if (typeof window !== 'undefined') {
-    return window.location.origin;
-  }
-  
-  // 3. Fallback to relative URLs (SSR case)
+  // Fallback to relative URLs (SSR case or unset production)
   return '';
 }
 
