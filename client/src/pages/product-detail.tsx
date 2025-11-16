@@ -1077,16 +1077,18 @@ export default function ProductDetail() {
             )}
           </Button>
 
-          {/* Delivery Information */}
-          <div className="mb-4 text-sm">
-            <p className="flex items-center text-gray-700">
-              <ShoppingCart className="h-4 w-4 mr-2" />
-              {translateText(`Estimated complimentary delivery: ${getDeliveryDateRange()}`)}
-            </p>
-            <p className="text-xs text-gray-500 mt-1 ml-6">
-              {translateText('Some regions may take up to 20+ working days')}
-            </p>
-          </div>
+          {/* Delivery Information - Hidden for Vehicles-Cars */}
+          {product.category !== 'vehicles-cars' && (
+            <div className="mb-4 text-sm">
+              <p className="flex items-center text-gray-700">
+                <ShoppingCart className="h-4 w-4 mr-2" />
+                {translateText(`Estimated complimentary delivery: ${getDeliveryDateRange()}`)}
+              </p>
+              <p className="text-xs text-gray-500 mt-1 ml-6">
+                {translateText('Some regions may take up to 20+ working days')}
+              </p>
+            </div>
+          )}
 
           {/* Order via WhatsApp and Email + Action Icons */}
           <div className="mb-6 text-sm flex gap-6 items-center border-t border-gray-200 pt-4">
