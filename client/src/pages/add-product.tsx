@@ -55,6 +55,162 @@ import CurrencyInput from '@/components/ui/currency-input';
 import { VendorCreationDialog } from '@/components/VendorCreationDialog';
 import { cn } from '@/lib/utils';
 
+// Comprehensive Category System - All Products, Services, and Digital Products Known to Humanity
+const PRODUCT_CATEGORIES = [
+  { value: 'vehicles-cars', label: 'Cars & Automobiles', fields: ['make', 'model', 'year', 'mileage', 'vin', 'fuel_type', 'transmission', 'condition'] },
+  { value: 'vehicles-motorcycles', label: 'Motorcycles', fields: ['make', 'model', 'year', 'mileage', 'engine_size', 'condition'] },
+  { value: 'vehicles-boats', label: 'Boats & Marine', fields: ['make', 'model', 'year', 'length', 'engine_type', 'condition'] },
+  { value: 'electronics-phones', label: 'Mobile Phones', fields: ['brand', 'model', 'storage', 'color', 'condition', 'warranty'] },
+  { value: 'electronics-computers', label: 'Computers & Laptops', fields: ['brand', 'model', 'processor', 'ram', 'storage', 'screen_size', 'condition'] },
+  { value: 'electronics-tablets', label: 'Tablets', fields: ['brand', 'model', 'storage', 'screen_size', 'condition'] },
+  { value: 'electronics-cameras', label: 'Cameras', fields: ['brand', 'model', 'megapixels', 'lens_type', 'condition'] },
+  { value: 'electronics-audio', label: 'Audio & Headphones', fields: ['brand', 'model', 'type', 'wireless', 'condition'] },
+  { value: 'electronics-tv', label: 'TVs & Monitors', fields: ['brand', 'screen_size', 'resolution', 'smart_tv', 'condition'] },
+  { value: 'electronics-gaming', label: 'Gaming Consoles', fields: ['brand', 'model', 'storage', 'condition'] },
+  { value: 'fashion-mens', label: 'Men\'s Clothing', fields: ['brand', 'size', 'color', 'material', 'condition'] },
+  { value: 'fashion-womens', label: 'Women\'s Clothing', fields: ['brand', 'size', 'color', 'material', 'condition'] },
+  { value: 'fashion-kids', label: 'Kids Clothing', fields: ['brand', 'age_group', 'size', 'color', 'condition'] },
+  { value: 'fashion-shoes', label: 'Shoes & Footwear', fields: ['brand', 'size', 'color', 'material', 'condition'] },
+  { value: 'fashion-accessories', label: 'Fashion Accessories', fields: ['brand', 'type', 'material', 'condition'] },
+  { value: 'fashion-watches', label: 'Watches & Jewelry', fields: ['brand', 'material', 'gender', 'condition'] },
+  { value: 'home-furniture', label: 'Furniture', fields: ['material', 'dimensions', 'color', 'condition'] },
+  { value: 'home-appliances', label: 'Home Appliances', fields: ['brand', 'model', 'energy_rating', 'condition'] },
+  { value: 'home-decor', label: 'Home Decor', fields: ['material', 'dimensions', 'color'] },
+  { value: 'home-kitchen', label: 'Kitchen & Dining', fields: ['material', 'brand', 'condition'] },
+  { value: 'home-garden', label: 'Garden & Outdoor', fields: ['material', 'dimensions', 'condition'] },
+  { value: 'home-tools', label: 'Tools & Hardware', fields: ['brand', 'type', 'power_source', 'condition'] },
+  { value: 'sports-equipment', label: 'Sports Equipment', fields: ['sport', 'brand', 'size', 'condition'] },
+  { value: 'sports-fitness', label: 'Fitness Equipment', fields: ['brand', 'type', 'weight_capacity', 'condition'] },
+  { value: 'books-fiction', label: 'Fiction Books', fields: ['author', 'publisher', 'isbn', 'pages', 'language', 'condition'] },
+  { value: 'books-nonfiction', label: 'Non-Fiction Books', fields: ['author', 'publisher', 'isbn', 'pages', 'language', 'condition'] },
+  { value: 'books-textbooks', label: 'Textbooks', fields: ['author', 'publisher', 'isbn', 'edition', 'subject', 'condition'] },
+  { value: 'realestate-residential', label: 'Residential Property', fields: ['property_type', 'bedrooms', 'bathrooms', 'size_sqft', 'year_built'] },
+  { value: 'realestate-commercial', label: 'Commercial Property', fields: ['property_type', 'size_sqft', 'year_built', 'zoning'] },
+  { value: 'food-fresh', label: 'Fresh Food', fields: ['origin', 'organic', 'expiry_date', 'weight'] },
+  { value: 'food-packaged', label: 'Packaged Foods', fields: ['brand', 'expiry_date', 'weight', 'allergens'] },
+  { value: 'beauty-skincare', label: 'Skincare', fields: ['brand', 'skin_type', 'volume', 'expiry_date'] },
+  { value: 'beauty-makeup', label: 'Makeup', fields: ['brand', 'shade', 'type', 'expiry_date'] },
+  { value: 'toys-kids', label: 'Kids Toys', fields: ['age_range', 'brand', 'condition'] },
+  { value: 'pets-food', label: 'Pet Food', fields: ['pet_type', 'brand', 'weight', 'expiry_date'] },
+  { value: 'pets-accessories', label: 'Pet Accessories', fields: ['pet_type', 'brand', 'size'] },
+  { value: 'office-supplies', label: 'Office Supplies', fields: ['brand', 'quantity'] },
+];
+
+const SERVICE_CATEGORIES = [
+  { value: 'services-legal', label: 'Legal Services', fields: ['specialization', 'years_experience', 'certification', 'hourly_rate'] },
+  { value: 'services-accounting', label: 'Accounting', fields: ['specialization', 'years_experience', 'hourly_rate'] },
+  { value: 'services-consulting', label: 'Business Consulting', fields: ['industry', 'years_experience', 'hourly_rate'] },
+  { value: 'services-design', label: 'Design Services', fields: ['specialization', 'portfolio_link', 'hourly_rate'] },
+  { value: 'services-writing', label: 'Writing & Translation', fields: ['languages', 'specialization', 'word_rate'] },
+  { value: 'services-photography', label: 'Photography', fields: ['specialization', 'equipment', 'session_rate'] },
+  { value: 'services-cleaning', label: 'Cleaning Services', fields: ['service_type', 'area_coverage', 'hourly_rate'] },
+  { value: 'services-plumbing', label: 'Plumbing', fields: ['certification', 'years_experience', 'hourly_rate'] },
+  { value: 'services-electrical', label: 'Electrical Services', fields: ['certification', 'years_experience', 'hourly_rate'] },
+  { value: 'services-tutoring', label: 'Tutoring', fields: ['subject', 'level', 'years_experience', 'hourly_rate'] },
+  { value: 'services-fitness', label: 'Personal Training', fields: ['specialization', 'certification', 'session_rate'] },
+  { value: 'services-it', label: 'IT Support', fields: ['specialization', 'certification', 'hourly_rate'] },
+  { value: 'services-auto-repair', label: 'Auto Repair', fields: ['specialization', 'certification', 'hourly_rate'] },
+  { value: 'services-catering', label: 'Catering', fields: ['cuisine_type', 'capacity', 'per_person_rate'] },
+];
+
+const DIGITAL_CATEGORIES = [
+  { value: 'digital-software', label: 'Software & Apps', fields: ['platform', 'version', 'license_type', 'file_size'] },
+  { value: 'digital-ebooks', label: 'E-books', fields: ['author', 'pages', 'format', 'language'] },
+  { value: 'digital-music', label: 'Music & Audio', fields: ['artist', 'genre', 'duration', 'format'] },
+  { value: 'digital-video', label: 'Videos', fields: ['genre', 'duration', 'resolution', 'format'] },
+  { value: 'digital-photos', label: 'Stock Photos', fields: ['resolution', 'format', 'license_type'] },
+  { value: 'digital-courses', label: 'Online Courses', fields: ['subject', 'duration', 'level', 'certificate'] },
+  { value: 'digital-graphics', label: 'Graphics & Templates', fields: ['software_required', 'format', 'license_type'] },
+  { value: 'digital-games', label: 'Digital Games', fields: ['platform', 'genre', 'multiplayer'] },
+];
+
+// Field configuration for dynamic rendering
+const FIELD_CONFIGS: Record<string, {label: string; type: string; placeholder?: string; options?: string[]}> = {
+  make: { label: 'Make', type: 'text', placeholder: 'e.g., Toyota' },
+  model: { label: 'Model', type: 'text', placeholder: 'e.g., Camry' },
+  year: { label: 'Year', type: 'number', placeholder: 'e.g., 2020' },
+  mileage: { label: 'Mileage (km)', type: 'number', placeholder: 'e.g., 50000' },
+  vin: { label: 'VIN', type: 'text', placeholder: '17-digit VIN' },
+  fuel_type: { label: 'Fuel Type', type: 'select', options: ['Petrol', 'Diesel', 'Electric', 'Hybrid'] },
+  transmission: { label: 'Transmission', type: 'select', options: ['Automatic', 'Manual', 'CVT'] },
+  engine_size: { label: 'Engine (cc)', type: 'number', placeholder: 'e.g., 1500' },
+  brand: { label: 'Brand', type: 'text', placeholder: 'Brand name' },
+  storage: { label: 'Storage', type: 'select', options: ['16GB', '32GB', '64GB', '128GB', '256GB', '512GB', '1TB'] },
+  processor: { label: 'Processor', type: 'text', placeholder: 'e.g., Intel i7' },
+  ram: { label: 'RAM', type: 'select', options: ['4GB', '8GB', '16GB', '32GB'] },
+  screen_size: { label: 'Screen (inches)', type: 'number', placeholder: 'e.g., 15.6' },
+  resolution: { label: 'Resolution', type: 'select', options: ['HD', 'Full HD', '2K', '4K'] },
+  megapixels: { label: 'Megapixels', type: 'number', placeholder: 'e.g., 24' },
+  lens_type: { label: 'Lens Type', type: 'text', placeholder: 'e.g., 18-55mm' },
+  wireless: { label: 'Wireless', type: 'select', options: ['Yes', 'No'] },
+  smart_tv: { label: 'Smart TV', type: 'select', options: ['Yes', 'No'] },
+  size: { label: 'Size', type: 'select', options: ['XS', 'S', 'M', 'L', 'XL', 'XXL'] },
+  color: { label: 'Color', type: 'text', placeholder: 'e.g., Black' },
+  material: { label: 'Material', type: 'text', placeholder: 'e.g., Cotton' },
+  gender: { label: 'Gender', type: 'select', options: ['Men', 'Women', 'Unisex'] },
+  age_group: { label: 'Age Group', type: 'text', placeholder: 'e.g., 5-7 years' },
+  property_type: { label: 'Type', type: 'select', options: ['House', 'Apartment', 'Condo', 'Villa', 'Office', 'Shop'] },
+  bedrooms: { label: 'Bedrooms', type: 'number', placeholder: 'e.g., 3' },
+  bathrooms: { label: 'Bathrooms', type: 'number', placeholder: 'e.g., 2' },
+  size_sqft: { label: 'Size (sq ft)', type: 'number', placeholder: 'e.g., 1200' },
+  year_built: { label: 'Year Built', type: 'number', placeholder: 'e.g., 2015' },
+  condition: { label: 'Condition', type: 'select', options: ['New', 'Like New', 'Excellent', 'Good', 'Fair'] },
+  warranty: { label: 'Warranty (months)', type: 'number', placeholder: 'e.g., 12' },
+  energy_rating: { label: 'Energy Rating', type: 'select', options: ['A+++', 'A++', 'A+', 'A', 'B', 'C'] },
+  dimensions: { label: 'Dimensions', type: 'text', placeholder: 'L × W × H' },
+  type: { label: 'Type', type: 'text', placeholder: 'Type/Category' },
+  power_source: { label: 'Power Source', type: 'select', options: ['Electric', 'Battery', 'Manual', 'Gas'] },
+  sport: { label: 'Sport', type: 'text', placeholder: 'e.g., Soccer' },
+  weight_capacity: { label: 'Weight Capacity (kg)', type: 'number', placeholder: 'e.g., 150' },
+  author: { label: 'Author', type: 'text', placeholder: 'Author name' },
+  publisher: { label: 'Publisher', type: 'text', placeholder: 'Publisher name' },
+  isbn: { label: 'ISBN', type: 'text', placeholder: 'ISBN number' },
+  pages: { label: 'Pages', type: 'number', placeholder: 'e.g., 350' },
+  language: { label: 'Language', type: 'text', placeholder: 'e.g., English' },
+  edition: { label: 'Edition', type: 'text', placeholder: 'e.g., 5th Edition' },
+  subject: { label: 'Subject', type: 'text', placeholder: 'e.g., Mathematics' },
+  origin: { label: 'Origin', type: 'text', placeholder: 'Country/Region' },
+  organic: { label: 'Organic', type: 'select', options: ['Yes', 'No'] },
+  expiry_date: { label: 'Expiry Date', type: 'date' },
+  weight: { label: 'Weight', type: 'text', placeholder: 'e.g., 1kg' },
+  allergens: { label: 'Allergens', type: 'text', placeholder: 'e.g., Nuts, Dairy' },
+  skin_type: { label: 'Skin Type', type: 'select', options: ['All', 'Oily', 'Dry', 'Combination', 'Sensitive'] },
+  volume: { label: 'Volume', type: 'text', placeholder: 'e.g., 50ml' },
+  shade: { label: 'Shade/Color', type: 'text', placeholder: 'e.g., Natural Beige' },
+  age_range: { label: 'Age Range', type: 'text', placeholder: 'e.g., 3-5 years' },
+  pet_type: { label: 'Pet Type', type: 'select', options: ['Dog', 'Cat', 'Bird', 'Fish', 'Other'] },
+  quantity: { label: 'Quantity', type: 'number', placeholder: 'e.g., 100' },
+  zoning: { label: 'Zoning', type: 'text', placeholder: 'e.g., Commercial' },
+  length: { label: 'Length (ft)', type: 'number', placeholder: 'e.g., 25' },
+  engine_type: { label: 'Engine Type', type: 'text', placeholder: 'e.g., Outboard' },
+  specialization: { label: 'Specialization', type: 'text', placeholder: 'Your expertise' },
+  years_experience: { label: 'Experience (years)', type: 'number', placeholder: 'e.g., 5' },
+  certification: { label: 'Certifications', type: 'text', placeholder: 'Professional certs' },
+  hourly_rate: { label: 'Hourly Rate', type: 'number', placeholder: 'e.g., 50' },
+  industry: { label: 'Industry', type: 'text', placeholder: 'e.g., Tech' },
+  portfolio_link: { label: 'Portfolio URL', type: 'text', placeholder: 'https://...' },
+  word_rate: { label: 'Rate per Word', type: 'number', placeholder: 'e.g., 0.05' },
+  languages: { label: 'Languages', type: 'text', placeholder: 'e.g., EN, FR' },
+  equipment: { label: 'Equipment', type: 'text', placeholder: 'Camera models' },
+  session_rate: { label: 'Session Rate', type: 'number', placeholder: 'e.g., 200' },
+  service_type: { label: 'Service Type', type: 'text', placeholder: 'Type of service' },
+  area_coverage: { label: 'Coverage Area', type: 'text', placeholder: 'Cities/Regions' },
+  level: { label: 'Level', type: 'select', options: ['Beginner', 'Intermediate', 'Advanced'] },
+  platform: { label: 'Platform', type: 'select', options: ['Windows', 'macOS', 'Linux', 'iOS', 'Android', 'Web'] },
+  version: { label: 'Version', type: 'text', placeholder: 'e.g., 2.0' },
+  license_type: { label: 'License', type: 'select', options: ['Personal', 'Commercial', 'Extended'] },
+  file_size: { label: 'File Size (MB)', type: 'number', placeholder: 'e.g., 150' },
+  format: { label: 'Format', type: 'text', placeholder: 'e.g., PDF, MP3' },
+  artist: { label: 'Artist', type: 'text', placeholder: 'Artist name' },
+  genre: { label: 'Genre', type: 'text', placeholder: 'e.g., Pop' },
+  duration: { label: 'Duration', type: 'text', placeholder: 'e.g., 45 min' },
+  certificate: { label: 'Certificate', type: 'select', options: ['Yes', 'No'] },
+  software_required: { label: 'Software Required', type: 'text', placeholder: 'e.g., Photoshop' },
+  multiplayer: { label: 'Multiplayer', type: 'select', options: ['Yes', 'No'] },
+  cuisine_type: { label: 'Cuisine Type', type: 'text', placeholder: 'e.g., Italian' },
+  capacity: { label: 'Capacity', type: 'number', placeholder: 'e.g., 50' },
+  per_person_rate: { label: 'Rate per Person', type: 'number', placeholder: 'e.g., 25' },
+};
 
 // Product form schema
 const productSchema = z.object({
@@ -111,6 +267,8 @@ const productSchema = z.object({
   bedrooms: z.string().optional(),
   bathrooms: z.string().optional(),
   propertyAge: z.string().optional(),
+  // Dynamic category-specific fields
+  categoryFields: z.record(z.string()).optional(),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -667,6 +825,16 @@ export default function AddProduct() {
       }
     }
   }, [parsedPrefillData, hasShownAutoFillNotification]);
+
+  // Clear category fields when offering type or category changes to prevent stale data
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'offeringType' || name === 'category') {
+        form.setValue('categoryFields', {});
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   // Create vendor mutation
   const createVendorMutation = useMutation({
@@ -1267,6 +1435,146 @@ export default function AddProduct() {
               )}
             />
           </div>
+
+          {/* Category Selection - Right after offering type */}
+          <div className="mb-6">
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => {
+                const offeringType = form.watch('offeringType');
+                const availableCategories = offeringType === 'service' 
+                  ? SERVICE_CATEGORIES 
+                  : offeringType === 'digital_product'
+                  ? DIGITAL_CATEGORIES
+                  : PRODUCT_CATEGORIES;
+                
+                return (
+                  <FormItem>
+                    <FormLabel>{t("Product Category")}</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t("Select category")} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="max-h-[300px]">
+                        {availableCategories.map((cat) => (
+                          <SelectItem key={cat.value} value={cat.value}>
+                            {t(cat.label)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
+            />
+          </div>
+
+          {/* Dynamic Category-Specific Fields */}
+          {form.watch('category') && (() => {
+            const offeringType = form.watch('offeringType');
+            const selectedCategory = form.watch('category');
+            const categories = offeringType === 'service' 
+              ? SERVICE_CATEGORIES 
+              : offeringType === 'digital_product'
+              ? DIGITAL_CATEGORIES
+              : PRODUCT_CATEGORIES;
+            
+            const categoryConfig = categories.find(c => c.value === selectedCategory);
+            const fieldsToRender = categoryConfig?.fields || [];
+
+            if (fieldsToRender.length === 0) return null;
+
+            return (
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle>{t("Category-Specific Details")}</CardTitle>
+                  <CardDescription>{t("Fill in the details specific to your category")}</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {fieldsToRender.map((fieldKey) => {
+                    const fieldConfig = FIELD_CONFIGS[fieldKey];
+                    if (!fieldConfig) return null;
+
+                    const fieldName = `categoryFields.${fieldKey}` as any;
+
+                    if (fieldConfig.type === 'select') {
+                      return (
+                        <FormField
+                          key={fieldKey}
+                          control={form.control}
+                          name={fieldName}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t(fieldConfig.label)}</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder={t("Select")} />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {fieldConfig.options?.map((opt) => (
+                                    <SelectItem key={opt} value={opt}>
+                                      {t(opt)}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      );
+                    }
+
+                    if (fieldConfig.type === 'date') {
+                      return (
+                        <FormField
+                          key={fieldKey}
+                          control={form.control}
+                          name={fieldName}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t(fieldConfig.label)}</FormLabel>
+                              <FormControl>
+                                <Input type="date" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      );
+                    }
+
+                    return (
+                      <FormField
+                        key={fieldKey}
+                        control={form.control}
+                        name={fieldName}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t(fieldConfig.label)}</FormLabel>
+                            <FormControl>
+                              <Input
+                                type={fieldConfig.type}
+                                placeholder={fieldConfig.placeholder ? t(fieldConfig.placeholder) : ''}
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            );
+          })()}
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Content */}
@@ -1996,31 +2304,6 @@ export default function AddProduct() {
                   <CardTitle>{t("Product organization")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("Product category")}</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={t("Select category")} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {categories.map((category: {id: number, name: string}) => (
-                              <SelectItem key={category.id} value={category.name}>
-                                {category.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
                   <FormField
                     control={form.control}
                     name="vendor"
