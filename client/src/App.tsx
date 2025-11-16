@@ -367,11 +367,18 @@ function MarketplaceNavWrapper() {
   const [location] = useLocation();
   const showOnPaths = [
     '/marketplace', '/products', '/product', '/vendors', '/vendor',
-    '/government', '/checkout', '/payment-success', '/add-product',
-    '/upload-product', '/vendor-dashboard', '/become-vendor',
+    '/government', '/checkout', '/payment-success',
+    '/vendor-dashboard', '/become-vendor',
     '/become-business-vendor', '/liked', '/orders-returns',
     '/shipping-calculator'
   ];
+  
+  const hideOnPaths = ['/add-product', '/upload-product'];
+  const isHiddenPath = hideOnPaths.some(path => 
+    location === path || location.startsWith(`${path}/`) || location.startsWith(`${path}?`)
+  );
+  
+  if (isHiddenPath) return null;
   
   const shouldShowNav = showOnPaths.some(path => 
     location === path || location.startsWith(`${path}/`)
@@ -387,7 +394,7 @@ function MarketplaceNavWrapper() {
 }
 
 // Standalone route utilities - routes that render without shared navigation/footer
-const STANDALONE_ROUTES: string[] = ['/add-product', '/upload-product'];
+const STANDALONE_ROUTES: string[] = [];
 const normalizePath = (path: string) => path.split('?')[0];
 const isStandaloneRoutePath = (path: string) => STANDALONE_ROUTES.includes(normalizePath(path));
 
