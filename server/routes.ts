@@ -16,7 +16,7 @@ import { fileURLToPath } from 'url';
 import { storage } from "./storage";
 import { db } from "./db";
 import { eq, or, like, ilike, sql, and, ne, inArray, desc, count, sum, avg, isNull, gte, lte, between, notInArray, isNotNull } from "drizzle-orm";
-import { users, products, orders, vendors, carts, orderItems, reviews, messages, vendorPaymentInfo, insertVendorPaymentInfoSchema, vendorDiscounts, discountUsages, promotionalCampaigns, insertVendorDiscountSchema, insertDiscountUsageSchema, insertPromotionalCampaignSchema, returns, insertReturnSchema, marketingCampaigns, campaignActivities, campaignTouchpoints, campaignAnalytics, campaignProducts, insertMarketingCampaignSchema, insertCampaignActivitySchema, insertCampaignTouchpointSchema, insertCampaignAnalyticsSchema, storeUsers, cities, privateRoomInvitations, videos, videoPurchases, subscriptions, creatorEarnings, friendships, friendRequests, audioSessions, giftPropositions, notifications, moderationReports, insertModerationReportSchema, likedProducts, toastReports, insertToastReportSchema, affiliatePartners, vendorAffiliatePartners } from "@shared/schema";
+import { users, products, orders, vendors, carts, orderItems, reviews, messages, vendorPaymentInfo, insertVendorPaymentInfoSchema, vendorDiscounts, discountUsages, promotionalCampaigns, insertVendorDiscountSchema, insertDiscountUsageSchema, insertPromotionalCampaignSchema, returns, insertReturnSchema, marketingCampaigns, campaignActivities, campaignTouchpoints, campaignAnalytics, campaignProducts, insertMarketingCampaignSchema, insertCampaignActivitySchema, insertCampaignTouchpointSchema, insertCampaignAnalyticsSchema, storeUsers, cities, privateRoomInvitations, videos, videoPurchases, subscriptions, creatorEarnings, friendships, friendRequests, audioSessions, giftPropositions, notifications, moderationReports, insertModerationReportSchema, productReports, insertProductReportSchema, likedProducts, toastReports, insertToastReportSchema, affiliatePartners, vendorAffiliatePartners } from "@shared/schema";
 
 import { setupAuth, hashPassword, comparePasswords } from "./auth";
 import { setupJwtAuth, verifyToken, revokeToken, generateToken } from "./jwt-auth";
@@ -14460,6 +14460,69 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
     } catch (error) {
       console.error('Error unliking product', error);
       res.status(500).json({ message: 'Failed to unlike product' });
+    }
+  });
+
+  // Report product endpoint
+  app.post('/api/products/:id/report', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const productId = parseInt(req.params.id);
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: 'Invalid product ID' });
+      }
+      
+      // Validate request body using insertProductReportSchema
+      const reportData = insertProductReportSchema.parse({
+        productId,
+        reporterId: userId,
+        reason: req.body.reason,
+        customMessage: req.body.customMessage || null,
+        status: 'pending'
+      });
+      
+      // Create the report
+      const [report] = await db.insert(productReports).values(reportData).returning();
+      
+      // Get product and reporter details for admin notification
+      const product = await storage.getProduct(productId);
+      const reporter = await storage.getUserById(userId);
+      
+      if (product && reporter) {
+        // Notify admins about the new report
+        const admins = await db
+          .select({ id: users.id })
+          .from(users)
+          .where(eq(users.role, 'admin'));
+        
+        for (const admin of admins) {
+          await storage.createNotification({
+            userId: admin.id,
+            type: 'system',
+            title: 'New Product Report',
+            content: `${reporter.username} reported product "${product.name}" for ${reportData.reason}`,
+            sourceId: report.id,
+            sourceType: 'product_report'
+          });
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        message: 'Product reported successfully',
+        reportId: report.id 
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid report data', errors: error.errors });
+      }
+      console.error('Error reporting product:', error);
+      res.status(500).json({ message: 'Failed to report product' });
     }
   });
 
