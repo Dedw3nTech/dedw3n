@@ -1023,7 +1023,7 @@ export default function VendorDetailPage() {
       </div>
 
       {/* Products Section with Filters */}
-      <div className="container pb-8">
+      <div className="container pb-8 px-4">
         <div className="flex justify-end items-center mb-4">
           {/* Mobile filter button */}
           <Sheet>
