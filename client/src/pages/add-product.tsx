@@ -78,7 +78,7 @@ const productSchema = z.object({
   isOnSale: z.boolean().default(false),
   // New Shopify-style fields
   status: z.enum(['active', 'draft', 'archived']).default('active'),
-  offeringType: z.enum(['product', 'service', 'vehicle', 'real_estate', 'xl_xxl_product', 'request_product', 'request_service']).default('product'),
+  offeringType: z.enum(['product', 'service', 'digital_product']).default('product'),
   vendor: z.string().optional(),
   collections: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
@@ -105,10 +105,6 @@ const productSchema = z.object({
   serviceType: z.enum(['onetime', 'recurring', 'subscription', 'consultation']).optional(),
   serviceLocation: z.enum(['online', 'onsite', 'office', 'flexible']).optional(),
   // Vehicle-specific fields
-  vehicleMake: z.string().optional(),
-  vehicleModel: z.string().optional(),
-  vehicleYear: z.string().optional(),
-  vehicleMileage: z.string().optional(),
   // Property-specific fields  
   propertyType: z.string().optional(),
   propertySize: z.string().optional(),
@@ -177,11 +173,7 @@ export default function AddProduct() {
     "What are you offering?",
     "Product",
     "Service",
-    "Vehicle",
-    "Real Estate", 
-    "XL/XXL Product",
-    "Request Product",
-    "Request Service",
+    "Digital Product",
     
     // Main Navigation Sections
     "Finance",
@@ -535,10 +527,6 @@ export default function AddProduct() {
       vatIncluded: false,
       vatRate: undefined,
       // Vehicle fields
-      vehicleMake: '',
-      vehicleModel: '',
-      vehicleYear: '',
-      vehicleMileage: '',
       // Property fields
       propertyType: '',
       propertySize: '',
@@ -562,15 +550,8 @@ export default function AddProduct() {
     enabled: !!user,
   });
 
-  // Determine available marketplaces based on vendor type and offering type
+  // Determine available marketplaces based on vendor type
   const getAvailableMarketplaces = () => {
-    const offeringType = form.watch('offeringType');
-    
-    // If request_product or request_service is selected, only show RQST marketplace
-    if (offeringType === 'request_product' || offeringType === 'request_service') {
-      return [{ value: 'rqst', label: 'RQST (Request)', description: 'For product and service requests' }];
-    }
-    
     // Safety check for null/undefined data
     if (!vendorAccountsData || !vendorAccountsData.vendorAccounts || !Array.isArray(vendorAccountsData.vendorAccounts)) {
       return [{ value: 'c2c', label: 'C2C (Consumer to Consumer)', description: 'For individual sellers' }];
@@ -605,18 +586,6 @@ export default function AddProduct() {
     }
   }, [availableMarketplaces, form]);
 
-  // Auto-select RQST marketplace when request options are selected
-  useEffect(() => {
-    const subscription = form.watch((value, { name }) => {
-      if (name === 'offeringType') {
-        const offeringType = value.offeringType;
-        if (offeringType === 'request_product' || offeringType === 'request_service') {
-          form.setValue('marketplace', 'rqst');
-        }
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [form]);
 
   // Auto-fill vendor name based on marketplace selection
   useEffect(() => {
@@ -1266,12 +1235,12 @@ export default function AddProduct() {
               name="offeringType"
               render={({ field }) => (
                 <FormItem className="space-y-3">
-                  <FormLabel>{t("What are you offering/requesting ?")}</FormLabel>
+                  <FormLabel>{t("What are you offering?")}</FormLabel>
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
                       defaultValue={field.value}
-                      className="grid grid-cols-2 md:grid-cols-3 gap-4"
+                      className="grid grid-cols-3 gap-4"
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="product" id="product" />
@@ -1286,33 +1255,9 @@ export default function AddProduct() {
                         </label>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="vehicle" id="vehicle" />
-                        <label htmlFor="vehicle" className="text-sm font-medium cursor-pointer">
-                          {t("Vehicle")}
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="real_estate" id="real_estate" />
-                        <label htmlFor="real_estate" className="text-sm font-medium cursor-pointer">
-                          {t("Real Estate")}
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="xl_xxl_product" id="xl_xxl_product" />
-                        <label htmlFor="xl_xxl_product" className="text-sm font-medium cursor-pointer">
-                          {t("XL/XXL Product")}
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="request_product" id="request_product" />
-                        <label htmlFor="request_product" className="text-sm font-medium cursor-pointer">
-                          {t("Request Product")}
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="request_service" id="request_service" />
-                        <label htmlFor="request_service" className="text-sm font-medium cursor-pointer">
-                          {t("Request Service")}
+                        <RadioGroupItem value="digital_product" id="digital_product" />
+                        <label htmlFor="digital_product" className="text-sm font-medium cursor-pointer">
+                          {t("Digital Product")}
                         </label>
                       </div>
                     </RadioGroup>
@@ -1713,8 +1658,8 @@ export default function AddProduct() {
                 </CardContent>
               </Card>
 
-              {/* Inventory Section - Only show for products, vehicles, and XL/XXL products */}
-              {(form.watch('offeringType') === 'product' || form.watch('offeringType') === 'vehicle' || form.watch('offeringType') === 'xl_xxl_product') && (
+              {/* Inventory Section - Only show for physical products */}
+              {form.watch('offeringType') === 'product' && (
               <Card>
                 <CardHeader>
                   <CardTitle>{t("Inventory")}</CardTitle>
@@ -1814,8 +1759,8 @@ export default function AddProduct() {
               </Card>
               )}
 
-              {/* Shipping Section - Only show for products, vehicles, and XL/XXL products */}
-              {(form.watch('offeringType') === 'product' || form.watch('offeringType') === 'vehicle' || form.watch('offeringType') === 'xl_xxl_product') && (
+              {/* Shipping Section - Only show for physical products */}
+              {form.watch('offeringType') === 'product' && (
               <Card>
                 <CardHeader>
                   <CardTitle>{t("Shipping")}</CardTitle>
@@ -1957,8 +1902,8 @@ export default function AddProduct() {
               </Card>
               )}
               
-              {/* Variants - Only show for products, vehicles, and XL/XXL products */}
-              {(form.watch('offeringType') === 'product' || form.watch('offeringType') === 'vehicle' || form.watch('offeringType') === 'xl_xxl_product') && (
+              {/* Variants - Only show for products */}
+              {form.watch('offeringType') === 'product' && (
               <Card>
                 <CardHeader>
                   <CardTitle>{t("Variants")}</CardTitle>
@@ -2041,164 +1986,6 @@ export default function AddProduct() {
                         </FormItem>
                       )}
                     />
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Vehicle-specific fields */}
-              {form.watch('offeringType') === 'vehicle' && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{t("Vehicle Details")}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="vehicleMake"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("Make")}</FormLabel>
-                            <FormControl>
-                              <Input placeholder={t("e.g., Toyota, BMW")} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="vehicleModel"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("Model")}</FormLabel>
-                            <FormControl>
-                              <Input placeholder={t("e.g., Camry, X5")} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="vehicleYear"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("Year")}</FormLabel>
-                            <FormControl>
-                              <Input placeholder={t("e.g., 2020")} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="vehicleMileage"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("Mileage")}</FormLabel>
-                            <FormControl>
-                              <Input placeholder={t("e.g., 50,000 km")} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Real Estate-specific fields */}
-              {form.watch('offeringType') === 'real_estate' && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{t("Property Details")}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="propertyType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("Property Type")}</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder={t("Select type")} />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="house">{t("House")}</SelectItem>
-                                <SelectItem value="apartment">{t("Apartment")}</SelectItem>
-                                <SelectItem value="condo">{t("Condo")}</SelectItem>
-                                <SelectItem value="land">{t("Land")}</SelectItem>
-                                <SelectItem value="commercial">{t("Commercial")}</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="propertySize"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("Size (sq ft/m²)")}</FormLabel>
-                            <FormControl>
-                              <Input placeholder={t("e.g., 1200 sq ft")} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="bedrooms"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("Bedrooms")}</FormLabel>
-                            <FormControl>
-                              <Input placeholder={t("e.g., 3")} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="bathrooms"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("Bathrooms")}</FormLabel>
-                            <FormControl>
-                              <Input placeholder={t("e.g., 2")} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="propertyAge"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("Age (years)")}</FormLabel>
-                            <FormControl>
-                              <Input placeholder={t("e.g., 5")} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -2297,10 +2084,7 @@ export default function AddProduct() {
             <Card>
               <CardHeader>
                 <CardTitle>
-                  {form.watch('offeringType') === 'service' ? t('Service badges') : 
-                   form.watch('offeringType') === 'vehicle' ? t('Vehicle badges') :
-                   form.watch('offeringType') === 'real_estate' ? t('Property badges') :
-                   form.watch('offeringType') === 'xl_xxl_product' ? t('XL/XXL Product badges') : t('Product badges')}
+                  {form.watch('offeringType') === 'service' ? t('Service badges') : t('Product badges')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -2313,9 +2097,7 @@ export default function AddProduct() {
                       <FormItem className={`flex flex-row items-center justify-between ${isService ? 'opacity-50' : ''}`}>
                         <div className="space-y-0.5">
                           <FormLabel className={`text-sm font-normal ${isService ? 'text-gray-400' : ''}`}>
-                            {form.watch('offeringType') === 'vehicle' ? 'New Vehicle' : 
-                             form.watch('offeringType') === 'real_estate' ? 'New Property' :
-                             form.watch('offeringType') === 'xl_xxl_product' ? 'New XL/XXL Product' : 'New Product'}
+                            {t('New Product')}
                           </FormLabel>
                         </div>
                         <FormControl>
