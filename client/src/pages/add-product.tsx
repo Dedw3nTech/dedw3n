@@ -1243,19 +1243,19 @@ export default function AddProduct() {
                       className="grid grid-cols-3 gap-4"
                     >
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="product" id="product" />
+                        <RadioGroupItem value="product" id="product" className="border-gray-300 text-black data-[state=checked]:border-black data-[state=checked]:bg-black" />
                         <label htmlFor="product" className="text-sm font-medium cursor-pointer">
                           {t("Product")}
                         </label>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="service" id="service" />
+                        <RadioGroupItem value="service" id="service" className="border-gray-300 text-black data-[state=checked]:border-black data-[state=checked]:bg-black" />
                         <label htmlFor="service" className="text-sm font-medium cursor-pointer">
                           {t("Service")}
                         </label>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="digital_product" id="digital_product" />
+                        <RadioGroupItem value="digital_product" id="digital_product" className="border-gray-300 text-black data-[state=checked]:border-black data-[state=checked]:bg-black" />
                         <label htmlFor="digital_product" className="text-sm font-medium cursor-pointer">
                           {t("Digital Product")}
                         </label>
