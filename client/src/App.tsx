@@ -387,7 +387,7 @@ function MarketplaceNavWrapper() {
 }
 
 // Standalone route utilities - routes that render without shared navigation/footer
-const STANDALONE_ROUTES: string[] = [];
+const STANDALONE_ROUTES: string[] = ['/add-product', '/upload-product'];
 const normalizePath = (path: string) => path.split('?')[0];
 const isStandaloneRoutePath = (path: string) => STANDALONE_ROUTES.includes(normalizePath(path));
 

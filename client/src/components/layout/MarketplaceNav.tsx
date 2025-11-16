@@ -43,6 +43,7 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
   const [isNavVisible, setIsNavVisible] = useState(true);
   
   const isGovernmentPage = location === '/government' || location === '/dr-congo';
+  const isAddProductPage = location.startsWith('/add-product') || location.startsWith('/upload-product');
   const canAddService = user?.role === 'admin' || user?.username === 'Serruti';
   
   // Use external search term if provided, otherwise use local state
@@ -395,8 +396,8 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
             )}
           </div>
 
-          {/* Market type navigation buttons - ABSOLUTELY CENTERED, ONE LINE - Hidden on government page */}
-          {!isGovernmentPage && (
+          {/* Market type navigation buttons - ABSOLUTELY CENTERED, ONE LINE - Hidden on government and add-product pages */}
+          {!isGovernmentPage && !isAddProductPage && (
             <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center flex-nowrap gap-2 md:gap-3 lg:gap-4 xl:gap-6">
               {/* Friend to Friend (C2C) */}
             <div 
@@ -554,8 +555,8 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
               </form>
             </div>
             
-            {/* Hamburger menu button for desktop - Hidden on government page */}
-            {!isGovernmentPage && (
+            {/* Hamburger menu button for desktop - Hidden on government and add-product pages */}
+            {!isGovernmentPage && !isAddProductPage && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -769,8 +770,8 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
               )}
             </div>
 
-            {/* Active market type indicator - Hidden on government page */}
-            {!isGovernmentPage && (
+            {/* Active market type indicator - Hidden on government and add-product pages */}
+            {!isGovernmentPage && !isAddProductPage && (
               <div className="flex items-center">
                 <span className="text-sm font-medium text-gray-700">
                   {marketType === 'c2c' && translatedLabels.c2cText}
