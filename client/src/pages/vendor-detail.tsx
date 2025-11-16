@@ -1015,13 +1015,6 @@ export default function VendorDetailPage() {
                   <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                     {vendor.description || translateText("No description available")}
                   </p>
-                  <div className="flex items-center gap-1 mt-1">
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span className="font-medium">
-                      {vendor.rating?.toFixed(1) || translateText("New")} 
-                      {vendor.ratingCount ? ` (${vendor.ratingCount})` : ""}
-                    </span>
-                  </div>
                 </div>
               </div>
             </div>
