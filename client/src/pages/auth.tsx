@@ -18,6 +18,7 @@ import { useEmailValidation } from "@/hooks/use-email-validation";
 import { useNameValidation } from "@/hooks/use-name-validation";
 import { useAffiliateVerification } from "@/hooks/use-affiliate-verification";
 import { usePasswordStrength } from "@/hooks/use-password-strength";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 import { ReportButton } from "@/components/ui/report-button";
 // Remove usePageTitle import as it's not needed
@@ -88,6 +89,7 @@ export default function AuthPage() {
   const [emailTouched, setEmailTouched] = useState(false);
   const [nameTouched, setNameTouched] = useState(false);
   const [affiliateCodeTouched, setAffiliateCodeTouched] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   
   // Use the affiliate verification hook
   const {
@@ -275,7 +277,8 @@ export default function AuthPage() {
       if (isLogin) {
         await loginMutation.mutateAsync({
           username: formData.username,
-          password: formData.password
+          password: formData.password,
+          turnstileToken: turnstileToken || undefined
         });
         
         // Handle remember password functionality
@@ -308,7 +311,8 @@ export default function AuthPage() {
           country: formData.country,
           city: formData.city,
           preferredLanguage: formData.language,
-          affiliatePartner: formData.affiliatePartnerCode
+          affiliatePartner: formData.affiliatePartnerCode,
+          turnstileToken: turnstileToken || undefined
         });
         toast({
           title: t["Account created!"] || "Account created!",
@@ -869,6 +873,16 @@ export default function AuthPage() {
                   </Link>
                 </div>
               )}
+
+              {/* Cloudflare Turnstile Widget */}
+              <TurnstileWidget
+                siteKey="0x4AAAAAAB8uGno-22fB8NmD"
+                onVerify={(token) => setTurnstileToken(token)}
+                onError={() => setTurnstileToken(null)}
+                onExpire={() => setTurnstileToken(null)}
+                theme="light"
+                action={isLogin ? 'login' : 'register'}
+              />
 
               <Button
                 type="submit"

@@ -9,7 +9,7 @@ interface TurnstileVerificationResponse {
   cdata?: string;
 }
 
-const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY || '0x4AAAAAAB8uGkWysamiZulXcEt_bgJat9A';
+const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY;
 const TURNSTILE_VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 
 /**
@@ -25,6 +25,11 @@ export async function verifyTurnstileToken(
   try {
     if (!token) {
       return { success: false, error: 'No token provided' };
+    }
+
+    if (!TURNSTILE_SECRET_KEY) {
+      console.error('[TURNSTILE] Secret key not configured');
+      return { success: false, error: 'Turnstile not configured' };
     }
 
     // In development, allow bypass with a special token

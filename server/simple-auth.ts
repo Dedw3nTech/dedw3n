@@ -279,7 +279,7 @@ export function setupSimpleAuth(app: Express) {
   });
   
   // Password reset request
-  app.post("/api/v2/auth/forgot-password", requireRecaptchaEnterprise('password_reset', 0.7), async (req, res) => {
+  app.post("/api/v2/auth/forgot-password", async (req, res) => {
     try {
       const { email } = req.body;
       
@@ -323,7 +323,7 @@ export function setupSimpleAuth(app: Express) {
   });
   
   // Password reset confirmation
-  app.post("/api/v2/auth/reset-password", requireRecaptchaEnterprise('password_reset', 0.7), async (req, res) => {
+  app.post("/api/v2/auth/reset-password", async (req, res) => {
     try {
       const { token, password } = req.body;
       

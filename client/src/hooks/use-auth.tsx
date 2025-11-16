@@ -31,10 +31,10 @@ type AuthContextType = {
   error: Error | null;
   loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
   logoutMutation: UseMutationResult<any, Error, void>;
-  registerMutation: UseMutationResult<SelectUser, Error, InsertUser & { captchaId?: string; captchaInput?: string }>;
+  registerMutation: UseMutationResult<SelectUser, Error, InsertUser & { captchaId?: string; captchaInput?: string; turnstileToken?: string }>;
 };
 
-type LoginData = Pick<InsertUser, "username" | "password"> & { captchaId?: string; captchaInput?: string };
+type LoginData = Pick<InsertUser, "username" | "password"> & { captchaId?: string; captchaInput?: string; turnstileToken?: string };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 

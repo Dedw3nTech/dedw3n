@@ -15,6 +15,7 @@ import { sendEmail } from "./email-service";
 import createMemoryStore from "memorystore";
 import speakeasy from "speakeasy";
 import QRCode from "qrcode";
+import { verifyTurnstileToken } from "./turnstile";
 
 // Simple in-memory rate limiter for authentication endpoints
 const authAttempts = new Map<string, { count: number; resetTime: number }>();
@@ -469,6 +470,20 @@ export function setupAuth(app: Express) {
           code: "RATE_LIMIT_EXCEEDED"
         });
       }
+
+      // Verify Turnstile token
+      if (req.body.turnstileToken) {
+        const turnstileResult = await verifyTurnstileToken(req.body.turnstileToken, clientIp);
+        if (!turnstileResult.success) {
+          console.log(`[SECURITY] Turnstile verification failed for registration: ${req.body.username}`);
+          return res.status(400).json({ 
+            message: "Bot verification failed. Please try again.",
+            code: "TURNSTILE_FAILED",
+            error: turnstileResult.error
+          });
+        }
+        console.log(`[SECURITY] Turnstile verification passed for registration: ${req.body.username}`);
+      }
       
       // Check if username already exists
       const existingUser = await storage.getUserByUsername(req.body.username);
@@ -642,6 +657,20 @@ The Dedw3n Team
         message: "Too many login attempts. Please try again later.",
         code: "RATE_LIMIT_EXCEEDED"
       });
+    }
+
+    // Verify Turnstile token
+    if (req.body.turnstileToken) {
+      const turnstileResult = await verifyTurnstileToken(req.body.turnstileToken, clientIp);
+      if (!turnstileResult.success) {
+        console.log(`[SECURITY] Turnstile verification failed for login: ${req.body.username}`);
+        return res.status(400).json({ 
+          message: "Bot verification failed. Please try again.",
+          code: "TURNSTILE_FAILED",
+          error: turnstileResult.error
+        });
+      }
+      console.log(`[SECURITY] Turnstile verification passed for login: ${req.body.username}`);
     }
 
     // Check for account lockout first
