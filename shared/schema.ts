@@ -460,6 +460,7 @@ export const vendors = pgTable("vendors", {
   taxId: text("tax_id"),
   website: text("website"),
   logo: text("logo"),
+  banner: text("banner"),
   rating: doublePrecision("rating").default(0),
   ratingCount: integer("rating_count").default(0),
   // Badge system fields

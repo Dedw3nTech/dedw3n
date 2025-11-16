@@ -300,14 +300,20 @@ export default function VendorDetailPage() {
         description={normalizeDescription(vendor?.description || `Browse products and services from ${vendor?.storeName || 'this vendor'} on Dedw3n marketplace.`)}
         structuredData={vendor ? buildVendorSchema(vendor, products) : undefined}
       />
-      <div className="container py-8">
-        <div className="flex items-center mb-8">
-          <Button variant="ghost" onClick={() => setLocation("/vendors")}>
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            {translateText("Back")}
-          </Button>
-        </div>
       
+      {/* Vendor Banner Section */}
+      {vendor.banner && (
+        <div className="w-full h-48 md:h-64 lg:h-80 overflow-hidden bg-gray-100">
+          <img 
+            src={vendor.banner} 
+            alt={`${vendor.storeName} banner`}
+            className="w-full h-full object-cover"
+            data-testid="vendor-banner-image"
+          />
+        </div>
+      )}
+      
+      <div className="container py-8">
       {/* Vendor Info Top Bar */}
       <Card className="mb-8">
         <CardContent className="p-6">
