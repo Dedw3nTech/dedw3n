@@ -39,7 +39,9 @@ import {
   Activity,
   Target,
   Award,
-  Clock
+  Clock,
+  Lightbulb,
+  AlertCircle
 } from 'lucide-react';
 
 interface VendorAnalyticsProps {
@@ -106,6 +108,15 @@ interface AnalyticsData {
   };
 }
 
+interface Suggestion {
+  id: number;
+  type: 'pricing' | 'inventory' | 'marketing' | 'product' | 'customer';
+  priority: 'high' | 'medium' | 'low';
+  title: string;
+  description: string;
+  impact: string;
+}
+
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00C49F', '#FFBB28'];
 
 export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
@@ -119,6 +130,16 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
     queryFn: async () => {
       const response = await apiRequest(`/api/vendors/analytics?vendorId=${vendorId}&timeRange=${timeRange}`);
       return response as AnalyticsData;
+    },
+    enabled: !!vendorId
+  });
+
+  // Fetch AI-powered suggestions
+  const { data: suggestions, isLoading: isLoadingSuggestions } = useQuery({
+    queryKey: ['/api/vendors', vendorId, 'suggestions'],
+    queryFn: async () => {
+      const response = await apiRequest(`/api/vendors/${vendorId}/suggestions`);
+      return response as Suggestion[];
     },
     enabled: !!vendorId
   });
@@ -144,6 +165,36 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
     if (growth > 0) return 'text-green-600';
     if (growth < 0) return 'text-red-600';
     return 'text-gray-600';
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'low':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'pricing':
+        return <DollarSign className="h-5 w-5" />;
+      case 'inventory':
+        return <Package className="h-5 w-5" />;
+      case 'marketing':
+        return <TrendingUp className="h-5 w-5" />;
+      case 'product':
+        return <ShoppingCart className="h-5 w-5" />;
+      case 'customer':
+        return <Users className="h-5 w-5" />;
+      default:
+        return <Lightbulb className="h-5 w-5" />;
+    }
   };
 
   if (isLoading) {
@@ -315,6 +366,60 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* AI-Powered Suggestions */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Lightbulb className="h-5 w-5" />
+            AI-Powered Suggestions
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Personalized tips to increase your sales based on your store's performance
+          </p>
+        </CardHeader>
+        <CardContent>
+          {isLoadingSuggestions ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Generating personalized suggestions...
+            </div>
+          ) : suggestions && suggestions.length > 0 ? (
+            <div className="space-y-4">
+              {suggestions.map((suggestion) => (
+                <div
+                  key={suggestion.id}
+                  className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+                  data-testid={`suggestion-${suggestion.id}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1">{getTypeIcon(suggestion.type)}</div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h4 className="font-semibold">{suggestion.title}</h4>
+                        <span className={`text-xs px-2 py-1 rounded-full border ${getPriorityColor(suggestion.priority)}`}>
+                          {suggestion.priority === 'high' && 'High Priority'}
+                          {suggestion.priority === 'medium' && 'Medium Priority'}
+                          {suggestion.priority === 'low' && 'Low Priority'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-2">{suggestion.description}</p>
+                      <div className="flex items-center gap-1 text-sm text-green-700">
+                        <TrendingUp className="h-4 w-4" />
+                        <span className="font-medium">Impact:</span>
+                        <span>{suggestion.impact}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              No suggestions available at the moment. Keep growing your business and check back later!
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Analytics Tabs */}
       <Tabs defaultValue="performance" className="space-y-4">

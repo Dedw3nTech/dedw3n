@@ -37,6 +37,7 @@ import {
 import VendorCommissionDashboard from "@/components/vendor/VendorCommissionDashboard";
 import VendorProductManagement from "@/components/vendor/VendorProductManagement";
 import VendorOrderManagement from "@/components/vendor/VendorOrderManagement";
+import VendorAnalytics from "@/components/vendor/VendorAnalytics";
 import { DeleteStoreModal } from "@/components/ui/delete-store-modal";
 
 export default function VendorDashboard() {
@@ -523,6 +524,17 @@ export default function VendorDashboard() {
                 >
                   {t("Commission")}
                 </button>
+                <button
+                  onClick={() => setActiveTab('analytics')}
+                  className={`w-full text-left px-4 py-3 rounded-md transition-colors ${
+                    activeTab === 'analytics'
+                      ? 'bg-black text-white'
+                      : 'hover:bg-gray-100 text-gray-700'
+                  }`}
+                  data-testid="tab-analytics"
+                >
+                  {analyticsText}
+                </button>
               </nav>
             </CardContent>
           </Card>
@@ -540,6 +552,10 @@ export default function VendorDashboard() {
 
           {activeTab === 'commission' && (
             <VendorCommissionDashboard vendorId={vendorId!} />
+          )}
+
+          {activeTab === 'analytics' && (
+            <VendorAnalytics vendorId={vendorId!} />
           )}
         </div>
       </div>
