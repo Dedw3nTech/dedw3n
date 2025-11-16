@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useLocation } from 'wouter';
+import { useLocation, Link } from 'wouter';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -50,9 +50,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Loader2, Plus, Upload, X, Video as VideoIcon, CheckCircle } from 'lucide-react';
+import { Loader2, Plus, Upload, X, Video as VideoIcon, CheckCircle, Landmark, Building, Coffee, Wrench, Store, Users } from 'lucide-react';
 import CurrencyInput from '@/components/ui/currency-input';
 import { VendorCreationDialog } from '@/components/VendorCreationDialog';
+import { cn } from '@/lib/utils';
 
 
 // Product form schema
@@ -119,7 +120,7 @@ const productSchema = z.object({
 type ProductFormValues = z.infer<typeof productSchema>;
 
 export default function AddProduct() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
   const [isVendor, setIsVendor] = useState(false);
@@ -130,9 +131,27 @@ export default function AddProduct() {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [successData, setSuccessData] = useState<any>(null);
 
-  // Parse URL parameters for prefill data
-  const urlParams = new URLSearchParams(window.location.search);
+  // Parse URL parameters for prefill data and section tracking from Wouter location
+  const getQueryParams = (loc: string) => {
+    const searchIndex = loc.indexOf('?');
+    return searchIndex >= 0 ? loc.substring(searchIndex) : '';
+  };
+  
+  const urlParams = new URLSearchParams(getQueryParams(location));
   const prefillData = urlParams.get('prefill');
+  const sectionFromUrl = urlParams.get('section') || 'marketplace'; // Default to marketplace
+  const [activeSection, setActiveSection] = useState(sectionFromUrl);
+  
+  // Sync activeSection with URL parameter whenever location changes
+  useEffect(() => {
+    const currentParams = new URLSearchParams(getQueryParams(location));
+    const urlSection = currentParams.get('section') || 'marketplace';
+    // Only update if the value has changed to avoid unnecessary renders
+    if (urlSection !== activeSection) {
+      setActiveSection(urlSection);
+    }
+  }, [location]);
+  
   let parsedPrefillData = null;
 
   if (prefillData) {
@@ -162,6 +181,21 @@ export default function AddProduct() {
     "XL/XXL Product",
     "Request Product",
     "Request Service",
+    
+    // Main Navigation Sections
+    "Finance",
+    "Government",
+    "Lifestyle",
+    "Services",
+    "Marketplace",
+    "Community",
+    "Select Section",
+    "Upload products to the Marketplace section",
+    "Upload financial products and services",
+    "Upload government-related products and services",
+    "Upload lifestyle products and services",
+    "Upload professional services",
+    "Upload community-related products",
     
     // Authentication & Access
     "Please log in to add a product",
@@ -1012,14 +1046,121 @@ export default function AddProduct() {
     );
   }
 
+  // Generate href for section links preserving current query params
+  const getSectionHref = (sectionId: string) => {
+    const currentParams = new URLSearchParams(getQueryParams(location));
+    // Ensure we only have one section parameter by deleting first then setting
+    currentParams.delete('section');
+    currentParams.set('section', sectionId);
+    const basePath = location.split('?')[0];
+    return `${basePath}?${currentParams.toString()}`;
+  };
+
+  // Navigation sections with icons - memoized to prevent unnecessary re-renders
+  const navigationSections = useMemo(() => [
+    {
+      id: 'finance',
+      label: t("Finance"),
+      icon: Landmark,
+      href: getSectionHref('finance'),
+      isActive: activeSection === 'finance',
+    },
+    {
+      id: 'government',
+      label: t("Government"),
+      icon: Building,
+      href: getSectionHref('government'),
+      isActive: activeSection === 'government',
+    },
+    {
+      id: 'lifestyle',
+      label: t("Lifestyle"),
+      icon: Coffee,
+      href: getSectionHref('lifestyle'),
+      isActive: activeSection === 'lifestyle',
+    },
+    {
+      id: 'services',
+      label: t("Services"),
+      icon: Wrench,
+      href: getSectionHref('services'),
+      isActive: activeSection === 'services',
+    },
+    {
+      id: 'marketplace',
+      label: t("Marketplace"),
+      icon: Store,
+      href: getSectionHref('marketplace'),
+      isActive: activeSection === 'marketplace',
+    },
+    {
+      id: 'community',
+      label: t("Community"),
+      icon: Users,
+      href: getSectionHref('community'),
+      isActive: activeSection === 'community',
+    },
+  ], [activeSection, location, t]);
+
   return (
     <div className="container max-w-7xl mx-auto py-8 px-4">
-      <div className="flex items-center gap-2 mb-6">
-        <h1 className="text-2xl font-bold">{t("Add Product / Service")}</h1>
-      </div>
+      {/* Grid Layout with Sidebar */}
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
+        {/* Left Sidebar - Section Navigation */}
+        <aside className="lg:sticky lg:top-24 lg:h-[calc(100vh-8rem)] overflow-y-auto">
+          <Card className="border-2">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg">{t("Select Section")}</CardTitle>
+            </CardHeader>
+            <CardContent className="p-3">
+              <nav className="space-y-1" role="navigation" aria-label="Section navigation">
+                {navigationSections.map((section) => {
+                  const Icon = section.icon;
+                  return (
+                    <Link
+                      key={section.id}
+                      href={section.href}
+                      data-testid={`section-${section.id}`}
+                      aria-current={section.isActive ? 'page' : undefined}
+                      className={cn(
+                        "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all",
+                        section.isActive
+                          ? "bg-black text-white shadow-md"
+                          : "text-gray-700 hover:bg-gray-100"
+                      )}
+                    >
+                      <Icon className="h-5 w-5 flex-shrink-0" />
+                      <span>{section.label}</span>
+                    </Link>
+                  );
+                })}
+              </nav>
+            </CardContent>
+          </Card>
 
-      {/* Pre-filled Data Indicator */}
-      {parsedPrefillData && parsedPrefillData.name && (
+          {/* Section Info */}
+          <Card className="mt-4 border-2 bg-gray-50">
+            <CardContent className="p-4">
+              <p className="text-xs text-gray-600">
+                {activeSection === 'marketplace' && t("Upload products to the Marketplace section")}
+                {activeSection === 'finance' && t("Upload financial products and services")}
+                {activeSection === 'government' && t("Upload government-related products and services")}
+                {activeSection === 'lifestyle' && t("Upload lifestyle products and services")}
+                {activeSection === 'services' && t("Upload professional services")}
+                {activeSection === 'community' && t("Upload community-related products")}
+              </p>
+            </CardContent>
+          </Card>
+        </aside>
+
+        {/* Main Content Area */}
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-6">
+            <h1 className="text-2xl font-bold">{t("Add Product / Service")}</h1>
+          </div>
+
+          {/* Pre-filled Data Indicator */}
+          {parsedPrefillData && parsedPrefillData.name && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
           <div className="flex items-center">
             <div className="flex-shrink-0">
@@ -2183,50 +2324,54 @@ export default function AddProduct() {
               {createProductMutation.isPending ? t("Publishing...") : t("Publish")}
             </Button>
           </div>
-        </form>
-      </Form>
+          </form>
+        </Form>
       
-      {/* Vendor Creation Dialog */}
-      <VendorCreationDialog
-        open={showVendorDialog}
-        onOpenChange={setShowVendorDialog}
-        onSubmit={handleVendorSubmit}
-        isLoading={createVendorMutation.isPending}
-      />
+          {/* Vendor Creation Dialog */}
+          <VendorCreationDialog
+            open={showVendorDialog}
+            onOpenChange={setShowVendorDialog}
+            onSubmit={handleVendorSubmit}
+            isLoading={createVendorMutation.isPending}
+          />
 
-      {/* Success Dialog */}
-      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <CheckCircle className="h-16 w-16 text-green-500" />
-            </div>
-            <DialogTitle className="text-2xl font-bold text-green-600 text-center">
-              SUCCESS!
-            </DialogTitle>
-            <DialogDescription className="text-center space-y-2">
-              <p className="text-lg font-medium">
-                Your product "{successData?.name || form.getValues('name')}" has been published!
-              </p>
-              <div className="bg-gray-50 p-3 rounded-lg space-y-1 text-sm">
-                <p><strong>Product Code:</strong> {successData?.productCode || 'Generated'}</p>
-                <p><strong>Marketplace:</strong> {successData?.marketplace?.toUpperCase() || 'C2C'}</p>
-              </div>
-              <p className="text-gray-600">
-                Redirecting to product page...
-              </p>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="sm:justify-center">
-            <Button 
-              onClick={handleSuccessConfirm}
-              className="w-full bg-black hover:bg-gray-800 text-white"
-            >
-              OK
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          {/* Success Dialog */}
+          <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader className="text-center">
+                <div className="flex justify-center mb-4">
+                  <CheckCircle className="h-16 w-16 text-green-500" />
+                </div>
+                <DialogTitle className="text-2xl font-bold text-green-600 text-center">
+                  SUCCESS!
+                </DialogTitle>
+                <DialogDescription className="text-center space-y-2">
+                  <p className="text-lg font-medium">
+                    Your product "{successData?.name || form.getValues('name')}" has been published!
+                  </p>
+                  <div className="bg-gray-50 p-3 rounded-lg space-y-1 text-sm">
+                    <p><strong>Product Code:</strong> {successData?.productCode || 'Generated'}</p>
+                    <p><strong>Marketplace:</strong> {successData?.marketplace?.toUpperCase() || 'C2C'}</p>
+                  </div>
+                  <p className="text-gray-600">
+                    Redirecting to product page...
+                  </p>
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="sm:justify-center">
+                <Button 
+                  onClick={handleSuccessConfirm}
+                  className="w-full bg-black hover:bg-gray-800 text-white"
+                >
+                  OK
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+        {/* End Main Content Area */}
+      </div>
+      {/* End Grid Layout */}
     </div>
   );
 }
