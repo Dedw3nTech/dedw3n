@@ -7,6 +7,7 @@ import { GPCProvider } from "@/components/GPCProvider";
 import { CookieConsentProvider } from "@/components/CookieConsentProvider";
 import { WeightUnitProvider } from "@/contexts/WeightUnitContext";
 import { DimensionUnitProvider } from "@/hooks/use-dimension-unit";
+import { DistanceUnitProvider } from "@/hooks/use-distance-unit";
 import { queryClient } from "@/lib/queryClient";
 
 interface CoreProvidersProps {
@@ -22,11 +23,13 @@ export function CoreProviders({ children, forceRefresh = 0 }: CoreProvidersProps
           <TooltipProvider>
             <AuthTokenProvider>
               <LanguageProvider>
-                <WeightUnitProvider>
-                  <DimensionUnitProvider>
-                    {children}
-                  </DimensionUnitProvider>
-                </WeightUnitProvider>
+                <DistanceUnitProvider>
+                  <WeightUnitProvider>
+                    <DimensionUnitProvider>
+                      {children}
+                    </DimensionUnitProvider>
+                  </WeightUnitProvider>
+                </DistanceUnitProvider>
               </LanguageProvider>
             </AuthTokenProvider>
           </TooltipProvider>

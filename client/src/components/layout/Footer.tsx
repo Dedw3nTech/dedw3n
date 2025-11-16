@@ -7,6 +7,7 @@ import { useLocationConsent } from "@/hooks/use-location-consent";
 import ErrorBoundary from "@/components/ui/error-boundary";
 import { WeightUnitSelector } from "@/components/ui/weight-unit-selector";
 import { DimensionUnitSelector } from "@/components/ui/dimension-unit-selector";
+import { DistanceUnitSelector } from "@/components/ui/distance-unit-selector";
 
 function FooterContent() {
   const { consentStatus } = useLocationConsent();
@@ -85,6 +86,8 @@ function FooterContent() {
 
         <div className="border-t border-gray-200 mt-8 pt-6 flex flex-col space-y-4">
           <div className="flex flex-wrap justify-center md:justify-end gap-x-3 gap-y-2 items-center">
+            <DistanceUnitSelector />
+            <span className="text-xs text-gray-400">|</span>
             <WeightUnitSelector />
             <DimensionUnitSelector />
             <span className="text-xs text-gray-400">|</span>
