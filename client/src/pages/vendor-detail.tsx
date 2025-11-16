@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useMasterTranslation } from "@/hooks/use-master-translation";
 import { useAuth } from "@/hooks/use-auth";
 import { SEOHead } from "@/components/seo/SEOHead";
@@ -203,6 +203,8 @@ const TopBuyerItem = ({ buyer, index }: { buyer: TopBuyer; index: number }) => {
   );
 };
 
+const nullishToUndefined = <T,>(value: T | null | undefined): T | undefined => value ?? undefined;
+
 export default function VendorDetailPage() {
   const { translateText } = useMasterTranslation();
   const { user } = useAuth();
@@ -227,6 +229,43 @@ export default function VendorDetailPage() {
     queryKey: [`/api/products`, { vendorId: vendor?.id }],
     enabled: !!vendor?.id,
   });
+  
+  // Sanitize vendor and products for SEO schema (convert null to undefined)
+  const seoVendor = useMemo(() => {
+    if (!vendor) return undefined;
+    return {
+      ...vendor,
+      description: nullishToUndefined(vendor.description),
+      logo: nullishToUndefined(vendor.logo),
+      banner: nullishToUndefined(vendor.banner),
+      website: nullishToUndefined(vendor.website),
+      taxId: nullishToUndefined(vendor.taxId),
+      contactEmail: nullishToUndefined(vendor.contactEmail),
+      contactPhone: nullishToUndefined(vendor.contactPhone),
+      rating: nullishToUndefined(vendor.rating),
+      ratingCount: nullishToUndefined(vendor.ratingCount),
+      totalSalesAmount: nullishToUndefined(vendor.totalSalesAmount),
+      totalTransactions: nullishToUndefined(vendor.totalTransactions),
+    };
+  }, [vendor]);
+
+  const seoProducts = useMemo(() => {
+    if (!products) return undefined;
+    return products.map(product => ({
+      ...product,
+      discountPrice: nullishToUndefined(product.discountPrice),
+      imageUrl: nullishToUndefined(product.imageUrl),
+      productCode: nullishToUndefined(product.productCode),
+      condition: nullishToUndefined(product.condition),
+      createdAt: nullishToUndefined(product.createdAt),
+      dimensions: nullishToUndefined(product.dimensions),
+      dimensionUnit: nullishToUndefined(product.dimensionUnit),
+      weight: nullishToUndefined(product.weight),
+      weightUnit: nullishToUndefined(product.weightUnit),
+      seoDescription: nullishToUndefined(product.seoDescription),
+      seoTitle: nullishToUndefined(product.seoTitle),
+    }));
+  }, [products]);
   
   // Get vendor analytics if the viewing user is the vendor
   const isOwner = user && vendor && vendor.userId === user.id;
@@ -298,7 +337,7 @@ export default function VendorDetailPage() {
       <SEOHead 
         title={normalizeTitle(vendor?.storeName ? `${vendor.storeName} - Vendor Profile` : undefined, 'Vendor Profile - Dedw3n')}
         description={normalizeDescription(vendor?.description, `Browse products and services from ${vendor?.storeName || 'this vendor'} on Dedw3n marketplace.`)}
-        structuredData={vendor ? buildVendorSchema(vendor as any, products) : undefined}
+        structuredData={seoVendor && seoProducts ? buildVendorSchema(seoVendor as any, seoProducts as any) : undefined}
       />
       
       {/* Vendor Banner Section */}
@@ -335,6 +374,13 @@ export default function VendorDetailPage() {
                     <User className="h-4 w-4 inline mr-1" />
                     {translateText("View Profile")}
                   </Link>
+                  <button 
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                    data-testid="button-contact-vendor"
+                    title={translateText("Contact Vendor")}
+                  >
+                    <Mail className="h-4 w-4" />
+                  </button>
                 </div>
                 <div className="flex items-center gap-1 mt-1">
                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
@@ -358,10 +404,6 @@ export default function VendorDetailPage() {
 
             {/* Right Section - Actions */}
             <div className="flex flex-col gap-2 flex-shrink-0">
-              <Button variant="outline" className="w-full md:w-auto">
-                <Mail className="mr-2 h-4 w-4" />
-                {translateText("Contact Vendor")}
-              </Button>
               {isOwner && (
                 <Sheet>
                   <SheetTrigger asChild>
