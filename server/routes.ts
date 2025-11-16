@@ -11,7 +11,7 @@ import { fileURLToPath } from 'url';
 import { storage } from "./storage";
 import { db } from "./db";
 import { eq, or, like, ilike, sql, and, ne, inArray, desc, count, sum, avg, isNull, gte, lte, between, notInArray, isNotNull } from "drizzle-orm";
-import { users, products, orders, vendors, carts, orderItems, reviews, messages, vendorPaymentInfo, insertVendorPaymentInfoSchema, vendorDiscounts, discountUsages, promotionalCampaigns, insertVendorDiscountSchema, insertDiscountUsageSchema, insertPromotionalCampaignSchema, returns, insertReturnSchema, marketingCampaigns, campaignActivities, campaignTouchpoints, campaignAnalytics, campaignProducts, insertMarketingCampaignSchema, insertCampaignActivitySchema, insertCampaignTouchpointSchema, insertCampaignAnalyticsSchema, storeUsers, cities, privateRoomInvitations } from "@shared/schema";
+import { users, products, orders, vendors, carts, orderItems, reviews, messages, vendorPaymentInfo, insertVendorPaymentInfoSchema, vendorDiscounts, discountUsages, promotionalCampaigns, insertVendorDiscountSchema, insertDiscountUsageSchema, insertPromotionalCampaignSchema, returns, insertReturnSchema, marketingCampaigns, campaignActivities, campaignTouchpoints, campaignAnalytics, campaignProducts, insertMarketingCampaignSchema, insertCampaignActivitySchema, insertCampaignTouchpointSchema, insertCampaignAnalyticsSchema, storeUsers, cities, privateRoomInvitations, audioSessions } from "@shared/schema";
 
 import { setupAuth, hashPassword, comparePasswords } from "./auth";
 import { setupJwtAuth, verifyToken, revokeToken } from "./jwt-auth";
@@ -1849,7 +1849,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
 }
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2023-10-16",
+  apiVersion: "2024-11-20.acacia",
 });
 
 export async function registerRoutes(app: Express, httpServer?: Server): Promise<Server> {
@@ -1858,7 +1858,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // SEO routes moved to server/index.ts to be absolutely first
 
   // Store server instance globally for WebSocket setup
-  global.httpServer = server;
+  (global as any).httpServer = server;
 
   // Setup authentication with passport FIRST - before any routes that need auth
   setupAuth(app);
@@ -2823,7 +2823,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
   }
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: "2023-10-16",
+    apiVersion: "2024-11-20.acacia",
   });
 
   // Stripe payment route for one-time payments
@@ -12032,7 +12032,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Import Stripe only when needed
       const { default: Stripe } = await import('stripe');
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-        apiVersion: '2023-10-16',
+        apiVersion: '2024-11-20.acacia',
       });
 
       // Create payment intent
