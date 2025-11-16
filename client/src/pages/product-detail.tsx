@@ -35,10 +35,7 @@ import {
   Phone,
   CreditCard,
   Tag,
-  Flag,
-  Edit,
-  Save,
-  XCircle
+  Flag
 } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
 
@@ -154,18 +151,6 @@ export default function ProductDetail() {
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [reportMessage, setReportMessage] = useState('');
-  
-  // Inline editing state
-  const [isEditingDescription, setIsEditingDescription] = useState(false);
-  const [isEditingDetails, setIsEditingDetails] = useState(false);
-  const [isEditingMaterials, setIsEditingMaterials] = useState(false);
-  
-  // Editable field values
-  const [editedDescription, setEditedDescription] = useState('');
-  const [editedWeight, setEditedWeight] = useState('');
-  const [editedDimensions, setEditedDimensions] = useState('');
-  const [editedDimensionUnit, setEditedDimensionUnit] = useState('cm');
-  const [editedMaterialsCare, setEditedMaterialsCare] = useState('');
   
   // User search query for gift functionality
   const { data: userSearchResults = [], isLoading: userSearchLoading } = useQuery<any[]>({
@@ -515,80 +500,6 @@ export default function ProductDetail() {
       });
     }
   });
-
-  // Product update mutation for inline editing
-  const updateProductMutation = useMutation({
-    mutationFn: async (updateData: any) => {
-      if (!product?.id) throw new Error('Product not available');
-      return apiRequest('PATCH', `/api/products/${product.id}`, updateData);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/products', identifier] });
-      toast({
-        title: translateText("Success"),
-        description: translateText("Product updated successfully!"),
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: translateText("Error"),
-        description: error.message || translateText("Failed to update product. Please try again."),
-        variant: "destructive",
-      });
-    }
-  });
-
-  // Check if current user is the publisher of the product
-  const isPublisher = user && product && user.id === product.userId;
-
-  // Initialize edit values when product loads
-  useEffect(() => {
-    if (product) {
-      setEditedDescription(product.description || '');
-      setEditedWeight(product.weight?.toString() || '');
-      setEditedDimensions(product.dimensions || '');
-      setEditedDimensionUnit(product.dimensionUnit || 'cm');
-      setEditedMaterialsCare(product.materialsCare || '');
-    }
-  }, [product]);
-
-  // Handlers for saving edits
-  const handleSaveDescription = () => {
-    updateProductMutation.mutate({ description: editedDescription });
-    setIsEditingDescription(false);
-  };
-
-  const handleSaveDetails = () => {
-    const updates: any = {};
-    if (editedWeight) updates.weight = parseFloat(editedWeight);
-    if (editedDimensions) updates.dimensions = editedDimensions;
-    if (editedDimensionUnit) updates.dimensionUnit = editedDimensionUnit;
-    updateProductMutation.mutate(updates);
-    setIsEditingDetails(false);
-  };
-
-  const handleSaveMaterials = () => {
-    updateProductMutation.mutate({ materialsCare: editedMaterialsCare });
-    setIsEditingMaterials(false);
-  };
-
-  // Cancel handlers
-  const handleCancelDescription = () => {
-    setEditedDescription(product?.description || '');
-    setIsEditingDescription(false);
-  };
-
-  const handleCancelDetails = () => {
-    setEditedWeight(product?.weight?.toString() || '');
-    setEditedDimensions(product?.dimensions || '');
-    setEditedDimensionUnit(product?.dimensionUnit || 'cm');
-    setIsEditingDetails(false);
-  };
-
-  const handleCancelMaterials = () => {
-    setEditedMaterialsCare(product?.materialsCare || '');
-    setIsEditingMaterials(false);
-  };
 
   // Handle quantity change
   const handleQuantityChange = (delta: number) => {
@@ -950,212 +861,44 @@ export default function ProductDetail() {
 
           {/* Product Description */}
           <div className="mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-sm font-bold">{translateText('PRODUCT DESCRIPTION')}</h2>
-              {isPublisher && !isEditingDescription && (
-                <button
-                  onClick={() => setIsEditingDescription(true)}
-                  className="text-xs text-gray-600 hover:text-black flex items-center gap-1"
-                  data-testid="button-edit-description"
-                >
-                  <Edit className="h-3 w-3" />
-                  {translateText('Edit')}
-                </button>
-              )}
-            </div>
-            {isEditingDescription ? (
-              <div className="space-y-2">
-                <Textarea
-                  value={editedDescription}
-                  onChange={(e) => setEditedDescription(e.target.value)}
-                  className="w-full text-sm min-h-[100px]"
-                  placeholder={translateText('Enter product description')}
-                  data-testid="input-edit-description"
-                />
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleSaveDescription}
-                    disabled={updateProductMutation.isPending}
-                    className="bg-black text-white hover:bg-gray-800 text-xs h-8"
-                    data-testid="button-save-description"
-                  >
-                    <Save className="h-3 w-3 mr-1" />
-                    {translateText('Save')}
-                  </Button>
-                  <Button
-                    onClick={handleCancelDescription}
-                    variant="outline"
-                    className="text-xs h-8"
-                    data-testid="button-cancel-description"
-                  >
-                    <XCircle className="h-3 w-3 mr-1" />
-                    {translateText('Cancel')}
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-gray-700 mb-4">{translateText(product.description)}</p>
-            )}
+            <h2 className="text-sm font-bold mb-2">{translateText('PRODUCT DESCRIPTION')}</h2>
+            <p className="text-sm text-gray-700 mb-4">{translateText(product.description)}</p>
 
             {/* Collapsible Sections */}
             <Accordion type="single" collapsible>
               <AccordionItem value="details" className="border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <AccordionTrigger className="text-sm hover:no-underline py-3 flex-1">
-                    {translateText('Product Details')}
-                  </AccordionTrigger>
-                  {isPublisher && !isEditingDetails && (
-                    <button
-                      onClick={() => setIsEditingDetails(true)}
-                      className="text-xs text-gray-600 hover:text-black flex items-center gap-1 mr-2"
-                      data-testid="button-edit-details"
-                    >
-                      <Edit className="h-3 w-3" />
-                      {translateText('Edit')}
-                    </button>
-                  )}
-                </div>
+                <AccordionTrigger className="text-sm hover:no-underline py-3">
+                  {translateText('Product Details')}
+                </AccordionTrigger>
                 <AccordionContent className="text-sm text-gray-700 pb-4">
                   <p className="text-xs text-gray-500 mb-2">
                     {translateText('Product ID')}: {product.productCode || product.id}
                   </p>
-                  {isEditingDetails ? (
-                    <div className="space-y-3">
-                      <div>
-                        <Label className="text-xs mb-1 block">{translateText('Category')}</Label>
-                        <p className="text-sm">{product.category}</p>
-                      </div>
-                      <div>
-                        <Label htmlFor="edit-weight" className="text-xs mb-1 block">{translateText('Weight (kg)')}</Label>
-                        <Input
-                          id="edit-weight"
-                          type="number"
-                          step="0.01"
-                          value={editedWeight}
-                          onChange={(e) => setEditedWeight(e.target.value)}
-                          className="h-8 text-sm"
-                          placeholder={translateText('Enter weight')}
-                          data-testid="input-edit-weight"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="edit-dimensions" className="text-xs mb-1 block">{translateText('Dimensions (L x W x H)')}</Label>
-                        <Input
-                          id="edit-dimensions"
-                          value={editedDimensions}
-                          onChange={(e) => setEditedDimensions(e.target.value)}
-                          className="h-8 text-sm"
-                          placeholder="e.g., 10x20x30"
-                          data-testid="input-edit-dimensions"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="edit-dimension-unit" className="text-xs mb-1 block">{translateText('Dimension Unit')}</Label>
-                        <Select value={editedDimensionUnit} onValueChange={setEditedDimensionUnit}>
-                          <SelectTrigger className="h-8 text-sm" data-testid="select-dimension-unit">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="cm">cm</SelectItem>
-                            <SelectItem value="inches">inches</SelectItem>
-                            <SelectItem value="m">m</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="flex gap-2 pt-2">
-                        <Button
-                          onClick={handleSaveDetails}
-                          disabled={updateProductMutation.isPending}
-                          className="bg-black text-white hover:bg-gray-800 text-xs h-8"
-                          data-testid="button-save-details"
-                        >
-                          <Save className="h-3 w-3 mr-1" />
-                          {translateText('Save')}
-                        </Button>
-                        <Button
-                          onClick={handleCancelDetails}
-                          variant="outline"
-                          className="text-xs h-8"
-                          data-testid="button-cancel-details"
-                        >
-                          <XCircle className="h-3 w-3 mr-1" />
-                          {translateText('Cancel')}
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <p>{translateText('Category')}: {product.category}</p>
-                      {product.weight && (
-                        <p>
-                          {translateText('Weight')}: {formatWeight(product.weight)}
-                        </p>
-                      )}
-                      {product.dimensions && (
-                        <p>
-                          {translateText('Dimensions')}: {product.dimensions} {product.dimensionUnit || 'cm'}
-                        </p>
-                      )}
-                      {product.inventory > 0 && (
-                        <p className="text-green-600 font-medium">{translateText('In Stock')}</p>
-                      )}
-                    </div>
-                  )}
+                  <div className="space-y-2">
+                    <p>{translateText('Category')}: {product.category}</p>
+                    {product.weight && (
+                      <p>
+                        {translateText('Weight')}: {formatWeight(product.weight)}
+                      </p>
+                    )}
+                    {product.dimensions && (
+                      <p>
+                        {translateText('Dimensions')}: {product.dimensions} {product.dimensionUnit || 'cm'}
+                      </p>
+                    )}
+                    {product.inventory > 0 && (
+                      <p className="text-green-600 font-medium">{translateText('In Stock')}</p>
+                    )}
+                  </div>
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="materials" className="border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <AccordionTrigger className="text-sm hover:no-underline py-3 flex-1">
-                    {translateText('Materials & Care')}
-                  </AccordionTrigger>
-                  {isPublisher && !isEditingMaterials && (
-                    <button
-                      onClick={() => setIsEditingMaterials(true)}
-                      className="text-xs text-gray-600 hover:text-black flex items-center gap-1 mr-2"
-                      data-testid="button-edit-materials"
-                    >
-                      <Edit className="h-3 w-3" />
-                      {translateText('Edit')}
-                    </button>
-                  )}
-                </div>
+                <AccordionTrigger className="text-sm hover:no-underline py-3">
+                  {translateText('Materials & Care')}
+                </AccordionTrigger>
                 <AccordionContent className="text-sm text-gray-700 pb-4">
-                  {isEditingMaterials ? (
-                    <div className="space-y-2">
-                      <Textarea
-                        value={editedMaterialsCare}
-                        onChange={(e) => setEditedMaterialsCare(e.target.value)}
-                        className="w-full text-sm min-h-[80px]"
-                        placeholder={translateText('Enter materials and care instructions')}
-                        data-testid="input-edit-materials"
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={handleSaveMaterials}
-                          disabled={updateProductMutation.isPending}
-                          className="bg-black text-white hover:bg-gray-800 text-xs h-8"
-                          data-testid="button-save-materials"
-                        >
-                          <Save className="h-3 w-3 mr-1" />
-                          {translateText('Save')}
-                        </Button>
-                        <Button
-                          onClick={handleCancelMaterials}
-                          variant="outline"
-                          className="text-xs h-8"
-                          data-testid="button-cancel-materials"
-                        >
-                          <XCircle className="h-3 w-3 mr-1" />
-                          {translateText('Cancel')}
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <p>
-                      {product.materialsCare || translateText('Please refer to product label for detailed care instructions.')}
-                    </p>
-                  )}
+                  <p>{translateText('Please refer to product label for detailed care instructions.')}</p>
                 </AccordionContent>
               </AccordionItem>
 
