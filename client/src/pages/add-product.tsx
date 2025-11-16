@@ -1115,7 +1115,7 @@ export default function AddProduct() {
                     data-testid={`section-${section.id}`}
                     aria-current={section.isActive ? 'page' : undefined}
                     className={cn(
-                      "w-full block px-4 py-3 rounded-lg text-sm font-medium transition-all text-center",
+                      "w-full block px-4 py-3 rounded-lg text-sm font-medium transition-all text-left",
                       section.isActive
                         ? "bg-black text-white shadow-md"
                         : "text-gray-700 hover:bg-gray-100"
