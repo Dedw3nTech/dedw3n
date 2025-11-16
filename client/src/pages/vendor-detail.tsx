@@ -978,6 +978,7 @@ export default function VendorDetailPage() {
                       <User className="h-4 w-4" />
                     </Link>
                     <button 
+                      onClick={() => setLocation(`/messages?user=${vendor.userId}`)}
                       className="text-muted-foreground hover:text-primary transition-colors"
                       data-testid="button-contact-vendor"
                       title={translateText("Contact Vendor")}
