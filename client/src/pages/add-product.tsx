@@ -240,7 +240,7 @@ const productSchema = z.object({
   vendor: z.string().optional(),
   collections: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
-  weight: z.coerce.number().min(0).max(999.999).optional().refine(
+  weight: z.coerce.number().min(0).max(10000000).optional().refine(
     (val) => val === undefined || Number((val * 1000).toFixed(0)) / 1000 === val,
     { message: "Weight must have at most 3 decimal places" }
   ),
