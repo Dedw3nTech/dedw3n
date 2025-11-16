@@ -368,7 +368,16 @@ export function UnifiedMessaging() {
   });
 
   // Determine current recipient - Clean Coding: Early calculation to prevent temporal dead zone
-  const currentRecipient: any = selectedUser || selectedConversation?.participants?.find((p: any) => p.id !== user?.id);
+  const currentRecipient: any = selectedUser || (() => {
+    let participant = selectedConversation?.participants?.find((p: any) => p.id !== user?.id);
+    
+    // Fallback for self-conversations: find any participant with complete data
+    if (!participant && selectedConversation?.participants) {
+      participant = selectedConversation.participants.find((p: any) => p.username || p.name);
+    }
+    
+    return participant;
+  })();
 
   // Fetch call history for active conversation
   const otherParticipantId = currentRecipient?.id;
