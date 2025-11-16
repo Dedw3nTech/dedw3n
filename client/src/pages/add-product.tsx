@@ -1082,6 +1082,17 @@ export default function AddProduct() {
     };
   }, [uploadedImages, uploadedVideo]);
 
+  // Generate URL-friendly slug from product name
+  const generateSlug = (name: string): string => {
+    return name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+  };
+
   // On form submit
   const onSubmit = (values: ProductFormValues) => {
     console.log('🚀 Form submission started!', values);
@@ -1108,9 +1119,13 @@ export default function AddProduct() {
       return;
     }
     
-    // Add custom fields to submission data
+    // Generate slug from product name
+    const slug = generateSlug(values.name);
+    
+    // Add custom fields and slug to submission data
     const submitData = {
       ...values,
+      slug,
       customFields: customFields.filter(field => field.name && field.value)
     };
     
