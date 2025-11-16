@@ -843,13 +843,9 @@ export default function ProductDetail() {
             <div className="mb-4">
               <p className="text-sm text-gray-500">
                 {translateText('Sold by')}{' '}
-                <span 
-                  className="text-xs text-muted-foreground cursor-pointer hover:text-foreground"
-                  onClick={() => setLocation(`/vendor/${vendor.id}`)}
-                  data-testid="link-vendor-store"
-                >
+                <Link href={`/vendor/${vendor.id}`} className="text-black hover:underline">
                   {vendor.storeName}
-                </span>
+                </Link>
               </p>
             </div>
           )}
