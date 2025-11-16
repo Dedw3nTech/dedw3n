@@ -106,7 +106,7 @@ export default function VendorDetailPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedProductTypes, setSelectedProductTypes] = useState<string[]>(['product', 'service']);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
   const [showSale, setShowSale] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [sortBy, setSortBy] = useState<string>('newest');
@@ -413,7 +413,7 @@ export default function VendorDetailPage() {
     setSearchTerm('');
     setSelectedCategories([]);
     setSelectedProductTypes(['product', 'service']);
-    setPriceRange([0, 1000]);
+    setPriceRange([0, 1000000]);
     setShowSale(false);
     setShowNew(false);
     setSortBy('newest');
