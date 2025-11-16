@@ -3,7 +3,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery } from "@tanstack/react-query";
 import { User } from "lucide-react";
 import { sanitizeImageUrl } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/use-auth";
 
 interface UserAvatarProps {
   userId: number;
@@ -22,11 +21,7 @@ interface AvatarData {
 }
 
 export function UserAvatar({ userId, username, size = "md", className = "", onClick }: UserAvatarProps) {
-  const { user } = useAuth();
   const [imageError, setImageError] = useState(false);
-  
-  // Permission check: Only admin and Serruti user can view profile pictures
-  const canViewProfilePictures = user?.role === 'admin' || user?.username === 'Serruti';
   
   // Size mapping
   const sizeClass = {
