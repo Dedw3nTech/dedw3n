@@ -1313,6 +1313,7 @@ export default function AddProduct() {
         label: t("Government"),
         href: getSectionHref('government'),
         isActive: activeSection === 'government',
+        isReactiveButton: true,
       },
       {
         id: 'lifestyle',
@@ -1403,6 +1404,24 @@ export default function AddProduct() {
                           </div>
                         )}
                       </>
+                    ) : section.isReactiveButton ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLocation('/add-product?type=government-service');
+                          form.setValue('offeringType', 'service');
+                          form.setValue('category', '');
+                        }}
+                        data-testid={`section-${section.id}`}
+                        className={cn(
+                          "w-full block px-5 py-4 rounded-lg text-base font-semibold tracking-wide transition-all text-left",
+                          section.isActive
+                            ? "bg-black text-white shadow-md"
+                            : "text-gray-700 hover:bg-gray-100"
+                        )}
+                      >
+                        {section.label}
+                      </button>
                     ) : (
                       <Link
                         href={section.href}
