@@ -34,7 +34,8 @@ import {
   Smartphone,
   Phone,
   CreditCard,
-  Tag
+  Tag,
+  Flag
 } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
 
@@ -145,6 +146,11 @@ export default function ProductDetail() {
   const [isOfferDialogOpen, setIsOfferDialogOpen] = useState(false);
   const [offerAmount, setOfferAmount] = useState('');
   const [offerMessage, setOfferMessage] = useState('');
+  
+  // Report Product dialog state
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportMessage, setReportMessage] = useState('');
   
   // User search query for gift functionality
   const { data: userSearchResults = [], isLoading: userSearchLoading } = useQuery<any[]>({
@@ -464,6 +470,35 @@ export default function ProductDetail() {
         variant: 'destructive',
       });
     },
+  });
+
+  // Report product mutation
+  const reportProductMutation = useMutation({
+    mutationFn: async () => {
+      if (!product?.id || !user) {
+        throw new Error('Product or user not available');
+      }
+      return apiRequest('POST', `/api/products/${product.id}/report`, {
+        reason: reportReason,
+        customMessage: reportMessage
+      });
+    },
+    onSuccess: () => {
+      setIsReportDialogOpen(false);
+      setReportReason('');
+      setReportMessage('');
+      toast({
+        title: translateText('Report Submitted'),
+        description: translateText('Thank you for reporting. We will review this product.'),
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: translateText('Error'),
+        description: error.message || translateText('Failed to submit report. Please try again.'),
+        variant: 'destructive',
+      });
+    }
   });
 
   // Handle quantity change
@@ -864,6 +899,34 @@ export default function ProductDetail() {
                 </AccordionTrigger>
                 <AccordionContent className="text-sm text-gray-700 pb-4">
                   <p>{translateText('We are committed to quality, sustainability, and exceptional customer service.')}</p>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="report" className="border-b border-gray-200">
+                <AccordionTrigger className="text-sm hover:no-underline py-3">
+                  {translateText('Report')}
+                </AccordionTrigger>
+                <AccordionContent className="text-sm text-gray-700 pb-4">
+                  <p className="mb-3">{translateText('Something Wrong with this product? Please Report')}</p>
+                  <Button
+                    onClick={() => {
+                      if (!user) {
+                        toast({
+                          title: translateText('Login Required'),
+                          description: translateText('Please log in to report a product.'),
+                          variant: 'destructive'
+                        });
+                        return;
+                      }
+                      setIsReportDialogOpen(true);
+                    }}
+                    variant="outline"
+                    className="text-black border-black hover:bg-black hover:text-white"
+                    data-testid="button-open-report-dialog"
+                  >
+                    <Flag className="mr-2 h-4 w-4" />
+                    {translateText('Report This Product')}
+                  </Button>
                 </AccordionContent>
               </AccordionItem>
 
@@ -1540,6 +1603,107 @@ export default function ProductDetail() {
                 </>
               ) : (
                 'Send Offer'
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Report Product Dialog */}
+      <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-bold">{translateText('Report Product')}</DialogTitle>
+            <DialogDescription>
+              {translateText('Help us maintain a safe marketplace by reporting products that violate our policies')}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {product && (
+            <div className="my-4">
+              <div className="flex gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="w-16 h-16 bg-gray-200 rounded flex-shrink-0 overflow-hidden">
+                  {product.imageUrl && (
+                    <img 
+                      src={product.imageUrl} 
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium text-sm truncate">{product.name}</h4>
+                  <p className="text-sm text-gray-600">
+                    {formatPriceFromGBP(product.price)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="report-reason" className="text-sm font-medium">
+                {translateText('Reason for reporting')}
+              </Label>
+              <Select value={reportReason} onValueChange={setReportReason}>
+                <SelectTrigger className="mt-2" data-testid="select-report-reason">
+                  <SelectValue placeholder={translateText('Select a reason')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="counterfeit">{translateText('Counterfeit Product')}</SelectItem>
+                  <SelectItem value="fraud">{translateText('Fraudulent Listing')}</SelectItem>
+                  <SelectItem value="prohibited">{translateText('Prohibited Item')}</SelectItem>
+                  <SelectItem value="misinformation">{translateText('Misleading Information')}</SelectItem>
+                  <SelectItem value="harassment">{translateText('Harassment or Abuse')}</SelectItem>
+                  <SelectItem value="spam">{translateText('Spam')}</SelectItem>
+                  <SelectItem value="copyright">{translateText('Copyright Violation')}</SelectItem>
+                  <SelectItem value="other">{translateText('Other')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="report-message" className="text-sm font-medium">
+                {translateText('Additional details (optional)')}
+              </Label>
+              <Textarea
+                id="report-message"
+                placeholder={translateText('Provide more information about why you\'re reporting this product...')}
+                value={reportMessage}
+                onChange={(e) => setReportMessage(e.target.value)}
+                className="mt-2"
+                rows={4}
+                data-testid="textarea-report-message"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 mt-6">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsReportDialogOpen(false)}
+              data-testid="button-cancel-report"
+            >
+              {translateText('Cancel')}
+            </Button>
+            <Button
+              onClick={() => {
+                if (reportReason) {
+                  reportProductMutation.mutate();
+                }
+              }}
+              disabled={reportProductMutation.isPending || !reportReason}
+              className="bg-black text-white hover:bg-gray-800"
+              data-testid="button-submit-report"
+            >
+              {reportProductMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {translateText('Submitting...')}
+                </>
+              ) : (
+                translateText('Submit Report')
               )}
             </Button>
           </div>
