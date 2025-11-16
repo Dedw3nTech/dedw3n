@@ -1063,49 +1063,38 @@ export default function AddProduct() {
     return `${basePath}?${currentParams.toString()}`;
   };
 
-  // Navigation sections - memoized to prevent unnecessary re-renders
-  const navigationSections = useMemo(() => [
-    {
-      id: 'finance',
-      label: t("Finance"),
-      href: getSectionHref('finance'),
-      isActive: activeSection === 'finance',
-    },
-    {
-      id: 'government',
-      label: t("Government"),
-      href: getSectionHref('government'),
-      isActive: activeSection === 'government',
-    },
-    {
-      id: 'lifestyle',
-      label: t("Lifestyle"),
-      href: getSectionHref('lifestyle'),
-      isActive: activeSection === 'lifestyle',
-    },
-    {
-      id: 'services',
-      label: t("Services"),
-      href: getSectionHref('services'),
-      isActive: activeSection === 'services',
-    },
-    {
-      id: 'marketplace',
-      label: t("Marketplace"),
+  // Filter marketplace sub-items based on vendor type
+  const getFilteredMarketplaceSubItems = () => {
+    const vendorAccounts = vendorAccountsData?.vendorAccounts;
+    
+    if (!vendorAccounts || !Array.isArray(vendorAccounts)) {
+      return [];
+    }
+    
+    const hasPrivateVendor = vendorAccounts.some((account: any) => account.vendorType === 'private');
+    const hasBusinessVendor = vendorAccounts.some((account: any) => account.vendorType === 'business');
+    
+    const subItems = [];
+    
+    // Friend to Friend - Only for private vendors
+    if (hasPrivateVendor) {
+      subItems.push({
+        id: 'friend-to-friend',
+        label: t("Friend to Friend"),
+        href: getSectionHref('marketplace'),
+      });
+    }
+    
+    // Request - Available to all vendors
+    subItems.push({
+      id: 'request',
+      label: t("Request"),
       href: getSectionHref('marketplace'),
-      isActive: activeSection === 'marketplace',
-      hasSubItems: true,
-      subItems: [
-        {
-          id: 'friend-to-friend',
-          label: t("Friend to Friend"),
-          href: getSectionHref('marketplace'),
-        },
-        {
-          id: 'request',
-          label: t("Request"),
-          href: getSectionHref('marketplace'),
-        },
+    });
+    
+    // Online Store and Whole Sale - Only for business vendors
+    if (hasBusinessVendor) {
+      subItems.push(
         {
           id: 'online-store',
           label: t("Online Store"),
@@ -1115,16 +1104,58 @@ export default function AddProduct() {
           id: 'wholesale',
           label: t("Whole Sale"),
           href: getSectionHref('marketplace'),
-        },
-      ],
-    },
-    {
-      id: 'community',
-      label: t("Community"),
-      href: getSectionHref('community'),
-      isActive: activeSection === 'community',
-    },
-  ], [activeSection, location, t]);
+        }
+      );
+    }
+    
+    return subItems;
+  };
+
+  // Navigation sections - memoized to prevent unnecessary re-renders
+  const navigationSections = useMemo(() => {
+    const marketplaceSubItems = getFilteredMarketplaceSubItems();
+    
+    return [
+      {
+        id: 'finance',
+        label: t("Finance"),
+        href: getSectionHref('finance'),
+        isActive: activeSection === 'finance',
+      },
+      {
+        id: 'government',
+        label: t("Government"),
+        href: getSectionHref('government'),
+        isActive: activeSection === 'government',
+      },
+      {
+        id: 'lifestyle',
+        label: t("Lifestyle"),
+        href: getSectionHref('lifestyle'),
+        isActive: activeSection === 'lifestyle',
+      },
+      {
+        id: 'services',
+        label: t("Services"),
+        href: getSectionHref('services'),
+        isActive: activeSection === 'services',
+      },
+      {
+        id: 'marketplace',
+        label: t("Marketplace"),
+        href: getSectionHref('marketplace'),
+        isActive: activeSection === 'marketplace',
+        hasSubItems: marketplaceSubItems.length > 0,
+        subItems: marketplaceSubItems,
+      },
+      {
+        id: 'community',
+        label: t("Community"),
+        href: getSectionHref('community'),
+        isActive: activeSection === 'community',
+      },
+    ];
+  }, [activeSection, location, t, vendorAccountsData]);
 
   return (
     <div className="container max-w-7xl mx-auto py-8 px-4">
