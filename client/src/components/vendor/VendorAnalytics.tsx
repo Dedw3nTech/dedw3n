@@ -125,7 +125,7 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
   const [activeMetric, setActiveMetric] = useState('revenue');
 
   // Fetch analytics data
-  const { data: analytics, isLoading, refetch } = useQuery({
+  const { data: analytics, isLoading, refetch, error: analyticsError } = useQuery({
     queryKey: ['/api/vendors/analytics', vendorId, timeRange],
     queryFn: async () => {
       const response = await apiRequest(`/api/vendors/analytics?vendorId=${vendorId}&timeRange=${timeRange}`);
@@ -135,7 +135,7 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
   });
 
   // Fetch AI-powered suggestions
-  const { data: suggestions, isLoading: isLoadingSuggestions } = useQuery({
+  const { data: suggestions, isLoading: isLoadingSuggestions, error: suggestionsError } = useQuery({
     queryKey: ['/api/vendors', vendorId, 'suggestions'],
     queryFn: async () => {
       const response = await apiRequest(`/api/vendors/${vendorId}/suggestions`);
@@ -199,16 +199,36 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-8">
+      <div className="flex items-center justify-center p-8" data-testid="analytics-loading">
         <RefreshCw className="h-8 w-8 animate-spin mr-2" />
         Loading analytics...
       </div>
     );
   }
 
+  if (analyticsError) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center p-8">
+          <div className="text-center" data-testid="analytics-error">
+            <AlertCircle className="h-12 w-12 mx-auto mb-4 text-red-500" />
+            <h3 className="text-lg font-semibold mb-2">Failed to Load Analytics</h3>
+            <p className="text-muted-foreground mb-4">
+              {analyticsError instanceof Error ? analyticsError.message : 'An error occurred while loading analytics data'}
+            </p>
+            <Button onClick={() => refetch()} variant="outline" data-testid="button-retry-analytics">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Retry
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (!analytics) {
     return (
-      <div className="text-center p-8">
+      <div className="text-center p-8" data-testid="analytics-no-data">
         <BarChart3 className="h-12 w-12 mx-auto text-gray-400 mb-4" />
         <h3 className="text-lg font-medium mb-2">No Analytics Data</h3>
         <p className="text-muted-foreground">Analytics will appear once you have sales data.</p>
@@ -228,7 +248,7 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
         </div>
         <div className="flex gap-2">
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[150px]">
+            <SelectTrigger className="w-[150px]" data-testid="select-time-range">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -238,11 +258,11 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
               <SelectItem value="1y">Last year</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={() => refetch()}>
+          <Button variant="outline" onClick={() => refetch()} data-testid="button-refresh-analytics">
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" data-testid="button-export-analytics">
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
@@ -251,18 +271,18 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
 
       {/* Key Metrics */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+        <Card data-testid="card-total-revenue">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold" data-testid="text-total-revenue">
               {formatPriceFromGBP(analytics.overview.totalRevenue)}
             </div>
             <div className={`text-xs flex items-center ${getGrowthColor(analytics.comparison.revenueGrowth)}`}>
               {getGrowthIcon(analytics.comparison.revenueGrowth)}
-              <span className="ml-1">
+              <span className="ml-1" data-testid="text-revenue-growth">
                 {analytics.comparison.revenueGrowth > 0 ? '+' : ''}
                 {analytics.comparison.revenueGrowth.toFixed(1)}% from last period
               </span>
@@ -270,16 +290,18 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-testid="card-total-orders">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.overview.totalOrders.toLocaleString()}</div>
+            <div className="text-2xl font-bold" data-testid="text-total-orders">
+              {analytics.overview.totalOrders.toLocaleString()}
+            </div>
             <div className={`text-xs flex items-center ${getGrowthColor(analytics.comparison.orderGrowth)}`}>
               {getGrowthIcon(analytics.comparison.orderGrowth)}
-              <span className="ml-1">
+              <span className="ml-1" data-testid="text-order-growth">
                 {analytics.comparison.orderGrowth > 0 ? '+' : ''}
                 {analytics.comparison.orderGrowth.toFixed(1)}% from last period
               </span>
@@ -287,16 +309,18 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-testid="card-total-customers">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.overview.totalCustomers.toLocaleString()}</div>
+            <div className="text-2xl font-bold" data-testid="text-total-customers">
+              {analytics.overview.totalCustomers.toLocaleString()}
+            </div>
             <div className={`text-xs flex items-center ${getGrowthColor(analytics.comparison.customerGrowth)}`}>
               {getGrowthIcon(analytics.comparison.customerGrowth)}
-              <span className="ml-1">
+              <span className="ml-1" data-testid="text-customer-growth">
                 {analytics.comparison.customerGrowth > 0 ? '+' : ''}
                 {analytics.comparison.customerGrowth.toFixed(1)}% from last period
               </span>
@@ -304,16 +328,18 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-testid="card-conversion-rate">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.overview.conversionRate.toFixed(1)}%</div>
+            <div className="text-2xl font-bold" data-testid="text-conversion-rate">
+              {analytics.overview.conversionRate.toFixed(1)}%
+            </div>
             <div className={`text-xs flex items-center ${getGrowthColor(analytics.comparison.conversionGrowth)}`}>
               {getGrowthIcon(analytics.comparison.conversionGrowth)}
-              <span className="ml-1">
+              <span className="ml-1" data-testid="text-conversion-growth">
                 {analytics.comparison.conversionGrowth > 0 ? '+' : ''}
                 {analytics.comparison.conversionGrowth.toFixed(1)}% from last period
               </span>
@@ -380,11 +406,27 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
         </CardHeader>
         <CardContent>
           {isLoadingSuggestions ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-8 text-muted-foreground" data-testid="suggestions-loading">
               Generating personalized suggestions...
             </div>
+          ) : suggestionsError ? (
+            <div className="text-center py-8" data-testid="suggestions-error">
+              <AlertCircle className="h-8 w-8 mx-auto mb-3 text-red-500" />
+              <p className="text-sm text-muted-foreground mb-3">
+                {suggestionsError instanceof Error ? suggestionsError.message : 'Failed to load suggestions'}
+              </p>
+              <Button 
+                onClick={() => window.location.reload()} 
+                variant="outline" 
+                size="sm"
+                data-testid="button-retry-suggestions"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry
+              </Button>
+            </div>
           ) : suggestions && suggestions.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-4" data-testid="suggestions-list">
               {suggestions.map((suggestion) => (
                 <div
                   key={suggestion.id}
@@ -395,18 +437,25 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
                     <div className="mt-1">{getTypeIcon(suggestion.type)}</div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <h4 className="font-semibold">{suggestion.title}</h4>
-                        <span className={`text-xs px-2 py-1 rounded-full border ${getPriorityColor(suggestion.priority)}`}>
+                        <h4 className="font-semibold" data-testid={`text-suggestion-title-${suggestion.id}`}>
+                          {suggestion.title}
+                        </h4>
+                        <span 
+                          className={`text-xs px-2 py-1 rounded-full border ${getPriorityColor(suggestion.priority)}`}
+                          data-testid={`text-suggestion-priority-${suggestion.id}`}
+                        >
                           {suggestion.priority === 'high' && 'High Priority'}
                           {suggestion.priority === 'medium' && 'Medium Priority'}
                           {suggestion.priority === 'low' && 'Low Priority'}
                         </span>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-2">{suggestion.description}</p>
+                      <p className="text-sm text-muted-foreground mb-2" data-testid={`text-suggestion-description-${suggestion.id}`}>
+                        {suggestion.description}
+                      </p>
                       <div className="flex items-center gap-1 text-sm text-green-700">
                         <TrendingUp className="h-4 w-4" />
                         <span className="font-medium">Impact:</span>
-                        <span>{suggestion.impact}</span>
+                        <span data-testid={`text-suggestion-impact-${suggestion.id}`}>{suggestion.impact}</span>
                       </div>
                     </div>
                   </div>
@@ -414,7 +463,7 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-8 text-muted-foreground" data-testid="suggestions-empty">
               No suggestions available at the moment. Keep growing your business and check back later!
             </div>
           )}
@@ -423,11 +472,11 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
 
       {/* Analytics Tabs */}
       <Tabs defaultValue="performance" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="products">Products</TabsTrigger>
-          <TabsTrigger value="customers">Customers</TabsTrigger>
-          <TabsTrigger value="traffic">Traffic</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4" data-testid="tabs-analytics">
+          <TabsTrigger value="performance" data-testid="tab-performance">Performance</TabsTrigger>
+          <TabsTrigger value="products" data-testid="tab-products">Products</TabsTrigger>
+          <TabsTrigger value="customers" data-testid="tab-customers">Customers</TabsTrigger>
+          <TabsTrigger value="traffic" data-testid="tab-traffic">Traffic</TabsTrigger>
         </TabsList>
 
         <TabsContent value="performance" className="space-y-4">
