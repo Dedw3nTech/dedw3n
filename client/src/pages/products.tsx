@@ -103,7 +103,7 @@ export default function Products() {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
-  const [selectedProductTypes, setSelectedProductTypes] = useState<string[]>([]);
+  const [selectedProductTypes, setSelectedProductTypes] = useState<string[]>(['product', 'service', 'digital_product']);
   const [showSale, setShowSale] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [location, setLocation] = useLocation();
@@ -176,9 +176,9 @@ export default function Products() {
     "Add a message with your offer...", "Send via Message", "Send Offer",
     "Would you like to add a message with this offer ?", "Currency",
     
-    // Search & Filters (9 texts)
+    // Search & Filters (10 texts)
     "Categories", "Region", "Reset Filters",
-    "On Sale", "New Arrivals", "Product or Service", "Product", "Service", "Product Status",
+    "On Sale", "New Arrivals", "Product or Service", "Product", "Service", "Digital Product", "Product Status",
     
     // Friend & Store Options (10 texts)
     "Friend Options", "Friends only", "Local pickup only", "Store Options",
@@ -230,7 +230,7 @@ export default function Products() {
     sendOfferBtnText, wouldYouLikeAddMessageOfferText, currencyText,
     
     categoriesText, regionText, resetFiltersText,
-    onSaleText, newArrivalsText, productOrServiceText, productFilterText, serviceFilterText, productStatusText,
+    onSaleText, newArrivalsText, productOrServiceText, productFilterText, serviceFilterText, digitalProductFilterText, productStatusText,
     
     friendOptionsText, friendsOnlyText, localPickupText, storeOptionsText, verifiedStoresText,
     freeShippingText, nextDayDeliveryText, businessOptionsText,
@@ -1253,6 +1253,14 @@ export default function Products() {
                 onCheckedChange={() => toggleProductType('service')}
               />
               <Label htmlFor="show-services" className="text-[12px] font-normal">{serviceFilterText}</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="show-digital-products"
+                checked={selectedProductTypes.includes('digital_product')}
+                onCheckedChange={() => toggleProductType('digital_product')}
+              />
+              <Label htmlFor="show-digital-products" className="text-[12px] font-normal">{digitalProductFilterText}</Label>
             </div>
           </div>
         )}

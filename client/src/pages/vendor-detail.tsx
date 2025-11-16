@@ -105,7 +105,7 @@ export default function VendorDetailPage() {
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedProductTypes, setSelectedProductTypes] = useState<string[]>(['product', 'service']);
+  const [selectedProductTypes, setSelectedProductTypes] = useState<string[]>(['product', 'service', 'digital_product']);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
   const [showSale, setShowSale] = useState(false);
   const [showNew, setShowNew] = useState(false);
@@ -148,7 +148,7 @@ export default function VendorDetailPage() {
     "Your Offer Amount", "Enter your offer amount", "Message (optional)",
     "Add a message with your offer...", "Would you like to add a message with this offer ?",
     "Categories", "Reset Filters", "On Sale", "New Arrivals", 
-    "Product or Service", "Product", "Service", "Product Status",
+    "Product or Service", "Product", "Service", "Digital Product", "Product Status",
     "Add to Favorites", "Remove from Favorites", "Sold by",
     "Report Product", "Reason for reporting", "Select a reason",
     "Counterfeit Product", "Fraudulent Listing", "Prohibited Item",
@@ -176,7 +176,7 @@ export default function VendorDetailPage() {
     yourOfferAmountText, enterOfferAmountText, messageOptionalText,
     addMessageWithOfferText, wouldYouLikeAddMessageOfferText,
     categoriesText, resetFiltersText, onSaleText, newArrivalsText,
-    productOrServiceText, productFilterText, serviceFilterText, productStatusText,
+    productOrServiceText, productFilterText, serviceFilterText, digitalProductFilterText, productStatusText,
     addToFavoritesText, removeFromFavoritesText, soldByText,
     reportProductText, reasonForReportingText, selectReasonText,
     counterfeitProductText, fraudulentListingText, prohibitedItemText,
@@ -749,6 +749,14 @@ export default function VendorDetailPage() {
                 onCheckedChange={() => toggleProductType('service')}
               />
               <Label htmlFor="show-services" className="text-[12px] font-normal">{serviceFilterText}</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="show-digital-products"
+                checked={selectedProductTypes.includes('digital_product')}
+                onCheckedChange={() => toggleProductType('digital_product')}
+              />
+              <Label htmlFor="show-digital-products" className="text-[12px] font-normal">{digitalProductFilterText}</Label>
             </div>
           </div>
         )}
