@@ -108,7 +108,7 @@ export default function Products() {
   const [showNew, setShowNew] = useState(false);
   const [location, setLocation] = useLocation();
   const { marketType, setMarketType, marketTypeLabel } = useMarketType();
-  const { formatPrice, currencyList, selectedCurrency } = useCurrency();
+  const { formatPrice, formatPriceFromGBP, currencyList, selectedCurrency } = useCurrency();
   
   // Get current marketplace from URL
   const currentMarketplace = location.includes('/marketplace/b2c') ? 'b2c' :
@@ -1122,14 +1122,14 @@ export default function Products() {
               {product.discountPrice ? (
                 <div className="flex items-center">
                   <div className="text-black text-sm">
-                    {formatPrice(product.discountPrice)}
+                    {formatPriceFromGBP(product.discountPrice)}
                     {marketType === 'b2b' && <span className="text-xs ml-1">{vatText}</span>}
                   </div>
-                  <div className="ml-2 text-sm text-gray-500 line-through">{formatPrice(product.price)}</div>
+                  <div className="ml-2 text-sm text-gray-500 line-through">{formatPriceFromGBP(product.price)}</div>
                 </div>
               ) : (
                 <div className="text-black text-sm">
-                  {formatPrice(product.price)}
+                  {formatPriceFromGBP(product.price)}
                   {marketType === 'b2b' && <span className="text-xs ml-1">{vatText}</span>}
                 </div>
               )}
