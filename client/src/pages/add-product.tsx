@@ -1352,7 +1352,7 @@ export default function AddProduct() {
         <aside className="lg:sticky lg:top-24 lg:h-[calc(100vh-8rem)]">
           <Card className="border-2 h-full flex flex-col">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg">{t("Select Section")}</CardTitle>
+              <CardTitle className="text-lg">{t("Add Product/Service")}</CardTitle>
             </CardHeader>
             <CardContent className="p-3 flex-1 overflow-y-auto">
               <nav className="space-y-2" role="navigation" aria-label="Section navigation">
