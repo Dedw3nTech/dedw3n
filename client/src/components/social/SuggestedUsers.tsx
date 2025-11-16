@@ -1,9 +1,9 @@
 import { useFollow } from "@/hooks/useFollow";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "wouter";
 import FollowButton from "./FollowButton";
 import { Skeleton } from "@/components/ui/skeleton";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 interface SuggestedUsersProps {
   limit?: number;
@@ -57,10 +57,7 @@ export default function SuggestedUsers({
           <div key={user.id} className="flex items-center justify-between">
             <Link to={`/profile/${user.id}`}>
               <div className="flex items-center gap-2 cursor-pointer">
-                <Avatar>
-                  <AvatarImage src={user.avatar || undefined} alt={user.name} />
-                  <AvatarFallback>{user.name[0]}</AvatarFallback>
-                </Avatar>
+                <UserAvatar userId={user.id} username={user.username} size="md" />
                 <div>
                   <p className="font-medium">{user.name}</p>
                   <p className="text-sm text-muted-foreground">@{user.username}</p>

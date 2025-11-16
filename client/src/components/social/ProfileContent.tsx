@@ -4,11 +4,11 @@ import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { 
   Dialog,
   DialogContent,
@@ -230,14 +230,7 @@ export default function ProfileContent({ user, username }: ProfileContentProps) 
       <Card>
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row md:items-center gap-6">
-            <Avatar className="h-24 w-24">
-              {displayUser.avatar ? (
-                <AvatarImage src={displayUser.avatar} alt={displayUser.name} />
-              ) : null}
-              <AvatarFallback className="text-xl">
-                {getInitials(displayUser.name || "User")}
-              </AvatarFallback>
-            </Avatar>
+            <UserAvatar userId={displayUser.id} username={displayUser.username} size="xl" />
             
             <div className="flex-1">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">

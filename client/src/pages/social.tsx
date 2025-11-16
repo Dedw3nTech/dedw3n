@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -192,14 +192,7 @@ export default function Social() {
                       <Card>
                         <CardContent className="p-4">
                           <div className="flex items-center gap-3 mb-3">
-                            <Avatar className="h-12 w-12">
-                              {user.avatar ? (
-                                <AvatarImage src={user.avatar} alt={user.name || "User"} />
-                              ) : null}
-                              <AvatarFallback className="text-lg">
-                                {getInitials(user.name || "User")}
-                              </AvatarFallback>
-                            </Avatar>
+                            <UserAvatar userId={user.id} username={user.username} size="lg" className="h-12 w-12" />
                             <div>
                               <h3 className="font-medium">{user.name}</h3>
                               <p className="text-sm text-blue-500">@{user.username}</p>

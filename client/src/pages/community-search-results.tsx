@@ -12,6 +12,7 @@ import { CommunityNav } from '@/components/layout/CommunityNav';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { UserAvatar } from '@/components/ui/user-avatar';
 
 export default function CommunitySearchResults() {
   const [location, setLocation] = useLocation();
@@ -170,13 +171,7 @@ export default function CommunitySearchResults() {
                       >
                         <CardContent className="p-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                              {member.avatar ? (
-                                <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
-                              ) : (
-                                <User className="h-6 w-6 text-purple-600" />
-                              )}
-                            </div>
+                            <UserAvatar userId={member.id} username={member.username} size="md" />
                             <div className="flex-1 min-w-0">
                               <h3 className="font-semibold text-gray-900 truncate">{member.name}</h3>
                               <p className="text-sm text-gray-500 truncate">@{member.username}</p>
@@ -325,13 +320,7 @@ export default function CommunitySearchResults() {
                 >
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                        {member.avatar ? (
-                          <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <User className="h-6 w-6 text-purple-600" />
-                        )}
-                      </div>
+                      <UserAvatar userId={member.id} username={member.username} size="md" />
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-gray-900 truncate">{member.name}</h3>
                         <p className="text-sm text-gray-500 truncate">@{member.username}</p>

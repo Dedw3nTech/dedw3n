@@ -29,6 +29,7 @@ import TrendingSidebar from "@/components/social/TrendingSidebar";
 import SocialMessaging from "@/components/messaging/SocialMessaging";
 import { getInitials } from "@/lib/utils";
 import PostCard from "@/components/social/PostCard";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 export default function Social() {
   const { setView } = useView();
@@ -94,14 +95,7 @@ export default function Social() {
           <Card className="mb-6">
             <CardContent className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Avatar className="h-12 w-12">
-                  {user.avatar ? (
-                    <AvatarImage src={user.avatar} alt={user.name || "User"} />
-                  ) : null}
-                  <AvatarFallback className="text-base">
-                    {getInitials(user.name || "User")}
-                  </AvatarFallback>
-                </Avatar>
+                <UserAvatar userId={user.id} username={user.username} size="md" />
                 <div>
                   <h3 className="font-medium">{user.name}</h3>
                   <p className="text-sm text-muted-foreground">@{user.username}</p>
@@ -409,12 +403,7 @@ export default function Social() {
                       >
                         <CardContent className="p-4">
                           <div className="flex items-center gap-3 mb-3">
-                            <Avatar className="h-12 w-12">
-                              {user.avatar ? (
-                                <AvatarImage src={user.avatar} alt={user.name} />
-                              ) : null}
-                              <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-                            </Avatar>
+                            <UserAvatar userId={user.id} username={user.username} size="md" />
                             <div>
                               <h3 className="font-medium">{user.name}</h3>
                               <p className="text-xs text-muted-foreground">@{user.username}</p>
@@ -445,14 +434,7 @@ export default function Social() {
                 <Card>
                   <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row md:items-center gap-6">
-                      <Avatar className="h-24 w-24">
-                        {user.avatar ? (
-                          <AvatarImage src={user.avatar} alt={user.name} />
-                        ) : null}
-                        <AvatarFallback className="text-xl">
-                          {getInitials(user.name || "User")}
-                        </AvatarFallback>
-                      </Avatar>
+                      <UserAvatar userId={user.id} username={user.username} size="xl" />
                       
                       <div className="flex-1">
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">

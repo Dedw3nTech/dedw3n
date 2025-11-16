@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
+import { useMasterTranslation } from '@/hooks/use-master-translation';
 import { UserWithoutPassword } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from "@/hooks/use-toast";
@@ -13,11 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -63,10 +59,7 @@ const MemberCard = ({ member, onMessageClick, onCallClick, onVideoClick }: {
     <Card className="h-full flex flex-col">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
-          <Avatar className="h-16 w-16 border-2 border-primary/10">
-            <AvatarImage src={member.avatar || undefined} alt={member.name} />
-            <AvatarFallback>{generateAvatarFallback(member.name)}</AvatarFallback>
-          </Avatar>
+          <UserAvatar userId={member.id} username={member.username} size="lg" className="h-16 w-16 border-2 border-primary/10" />
           {member.isVendor && (
             <div className="flex flex-col items-end">
               <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-300 mb-1">
@@ -336,10 +329,7 @@ const ChatDialog: React.FC<ChatDialogProps> = ({ isOpen, member, onClose }) => {
     <div className="fixed bottom-4 right-4 w-96 h-96 bg-white rounded-lg shadow-lg flex flex-col z-50">
       <div className="flex justify-between items-center p-3 border-b">
         <div className="flex items-center">
-          <Avatar className="h-8 w-8 mr-2">
-            <AvatarImage src={member.avatar || undefined} alt={member.name} />
-            <AvatarFallback>{generateAvatarFallback(member.name)}</AvatarFallback>
-          </Avatar>
+          <UserAvatar userId={member.id} username={member.username} size="sm" className="h-8 w-8 mr-2" />
           <div>
             <h3 className="font-medium">{member.name}</h3>
             {callStatus !== 'none' && (

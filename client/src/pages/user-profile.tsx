@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
@@ -227,10 +227,6 @@ export default function UserProfilePage() {
     return null;
   }
 
-  const initials = profileUser.name 
-    ? profileUser.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()
-    : profileUser.username.substring(0, 2).toUpperCase();
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-5xl mx-auto">
@@ -238,12 +234,12 @@ export default function UserProfilePage() {
         <Card className="border-0 border-b rounded-none">
           <CardContent className="p-6">
             <div className="flex items-start gap-6">
-              <Avatar className="h-32 w-32 border-4 border-white shadow-lg">
-                <AvatarImage src={profileUser.avatar} alt={profileUser.name || profileUser.username} />
-                <AvatarFallback className="text-3xl">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar 
+                userId={profileUser.id}
+                username={profileUser.username}
+                size="xl"
+                className="h-32 w-32 border-4 border-white shadow-lg"
+              />
 
               <div className="flex-1">
                 <div className="flex items-start justify-between">

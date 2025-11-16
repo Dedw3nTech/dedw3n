@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import PostCard from "@/components/social/PostCard";
 import { getInitials } from "@/lib/utils";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { 
   CompassIcon, 
   Loader2, 
@@ -391,12 +392,7 @@ export default function ExploreFeed() {
                 >
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3 mb-3">
-                      <Avatar className="h-12 w-12">
-                        {user.avatar ? (
-                          <AvatarImage src={user.avatar} alt={user.name} />
-                        ) : null}
-                        <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-                      </Avatar>
+                      <UserAvatar userId={user.id} username={user.username} size="md" />
                       <div>
                         <h3 className="font-medium">{user.name}</h3>
                         <p className="text-xs text-muted-foreground">@{user.username}</p>

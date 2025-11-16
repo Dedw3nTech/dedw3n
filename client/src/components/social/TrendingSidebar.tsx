@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 export default function TrendingSidebar() {
   return (
@@ -99,10 +100,7 @@ export default function TrendingSidebar() {
         <h3 className="font-semibold text-lg mb-3">Recent Activity</h3>
         <div className="space-y-3">
           <div className="flex items-start space-x-3">
-            <Avatar className="w-8 h-8">
-              <AvatarImage src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80" alt="User avatar" />
-              <AvatarFallback>SW</AvatarFallback>
-            </Avatar>
+            <UserAvatar userId={1} username="sarahwilliams" size="sm" />
             <div>
               <p className="text-sm">
                 <span className="font-medium">Sarah Williams</span>
@@ -113,10 +111,7 @@ export default function TrendingSidebar() {
           </div>
 
           <div className="flex items-start space-x-3">
-            <Avatar className="w-8 h-8">
-              <AvatarImage src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80" alt="User avatar" />
-              <AvatarFallback>DG</AvatarFallback>
-            </Avatar>
+            <UserAvatar userId={2} username="davidgarcia" size="sm" />
             <div>
               <p className="text-sm">
                 <span className="font-medium">David Garcia</span>

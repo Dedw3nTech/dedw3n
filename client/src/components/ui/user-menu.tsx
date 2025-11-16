@@ -172,29 +172,6 @@ export default function UserMenu() {
     },
   });
 
-  // Stable cache token that only updates when avatar actually changes
-  const avatarCacheRef = useRef<{ avatar: string | null | undefined; token: number }>({
-    avatar: currentUser?.avatar,
-    token: Date.now()
-  });
-  
-  // Update cache token only when avatar value changes
-  if (avatarCacheRef.current.avatar !== currentUser?.avatar) {
-    avatarCacheRef.current = {
-      avatar: currentUser?.avatar,
-      token: Date.now()
-    };
-  }
-  
-  // Memoized avatar URL with stable cache-busting
-  const getAvatarUrl = useMemo(() => {
-    return (avatarUrl?: string) => {
-      if (!avatarUrl) return '/assets/default-avatar.png';
-      const isLocalUrl = !avatarUrl.includes('http');
-      const cacheBuster = isLocalUrl ? `?v=${avatarCacheRef.current.token}` : '';
-      return `${avatarUrl}${cacheBuster}`;
-    };
-  }, [avatarCacheRef.current.token]);
 
   // If user is not logged in, show login button
   if (!user) {
@@ -278,12 +255,7 @@ export default function UserMenu() {
                         onClick={() => switchBackMutation.mutate()}
                         disabled={switchBackMutation.isPending}
                       >
-                        <Avatar className="h-8 w-8 flex-shrink-0">
-                          <AvatarImage src={getAvatarUrl(parentUser.avatar)} alt={parentUser.name || parentUser.username} />
-                          <AvatarFallback className="bg-black text-white text-xs">
-                            {getInitials(parentUser.name || parentUser.username || '')}
-                          </AvatarFallback>
-                        </Avatar>
+                        <UserAvatar userId={parentUser.id} username={parentUser.username} size="sm" className="flex-shrink-0" />
                         <div className="flex-1 text-left min-w-0">
                           <p className="font-medium truncate">{parentUser.name || parentUser.username}</p>
                           <p className="text-xs text-gray-500">{translatedLabels.mainAccount}</p>

@@ -3,7 +3,7 @@ import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
@@ -271,10 +271,7 @@ export default function PostDetail() {
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-center space-x-3">
-                <Avatar>
-                  <AvatarImage src={post.user.avatar || ""} />
-                  <AvatarFallback>{post.user.name[0]}</AvatarFallback>
-                </Avatar>
+                <UserAvatar userId={post.user.id} username={post.user.username} size="md" />
                 <div>
                   <h3 className="font-semibold">{post.user.name}</h3>
                   <p className="text-sm text-muted-foreground">@{post.user.username}</p>
@@ -393,10 +390,7 @@ export default function PostDetail() {
             {isAuthenticated && (
               <form onSubmit={handleCommentSubmit} className="space-y-3">
                 <div className="flex items-start space-x-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user?.avatar || ""} />
-                    <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
-                  </Avatar>
+                  <UserAvatar userId={user?.id || 0} username={user?.username || ""} size="sm" className="h-8 w-8" />
                   <div className="flex-1">
                     <Textarea
                       placeholder="Write a comment..."
@@ -442,10 +436,7 @@ export default function PostDetail() {
               <div className="space-y-4">
                 {comments.map((comment) => (
                   <div key={comment.id} className="flex items-start space-x-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={comment.user.avatar || ""} />
-                      <AvatarFallback>{comment.user.name[0]}</AvatarFallback>
-                    </Avatar>
+                    <UserAvatar userId={comment.user.id} username={comment.user.username} size="sm" className="h-8 w-8" />
                     <div className="flex-1">
                       <div className="bg-muted rounded-lg p-3">
                         <div className="flex items-center space-x-2 mb-1">

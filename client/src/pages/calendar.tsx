@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -1251,13 +1252,11 @@ export default function CalendarPage() {
                                 >
                                   <Checkbox checked={isSelected} className="mr-2" />
                                   <div className="flex items-center gap-2">
-                                    {user.avatar ? (
-                                      <img src={user.avatar} alt={user.name} className="w-6 h-6 rounded-full" />
-                                    ) : (
-                                      <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-xs">
-                                        {user.name.charAt(0).toUpperCase()}
-                                      </div>
-                                    )}
+                                    <UserAvatar 
+                                      userId={user.id} 
+                                      username={user.username} 
+                                      size="sm" 
+                                    />
                                     <div className="flex flex-col">
                                       <span className="text-sm font-medium">{user.name}</span>
                                       <span className="text-xs text-gray-500">@{user.username}</span>

@@ -1,7 +1,7 @@
 import { useFollow } from "@/hooks/useFollow";
 import { useParams, Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import FollowButton from "@/components/social/FollowButton";
@@ -70,10 +70,7 @@ export default function FollowingPage() {
                   <div className="flex items-center justify-between">
                     <Link to={`/profile/${followedUser.id}`}>
                       <div className="flex items-center gap-3 cursor-pointer">
-                        <Avatar className="h-12 w-12">
-                          <AvatarImage src={followedUser.avatar || undefined} alt={followedUser.name} />
-                          <AvatarFallback>{followedUser.name[0]}</AvatarFallback>
-                        </Avatar>
+                        <UserAvatar userId={followedUser.id} username={followedUser.username} size="lg" className="h-12 w-12" />
                         <div>
                           <p className="font-medium">{followedUser.name}</p>
                           <p className="text-sm text-muted-foreground">@{followedUser.username}</p>

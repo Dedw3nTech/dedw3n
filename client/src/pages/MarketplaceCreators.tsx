@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useMarketType } from "@/hooks/use-market-type";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 interface CreatorVideo {
   id: number;
@@ -187,12 +187,7 @@ export default function MarketplaceCreators() {
                   {/* Creator Info */}
                   <Link href={`/creators/${video.creator.id}`}>
                     <div className="flex items-center gap-2 mt-2 group/creator hover:text-blue-600 transition-colors">
-                      <Avatar className="w-6 h-6">
-                        <AvatarImage src={video.creator.avatar} alt={video.creator.name} />
-                        <AvatarFallback className="text-xs">
-                          {video.creator.name?.charAt(0) || video.creator.username?.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
+                      <UserAvatar userId={video.creator.id} username={video.creator.username} size="sm" />
                       <span className="text-sm text-gray-600 group-hover/creator:text-blue-600 transition-colors truncate">
                         {video.creator.name || video.creator.username}
                       </span>
