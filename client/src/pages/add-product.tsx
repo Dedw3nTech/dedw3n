@@ -2442,27 +2442,20 @@ export default function AddProduct() {
                   render={({ field }) => {
                     const isService = form.watch('offeringType') === 'service';
                     return (
-                      <FormItem className={isService ? 'opacity-50' : ''}>
-                        <div className="flex flex-row items-center justify-between">
-                          <div className="space-y-0.5">
-                            <FormLabel className={`text-sm font-normal ${isService ? 'text-gray-400' : ''}`}>
-                              {t('New Product')}
-                            </FormLabel>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={isService ? undefined : field.onChange}
-                              disabled={isService}
-                              className={isService ? 'cursor-not-allowed' : ''}
-                            />
-                          </FormControl>
+                      <FormItem className={`flex flex-row items-center justify-between ${isService ? 'opacity-50' : ''}`}>
+                        <div className="space-y-0.5">
+                          <FormLabel className={`text-sm font-normal ${isService ? 'text-gray-400' : ''}`}>
+                            {t('New Product')}
+                          </FormLabel>
                         </div>
-                        {!isService && field.value && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {t("Auto-expires 30 days after publication")}
-                          </p>
-                        )}
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={isService ? undefined : field.onChange}
+                            disabled={isService}
+                            className={isService ? 'cursor-not-allowed' : ''}
+                          />
+                        </FormControl>
                       </FormItem>
                     );
                   }}
