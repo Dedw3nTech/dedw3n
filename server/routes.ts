@@ -10165,6 +10165,208 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
   });
 
   // =====================================
+  // VENDOR BRAND ASSETS UPLOAD ROUTES
+  // =====================================
+
+  // Helper function to validate image MIME type by magic bytes
+  const validateImageMimeType = (buffer: Buffer): { valid: boolean; mimeType: string } => {
+    // Check magic bytes to determine format
+    if (buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF) {
+      return { valid: true, mimeType: 'image/jpeg' };
+    }
+    if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) {
+      return { valid: true, mimeType: 'image/png' };
+    }
+    if (buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46) {
+      return { valid: true, mimeType: 'image/webp' };
+    }
+    if (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46) {
+      return { valid: true, mimeType: 'image/gif' };
+    }
+    return { valid: false, mimeType: '' };
+  };
+
+  // Upload vendor banner
+  app.post('/api/vendors/:vendorId/banner', unifiedIsAuthenticated, upload.single('banner'), async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+
+      const vendorId = parseInt(req.params.vendorId);
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ message: 'Invalid vendor ID' });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: 'Banner file is required' });
+      }
+
+      // Verify user owns this vendor
+      const vendor = await db
+        .select()
+        .from(vendors)
+        .where(eq(vendors.id, vendorId))
+        .limit(1);
+
+      if (!vendor || vendor.length === 0) {
+        return res.status(404).json({ message: 'Vendor not found' });
+      }
+
+      if (vendor[0].userId !== userId) {
+        return res.status(403).json({ message: 'Unauthorized - you do not own this vendor' });
+      }
+
+      // Validate file size (max 5MB)
+      if (req.file.size > 5 * 1024 * 1024) {
+        return res.status(400).json({ message: 'Banner image must be less than 5MB' });
+      }
+
+      // Validate MIME type using magic bytes (security check)
+      const mimeValidation = validateImageMimeType(req.file.buffer);
+      if (!mimeValidation.valid) {
+        return res.status(400).json({ message: 'Invalid image format. Only JPEG, PNG, WebP, and GIF are allowed.' });
+      }
+
+      // Extract bucket name from environment
+      const publicPaths = process.env.PUBLIC_OBJECT_SEARCH_PATHS || '';
+      const firstPath = publicPaths.split(',')[0].trim();
+      const bucketMatch = firstPath.match(/\/([^\/,]+)/);
+      const bucketName = bucketMatch ? bucketMatch[1].replace(/,+$/, '') : '';
+      
+      if (!bucketName) {
+        return res.status(500).json({ message: 'Object storage not configured' });
+      }
+
+      const timestamp = Date.now();
+      const extension = mimeValidation.mimeType.split('/')[1] || 'jpg';
+      const filename = `vendor-banners/vendor_banner_${vendorId}_${timestamp}.${extension}`;
+      
+      const bucket = objectStorageClient.bucket(bucketName);
+      const file = bucket.file(filename);
+
+      await file.save(req.file.buffer, {
+        metadata: {
+          contentType: mimeValidation.mimeType,
+          cacheControl: 'public, max-age=31536000, immutable'
+        },
+        resumable: true,
+        timeout: 30000
+      });
+
+      // Set public read permissions
+      await setObjectAclPolicy(filename, bucketName, ObjectPermission.PublicRead);
+
+      const bannerPath = objectPathToPublicUrl(filename);
+
+      // Update vendor banner in database
+      await db
+        .update(vendors)
+        .set({ banner: bannerPath })
+        .where(eq(vendors.id, vendorId));
+
+      res.json({
+        message: 'Banner uploaded successfully',
+        bannerUrl: bannerPath
+      });
+    } catch (error: any) {
+      console.error('Error uploading vendor banner:', error);
+      res.status(500).json({ message: error.message || 'Failed to upload banner' });
+    }
+  });
+
+  // Upload vendor logo
+  app.post('/api/vendors/:vendorId/logo', unifiedIsAuthenticated, upload.single('logo'), async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+
+      const vendorId = parseInt(req.params.vendorId);
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ message: 'Invalid vendor ID' });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: 'Logo file is required' });
+      }
+
+      // Verify user owns this vendor
+      const vendor = await db
+        .select()
+        .from(vendors)
+        .where(eq(vendors.id, vendorId))
+        .limit(1);
+
+      if (!vendor || vendor.length === 0) {
+        return res.status(404).json({ message: 'Vendor not found' });
+      }
+
+      if (vendor[0].userId !== userId) {
+        return res.status(403).json({ message: 'Unauthorized - you do not own this vendor' });
+      }
+
+      // Validate file size (max 2MB)
+      if (req.file.size > 2 * 1024 * 1024) {
+        return res.status(400).json({ message: 'Logo image must be less than 2MB' });
+      }
+
+      // Validate MIME type using magic bytes (security check)
+      const mimeValidation = validateImageMimeType(req.file.buffer);
+      if (!mimeValidation.valid) {
+        return res.status(400).json({ message: 'Invalid image format. Only JPEG, PNG, WebP, and GIF are allowed.' });
+      }
+
+      // Extract bucket name from environment
+      const publicPaths = process.env.PUBLIC_OBJECT_SEARCH_PATHS || '';
+      const firstPath = publicPaths.split(',')[0].trim();
+      const bucketMatch = firstPath.match(/\/([^\/,]+)/);
+      const bucketName = bucketMatch ? bucketMatch[1].replace(/,+$/, '') : '';
+      
+      if (!bucketName) {
+        return res.status(500).json({ message: 'Object storage not configured' });
+      }
+
+      const timestamp = Date.now();
+      const extension = mimeValidation.mimeType.split('/')[1] || 'jpg';
+      const filename = `vendor-logos/vendor_logo_${vendorId}_${timestamp}.${extension}`;
+      
+      const bucket = objectStorageClient.bucket(bucketName);
+      const file = bucket.file(filename);
+
+      await file.save(req.file.buffer, {
+        metadata: {
+          contentType: mimeValidation.mimeType,
+          cacheControl: 'public, max-age=31536000, immutable'
+        },
+        resumable: true,
+        timeout: 30000
+      });
+
+      // Set public read permissions
+      await setObjectAclPolicy(filename, bucketName, ObjectPermission.PublicRead);
+
+      const logoPath = objectPathToPublicUrl(filename);
+
+      // Update vendor logo in database
+      await db
+        .update(vendors)
+        .set({ logo: logoPath })
+        .where(eq(vendors.id, vendorId));
+
+      res.json({
+        message: 'Logo uploaded successfully',
+        logoUrl: logoPath
+      });
+    } catch (error: any) {
+      console.error('Error uploading vendor logo:', error);
+      res.status(500).json({ message: error.message || 'Failed to upload logo' });
+    }
+  });
+
+  // =====================================
   // VENDOR PRODUCTS MANAGEMENT ROUTES (MUST BE BEFORE PARAMETERIZED ROUTES)
   // =====================================
 

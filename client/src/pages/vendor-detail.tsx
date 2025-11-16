@@ -296,8 +296,8 @@ export default function VendorDetailPage() {
   return (
     <>
       <SEOHead 
-        title={normalizeTitle(vendor?.storeName ? `${vendor.storeName} - Vendor Profile | Dedw3n` : 'Vendor Profile - Dedw3n')}
-        description={normalizeDescription(vendor?.description || `Browse products and services from ${vendor?.storeName || 'this vendor'} on Dedw3n marketplace.`)}
+        title={normalizeTitle(vendor?.storeName ? `${vendor.storeName} - Vendor Profile` : undefined, 'Vendor Profile - Dedw3n')}
+        description={normalizeDescription(vendor?.description, `Browse products and services from ${vendor?.storeName || 'this vendor'} on Dedw3n marketplace.`)}
         structuredData={vendor ? buildVendorSchema(vendor, products) : undefined}
       />
       

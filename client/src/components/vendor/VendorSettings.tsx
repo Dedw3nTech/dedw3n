@@ -66,6 +66,7 @@ interface VendorData {
   taxId?: string;
   website?: string;
   logo?: string;
+  banner?: string;
   rating: number;
   ratingCount: number;
   badgeLevel: string;
@@ -238,6 +239,148 @@ export default function VendorSettings({ vendorId }: VendorSettingsProps) {
     updateNotificationsMutation.mutate(notifications);
   };
 
+  // Banner and Logo upload handlers
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+
+  const handleBannerUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid File",
+        description: "Please upload an image file",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File Too Large",
+        description: "Banner image must be less than 5MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsUploadingBanner(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('banner', file);
+
+      const response = await fetch(`/api/vendors/${vendorId}/banner`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
+
+      let data: any = {};
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        throw new Error('Server returned an invalid response');
+      }
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to upload banner');
+      }
+      
+      // Update local state with new banner URL
+      updateField('banner', data.bannerUrl);
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/vendors/details', vendorId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/vendors/me'] });
+
+      toast({
+        title: "Success",
+        description: "Banner uploaded successfully"
+      });
+    } catch (error: any) {
+      console.error('Banner upload error:', error);
+      toast({
+        title: "Upload Failed",
+        description: error.message || "Failed to upload banner image",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploadingBanner(false);
+    }
+  };
+
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid File",
+        description: "Please upload an image file",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "File Too Large",
+        description: "Logo image must be less than 2MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsUploadingLogo(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('logo', file);
+
+      const response = await fetch(`/api/vendors/${vendorId}/logo`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
+
+      let data: any = {};
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        throw new Error('Server returned an invalid response');
+      }
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to upload logo');
+      }
+      
+      // Update local state with new logo URL
+      updateField('logo', data.logoUrl);
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/vendors/details', vendorId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/vendors/me'] });
+
+      toast({
+        title: "Success",
+        description: "Logo uploaded successfully"
+      });
+    } catch (error: any) {
+      console.error('Logo upload error:', error);
+      toast({
+        title: "Upload Failed",
+        description: error.message || "Failed to upload logo image",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  };
+
   if (isLoading) {
     return <div className="flex items-center justify-center p-8">Loading settings...</div>;
   }
@@ -348,6 +491,79 @@ export default function VendorSettings({ vendorId }: VendorSettingsProps) {
                 <Save className="mr-2 h-4 w-4" />
                 {updateVendorMutation.isPending ? 'Saving...' : 'Save Profile'}
               </Button>
+            </CardContent>
+          </Card>
+
+          {/* Brand Assets Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Camera className="h-5 w-5" />
+                Brand Assets
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Logo Upload */}
+              <div>
+                <Label>Store Logo</Label>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Upload your store logo (Recommended: 200x200px, Max: 2MB)
+                </p>
+                <div className="flex items-center gap-4">
+                  {formData.logo && (
+                    <div className="w-24 h-24 rounded-lg border-2 border-gray-200 overflow-hidden">
+                      <img 
+                        src={formData.logo} 
+                        alt="Store logo" 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      disabled={isUploadingLogo}
+                      data-testid="input-logo-upload"
+                    />
+                    {isUploadingLogo && (
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Uploading logo...
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Banner Upload */}
+              <div>
+                <Label>Store Banner</Label>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Upload a banner for your vendor page (Recommended: 1920x400px, Max: 5MB)
+                </p>
+                {formData.banner && (
+                  <div className="w-full h-32 rounded-lg border-2 border-gray-200 overflow-hidden mb-3">
+                    <img 
+                      src={formData.banner} 
+                      alt="Store banner" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBannerUpload}
+                  disabled={isUploadingBanner}
+                  data-testid="input-banner-upload"
+                />
+                {isUploadingBanner && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Uploading banner...
+                  </p>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
