@@ -427,25 +427,11 @@ export default function VendorDashboard() {
 
   return (
     <div className="container max-w-7xl py-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">{dashboardText}</h1>
-          <p className="text-muted-foreground">
-            {vendor.vendorType === 'private' ? t("Using Private Vendor account") : t("Using Business Vendor account")}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          {/* Show Open Business Store button only for private vendors */}
-          {vendor.vendorType === 'private' && (
-            <Button 
-              variant="outline" 
-              onClick={handleOpenBusinessStore}
-              className="bg-black text-white hover:bg-gray-800 border-black"
-            >
-              {t("Open Business Store")}
-            </Button>
-          )}
-        </div>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold">{dashboardText}</h1>
+        <p className="text-muted-foreground">
+          {vendor.vendorType === 'private' ? t("Using Private Vendor account") : t("Using Business Vendor account")}
+        </p>
       </div>
 
       {/* Summary Cards */}
