@@ -50,7 +50,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Loader2, Plus, Upload, X, Video as VideoIcon, CheckCircle, Landmark, Building, Coffee, Wrench, Store, Users } from 'lucide-react';
+import { Loader2, Plus, Upload, X, Video as VideoIcon, CheckCircle, Landmark, Building, Coffee, Wrench, Store, Users, ChevronDown } from 'lucide-react';
 import CurrencyInput from '@/components/ui/currency-input';
 import { VendorCreationDialog } from '@/components/VendorCreationDialog';
 import { cn } from '@/lib/utils';
@@ -130,6 +130,7 @@ export default function AddProduct() {
   const [hasShownAutoFillNotification, setHasShownAutoFillNotification] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [successData, setSuccessData] = useState<any>(null);
+  const [isMarketplaceExpanded, setIsMarketplaceExpanded] = useState(true);
 
   // Parse URL parameters for prefill data and section tracking from Wouter location
   const getQueryParams = (loc: string) => {
@@ -190,6 +191,12 @@ export default function AddProduct() {
     "Marketplace",
     "Community",
     "Select Section",
+    
+    // Marketplace Sub-sections
+    "Friend to Friend",
+    "Request",
+    "Online Store",
+    "Whole Sale",
     "Upload products to the Marketplace section",
     "Upload financial products and services",
     "Upload government-related products and services",
@@ -1087,6 +1094,29 @@ export default function AddProduct() {
       label: t("Marketplace"),
       href: getSectionHref('marketplace'),
       isActive: activeSection === 'marketplace',
+      hasSubItems: true,
+      subItems: [
+        {
+          id: 'friend-to-friend',
+          label: t("Friend to Friend"),
+          href: getSectionHref('marketplace'),
+        },
+        {
+          id: 'request',
+          label: t("Request"),
+          href: getSectionHref('marketplace'),
+        },
+        {
+          id: 'online-store',
+          label: t("Online Store"),
+          href: getSectionHref('marketplace'),
+        },
+        {
+          id: 'wholesale',
+          label: t("Whole Sale"),
+          href: getSectionHref('marketplace'),
+        },
+      ],
     },
     {
       id: 'community',
@@ -1109,20 +1139,58 @@ export default function AddProduct() {
             <CardContent className="p-3 flex-1 overflow-y-auto">
               <nav className="space-y-2" role="navigation" aria-label="Section navigation">
                 {navigationSections.map((section) => (
-                  <Link
-                    key={section.id}
-                    href={section.href}
-                    data-testid={`section-${section.id}`}
-                    aria-current={section.isActive ? 'page' : undefined}
-                    className={cn(
-                      "w-full block px-5 py-4 rounded-lg text-base font-semibold tracking-wide transition-all text-left",
-                      section.isActive
-                        ? "bg-black text-white shadow-md"
-                        : "text-gray-700 hover:bg-gray-100"
+                  <div key={section.id}>
+                    {section.hasSubItems ? (
+                      <>
+                        <button
+                          onClick={() => setIsMarketplaceExpanded(!isMarketplaceExpanded)}
+                          data-testid={`section-${section.id}`}
+                          className={cn(
+                            "w-full flex items-center justify-between px-5 py-4 rounded-lg text-base font-semibold tracking-wide transition-all text-left",
+                            section.isActive
+                              ? "bg-black text-white shadow-md"
+                              : "text-gray-700 hover:bg-gray-100"
+                          )}
+                        >
+                          <span>{section.label}</span>
+                          <ChevronDown
+                            className={cn(
+                              "h-5 w-5 transition-transform",
+                              isMarketplaceExpanded ? "rotate-180" : ""
+                            )}
+                          />
+                        </button>
+                        {isMarketplaceExpanded && section.subItems && (
+                          <div className="ml-4 mt-1 space-y-1">
+                            {section.subItems.map((subItem) => (
+                              <Link
+                                key={subItem.id}
+                                href={subItem.href}
+                                data-testid={`section-${subItem.id}`}
+                                className="w-full block px-4 py-3 rounded-lg text-sm font-medium tracking-wide transition-all text-left text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                              >
+                                {subItem.label}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <Link
+                        href={section.href}
+                        data-testid={`section-${section.id}`}
+                        aria-current={section.isActive ? 'page' : undefined}
+                        className={cn(
+                          "w-full block px-5 py-4 rounded-lg text-base font-semibold tracking-wide transition-all text-left",
+                          section.isActive
+                            ? "bg-black text-white shadow-md"
+                            : "text-gray-700 hover:bg-gray-100"
+                        )}
+                      >
+                        {section.label}
+                      </Link>
                     )}
-                  >
-                    {section.label}
-                  </Link>
+                  </div>
                 ))}
               </nav>
             </CardContent>
