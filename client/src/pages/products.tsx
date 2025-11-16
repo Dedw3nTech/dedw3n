@@ -1927,7 +1927,7 @@ export default function Products() {
                     key={user.id}
                     className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
                       selectedRecipient?.id === user.id
-                        ? 'bg-blue-100 border border-blue-300'
+                        ? 'bg-black/10 border border-black'
                         : 'bg-gray-50 hover:bg-gray-100'
                     }`}
                     onClick={() => setSelectedRecipient(user)}
@@ -1948,7 +1948,7 @@ export default function Products() {
                         />
                       ) : null}
                       <div 
-                        className={`w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm ${user.avatar ? 'hidden' : 'flex'}`}
+                        className={`w-full h-full bg-black flex items-center justify-center text-white font-semibold text-sm ${user.avatar ? 'hidden' : 'flex'}`}
                       >
                         {(user.name || user.username).charAt(0).toUpperCase()}
                       </div>
@@ -1961,7 +1961,7 @@ export default function Products() {
                       )}
                     </div>
                     {selectedRecipient?.id === user.id && (
-                      <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                      <div className="w-5 h-5 bg-black rounded-full flex items-center justify-center">
                         <div className="w-2 h-2 bg-white rounded-full"></div>
                       </div>
                     )}
@@ -2083,7 +2083,7 @@ export default function Products() {
                     key={member.id}
                     className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
                       selectedMember?.id === member.id
-                        ? 'bg-blue-100 border border-blue-300'
+                        ? 'bg-black/10 border border-black'
                         : 'bg-gray-50 hover:bg-gray-100'
                     }`}
                     onClick={() => setSelectedMember(member)}
@@ -2104,7 +2104,7 @@ export default function Products() {
                         />
                       ) : null}
                       <div 
-                        className={`w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm ${member.avatar ? 'hidden' : 'flex'}`}
+                        className={`w-full h-full bg-black flex items-center justify-center text-white font-semibold text-sm ${member.avatar ? 'hidden' : 'flex'}`}
                       >
                         {(member.name || member.username).charAt(0).toUpperCase()}
                       </div>
@@ -2117,7 +2117,7 @@ export default function Products() {
                       )}
                     </div>
                     {selectedMember?.id === member.id && (
-                      <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                      <div className="w-5 h-5 bg-black rounded-full flex items-center justify-center">
                         <div className="w-2 h-2 bg-white rounded-full"></div>
                       </div>
                     )}
@@ -2167,7 +2167,7 @@ export default function Products() {
                 }
               }}
               disabled={shareWithMemberMutation.isPending || !selectedMember}
-              className="text-white hover:bg-blue-600 bg-[#000000]"
+              className="bg-black text-white hover:bg-gray-800"
             >
               {shareWithMemberMutation.isPending ? (
                 <>
