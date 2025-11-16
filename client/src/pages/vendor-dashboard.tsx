@@ -97,7 +97,6 @@ export default function VendorDashboard() {
   const [activeTab, setActiveTab] = useState("products");
   const [isDeletingStore, setIsDeletingStore] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [vendorId, setVendorId] = useState<number | null>(null);
   const [discountFormOpen, setDiscountFormOpen] = useState(false);
   const [discountFormType, setDiscountFormType] = useState<"discount-code" | "automatic">("discount-code");
 
@@ -136,7 +135,7 @@ export default function VendorDashboard() {
       }
       return response.json();
     },
-    enabled: !!vendorId,
+    enabled: !!vendor?.id,
   });
 
   // Create private vendor mutation
@@ -229,13 +228,6 @@ export default function VendorDashboard() {
     setLocation('/become-vendor?type=business');
   };
 
-  // Set vendor ID when data is loaded
-  useEffect(() => {
-    if (vendor?.id) {
-      setVendorId(vendor.id);
-    }
-  }, [vendor]);
-  
   // Authentication wall - redirect if not logged in
   useEffect(() => {
     if (!user) {
@@ -542,20 +534,20 @@ export default function VendorDashboard() {
 
         {/* Main Content Area */}
         <div className="lg:col-span-4">
-          {activeTab === 'products' && vendorId && (
-            <VendorProductManagement vendorId={vendorId} />
+          {activeTab === 'products' && vendor?.id && (
+            <VendorProductManagement vendorId={vendor.id} />
           )}
 
-          {activeTab === 'orders' && vendorId && (
-            <VendorOrderManagement vendorId={vendorId} />
+          {activeTab === 'orders' && vendor?.id && (
+            <VendorOrderManagement vendorId={vendor.id} />
           )}
 
-          {activeTab === 'commission' && vendorId && (
-            <VendorCommissionDashboard vendorId={vendorId} />
+          {activeTab === 'commission' && vendor?.id && (
+            <VendorCommissionDashboard vendorId={vendor.id} />
           )}
 
-          {activeTab === 'analytics' && vendorId && (
-            <VendorAnalytics vendorId={vendorId} />
+          {activeTab === 'analytics' && vendor?.id && (
+            <VendorAnalytics vendorId={vendor.id} />
           )}
         </div>
       </div>
