@@ -1160,11 +1160,6 @@ export default function Products() {
               <span className="font-medium">{volumeDiscountText}</span>
             </div>
           )}
-          {marketType === 'c2c' && (
-            <div className="text-xs text-gray-500">
-              <span>{listedByText} {product.vendorStoreName || `User${product.vendorId}`}</span>
-            </div>
-          )}
         </CardContent>
       </Card>
     ));
