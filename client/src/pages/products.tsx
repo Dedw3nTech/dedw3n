@@ -28,7 +28,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Loader2, ShoppingCart, Search, SlidersHorizontal, Share2, Mail, Link as LinkIcon, MessageSquare, Users, MessageCircle, Store, Building, Landmark, Heart, ChevronDown, Plus, Gift, Smartphone, Filter, CreditCard, Repeat2, Tag } from 'lucide-react';
+import { Loader2, ShoppingCart, Search, SlidersHorizontal, Share2, Mail, Link as LinkIcon, MessageSquare, Users, MessageCircle, Store, Building, Landmark, Heart, ChevronDown, Plus, Gift, Smartphone, Filter, CreditCard, Repeat2, Tag, Flag } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -269,6 +269,12 @@ export default function Products() {
   // RQST Sell Confirmation dialog state
   const [sellConfirmationOpen, setSellConfirmationOpen] = useState(false);
   const [selectedSellProduct, setSelectedSellProduct] = useState<any>(null);
+
+  // Report Product dialog state
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [selectedReportProduct, setSelectedReportProduct] = useState<any>(null);
+  const [reportReason, setReportReason] = useState('');
+  const [reportMessage, setReportMessage] = useState('');
 
   // Member search query for share functionality  
   const { data: memberSearchResults = [], isLoading: memberSearchLoading } = useQuery({
@@ -587,6 +593,34 @@ export default function Products() {
       toast({
         title: "Error",
         description: "Failed to send gift. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Report product mutation
+  const reportProductMutation = useMutation({
+    mutationFn: async ({ productId, reason, customMessage }: { productId: number; reason: string; customMessage: string }) => {
+      const response = await apiRequest('POST', `/api/products/${productId}/report`, {
+        reason,
+        customMessage
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Report Submitted",
+        description: "Thank you for reporting. We will review this product.",
+      });
+      setReportDialogOpen(false);
+      setReportReason('');
+      setReportMessage('');
+      setSelectedReportProduct(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit report. Please try again.",
         variant: "destructive",
       });
     }
@@ -1113,6 +1147,20 @@ export default function Products() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedReportProduct(product);
+                  setReportDialogOpen(true);
+                }}
+                className="h-8 w-8 text-black hover:bg-gray-100"
+                title="Report Product"
+                data-testid={`button-report-${product.id}`}
+              >
+                <Flag className="h-4 w-4" />
+              </Button>
             </div>
           </div>
           
@@ -2108,6 +2156,101 @@ export default function Products() {
                 </>
               ) : (
                 'Share Product'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Report Product Dialog */}
+      <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-bold">Report Product</DialogTitle>
+            <DialogDescription>
+              Help us maintain a safe marketplace by reporting products that violate our policies
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedReportProduct && (
+            <div className="my-4">
+              <div className="flex gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="w-16 h-16 bg-gray-200 rounded flex-shrink-0 overflow-hidden">
+                  {selectedReportProduct.imageUrl && (
+                    <img 
+                      src={selectedReportProduct.imageUrl} 
+                      alt={selectedReportProduct.name}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium text-sm truncate">{selectedReportProduct.name}</h4>
+                  <p className="text-sm text-gray-600">
+                    {formatPriceFromGBP(selectedReportProduct.price)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="report-reason" className="text-sm font-medium">Reason for reporting</Label>
+              <Select value={reportReason} onValueChange={setReportReason}>
+                <SelectTrigger className="mt-2">
+                  <SelectValue placeholder="Select a reason" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="counterfeit">Counterfeit Product</SelectItem>
+                  <SelectItem value="fraud">Fraudulent Listing</SelectItem>
+                  <SelectItem value="prohibited">Prohibited Item</SelectItem>
+                  <SelectItem value="misinformation">Misleading Information</SelectItem>
+                  <SelectItem value="harassment">Harassment or Abuse</SelectItem>
+                  <SelectItem value="spam">Spam</SelectItem>
+                  <SelectItem value="copyright">Copyright Violation</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="report-message" className="text-sm font-medium">Additional details (optional)</Label>
+              <Textarea
+                id="report-message"
+                placeholder="Provide more information about why you're reporting this product..."
+                value={reportMessage}
+                onChange={(e) => setReportMessage(e.target.value)}
+                className="mt-2"
+                rows={4}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setReportDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedReportProduct && reportReason) {
+                  reportProductMutation.mutate({
+                    productId: selectedReportProduct.id,
+                    reason: reportReason,
+                    customMessage: reportMessage
+                  });
+                }
+              }}
+              disabled={reportProductMutation.isPending || !reportReason}
+              className="bg-black text-white hover:bg-gray-800"
+            >
+              {reportProductMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                'Submit Report'
               )}
             </Button>
           </DialogFooter>
