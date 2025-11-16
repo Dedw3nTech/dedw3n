@@ -1725,30 +1725,31 @@ export default function AddProduct() {
                       
                       <TabsContent value="upload" className="space-y-4">
                         {/* File Upload Area */}
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                        <label 
+                          htmlFor="image-upload" 
+                          className="block border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                        >
                           <div className="text-center">
                             <Upload className="mx-auto h-12 w-12 text-gray-400" />
                             <div className="mt-4">
-                              <label htmlFor="image-upload" className="cursor-pointer">
-                                <span className="mt-2 block text-sm font-medium text-gray-900">
-                                  {t("Upload images")}
-                                </span>
-                                <span className="mt-1 block text-sm text-gray-500">
-                                  {t("PNG, JPG, GIF up to 5MB each")}
-                                </span>
-                              </label>
-                              <input
-                                id="image-upload"
-                                type="file"
-                                multiple
-                                accept="image/*"
-                                className="hidden"
-                                onChange={handleImageUpload}
-                                disabled={uploadedImages.length >= 12}
-                              />
+                              <span className="mt-2 block text-sm font-medium text-gray-900">
+                                {t("Upload images")}
+                              </span>
+                              <span className="mt-1 block text-sm text-gray-500">
+                                {t("PNG, JPG, GIF up to 5MB each")}
+                              </span>
                             </div>
                           </div>
-                        </div>
+                          <input
+                            id="image-upload"
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleImageUpload}
+                            disabled={uploadedImages.length >= 12}
+                          />
+                        </label>
                         
                         {/* Uploaded Images Grid */}
                         {uploadedImages.length > 0 && (
@@ -1847,28 +1848,29 @@ export default function AddProduct() {
                       
                       <TabsContent value="upload" className="space-y-4">
                         {!uploadedVideo ? (
-                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                          <label 
+                            htmlFor="video-upload" 
+                            className="block border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                          >
                             <div className="text-center">
                               <VideoIcon className="mx-auto h-12 w-12 text-gray-400" />
                               <div className="mt-4">
-                                <label htmlFor="video-upload" className="cursor-pointer">
-                                  <span className="mt-2 block text-sm font-medium text-gray-900">
-                                    {t("Upload video")}
-                                  </span>
-                                  <span className="mt-1 block text-sm text-gray-500">
-                                    {t("MP4, MOV, AVI up to 50MB")}
-                                  </span>
-                                </label>
-                                <input
-                                  id="video-upload"
-                                  type="file"
-                                  accept="video/*"
-                                  className="hidden"
-                                  onChange={handleVideoUpload}
-                                />
+                                <span className="mt-2 block text-sm font-medium text-gray-900">
+                                  {t("Upload video")}
+                                </span>
+                                <span className="mt-1 block text-sm text-gray-500">
+                                  {t("MP4, MOV, AVI up to 50MB")}
+                                </span>
                               </div>
                             </div>
-                          </div>
+                            <input
+                              id="video-upload"
+                              type="file"
+                              accept="video/*"
+                              className="hidden"
+                              onChange={handleVideoUpload}
+                            />
+                          </label>
                         ) : (
                           <div className="relative">
                             <video
