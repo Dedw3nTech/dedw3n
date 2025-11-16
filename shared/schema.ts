@@ -193,6 +193,8 @@ export const moderationMatchTypeEnum = pgEnum('moderation_match_type', ['exact',
 export const moderationSeverityEnum = pgEnum('moderation_severity', ['low', 'medium', 'high']);
 export const flaggedContentTypeEnum = pgEnum('flagged_content_type', ['post', 'comment', 'message', 'product', 'profile', 'community']);
 export const flaggedContentStatusEnum = pgEnum('flagged_content_status', ['pending', 'approved', 'rejected']);
+export const productReportReasonEnum = pgEnum('product_report_reason', ['counterfeit', 'fraud', 'prohibited', 'misinformation', 'harassment', 'spam', 'copyright', 'other']);
+export const productReportStatusEnum = pgEnum('product_report_status', ['pending', 'reviewed', 'dismissed', 'action_taken']);
 export const notificationTypeEnum = pgEnum('notification_type', ['like', 'comment', 'follow', 'mention', 'message', 'order', 'payment', 'system', 'gift_received', 'gift_accepted', 'gift_declined', 'finance', 'government', 'lifestyle', 'marketplace', 'community']);
 export const notificationChannelEnum = pgEnum('notification_channel', ['app', 'email', 'push', 'sms']);
 
@@ -1837,6 +1839,25 @@ export const moderationReports = pgTable("moderation_reports", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const productReports = pgTable("product_reports", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  reporterId: integer("reporter_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  reason: productReportReasonEnum("reason").notNull(),
+  customMessage: text("custom_message"),
+  status: productReportStatusEnum("status").notNull().default("pending"),
+  reviewedById: integer("reviewed_by_id").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  adminNotes: text("admin_notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  productIdIdx: index("product_reports_product_id_idx").on(table.productId),
+  reporterIdIdx: index("product_reports_reporter_id_idx").on(table.reporterId),
+  statusIdx: index("product_reports_status_idx").on(table.status),
+  createdAtIdx: index("product_reports_created_at_idx").on(table.createdAt),
+}));
+
 export const userBlocks = pgTable("user_blocks", {
   id: serial("id").primaryKey(),
   blockerId: integer("blocker_id").notNull().references(() => users.id, { onDelete: "cascade" }),
@@ -1879,6 +1900,7 @@ export const insertBlockListSchema = createInsertSchema(blockList).omit({ id: tr
 export const insertFlaggedContentSchema = createInsertSchema(flaggedContent).omit({ id: true, reviewedAt: true, createdAt: true, updatedAt: true });
 export const insertFlaggedImageSchema = createInsertSchema(flaggedImages).omit({ id: true, reviewedAt: true, createdAt: true, updatedAt: true });
 export const insertModerationReportSchema = createInsertSchema(moderationReports).omit({ id: true, reviewedAt: true, createdAt: true, updatedAt: true });
+export const insertProductReportSchema = createInsertSchema(productReports).omit({ id: true, reviewedAt: true, createdAt: true, updatedAt: true });
 export const insertUserBlockSchema = createInsertSchema(userBlocks).omit({ id: true, createdAt: true });
 export const insertToastReportSchema = createInsertSchema(toastReports).omit({ id: true, reviewedAt: true, createdAt: true, updatedAt: true });
 
@@ -1897,6 +1919,9 @@ export type InsertFlaggedImage = z.infer<typeof insertFlaggedImageSchema>;
 
 export type ModerationReport = typeof moderationReports.$inferSelect;
 export type InsertModerationReport = z.infer<typeof insertModerationReportSchema>;
+
+export type ProductReport = typeof productReports.$inferSelect;
+export type InsertProductReport = z.infer<typeof insertProductReportSchema>;
 
 export type UserBlock = typeof userBlocks.$inferSelect;
 export type InsertUserBlock = z.infer<typeof insertUserBlockSchema>;
