@@ -302,6 +302,7 @@ export default function AddProduct() {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [successData, setSuccessData] = useState<any>(null);
   const [isMarketplaceExpanded, setIsMarketplaceExpanded] = useState(true);
+  const [isGovernmentExpanded, setIsGovernmentExpanded] = useState(true);
 
   // Parse URL parameters for prefill data and section tracking from Wouter location
   const getQueryParams = (loc: string) => {
@@ -1299,6 +1300,20 @@ export default function AddProduct() {
     return subItems;
   };
 
+  // Government sub-items
+  const governmentSubItems = [
+    {
+      id: 'dr-congo',
+      label: t("Dr Congo"),
+      onClick: () => {
+        setLocation('/add-product?type=government-service&section=government&country=dr-congo');
+        setActiveSection('government');
+        form.setValue('offeringType', 'service');
+        form.setValue('category', '');
+      }
+    }
+  ];
+
   // Navigation sections - memoized to prevent unnecessary re-renders
   const navigationSections = useMemo(() => {
     const marketplaceSubItems = getFilteredMarketplaceSubItems();
@@ -1315,7 +1330,8 @@ export default function AddProduct() {
         label: t("Government"),
         href: getSectionHref('government'),
         isActive: activeSection === 'government' || isGovernmentService,
-        isReactiveButton: true,
+        hasSubItems: true,
+        subItems: governmentSubItems,
       },
       {
         id: 'lifestyle',
@@ -1363,7 +1379,13 @@ export default function AddProduct() {
                     {section.hasSubItems ? (
                       <>
                         <button
-                          onClick={() => setIsMarketplaceExpanded(!isMarketplaceExpanded)}
+                          onClick={() => {
+                            if (section.id === 'marketplace') {
+                              setIsMarketplaceExpanded(!isMarketplaceExpanded);
+                            } else if (section.id === 'government') {
+                              setIsGovernmentExpanded(!isGovernmentExpanded);
+                            }
+                          }}
                           data-testid={`section-${section.id}`}
                           className={cn(
                             "w-full flex items-center justify-between px-5 py-4 rounded-lg text-base font-semibold tracking-wide transition-all text-left",
@@ -1376,22 +1398,26 @@ export default function AddProduct() {
                           <ChevronDown
                             className={cn(
                               "h-5 w-5 transition-transform",
-                              isMarketplaceExpanded ? "rotate-180" : ""
+                              (section.id === 'marketplace' ? isMarketplaceExpanded : isGovernmentExpanded) ? "rotate-180" : ""
                             )}
                           />
                         </button>
-                        {isMarketplaceExpanded && section.subItems && (
+                        {((section.id === 'marketplace' && isMarketplaceExpanded) || (section.id === 'government' && isGovernmentExpanded)) && section.subItems && (
                           <div className="ml-4 mt-1 space-y-1">
-                            {section.subItems.map((subItem) => {
-                              const isSelected = form.watch('marketplace') === subItem.marketplaceValue;
+                            {section.subItems.map((subItem: any) => {
+                              const isSelected = subItem.marketplaceValue && form.watch('marketplace') === subItem.marketplaceValue;
                               return (
                                 <button
                                   key={subItem.id}
                                   type="button"
                                   onClick={() => {
-                                    form.setValue('marketplace', subItem.marketplaceValue);
+                                    if (subItem.marketplaceValue) {
+                                      form.setValue('marketplace', subItem.marketplaceValue);
+                                    } else if (subItem.onClick) {
+                                      subItem.onClick();
+                                    }
                                   }}
-                                  data-testid={`marketplace-${subItem.id}`}
+                                  data-testid={`${section.id}-${subItem.id}`}
                                   className={cn(
                                     "w-full block px-4 py-3 rounded-lg text-sm font-medium tracking-wide transition-all text-left",
                                     isSelected
@@ -1406,25 +1432,6 @@ export default function AddProduct() {
                           </div>
                         )}
                       </>
-                    ) : section.isReactiveButton ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setLocation('/add-product?type=government-service&section=government');
-                          setActiveSection('government');
-                          form.setValue('offeringType', 'service');
-                          form.setValue('category', '');
-                        }}
-                        data-testid={`section-${section.id}`}
-                        className={cn(
-                          "w-full block px-5 py-4 rounded-lg text-base font-semibold tracking-wide transition-all text-left",
-                          section.isActive
-                            ? "bg-black text-white shadow-md"
-                            : "text-gray-700 hover:bg-gray-100"
-                        )}
-                      >
-                        {section.label}
-                      </button>
                     ) : (
                       <Link
                         href={section.href}
