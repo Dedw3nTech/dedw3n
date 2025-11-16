@@ -386,6 +386,9 @@ export default function VendorDetailPage() {
                     <Mail className="h-4 w-4" />
                   </button>
                 </div>
+                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                  {vendor.description || translateText("No description available")}
+                </p>
                 <div className="flex items-center gap-1 mt-1">
                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                   <span className="font-medium">
@@ -393,16 +396,6 @@ export default function VendorDetailPage() {
                     {vendor.ratingCount ? ` (${vendor.ratingCount})` : ""}
                   </span>
                 </div>
-              </div>
-            </div>
-
-            {/* Center Section - About & Description */}
-            <div className="flex-1 min-w-0">
-              <div>
-                <h3 className="font-medium mb-2">{translateText("About")}</h3>
-                <p className="text-sm text-muted-foreground line-clamp-3">
-                  {vendor.description || translateText("No description available")}
-                </p>
               </div>
             </div>
 
