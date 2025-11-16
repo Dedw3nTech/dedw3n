@@ -57,7 +57,7 @@ import { cn } from '@/lib/utils';
 
 // Comprehensive Category System - All Products, Services, and Digital Products Known to Humanity
 const PRODUCT_CATEGORIES = [
-  { value: 'vehicles-cars', label: 'Cars & Automobiles', fields: ['make', 'model', 'year', 'mileage', 'vin', 'fuel_type', 'transmission', 'condition'] },
+  { value: 'vehicles-cars', label: 'Cars & Automobiles', fields: ['make', 'model', 'year', 'mileage', 'fuel_type', 'transmission', 'condition'] },
   { value: 'vehicles-motorcycles', label: 'Motorcycles', fields: ['make', 'model', 'year', 'mileage', 'engine_size', 'condition'] },
   { value: 'vehicles-boats', label: 'Boats & Marine', fields: ['make', 'model', 'year', 'length', 'engine_type', 'condition'] },
   { value: 'electronics-phones', label: 'Mobile Phones', fields: ['brand', 'model', 'storage', 'color', 'condition', 'warranty'] },
@@ -130,7 +130,6 @@ const FIELD_CONFIGS: Record<string, {label: string; type: string; placeholder?: 
   model: { label: 'Model', type: 'text', placeholder: 'e.g., Camry' },
   year: { label: 'Year', type: 'number', placeholder: 'e.g., 2020' },
   mileage: { label: 'Mileage (km)', type: 'number', placeholder: 'e.g., 50000' },
-  vin: { label: 'VIN', type: 'text', placeholder: '17-digit VIN' },
   fuel_type: { label: 'Fuel Type', type: 'select', options: ['Petrol', 'Diesel', 'Electric', 'Hybrid'] },
   transmission: { label: 'Transmission', type: 'select', options: ['Automatic', 'Manual', 'CVT'] },
   engine_size: { label: 'Engine (cc)', type: 'number', placeholder: 'e.g., 1500' },
