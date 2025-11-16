@@ -59,7 +59,8 @@ export default function UserMenu() {
     "active",
     "suspended",
     "Offline Mode",
-    "Offline Mode Active"
+    "Offline Mode Active",
+    "Percentage Calculator"
   ], []);
 
   // Use master translation system for consistent auto-translation
@@ -86,7 +87,8 @@ export default function UserMenu() {
     active: translatedTexts[16] || "active",
     suspended: translatedTexts[17] || "suspended",
     offlineMode: translatedTexts[18] || "Offline Mode",
-    offlineModeActive: translatedTexts[19] || "Offline Mode Active"
+    offlineModeActive: translatedTexts[19] || "Offline Mode Active",
+    percentageCalculator: translatedTexts[20] || "Percentage Calculator"
   }), [translatedTexts]);
 
   // Helper function to translate account type and status dynamically
@@ -388,6 +390,15 @@ export default function UserMenu() {
               </div>
             </button>
           </div>
+
+          {/* Percentage Calculator Link */}
+          <SheetClose asChild>
+            <Link href="/percentage-calculator">
+              <span className="flex items-center px-3 py-3 rounded-md text-sm font-medium text-black hover:bg-gray-50 hover:text-black transition-colors cursor-pointer">
+                {translatedLabels.percentageCalculator}
+              </span>
+            </Link>
+          </SheetClose>
 
           <Separator />
 

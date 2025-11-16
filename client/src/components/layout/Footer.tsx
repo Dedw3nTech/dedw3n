@@ -56,8 +56,7 @@ function FooterContent() {
     "Unknown",
     "Education Policy",
     "Intellectual Property Claims Policy",
-    "Advertisement Terms of Service",
-    "Percentage Calculator"
+    "Advertisement Terms of Service"
   ], []);
 
   const { translations } = useMasterBatchTranslation(footerTexts);
@@ -73,8 +72,7 @@ function FooterContent() {
     downloadMobileAppText, downloadOnTheText, appStoreText, getItOnText, googlePlayText,
     britishCompanyText, registeredOfficeText, bankRegisteredText, officialWebsiteText,
     giftCardsText, helpText, legalText, dedw3nText, aboutUsText, codeOfEthicsText, careersText, locationText,
-    locationCountryText, loadingText, unknownText, educationPolicyText, intellectualPropertyText, advertisementTermsText,
-    percentageCalculatorText
+    locationCountryText, loadingText, unknownText, educationPolicyText, intellectualPropertyText, advertisementTermsText
   ] = translations || footerTexts;
   
   // Get translated country name
@@ -90,14 +88,6 @@ function FooterContent() {
             <span className="text-xs text-gray-400">|</span>
             <WeightUnitSelector />
             <DimensionUnitSelector />
-            <span className="text-xs text-gray-400">|</span>
-            <Link 
-              href="/percentage-calculator"
-              className="text-xs text-gray-600 hover:text-primary transition-colors duration-200"
-              data-testid="link-percentage-calculator"
-            >
-              {percentageCalculatorText}
-            </Link>
           </div>
           
           {/* Footer Links Sections */}
