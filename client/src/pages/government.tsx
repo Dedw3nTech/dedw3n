@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Plus, FileText, Users, Heart } from "lucide-react";
 import { useMasterTranslation } from "@/hooks/use-master-translation";
+import { useAuth } from "@/hooks/use-auth";
 import { SEOHead } from "@/components/seo/SEOHead";
 
 import documentsImage from "@assets/stock_images/passport_identificat_84d90351.jpg";
@@ -40,8 +41,11 @@ const services = [
 
 export default function GovernmentPage() {
   const { translateText } = useMasterTranslation();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<ServiceCategory | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
+
+  const canAddService = user?.role === 'admin' || user?.username === 'Serruti';
 
   const filteredServices = services.filter((service) => {
     const matchesTab = activeTab === "all" || service.id === activeTab;
@@ -64,15 +68,17 @@ export default function GovernmentPage() {
         <div className="container mx-auto px-4 py-8 max-w-7xl">
           {/* Header with Add Service Button and Search */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-            <Button
-              className="bg-black hover:bg-gray-800 text-white"
-              data-testid="button-add-service"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              {translateText("Add A Service")}
-            </Button>
+            {canAddService && (
+              <Button
+                className="bg-black hover:bg-gray-800 text-white"
+                data-testid="button-add-service"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                {translateText("Add A Service")}
+              </Button>
+            )}
 
-            <div className="relative w-full sm:w-auto">
+            <div className={`relative w-full sm:w-auto ${!canAddService ? 'sm:ml-auto' : ''}`}>
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
                 type="text"
