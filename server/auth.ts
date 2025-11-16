@@ -15,105 +15,6 @@ import { sendEmail } from "./email-service";
 import createMemoryStore from "memorystore";
 import speakeasy from "speakeasy";
 import QRCode from "qrcode";
-import { createAssessment } from "./recaptcha-enterprise";
-// SVG CAPTCHA removed - using math CAPTCHA only
-
-// Google reCAPTCHA v3 verification
-async function verifyRecaptcha(token: string, action: string): Promise<boolean> {
-  try {
-    // Use environment variable for secret key
-    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
-    
-    // Check if secret key is configured
-    if (!secretKey) {
-      console.error('[RECAPTCHA] Secret key not configured');
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[RECAPTCHA] Development bypass: Missing secret key');
-        return true;
-      }
-      return false;
-    }
-    
-    // Handle development bypass tokens
-    if (token === 'development-bypass-token' || token === 'dev_bypass_token') {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[RECAPTCHA] Development environment detected, allowing bypass token');
-        return true;
-      } else {
-        console.warn('[RECAPTCHA] Bypass token rejected in production environment');
-        return false;
-      }
-    }
-    
-    // Validate token format
-    if (!token || token.length < 20) {
-      console.error('[RECAPTCHA] Invalid token format');
-      return false;
-    }
-
-    console.log(`[RECAPTCHA] Verifying Google reCAPTCHA v3 token for action ${action}...`);
-    console.log(`[RECAPTCHA] Token length: ${token.length}`);
-    console.log(`[RECAPTCHA] Token preview: ${token.substring(0, 20)}...`);
-
-    const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `secret=${secretKey}&response=${token}`,
-    });
-
-    const data = await response.json();
-    console.log(`[RECAPTCHA] Google verification response:`, data);
-    
-    // Handle reCAPTCHA errors gracefully
-    if (!data.success) {
-      const errorCodes = data['error-codes'] || [];
-      console.warn(`[RECAPTCHA] Verification failed with errors:`, errorCodes);
-      
-      // Allow bypass in development for configuration issues
-      if (process.env.NODE_ENV === 'development') {
-        if (errorCodes.includes('invalid-input-secret') || 
-            errorCodes.includes('invalid-input-response') ||
-            errorCodes.includes('hostname-not-allowed')) {
-          console.log('[RECAPTCHA] Development bypass: Configuration issue detected');
-          return true;
-        }
-      }
-    }
-    
-    // reCAPTCHA v3 validation with score checking
-    if (data.success && data.score >= 0.5) {
-      console.log(`[RECAPTCHA] Verification successful for action ${action}: score ${data.score}`);
-      return true;
-    } else {
-      console.warn(`[RECAPTCHA] Verification failed for action ${action}:`, {
-        success: data.success,
-        score: data.score,
-        'error-codes': data['error-codes']
-      });
-      
-      // In development, allow bypass if it's a domain configuration issue
-      if (process.env.NODE_ENV === 'development' && 
-          data['error-codes'] && 
-          (data['error-codes'].includes('invalid-input-secret') || 
-           data['error-codes'].includes('hostname-not-allowed'))) {
-        console.log('[RECAPTCHA] Development bypass: Domain configuration issue detected');
-        return true;
-      }
-      
-      return false; // Fail secure
-    }
-  } catch (error) {
-    console.error('[RECAPTCHA] Verification error:', error);
-    
-    // In development, allow bypass for network errors
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[RECAPTCHA] Development bypass: Network error detected');
-      return true;
-    }
-    
-    return false; // Fail secure
-  }
-}
 
 // Simple in-memory rate limiter for authentication endpoints
 const authAttempts = new Map<string, { count: number; resetTime: number }>();
@@ -1397,4 +1298,4 @@ The Dedw3n Team
 }
 
 // Export reCAPTCHA verification function and password utilities for use in routes
-export { verifyRecaptcha, comparePasswords };
+export { comparePasswords };
