@@ -298,7 +298,7 @@ export default function VendorDetailPage() {
       <SEOHead 
         title={normalizeTitle(vendor?.storeName ? `${vendor.storeName} - Vendor Profile` : undefined, 'Vendor Profile - Dedw3n')}
         description={normalizeDescription(vendor?.description, `Browse products and services from ${vendor?.storeName || 'this vendor'} on Dedw3n marketplace.`)}
-        structuredData={vendor ? buildVendorSchema(vendor, products) : undefined}
+        structuredData={vendor ? buildVendorSchema(vendor as any, products) : undefined}
       />
       
       {/* Vendor Banner Section */}
@@ -348,20 +348,11 @@ export default function VendorDetailPage() {
 
             {/* Center Section - About & Description */}
             <div className="flex-1 min-w-0">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div>
-                  <h3 className="font-medium mb-2">{translateText("About")}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-3">
-                    {vendor.description || translateText("No description available")}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="font-medium mb-2">{translateText("Reviews")}</h3>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Star className="h-4 w-4 text-muted-foreground opacity-50 mr-2" />
-                    <span>{translateText("No reviews yet")}</span>
-                  </div>
-                </div>
+              <div>
+                <h3 className="font-medium mb-2">{translateText("About")}</h3>
+                <p className="text-sm text-muted-foreground line-clamp-3">
+                  {vendor.description || translateText("No description available")}
+                </p>
               </div>
             </div>
 
