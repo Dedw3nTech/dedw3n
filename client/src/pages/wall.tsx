@@ -7,15 +7,14 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { queryClient } from "@/lib/queryClient";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PageHeader from "@/components/layout/PageHeader";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import ConnectionsCard from "@/components/social/ConnectionsCard";
 import PostCard from "@/components/social/PostCard";
 import CreatePost from "@/components/social/CreatePost";
 import TrendingProducts from "@/components/TrendingProducts";
-import { getInitials } from "@/lib/utils";
 // Import database schema type but extend it with the runtime properties we need
 import { posts } from "@shared/schema";
 import { type InferSelectModel } from "drizzle-orm";
@@ -176,17 +175,12 @@ export default function WallPage() {
             {/* User profile card */}
             <Card className="p-6">
               <div className="flex flex-col items-center text-center">
-                <Avatar className="h-24 w-24 mb-4">
-                  {user.avatar ? (
-                    <AvatarImage 
-                      src={user.avatar} 
-                      alt={user.name || "User"}
-                    />
-                  ) : null}
-                  <AvatarFallback className="text-lg">
-                    {getInitials(user.name || "User")}
-                  </AvatarFallback>
-                </Avatar>
+                <UserAvatar 
+                  userId={user.id} 
+                  username={user.username} 
+                  size="xl" 
+                  className="mb-4"
+                />
                 <h2 className="text-xl font-bold">{user.name}</h2>
                 <p className="text-blue-600 mb-3">@{user.username}</p>
                 

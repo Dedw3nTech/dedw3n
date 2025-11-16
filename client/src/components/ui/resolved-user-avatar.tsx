@@ -73,11 +73,15 @@ export function ResolvedUserAvatar({
   })();
   
   // Preferred: Use UserAvatar when we have identifiers
-  // UserAvatar requires userId as number, so ensure it's properly typed
-  if (resolvedUserId && typeof resolvedUserId === 'number') {
+  // Convert userId to number if it's a string
+  const numericUserId = typeof resolvedUserId === 'string' 
+    ? parseInt(resolvedUserId, 10) 
+    : resolvedUserId;
+  
+  if (numericUserId && typeof numericUserId === 'number' && !isNaN(numericUserId)) {
     return (
       <UserAvatar
-        userId={resolvedUserId}
+        userId={numericUserId}
         username={resolvedUsername}
         size={size}
         className={className}
