@@ -267,7 +267,6 @@ export function createEnhancedLogout() {
   };
 }
 
-import { Request } from 'express';
 import { extractGpcSignal, applyGpcHeaders } from './gpc-middleware';
 
 /**
