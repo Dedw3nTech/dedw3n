@@ -67,8 +67,8 @@ export class AvatarHealthMonitor {
         filePath = filePath.replace('/public-objects/', '');
       }
       
-      // Use ObjectStorageService.searchPublicObject - handles all path resolution
-      const objectRef = await this.storageService.searchPublicObject(filePath);
+      // Use ObjectStorageService.searchPublicObject WITH SIGNAL - enables actual timeout cancellation
+      const objectRef = await this.storageService.searchPublicObject(filePath, controller.signal);
       
       // If searchPublicObject found the file, it exists
       if (objectRef) {

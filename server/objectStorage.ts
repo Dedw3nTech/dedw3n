@@ -364,7 +364,7 @@ export class ObjectStorageService {
   }
 
   // Search for a public object from the search paths.
-  async searchPublicObject(filePath: string): Promise<S3ObjectReference | null> {
+  async searchPublicObject(filePath: string, signal?: AbortSignal): Promise<S3ObjectReference | null> {
     for (const searchPath of this.getPublicObjectSearchPaths()) {
       // Normalize duplicate terminal segments for backward compatibility
       // Example: if searchPath ends with 'public' and filePath starts with 'public/', remove one
@@ -389,9 +389,13 @@ export class ObjectStorageService {
         await s3Client.send(new HeadObjectCommand({
           Bucket: bucketName,
           Key: objectName,
-        }));
+        }), signal ? { abortSignal: signal } : undefined);
         return { bucket: bucketName, key: objectName };
       } catch (error: any) {
+        // Handle abort signals
+        if (error.name === 'AbortError') {
+          throw error;
+        }
         if (error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
           continue;
         }
