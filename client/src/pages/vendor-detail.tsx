@@ -398,49 +398,6 @@ export default function VendorDetailPage() {
                 </div>
               </div>
             </div>
-
-            {/* Right Section - Actions */}
-            <div className="flex flex-col gap-2 flex-shrink-0">
-              {isOwner && (
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button variant="ghost" className="w-full md:w-auto">
-                      <Award className="mr-2 h-4 w-4" />
-                      {translateText("Top Products")}
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent className="w-full sm:max-w-md">
-                    <SheetHeader>
-                      <SheetTitle>{translateText("Top Products")}</SheetTitle>
-                    </SheetHeader>
-                    <div className="mt-6 -mx-6">
-                      {isLoadingAnalytics ? (
-                        <div className="space-y-4 px-6">
-                          {Array(3).fill(0).map((_, i) => (
-                            <div key={i} className="flex items-center gap-4">
-                              <Skeleton className="h-6 w-6" />
-                              <Skeleton className="h-14 w-14" />
-                              <div className="flex-1">
-                                <Skeleton className="h-4 w-full mb-2" />
-                                <Skeleton className="h-3 w-28" />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : topProducts && topProducts.length > 0 ? (
-                        topProducts.map((product, i) => (
-                          <TopProductItem key={i} product={product} index={i} />
-                        ))
-                      ) : (
-                        <p className="text-center text-sm text-muted-foreground py-4">
-                          {translateText("No products sold yet")}
-                        </p>
-                      )}
-                    </div>
-                  </SheetContent>
-                </Sheet>
-              )}
-            </div>
           </div>
         </CardContent>
       </Card>
