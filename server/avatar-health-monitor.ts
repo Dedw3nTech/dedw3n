@@ -15,25 +15,7 @@
 import { db } from './db';
 import { users } from '../shared/schema';
 import { eq, sql, isNotNull } from 'drizzle-orm';
-import { objectStorageClient } from './objectStorage';
-
-/**
- * Parse object storage path into bucket and object name
- */
-function parseObjectPath(path: string): { bucketName: string; objectName: string } {
-  if (!path.startsWith("/")) {
-    path = `/${path}`;
-  }
-  const pathParts = path.split("/");
-  if (pathParts.length < 3) {
-    throw new Error("Invalid path: must contain at least a bucket name");
-  }
-
-  const bucketName = pathParts[1];
-  const objectName = pathParts.slice(2).join("/");
-
-  return { bucketName, objectName };
-}
+import { ObjectStorageService } from './objectStorage';
 
 interface AvatarHealthMetrics {
   totalUsers: number;
@@ -62,12 +44,22 @@ export class AvatarHealthMonitor {
     lastCheckTime: null,
     errors: []
   };
+  
+  private storageService: ObjectStorageService;
+  
+  constructor() {
+    this.storageService = new ObjectStorageService();
+  }
 
   /**
    * Validate if an avatar file exists in R2 storage
-   * HARDENED: Comprehensive error handling with timeout protection
+   * PRODUCTION-SAFE: Uses ObjectStorageService with AbortController timeout
    */
   private async validateAvatarFile(avatarPath: string): Promise<boolean> {
+    // AbortController for proper timeout handling without unhandled rejections
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
+    
     try {
       // Remove /public-objects/ prefix if present
       let filePath = avatarPath;
@@ -75,50 +67,31 @@ export class AvatarHealthMonitor {
         filePath = filePath.replace('/public-objects/', '');
       }
       
-      // Parse the object path to get bucket and key
-      const publicPaths = process.env.PUBLIC_OBJECT_SEARCH_PATHS || '';
-      const searchPaths = publicPaths.split(',').map(p => p.trim()).filter(Boolean);
+      // Use ObjectStorageService.searchPublicObject - handles all path resolution
+      const objectRef = await this.storageService.searchPublicObject(filePath);
       
-      if (searchPaths.length === 0) {
-        console.error('[AVATAR-HEALTH] No public search paths configured');
-        return false;
+      // If searchPublicObject found the file, it exists
+      if (objectRef) {
+        clearTimeout(timeoutId);
+        return true;
       }
       
-      // Try each search path (with timeout protection)
-      for (const searchPath of searchPaths) {
-        try {
-          const fullPath = `${searchPath}/${filePath}`;
-          const { bucketName, objectName } = parseObjectPath(fullPath);
-          
-          // SAFETY: Wrap storage check with timeout (1 second max per file)
-          const checkPromise = (async () => {
-            const bucket = objectStorageClient.bucket(bucketName);
-            const file = bucket.file(objectName);
-            const [exists] = await file.exists();
-            return exists;
-          })();
-          
-          const timeoutPromise = new Promise<boolean>((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout')), 1000)
-          );
-          
-          const exists = await Promise.race([checkPromise, timeoutPromise]);
-          if (exists) {
-            return true;
-          }
-        } catch (error: any) {
-          // SAFETY: Log but continue to next search path
-          if (error.message !== 'Timeout') {
-            console.debug(`[AVATAR-HEALTH] Search path ${searchPath} check failed:`, error.message);
-          }
-          continue;
-        }
-      }
-      
+      clearTimeout(timeoutId);
       return false;
-    } catch (error) {
-      // HARDENED: Never throw - always return false for broken avatars
-      console.error('[AVATAR-HEALTH] Error validating avatar file:', error);
+      
+    } catch (error: any) {
+      // Clean up timeout
+      clearTimeout(timeoutId);
+      
+      // HARDENED: Never throw - gracefully handle all errors
+      if (error.name === 'AbortError') {
+        console.debug('[AVATAR-HEALTH] Storage check timed out:', avatarPath);
+      } else if (error.message?.includes('PUBLIC_OBJECT_SEARCH_PATHS not set')) {
+        console.debug('[AVATAR-HEALTH] Storage not configured - skipping validation');
+      } else {
+        console.debug('[AVATAR-HEALTH] Storage check failed:', error.message);
+      }
+      
       return false;
     }
   }

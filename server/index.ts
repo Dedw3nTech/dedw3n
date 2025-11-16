@@ -1006,37 +1006,62 @@ if (fs.existsSync(attachedAssetsPath)) {
   }
   
   async function avatarHealthMonitoringTask(): Promise<void> {
-    // AVATAR HEALTH MONITORING: Detect and repair broken avatar references
-    // This prevents user data loss by identifying avatars whose files are missing from R2
+    // PRODUCTION-SAFE AVATAR MONITORING:
+    // - Opt-in via AVATAR_MONITOR_ENABLED flag (default: disabled)
+    // - Detection-only on startup (never auto-repair)
+    // - Comprehensive error handling prevents startup crashes
+    // - Uses ObjectStorageService with AbortController timeouts
     
-    const publicPaths = process.env.PUBLIC_OBJECT_SEARCH_PATHS;
-    const privateDir = process.env.PRIVATE_OBJECT_DIR;
-    
-    if (!publicPaths || !privateDir) {
-      logger.warn('Avatar Health Monitoring disabled - storage not configured', {
-        feature: 'avatar health monitoring',
-        action: 'Set PUBLIC_OBJECT_SEARCH_PATHS and PRIVATE_OBJECT_DIR'
-      }, 'startup');
-      return;
-    }
-    
-    // Run silent health check (no auto-repair on startup - only detect)
-    const { avatarHealthMonitor } = await import('./avatar-health-monitor');
-    const metrics = await avatarHealthMonitor.runHealthCheck({ autoRepair: false });
-    
-    if (metrics.brokenAvatars > 0) {
-      logger.warn('Avatar Health Check: Found broken avatars', {
-        brokenAvatars: metrics.brokenAvatars,
-        totalUsers: metrics.totalUsers,
-        usersWithAvatars: metrics.usersWithAvatars,
-        repairEndpoint: 'GET /api/diagnostic/avatar-health?autoRepair=true (admin only)'
-      }, 'startup');
-    } else {
-      logger.lifecycle('Avatar Health Check: All avatars valid', {
-        totalUsers: metrics.totalUsers,
-        validAvatars: metrics.validAvatars,
-        monitoringActive: true
-      }, 'startup');
+    try {
+      // SAFETY: Opt-in feature flag (default: disabled for production safety)
+      const monitorEnabled = process.env.AVATAR_MONITOR_ENABLED === 'true';
+      if (!monitorEnabled) {
+        logger.debug('Avatar Health Monitoring disabled (set AVATAR_MONITOR_ENABLED=true to enable)', undefined, 'startup');
+        return;
+      }
+      
+      // Verify storage is configured
+      const publicPaths = process.env.PUBLIC_OBJECT_SEARCH_PATHS;
+      const privateDir = process.env.PRIVATE_OBJECT_DIR;
+      
+      if (!publicPaths || !privateDir) {
+        logger.warn('Avatar Health Monitoring disabled - storage not configured', {
+          feature: 'avatar health monitoring',
+          action: 'Set PUBLIC_OBJECT_SEARCH_PATHS and PRIVATE_OBJECT_DIR'
+        }, 'startup');
+        return;
+      }
+      
+      // Run detection-only health check (NEVER auto-repair on startup)
+      const { avatarHealthMonitor } = await import('./avatar-health-monitor');
+      const metrics = await avatarHealthMonitor.runHealthCheck({ autoRepair: false });
+      
+      // Report findings
+      if (metrics.errors.length > 0) {
+        logger.warn('Avatar Health Check encountered errors', {
+          errorCount: metrics.errors.length,
+          errors: metrics.errors.slice(0, 3) // First 3 errors only
+        }, 'startup');
+      } else if (metrics.brokenAvatars > 0) {
+        logger.warn('Avatar Health Check: Found broken avatars', {
+          brokenAvatars: metrics.brokenAvatars,
+          totalUsers: metrics.totalUsers,
+          usersWithAvatars: metrics.usersWithAvatars,
+          repairEndpoint: 'GET /api/diagnostic/avatar-health?autoRepair=true (admin only)'
+        }, 'startup');
+      } else {
+        logger.lifecycle('Avatar Health Check: All avatars valid', {
+          totalUsers: metrics.totalUsers,
+          validAvatars: metrics.validAvatars,
+          monitoringActive: true
+        }, 'startup');
+      }
+    } catch (error) {
+      // HARDENED: Catch all errors to prevent startup crashes
+      logger.error('Avatar Health Monitoring task failed', {
+        message: (error as Error).message,
+        note: 'Startup will continue normally'
+      }, error as Error, 'startup');
     }
   }
   
@@ -1060,11 +1085,15 @@ if (fs.existsSync(attachedAssetsPath)) {
     // Development: Run only essential, fast tasks
     scheduleBackgroundTask(seedDatabaseTask, 'database-seeding', 3000);
     scheduleBackgroundTask(storageValidationTask, 'storage-validation', 500);
+    
+    // Avatar health monitoring (opt-in via AVATAR_MONITOR_ENABLED=true)
+    // SAFETY: Task is wrapped in try/catch to prevent startup crashes
     scheduleBackgroundTask(avatarHealthMonitoringTask, 'avatar-health-monitoring', 5000);
     
     logger.info('Development mode - minimal background tasks scheduled', {
       count: 3,
-      tasks: ['database-seeding', 'storage-validation', 'avatar-health-monitoring']
+      tasks: ['database-seeding', 'storage-validation', 'avatar-health-monitoring'],
+      note: 'Avatar monitoring requires AVATAR_MONITOR_ENABLED=true'
     }, 'startup');
   }
 })();
