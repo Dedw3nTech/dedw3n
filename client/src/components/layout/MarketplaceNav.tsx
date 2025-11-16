@@ -25,7 +25,7 @@ interface MarketplaceNavProps {
 }
 
 export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchTerm: externalSetSearchTerm }: MarketplaceNavProps = {}) {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { marketType, setMarketType } = useMarketType();
   const { selectedCurrency, setSelectedCurrency } = useCurrency();
   const { cartItemCount } = useCart();
@@ -41,6 +41,9 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
   const searchRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const [isNavVisible, setIsNavVisible] = useState(true);
+  
+  const isGovernmentPage = location === '/government';
+  const canAddService = user?.role === 'admin' || user?.username === 'Serruti';
   
   // Use external search term if provided, otherwise use local state
   const searchTerm = externalSearchTerm || localSearchTerm;
@@ -66,7 +69,9 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
     "Cancel",
     "TRENDING SEARCHES",
     "NEW IN",
-    "FIND THE PERFECT GIFT"
+    "FIND THE PERFECT GIFT",
+    "Add A Service",
+    "Add Service"
   ], []);
 
   // Use optimized batch translation for optimal performance
@@ -92,7 +97,9 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
     cancelText: translatedTexts[15] || navigationTexts[15],
     trendingSearchesText: translatedTexts[16] || navigationTexts[16],
     newInText: translatedTexts[17] || navigationTexts[17],
-    findPerfectGiftText: translatedTexts[18] || navigationTexts[18]
+    findPerfectGiftText: translatedTexts[18] || navigationTexts[18],
+    addAServiceText: translatedTexts[19] || navigationTexts[19],
+    addServiceText: translatedTexts[20] || navigationTexts[20]
   }), [translatedTexts, navigationTexts]);
 
   // Memoize navigation handlers to prevent infinite re-renders
@@ -318,9 +325,9 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
       <div className="container mx-auto px-4">
         {/* Desktop layout - horizontal navigation with absolute centered navigation */}
         <div className="hidden md:flex relative items-center justify-between w-full">
-          {/* Profile Picture - LEFT side */}
+          {/* Left side - Add Product button for government, Profile + Add Product for marketplace */}
           <div className="flex-shrink-0 flex items-center gap-3">
-            {isAuthenticated && (
+            {!isGovernmentPage && isAuthenticated && (
               <div className="relative">
                 {/* Notification badge positioned at top-right corner */}
                 {totalNotifications > 0 && (
@@ -350,22 +357,37 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
                 </div>
               </div>
             )}
-            {isAuthenticated && (
-              <Button
-                onClick={handleAddProduct}
-                className="h-10 px-4 bg-transparent text-black hover:bg-gray-100 transition-colors flex items-center gap-2 font-medium"
-                style={{ fontSize: '12px' }}
-                data-testid="button-add-product-desktop"
-              >
-                <Plus className="h-4 w-4" />
-                {translatedLabels.addProductServiceText}
-              </Button>
+            {isGovernmentPage ? (
+              canAddService && (
+                <Button
+                  onClick={handleAddProduct}
+                  className="h-10 px-4 bg-transparent text-black hover:bg-gray-100 transition-colors flex items-center gap-2 font-medium"
+                  style={{ fontSize: '12px' }}
+                  data-testid="button-add-service-desktop"
+                >
+                  <Plus className="h-4 w-4" />
+                  {translatedLabels.addAServiceText}
+                </Button>
+              )
+            ) : (
+              isAuthenticated && (
+                <Button
+                  onClick={handleAddProduct}
+                  className="h-10 px-4 bg-transparent text-black hover:bg-gray-100 transition-colors flex items-center gap-2 font-medium"
+                  style={{ fontSize: '12px' }}
+                  data-testid="button-add-product-desktop"
+                >
+                  <Plus className="h-4 w-4" />
+                  {translatedLabels.addProductServiceText}
+                </Button>
+              )
             )}
           </div>
 
-          {/* Market type navigation buttons - ABSOLUTELY CENTERED, ONE LINE */}
-          <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center flex-nowrap gap-2 md:gap-3 lg:gap-4 xl:gap-6">
-            {/* Friend to Friend (C2C) */}
+          {/* Market type navigation buttons - ABSOLUTELY CENTERED, ONE LINE - Hidden on government page */}
+          {!isGovernmentPage && (
+            <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center flex-nowrap gap-2 md:gap-3 lg:gap-4 xl:gap-6">
+              {/* Friend to Friend (C2C) */}
             <div 
               className="cursor-pointer group transition-all duration-300 h-[40px] flex items-center flex-shrink-0"
               onClick={() => handleMarketNavigation("c2c")}
@@ -472,6 +494,7 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
               </div>
             </div>
           </div>
+          )}
 
           {/* Search bar and hamburger menu - positioned on the RIGHT side */}
           <div className="flex-shrink-0 flex items-center gap-3">
@@ -502,16 +525,18 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
               </form>
             </div>
             
-            {/* Hamburger menu button for desktop */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-10 w-10 p-0 hover:bg-gray-100"
-              onClick={() => setIsSidebarOpen(true)}
-              data-testid="button-hamburger-desktop"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
+            {/* Hamburger menu button for desktop - Hidden on government page */}
+            {!isGovernmentPage && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-10 w-10 p-0 hover:bg-gray-100"
+                onClick={() => setIsSidebarOpen(true)}
+                data-testid="button-hamburger-desktop"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -656,9 +681,9 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
       <div className="container mx-auto px-4">
         <div className="md:hidden">
           <div className="flex items-center justify-between">
-            {/* Profile Picture for Mobile - moved to left side */}
+            {/* Left side - Add Product button for government, Profile + Add Product for marketplace */}
             <div className="flex items-center gap-2">
-              {isAuthenticated && (
+              {!isGovernmentPage && isAuthenticated && (
                 <div className="relative">
                   {/* Notification badge positioned above frame for mobile */}
                   {totalNotifications > 0 && (
@@ -688,31 +713,47 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
                   </div>
                 </div>
               )}
-              {isAuthenticated && (
-                <Button
-                  onClick={handleAddProduct}
-                  className="h-8 px-3 bg-transparent text-black hover:bg-gray-100 transition-colors flex items-center gap-1.5 font-medium"
-                  style={{ fontSize: '10px' }}
-                  data-testid="button-add-product-mobile"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  {translatedLabels.addText}
-                </Button>
+              {isGovernmentPage ? (
+                canAddService && (
+                  <Button
+                    onClick={handleAddProduct}
+                    className="h-8 px-3 bg-transparent text-black hover:bg-gray-100 transition-colors flex items-center gap-1.5 font-medium"
+                    style={{ fontSize: '10px' }}
+                    data-testid="button-add-service-mobile"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    {translatedLabels.addServiceText}
+                  </Button>
+                )
+              ) : (
+                isAuthenticated && (
+                  <Button
+                    onClick={handleAddProduct}
+                    className="h-8 px-3 bg-transparent text-black hover:bg-gray-100 transition-colors flex items-center gap-1.5 font-medium"
+                    style={{ fontSize: '10px' }}
+                    data-testid="button-add-product-mobile"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    {translatedLabels.addText}
+                  </Button>
+                )
               )}
             </div>
 
-            {/* Active market type indicator */}
-            <div className="flex items-center">
-              <span className="text-sm font-medium text-gray-700">
-                {marketType === 'c2c' && translatedLabels.c2cText}
-                {marketType === 'b2c' && translatedLabels.b2cText}
-                {marketType === 'b2b' && translatedLabels.b2bText}
-                {marketType === 'raw' && translatedLabels.rawText}
-                {marketType === 'creators' && translatedLabels.creatorsText}
-                {marketType === 'real-estate' && translatedLabels.realEstateText}
-                {marketType === 'rqst' && translatedLabels.rqstText}
-              </span>
-            </div>
+            {/* Active market type indicator - Hidden on government page */}
+            {!isGovernmentPage && (
+              <div className="flex items-center">
+                <span className="text-sm font-medium text-gray-700">
+                  {marketType === 'c2c' && translatedLabels.c2cText}
+                  {marketType === 'b2c' && translatedLabels.b2cText}
+                  {marketType === 'b2b' && translatedLabels.b2bText}
+                  {marketType === 'raw' && translatedLabels.rawText}
+                  {marketType === 'creators' && translatedLabels.creatorsText}
+                  {marketType === 'real-estate' && translatedLabels.realEstateText}
+                  {marketType === 'rqst' && translatedLabels.rqstText}
+                </span>
+              </div>
+            )}
 
             {/* Search bar and hamburger menu for mobile */}
             <div className="flex items-center gap-2 flex-1 justify-end">
@@ -743,16 +784,18 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
                 </form>
               </div>
 
-              {/* Hamburger menu button for mobile */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 hover:bg-gray-100 flex-shrink-0"
-                onClick={() => setIsSidebarOpen(true)}
-                data-testid="button-hamburger-mobile"
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
+              {/* Hamburger menu button for mobile - Hidden on government page */}
+              {!isGovernmentPage && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 hover:bg-gray-100 flex-shrink-0"
+                  onClick={() => setIsSidebarOpen(true)}
+                  data-testid="button-hamburger-mobile"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              )}
             </div>
           </div>
         </div>
