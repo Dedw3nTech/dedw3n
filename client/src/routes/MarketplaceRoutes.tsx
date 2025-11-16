@@ -13,7 +13,6 @@ const VendorProfile = lazy(() => import('@/pages/vendor-profile'));
 const MarketplaceRaw = lazy(() => import('@/pages/marketplace-raw'));
 const MarketplaceCreators = lazy(() => import('@/pages/MarketplaceCreators'));
 const MarketplaceRealEstate = lazy(() => import('@/pages/MarketplaceRealEstate'));
-const MarketplaceRQST = lazy(() => import('@/pages/marketplace-rqst'));
 const Cart = lazy(() => import('@/pages/cart'));
 const Checkout = lazy(() => import('@/pages/checkout'));
 const PaymentGateway = lazy(() => import('@/pages/payment-gateway'));
@@ -61,7 +60,7 @@ export function MarketplaceRoutes({ params }: any) {
         
         <Route path="/marketplace/rqst">
           <SEOHead title="RQST Marketplace - Dedw3n" description="Request marketplace where you can post product requests and connect with vendors who can fulfill them." />
-          <MarketplaceRQST />
+          <Products />
         </Route>
         
         <Route path="/products">
