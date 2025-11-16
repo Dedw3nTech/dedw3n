@@ -386,6 +386,11 @@ function MarketplaceNavWrapper() {
   );
 }
 
+// Standalone route utilities - routes that render without shared navigation/footer
+const STANDALONE_ROUTES: string[] = [];
+const normalizePath = (path: string) => path.split('?')[0];
+const isStandaloneRoutePath = (path: string) => STANDALONE_ROUTES.includes(normalizePath(path));
+
 
 
 // SEO wrapper - SEOHead is now eager loaded for better SEO performance
@@ -550,6 +555,10 @@ function App() {
   // Force refresh state to update all components when language changes
   const [forceRefresh, setForceRefresh] = useState(0);
   
+  // Detect standalone routes that should render without navigation/footer
+  const [location] = useLocation();
+  const isStandalone = useMemo(() => isStandaloneRoutePath(location), [location]);
+  
   // Canonical URLs now managed by SEOHead component to prevent conflicts
   
   // Initialize offline detection, language, and advertisement preloader
@@ -588,11 +597,15 @@ function App() {
                 <ScrollToTop />
                 <EmailVerificationRedirect />
                 <div className="flex flex-col min-h-screen">
-                  <ConditionalNavigation />
-                  <GPCBanner />
-                  <MarketplaceNavWrapper />
-                  <CommunityNavWrapper />
-                  <DatingNavWrapper />
+                  {!isStandalone && (
+                    <>
+                      <ConditionalNavigation />
+                      <GPCBanner />
+                      <MarketplaceNavWrapper />
+                      <CommunityNavWrapper />
+                      <DatingNavWrapper />
+                    </>
+                  )}
                   
                   <main className="flex-grow">
                     <ApiErrorBoundary showHomeButton={false}>
@@ -602,8 +615,12 @@ function App() {
                     </ApiErrorBoundary>
                   </main>
                   
-                  <ConditionalFooter />
-                  <ConditionalMobileNavigation />
+                  {!isStandalone && (
+                    <>
+                      <ConditionalFooter />
+                      <ConditionalMobileNavigation />
+                    </>
+                  )}
                   <OfflineIndicator />
                   <LowerCookieBanner />
                   <GlobalLoginHandler />
