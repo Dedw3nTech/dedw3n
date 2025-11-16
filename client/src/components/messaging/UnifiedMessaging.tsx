@@ -439,7 +439,12 @@ export function UnifiedMessaging() {
     if (selectedUser) {
       receiverId = String(selectedUser.id);
     } else if (selectedConversation) {
-      const otherParticipant = selectedConversation.participants.find((p: any) => p.id !== user?.id);
+      let otherParticipant = selectedConversation.participants.find((p: any) => p.id !== user?.id);
+      
+      if (!otherParticipant) {
+        otherParticipant = selectedConversation.participants.find((p: any) => p.username || p.name);
+      }
+      
       if (!otherParticipant) return;
       receiverId = String(otherParticipant.id);
     } else {
@@ -1161,7 +1166,12 @@ export function UnifiedMessaging() {
 
     // Search through conversations and their messages
     conversations.forEach(conv => {
-      const otherParticipant = conv.participants.find((p: any) => p.id !== user?.id) as any;
+      let otherParticipant = conv.participants.find((p: any) => p.id !== user?.id) as any;
+      
+      if (!otherParticipant) {
+        otherParticipant = conv.participants.find((p: any) => p.username || p.name) as any;
+      }
+      
       const participantName = (otherParticipant?.name || otherParticipant?.username || '').toLowerCase();
       
       // Check if conversation name matches
@@ -1198,7 +1208,12 @@ export function UnifiedMessaging() {
 
   const filteredConversations = conversations.filter(conv => {
     if (!searchQuery) return true;
-    const otherParticipant = conv.participants.find((p: any) => p.id !== user?.id) as any;
+    let otherParticipant = conv.participants.find((p: any) => p.id !== user?.id) as any;
+    
+    if (!otherParticipant) {
+      otherParticipant = conv.participants.find((p: any) => p.username || p.name) as any;
+    }
+    
     const name: string = (otherParticipant?.name || otherParticipant?.username || '') as string;
     return name.toLowerCase().includes(searchQuery.toLowerCase());
   });
@@ -1328,7 +1343,12 @@ export function UnifiedMessaging() {
           ) : (
             <div>
               {filteredConversations.map((conversation) => {
-                const otherParticipant = conversation.participants.find((p: any) => p.id !== user.id) as any;
+                let otherParticipant = conversation.participants.find((p: any) => p.id !== user.id) as any;
+                
+                if (!otherParticipant) {
+                  otherParticipant = conversation.participants.find((p: any) => p.username || p.name) as any;
+                }
+                
                 const isSelected = selectedConversation?.id === conversation.id;
                 const lastMessageTime = conversation.lastMessage?.createdAt;
                 
@@ -1569,7 +1589,12 @@ export function UnifiedMessaging() {
                   </div>
                   <div className="space-y-2">
                     {searchResults.conversations.map((conv: any) => {
-                      const otherParticipant = conv.participants.find((p: any) => p.id !== user.id) as any;
+                      let otherParticipant = conv.participants.find((p: any) => p.id !== user.id) as any;
+                      
+                      if (!otherParticipant) {
+                        otherParticipant = conv.participants.find((p: any) => p.username || p.name) as any;
+                      }
+                      
                       return (
                         <div
                           key={conv.id}

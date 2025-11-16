@@ -100,6 +100,17 @@ export async function getUserConversations(userId: number): Promise<any[]> {
 
       logger.debug('Building conversation', { userId, otherUserId, username: otherUser.username }, 'api');
 
+      // Get current user's information for participant data
+      const [currentUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+
+      if (!currentUser) {
+        logger.debug('Current user not found, skipping conversation', { userId }, 'api');
+        continue;
+      }
+
       // Get messages between these users
       const conversationMessages = await db
         .select()
@@ -127,19 +138,26 @@ export async function getUserConversations(userId: number): Promise<any[]> {
         msg => msg.receiverId === userId && !msg.isRead
       ).length;
 
-      // Create a conversation summary
+      // Create a conversation summary with full participant data
+      const { password: currentUserPassword, ...safeCurrentUser } = currentUser;
       const { password, ...safeOtherUser } = otherUser;
       
       const conversation = {
         id: otherUserId, // Using the other user's ID as the conversation ID
         participants: [
-          { id: userId }, // Current user
+          { 
+            id: userId,
+            username: safeCurrentUser.username,
+            name: safeCurrentUser.name,
+            avatar: safeCurrentUser.avatar,
+            isOnline: false
+          },
           { 
             id: otherUserId,
             username: safeOtherUser.username,
             name: safeOtherUser.name,
             avatar: safeOtherUser.avatar,
-            isOnline: false // We'll need to implement online status tracking
+            isOnline: false
           }
         ],
         lastMessage: latestMessage,
