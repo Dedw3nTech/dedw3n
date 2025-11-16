@@ -18,7 +18,6 @@ import {
   Package, 
   Users, 
   Truck, 
-  Settings, 
   Store,
   Loader2,
   PlusCircle,
@@ -38,14 +37,13 @@ import {
 import VendorCommissionDashboard from "@/components/vendor/VendorCommissionDashboard";
 import VendorProductManagement from "@/components/vendor/VendorProductManagement";
 import VendorOrderManagement from "@/components/vendor/VendorOrderManagement";
-import VendorSettings from "@/components/vendor/VendorSettings";
 import { DeleteStoreModal } from "@/components/ui/delete-store-modal";
 
 export default function VendorDashboard() {
   // Master Translation mega-batch for Vendor Dashboard (90+ texts)
   const vendorTexts = useMemo(() => [
-    // Dashboard Navigation (8 texts)
-    "Dashboard", "Products", "Orders", "Customers", "Shipping", "Analytics", "Settings", "Marketing",
+    // Dashboard Navigation (7 texts)
+    "Dashboard", "Products", "Orders", "Customers", "Shipping", "Analytics", "Marketing",
     
     // Overview Section (12 texts)
     "Overview", "Total Sales", "Active Products", "Pending Orders", "Total Customers", "Revenue This Month",
@@ -254,8 +252,7 @@ export default function VendorDashboard() {
   const customersText = finalTexts[3] || "Customers";
   const shippingText = finalTexts[4] || "Shipping";
   const analyticsText = finalTexts[5] || "Analytics";
-  const settingsText = finalTexts[6] || "Settings";
-  const marketingText = finalTexts[7] || "Marketing";
+  const marketingText = finalTexts[6] || "Marketing";
 
   // Helper function to get translated text with proper typing
   const t = (text: string): string => {
@@ -526,17 +523,6 @@ export default function VendorDashboard() {
                 >
                   {t("Commission")}
                 </button>
-                <button
-                  onClick={() => setActiveTab('settings')}
-                  className={`w-full text-left px-4 py-3 rounded-md transition-colors ${
-                    activeTab === 'settings'
-                      ? 'bg-black text-white'
-                      : 'hover:bg-gray-100 text-gray-700'
-                  }`}
-                  data-testid="tab-settings"
-                >
-                  {settingsText}
-                </button>
               </nav>
             </CardContent>
           </Card>
@@ -554,10 +540,6 @@ export default function VendorDashboard() {
 
           {activeTab === 'commission' && (
             <VendorCommissionDashboard vendorId={vendorId!} />
-          )}
-
-          {activeTab === 'settings' && (
-            <VendorSettings vendorId={vendorId!} />
           )}
         </div>
       </div>
