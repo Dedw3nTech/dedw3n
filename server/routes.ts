@@ -19386,6 +19386,45 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
     }
   });
 
+  // Support - Report Issue Endpoint
+  app.post('/api/support/report-issue', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+
+      if (!userId) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+
+      const { page, vendorId, errorType, errorMessage, timestamp } = req.body;
+
+      if (!page || !errorType) {
+        return res.status(400).json({ error: 'Missing required fields: page and errorType' });
+      }
+
+      const reportData = {
+        userId,
+        vendorId: vendorId || null,
+        page,
+        errorType,
+        errorMessage: errorMessage || 'No error message provided',
+        timestamp: timestamp || new Date().toISOString(),
+        userAgent: req.headers['user-agent'] || 'Unknown',
+        reportedAt: new Date().toISOString()
+      };
+
+      console.log('[SUPPORT] Issue reported:', JSON.stringify(reportData, null, 2));
+
+      return res.status(200).json({ 
+        success: true, 
+        message: 'Issue report received successfully',
+        ticketId: `TICKET-${Date.now()}-${userId}`
+      });
+    } catch (error) {
+      console.error('[SUPPORT] Error processing issue report:', error);
+      return res.status(500).json({ error: 'Failed to process issue report' });
+    }
+  });
+
   app.get('/api/vendors/:vendorId/analytics/leads', async (req: Request, res: Response) => {
     try {
       const vendorId = parseInt(req.params.vendorId);

@@ -41,8 +41,11 @@ import {
   Award,
   Clock,
   Lightbulb,
-  AlertCircle
+  AlertCircle,
+  Info,
+  Flag
 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface VendorAnalyticsProps {
   vendorId: number;
@@ -121,8 +124,10 @@ const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00C49F', '#FFBB28'
 
 export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
   const { formatPriceFromGBP } = useCurrency();
+  const { toast } = useToast();
   const [timeRange, setTimeRange] = useState('30d');
   const [activeMetric, setActiveMetric] = useState('revenue');
+  const [isReportingIssue, setIsReportingIssue] = useState(false);
 
   // Fetch analytics data
   const { data: analytics, isLoading, refetch, error: analyticsError } = useQuery({
@@ -197,6 +202,32 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
     }
   };
 
+  const handleReportIssue = async () => {
+    setIsReportingIssue(true);
+    try {
+      await apiRequest('POST', '/api/support/report-issue', {
+        page: 'vendor-analytics',
+        vendorId,
+        errorType: 'analytics-load-error',
+        errorMessage: analyticsError instanceof Error ? analyticsError.message : 'Failed to load analytics',
+        timestamp: new Date().toISOString()
+      });
+
+      toast({
+        title: 'Issue Reported',
+        description: 'Thank you for reporting this issue. Our team will look into it.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Report Failed',
+        description: 'Unable to submit the report. Please try again later.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsReportingIssue(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8" data-testid="analytics-loading">
@@ -211,15 +242,26 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
       <Card>
         <CardContent className="flex items-center justify-center p-8">
           <div className="text-center" data-testid="analytics-error">
-            <AlertCircle className="h-12 w-12 mx-auto mb-4 text-red-500" />
+            <Info className="h-12 w-12 mx-auto mb-4 text-blue-500" />
             <h3 className="text-lg font-semibold mb-2">Failed to Load Analytics</h3>
             <p className="text-muted-foreground mb-4">
-              {analyticsError instanceof Error ? analyticsError.message : 'An error occurred while loading analytics data'}
+              Unable to load analytics data at this time. Please try again or report this issue if it persists.
             </p>
-            <Button onClick={() => refetch()} variant="outline" data-testid="button-retry-analytics">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Retry
-            </Button>
+            <div className="flex gap-2 justify-center">
+              <Button onClick={() => refetch()} variant="outline" data-testid="button-retry-analytics">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry
+              </Button>
+              <Button 
+                onClick={handleReportIssue} 
+                variant="secondary" 
+                disabled={isReportingIssue}
+                data-testid="button-report-issue"
+              >
+                <Flag className="h-4 w-4 mr-2" />
+                {isReportingIssue ? 'Reporting...' : 'Report Issue'}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
