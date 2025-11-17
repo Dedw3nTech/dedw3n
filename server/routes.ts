@@ -18939,13 +18939,28 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
       const vendorIdParam = req.query.vendorId;
       const timeRange = req.query.timeRange as string || '30d';
       
+      console.log('[VENDOR-ANALYTICS] Request received', { 
+        vendorIdParam, 
+        vendorIdParamType: typeof vendorIdParam,
+        timeRange,
+        queryParams: req.query 
+      });
+      
       if (!vendorIdParam) {
+        console.log('[VENDOR-ANALYTICS] Missing vendor ID parameter');
         return res.status(400).json({ message: 'Vendor ID is required' });
       }
       
       const vendorId = Number(vendorIdParam);
       
+      console.log('[VENDOR-ANALYTICS] Parsed vendor ID', { 
+        vendorId, 
+        isNaN: isNaN(vendorId),
+        isNegativeOrZero: vendorId <= 0 
+      });
+      
       if (!vendorId || isNaN(vendorId) || vendorId <= 0) {
+        console.log('[VENDOR-ANALYTICS] Invalid vendor ID', { vendorIdParam, vendorId });
         return res.status(400).json({ message: 'Invalid vendor ID' });
       }
 

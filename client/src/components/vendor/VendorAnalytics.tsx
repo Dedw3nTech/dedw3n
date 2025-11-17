@@ -130,11 +130,40 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
   const [activeMetric, setActiveMetric] = useState('revenue');
   const [isReportingIssue, setIsReportingIssue] = useState(false);
 
-  // Normalize vendorId to number
-  const numericVendorId = Number(vendorId);
+  // Normalize vendorId to number and validate
+  const numericVendorId = typeof vendorId === 'number' ? vendorId : Number(vendorId);
+  const isValidVendorId = !isNaN(numericVendorId) && numericVendorId > 0;
+
+  // Fetch analytics data
+  const { data: analytics, isLoading, refetch, error: analyticsError } = useQuery({
+    queryKey: ['/api/vendors/analytics', numericVendorId, timeRange],
+    queryFn: async () => {
+      if (!isValidVendorId) {
+        throw new Error('Invalid vendor ID');
+      }
+      const response = await apiRequest(`/api/vendors/analytics?vendorId=${numericVendorId}&timeRange=${timeRange}`);
+      return response as AnalyticsData;
+    },
+    enabled: isValidVendorId,
+    retry: false
+  });
+
+  // Fetch AI-powered suggestions
+  const { data: suggestions, isLoading: isLoadingSuggestions, error: suggestionsError } = useQuery({
+    queryKey: ['/api/vendors', numericVendorId, 'suggestions'],
+    queryFn: async () => {
+      if (!isValidVendorId) {
+        throw new Error('Invalid vendor ID');
+      }
+      const response = await apiRequest(`/api/vendors/${numericVendorId}/suggestions`);
+      return response as Suggestion[];
+    },
+    enabled: isValidVendorId,
+    retry: false
+  });
 
   // Early validation: if vendorId is invalid, show error immediately
-  if (!numericVendorId || isNaN(numericVendorId)) {
+  if (!isValidVendorId) {
     return (
       <Card className="border-0 shadow-none">
         <CardContent className="flex items-center justify-center p-8">
@@ -148,26 +177,6 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
       </Card>
     );
   }
-
-  // Fetch analytics data
-  const { data: analytics, isLoading, refetch, error: analyticsError } = useQuery({
-    queryKey: ['/api/vendors/analytics', numericVendorId, timeRange],
-    queryFn: async () => {
-      const response = await apiRequest(`/api/vendors/analytics?vendorId=${numericVendorId}&timeRange=${timeRange}`);
-      return response as AnalyticsData;
-    },
-    enabled: !!numericVendorId && !isNaN(numericVendorId)
-  });
-
-  // Fetch AI-powered suggestions
-  const { data: suggestions, isLoading: isLoadingSuggestions, error: suggestionsError } = useQuery({
-    queryKey: ['/api/vendors', numericVendorId, 'suggestions'],
-    queryFn: async () => {
-      const response = await apiRequest(`/api/vendors/${numericVendorId}/suggestions`);
-      return response as Suggestion[];
-    },
-    enabled: !!numericVendorId && !isNaN(numericVendorId)
-  });
 
   const formatMetric = (value: number, type: 'currency' | 'number' | 'percentage') => {
     switch (type) {

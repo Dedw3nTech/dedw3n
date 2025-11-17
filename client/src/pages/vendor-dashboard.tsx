@@ -546,8 +546,8 @@ export default function VendorDashboard() {
             <VendorCommissionDashboard vendorId={vendor.id} />
           )}
 
-          {activeTab === 'analytics' && vendor?.id && (
-            <VendorAnalytics vendorId={Number(vendor.id)} />
+          {activeTab === 'analytics' && vendor?.id && typeof vendor.id === 'number' && vendor.id > 0 && (
+            <VendorAnalytics vendorId={vendor.id} />
           )}
         </div>
       </div>
