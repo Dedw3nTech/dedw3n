@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,11 +19,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-
-import certificateImage from "@assets/stock_images/passport_identificat_84d90351.jpg";
-import passportImage from "@assets/stock_images/professional_busines_7f598002.jpg";
-import judgmentImage from "@assets/stock_images/diverse_young_people_e35c35b1.jpg";
-import licenseImage from "@assets/stock_images/democratic_republic__5eea171f.jpg";
 
 export default function DrCongo() {
   usePageTitle({ title: 'Dr Congo Services' });
@@ -91,44 +87,21 @@ export default function DrCongo() {
   const [priceRangeOpen, setPriceRangeOpen] = useState(false);
   const [sortByOpen, setSortByOpen] = useState(false);
 
-  const services = [
-    {
-      id: 'certificate',
-      name: certificatesText,
-      description: certificatesDescText,
-      icon: FileText,
-      image: certificateImage,
-      price: 50.00,
-      type: 'identity'
-    },
-    {
-      id: 'passport',
-      name: passportText,
-      description: passportDescText,
-      icon: Book,
-      image: passportImage,
-      price: 150.00,
-      type: 'identity'
-    },
-    {
-      id: 'supplementary_judgment',
-      name: supplementaryJudgmentText,
-      description: supplementaryDescText,
-      icon: Scale,
-      image: judgmentImage,
-      price: 75.00,
-      type: 'legal'
-    },
-    {
-      id: 'drivers_license',
-      name: driversLicenseText,
-      description: driversLicenseDescText,
-      icon: IdCard,
-      image: licenseImage,
-      price: 100.00,
-      type: 'identity'
-    }
-  ];
+  // Fetch products from the database filtered by government-dr-congo marketplace
+  const { data: productsData, isLoading } = useQuery<any[]>({
+    queryKey: ['/api/products', { marketplace: 'government-dr-congo' }],
+  });
+
+  // Map fetched products to the expected service format
+  const services = (productsData || []).map((product) => ({
+    id: product.id,
+    name: product.name,
+    description: product.description || '',
+    icon: FileText,
+    image: product.images?.[0]?.url || product.imageUrl || '',
+    price: product.price,
+    type: product.category?.includes('certificate') || product.category?.includes('document') ? 'identity' : 'legal'
+  }));
 
   const toggleServiceType = (type: string) => {
     setSelectedServiceTypes(prev =>
@@ -380,13 +353,26 @@ export default function DrCongo() {
             </div>
           </div>
 
-          <div className={`grid gap-6 ${
-            columnsPerRow === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3' :
-            columnsPerRow === 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3' :
-            columnsPerRow === 5 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3' :
-            'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3'
-          }`}>
-            {displayedServices.map((service) => {
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-gray-500">Loading services...</div>
+            </div>
+          ) : displayedServices.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <FileText className="h-16 w-16 text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No services available</h3>
+              <p className="text-sm text-gray-500">
+                Government services will appear here once they are published.
+              </p>
+            </div>
+          ) : (
+            <div className={`grid gap-6 ${
+              columnsPerRow === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3' :
+              columnsPerRow === 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3' :
+              columnsPerRow === 5 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3' :
+              'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3'
+            }`}>
+              {displayedServices.map((service) => {
               const Icon = service.icon;
               return (
                 <Card
@@ -466,7 +452,8 @@ export default function DrCongo() {
                 </Card>
               );
             })}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </>
