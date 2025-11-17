@@ -1368,7 +1368,10 @@ export default function AddProduct() {
   const navigationSections = useMemo(() => {
     const marketplaceSubItems = getFilteredMarketplaceSubItems();
     
-    return [
+    // Check if user has access to Finance section (Admin or Serruti only)
+    const hasFinanceAccess = user?.role === 'admin' || user?.username === 'Serruti';
+    
+    const allSections = [
       {
         id: 'finance',
         label: t("Finance"),
@@ -1404,7 +1407,10 @@ export default function AddProduct() {
         subItems: marketplaceSubItems,
       },
     ];
-  }, [activeSection, location, t, vendorAccountsData]);
+    
+    // Filter out Finance section for non-authorized users
+    return allSections.filter(section => section.id !== 'finance' || hasFinanceAccess);
+  }, [activeSection, location, t, vendorAccountsData, user]);
 
   return (
     <div className="container max-w-7xl mx-auto py-8 px-4">
