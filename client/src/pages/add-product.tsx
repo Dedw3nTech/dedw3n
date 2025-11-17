@@ -268,7 +268,7 @@ const productSchema = z.object({
   videoUrl: z.string().optional(),
   vatIncluded: z.boolean().default(false),
   vatRate: z.coerce.number().min(0).max(100).optional(),
-  marketplace: z.enum(['c2c', 'b2c', 'b2b', 'raw', 'rqst']),
+  marketplace: z.enum(['c2c', 'b2c', 'b2b', 'raw', 'rqst', 'government-dr-congo']),
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
   productCode: z.string().optional(),
@@ -313,8 +313,8 @@ export default function AddProduct() {
   const urlParams = new URLSearchParams(getQueryParams(location));
   const prefillData = urlParams.get('prefill');
   const serviceType = urlParams.get('type'); // Check for government-service or other types
-  const isGovernmentService = serviceType === 'government-service';
-  const sectionFromUrl = urlParams.get('section') || (isGovernmentService ? 'government' : 'marketplace');
+  const isGovernmentServiceFromUrl = serviceType === 'government-service';
+  const sectionFromUrl = urlParams.get('section') || (isGovernmentServiceFromUrl ? 'government' : 'marketplace');
   const [activeSection, setActiveSection] = useState(sectionFromUrl);
   
   // Sync activeSection with URL parameter whenever location changes
@@ -729,6 +729,10 @@ export default function AddProduct() {
     queryKey: ['/api/vendors/user/accounts'],
     enabled: !!user,
   });
+
+  // Compute isGovernmentService based on URL parameter or marketplace selection
+  const currentMarketplace = form.watch('marketplace');
+  const isGovernmentService = isGovernmentServiceFromUrl || currentMarketplace === 'government-dr-congo';
 
   // Determine available marketplaces based on vendor type
   const getAvailableMarketplaces = () => {
@@ -1420,6 +1424,13 @@ export default function AddProduct() {
                                   onClick={() => {
                                     if (subItem.marketplaceValue) {
                                       form.setValue('marketplace', subItem.marketplaceValue);
+                                      
+                                      // Special handling for government services
+                                      if (section.id === 'government' && subItem.id === 'dr-congo') {
+                                        setActiveSection('government');
+                                        form.setValue('offeringType', 'service');
+                                        form.setValue('category', '');
+                                      }
                                     } else if (subItem.onClick) {
                                       subItem.onClick();
                                     }

@@ -234,7 +234,7 @@ export const productTypeEnum = pgEnum('product_type', ['product', 'service', 've
 export const productStatusEnum = pgEnum('product_status', ['active', 'draft', 'archived']);
 
 // Define marketplace type enum
-export const marketplaceTypeEnum = pgEnum('marketplace_type', ['c2c', 'b2c', 'b2b', 'raw', 'rqst']);
+export const marketplaceTypeEnum = pgEnum('marketplace_type', ['c2c', 'b2c', 'b2b', 'raw', 'rqst', 'government-dr-congo']);
 
 // Define vendor badge level enum
 export const vendorBadgeLevelEnum = pgEnum('vendor_badge_level', ['new_vendor', 'level_2_vendor', 'top_vendor', 'infinity_vendor', 'elite_vendor']);
