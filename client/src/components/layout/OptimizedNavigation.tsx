@@ -120,44 +120,52 @@ export default function OptimizedNavigation() {
   });
 
   // Main navigation items using translated labels
-  const mainNavItems = useMemo(() => [
-    {
-      title: translatedLabels.finance,
-      href: "/finance",
-      icon: Landmark,
-      isActive: location.startsWith("/finance"),
-    },
-    {
-      title: translatedLabels.government,
-      href: "/government",
-      icon: Building,
-      isActive: location.startsWith("/government"),
-    },
-    {
-      title: translatedLabels.lifestyle,
-      href: "/lifestyle",
-      icon: Coffee,
-      isActive: location.startsWith("/lifestyle"),
-    },
-    {
-      title: translatedLabels.services,
-      href: "/services",
-      icon: Wrench,
-      isActive: location.startsWith("/services"),
-    },
-    {
-      title: translatedLabels.marketplace,
-      href: "/marketplace/b2c",
-      icon: Store,
-      isActive: location.startsWith("/products") || location.startsWith("/marketplace") || location === "/",
-    },
-    {
-      title: translatedLabels.community,
-      href: "/community",
-      icon: Users,
-      isActive: location.startsWith("/community") || location.startsWith("/social") || location.startsWith("/communities"),
-    },
-  ], [translatedLabels, location]);
+  const mainNavItems = useMemo(() => {
+    // Check if user has access to Finance section (Admin or Serruti only)
+    const hasFinanceAccess = userData?.role === 'admin' || userData?.username === 'Serruti';
+    
+    const allNavItems = [
+      {
+        title: translatedLabels.finance,
+        href: "/finance",
+        icon: Landmark,
+        isActive: location.startsWith("/finance"),
+      },
+      {
+        title: translatedLabels.government,
+        href: "/government",
+        icon: Building,
+        isActive: location.startsWith("/government"),
+      },
+      {
+        title: translatedLabels.lifestyle,
+        href: "/lifestyle",
+        icon: Coffee,
+        isActive: location.startsWith("/lifestyle"),
+      },
+      {
+        title: translatedLabels.services,
+        href: "/services",
+        icon: Wrench,
+        isActive: location.startsWith("/services"),
+      },
+      {
+        title: translatedLabels.marketplace,
+        href: "/marketplace/b2c",
+        icon: Store,
+        isActive: location.startsWith("/products") || location.startsWith("/marketplace") || location === "/",
+      },
+      {
+        title: translatedLabels.community,
+        href: "/community",
+        icon: Users,
+        isActive: location.startsWith("/community") || location.startsWith("/social") || location.startsWith("/communities"),
+      },
+    ];
+    
+    // Filter out Finance section for non-authorized users
+    return allNavItems.filter(item => item.href !== '/finance' || hasFinanceAccess);
+  }, [translatedLabels, location, userData]);
 
   // Quick access items for authenticated users
   const quickAccessItems = isLoggedIn ? [
