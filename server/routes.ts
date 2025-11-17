@@ -18936,10 +18936,16 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
   // Comprehensive Vendor Analytics endpoint
   app.get('/api/vendors/analytics', async (req: Request, res: Response) => {
     try {
-      const vendorId = parseInt(req.query.vendorId as string);
+      const vendorIdParam = req.query.vendorId;
       const timeRange = req.query.timeRange as string || '30d';
       
-      if (isNaN(vendorId) || !vendorId) {
+      if (!vendorIdParam) {
+        return res.status(400).json({ message: 'Vendor ID is required' });
+      }
+      
+      const vendorId = Number(vendorIdParam);
+      
+      if (!vendorId || isNaN(vendorId) || vendorId <= 0) {
         return res.status(400).json({ message: 'Invalid vendor ID' });
       }
 
