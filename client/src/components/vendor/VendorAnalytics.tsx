@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { apiRequest } from '@/lib/queryClient';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { ThinkingLoader } from '@/components/ui/thinking-loader';
 import {
   BarChart,
   Bar,
@@ -233,8 +234,7 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8" data-testid="analytics-loading">
-        <RefreshCw className="h-8 w-8 animate-spin mr-2" />
-        Loading analytics...
+        <ThinkingLoader size="md" text="Loading analytics" />
       </div>
     );
   }
