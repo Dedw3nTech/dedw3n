@@ -359,7 +359,7 @@ export default function DrCongo() {
             </div>
           ) : displayedServices.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No services available</h3>
+              <h3 className="text-lg font-normal text-gray-900 mb-2">No services available</h3>
             </div>
           ) : (
             <div className={`grid gap-6 ${
