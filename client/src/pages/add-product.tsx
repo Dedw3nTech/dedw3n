@@ -233,7 +233,7 @@ const FIELD_CONFIGS: Record<string, {label: string; type: string; placeholder?: 
 // Document type specific requirements configuration
 const DOCUMENT_REQUIREMENTS: Record<string, string[]> = {
   'Passport': ['Birth Certificate', 'ID'],
-  'Drivers License': ['Old Drivers License', 'ID'],
+  'Drivers License': ['Old Drivers License', 'ID', 'ID Witness', 'Contact info Witness'],
 };
 
 // Product form schema
