@@ -153,17 +153,17 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      active: { label: 'Active', variant: 'default' as const, icon: CheckCircle },
-      draft: { label: 'Draft', variant: 'secondary' as const, icon: Clock },
-      inactive: { label: 'Inactive', variant: 'destructive' as const, icon: XCircle },
-      out_of_stock: { label: 'Out of Stock', variant: 'outline' as const, icon: AlertTriangle }
+      active: { label: 'Active', variant: 'default' as const, icon: CheckCircle, className: 'bg-black text-white' },
+      draft: { label: 'Draft', variant: 'secondary' as const, icon: Clock, className: '' },
+      inactive: { label: 'Inactive', variant: 'destructive' as const, icon: XCircle, className: '' },
+      out_of_stock: { label: 'Out of Stock', variant: 'outline' as const, icon: AlertTriangle, className: '' }
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
     const Icon = config.icon;
 
     return (
-      <Badge variant={config.variant} className="flex items-center gap-1">
+      <Badge variant={config.variant} className={`flex items-center gap-1 ${config.className}`}>
         <Icon className="h-3 w-3" />
         {config.label}
       </Badge>
