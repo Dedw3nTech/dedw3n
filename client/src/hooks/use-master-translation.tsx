@@ -785,6 +785,35 @@ export function useLowPriorityTranslation(texts: string[]) {
   return useMasterBatchTranslation(texts, 'low');
 }
 
+// Hover tooltip translation hook
+// Use this for button titles, tooltips, and hover text
+export function useHoverTranslation(texts: string[]) {
+  return useMasterBatchTranslation(texts, 'instant');
+}
+
+// Single text hover translation for inline usage
+export function useSingleHoverTranslation(text: string) {
+  const { currentLanguage } = useLanguage();
+  const [translatedText, setTranslatedText] = useState(text);
+
+  useEffect(() => {
+    if (currentLanguage === 'EN') {
+      setTranslatedText(text);
+      return;
+    }
+
+    const manager = MasterTranslationManager.getInstance();
+    const componentId = `hover-${Math.random()}`;
+    
+    manager.registerComponent(componentId);
+    manager.translateText(text, currentLanguage, 'instant', componentId, setTranslatedText);
+
+    return () => manager.unregisterComponent(componentId);
+  }, [text, currentLanguage]);
+
+  return translatedText;
+}
+
 // Analytics hook for monitoring
 export function useTranslationStats() {
   const [stats, setStats] = useState<any>(null);

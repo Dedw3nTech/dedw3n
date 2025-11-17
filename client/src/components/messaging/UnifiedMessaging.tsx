@@ -2123,45 +2123,42 @@ export function UnifiedMessaging() {
             </div>
 
             {/* Options */}
-            <div className="space-y-3">
+            <div className="flex justify-center gap-3">
               <Button
                 variant="ghost"
-                className="w-full justify-start"
+                className="h-12 w-12 p-0 hover:bg-gray-100 transition-all duration-200"
                 onClick={() => setIsMuted(!isMuted)}
+                title={isMuted ? t.unmuteNotifications : t.muteNotifications}
+                aria-label={isMuted ? t.unmuteNotifications : t.muteNotifications}
                 data-testid="button-mute-notifications"
               >
                 {isMuted ? (
-                  <BellOff className="h-5 w-5 mr-3" />
+                  <BellOff className="h-5 w-5 text-gray-700" />
                 ) : (
-                  <Bell className="h-5 w-5 mr-3" />
+                  <Bell className="h-5 w-5 text-gray-700" />
                 )}
-                <span className="flex-1 text-left">
-                  {isMuted ? t.unmuteNotifications : t.muteNotifications}
-                </span>
               </Button>
 
               <Button
                 variant="ghost"
-                className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                className="h-12 w-12 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 transition-all duration-200"
                 onClick={() => isUserBlocked ? handleUnblockUser() : setShowBlockDialog(true)}
+                title={isUserBlocked ? t.unblockUser : t.blockUser}
+                aria-label={isUserBlocked ? t.unblockUser : t.blockUser}
                 data-testid="button-block-user"
               >
-                <UserX className="h-5 w-5 mr-3" />
-                <span className="flex-1 text-left">
-                  {isUserBlocked ? t.unblockUser : t.blockUser}
-                </span>
+                <UserX className="h-5 w-5" />
               </Button>
 
               <Button
                 variant="ghost"
-                className="w-full justify-start"
+                className="h-12 w-12 p-0 hover:bg-gray-100 transition-all duration-200"
                 onClick={() => setShowReportDialog(true)}
+                title={t.reportIssue}
+                aria-label={t.reportIssue}
                 data-testid="button-report-issue"
               >
-                <Shield className="h-5 w-5 mr-3" />
-                <span className="flex-1 text-left">
-                  {t.reportIssue}
-                </span>
+                <Shield className="h-5 w-5 text-gray-700" />
               </Button>
 
               {currentRecipient?.username && (
