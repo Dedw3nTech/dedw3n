@@ -684,7 +684,7 @@ export default function AddProduct() {
       category: parsedPrefillData?.category || '',
       imageUrl: parsedPrefillData?.imageUrl || '',
       inventory: parsedPrefillData?.stock || 1,
-      isNew: true,
+      isNew: false,
       isOnSale: false,
       // New Shopify-style field defaults
       status: 'active',
