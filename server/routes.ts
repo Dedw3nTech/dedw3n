@@ -10867,6 +10867,332 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
     }
   });
 
+  // Comprehensive Vendor Analytics endpoint (MUST be before /api/vendors/:id)
+  app.get('/api/vendors/analytics', async (req: Request, res: Response) => {
+    try {
+      const vendorIdParam = req.query.vendorId;
+      const timeRange = req.query.timeRange as string || '30d';
+      
+      console.log('[VENDOR-ANALYTICS] Request received', { 
+        vendorIdParam, 
+        vendorIdParamType: typeof vendorIdParam,
+        timeRange,
+        queryParams: req.query 
+      });
+      
+      if (!vendorIdParam) {
+        console.log('[VENDOR-ANALYTICS] Missing vendor ID parameter');
+        return res.status(400).json({ message: 'Vendor ID is required' });
+      }
+      
+      const vendorId = Number(vendorIdParam);
+      
+      console.log('[VENDOR-ANALYTICS] Parsed vendor ID', { 
+        vendorId, 
+        isNaN: isNaN(vendorId),
+        isNegativeOrZero: vendorId <= 0 
+      });
+      
+      if (!vendorId || isNaN(vendorId) || vendorId <= 0) {
+        console.log('[VENDOR-ANALYTICS] Invalid vendor ID', { vendorIdParam, vendorId });
+        return res.status(400).json({ message: 'Invalid vendor ID' });
+      }
+
+      // Calculate date range
+      const now = new Date();
+      let startDate = new Date();
+      switch (timeRange) {
+        case '7d':
+          startDate.setDate(now.getDate() - 7);
+          break;
+        case '30d':
+          startDate.setDate(now.getDate() - 30);
+          break;
+        case '90d':
+          startDate.setDate(now.getDate() - 90);
+          break;
+        case '1y':
+          startDate.setFullYear(now.getFullYear() - 1);
+          break;
+        default:
+          startDate.setDate(now.getDate() - 30);
+      }
+
+      // Get overview metrics
+      const [overviewMetrics] = await db
+        .select({
+          totalRevenue: sql<number>`COALESCE(SUM(${orderItems.totalPrice}), 0)::numeric`,
+          totalOrders: sql<number>`COUNT(DISTINCT ${orderItems.orderId})::numeric`,
+          averageOrderValue: sql<number>`CASE WHEN COUNT(DISTINCT ${orderItems.orderId}) = 0 THEN 0 ELSE (SUM(${orderItems.totalPrice}) / COUNT(DISTINCT ${orderItems.orderId}))::numeric END`
+        })
+        .from(orderItems)
+        .innerJoin(orders, eq(orderItems.orderId, orders.id))
+        .where(
+          and(
+            eq(orderItems.vendorId, vendorId),
+            gte(orders.createdAt, startDate)
+          )
+        );
+
+      const [productCount] = await db
+        .select({ count: sql<number>`COUNT(*)::numeric` })
+        .from(products)
+        .where(eq(products.vendorId, vendorId));
+
+      const [customerCount] = await db
+        .select({ count: sql<number>`COUNT(DISTINCT ${orders.userId})::numeric` })
+        .from(orders)
+        .innerJoin(orderItems, eq(orders.id, orderItems.orderId))
+        .where(
+          and(
+            eq(orderItems.vendorId, vendorId),
+            gte(orders.createdAt, startDate)
+          )
+        );
+
+      const [totalViews] = await db
+        .select({ views: sql<number>`0::numeric` })
+        .from(products)
+        .where(eq(products.vendorId, vendorId))
+        .limit(1);
+
+      // Calculate conversion rate and repeat customer rate
+      const conversionRate = totalViews.views > 0 
+        ? ((overviewMetrics.totalOrders / totalViews.views) * 100) 
+        : 0;
+
+      const [repeatCustomers] = await db
+        .select({ count: sql<number>`COUNT(*)::numeric` })
+        .from(
+          db.select({ userId: orders.userId, orderCount: sql<number>`COUNT(*)` })
+            .from(orders)
+            .innerJoin(orderItems, eq(orders.id, orderItems.orderId))
+            .where(eq(orderItems.vendorId, vendorId))
+            .groupBy(orders.userId)
+            .having(sql`COUNT(*) > 1`)
+            .as('repeat_customers')
+        );
+
+      const repeatCustomerRate = customerCount.count > 0 
+        ? (repeatCustomers.count / customerCount.count) * 100 
+        : 0;
+
+      // Get revenue by period
+      const revenueByPeriod = await db
+        .select({
+          period: sql<string>`TO_CHAR(${orders.createdAt}, 'YYYY-MM-DD')`,
+          revenue: sql<number>`COALESCE(SUM(${orderItems.totalPrice}), 0)::numeric`,
+          orders: sql<number>`COUNT(DISTINCT ${orderItems.orderId})::numeric`,
+          profit: sql<number>`COALESCE(SUM(${orderItems.totalPrice} * 0.7), 0)::numeric`
+        })
+        .from(orderItems)
+        .innerJoin(orders, eq(orderItems.orderId, orders.id))
+        .where(
+          and(
+            eq(orderItems.vendorId, vendorId),
+            gte(orders.createdAt, startDate)
+          )
+        )
+        .groupBy(sql`TO_CHAR(${orders.createdAt}, 'YYYY-MM-DD')`)
+        .orderBy(sql`TO_CHAR(${orders.createdAt}, 'YYYY-MM-DD')`);
+
+      // Get product performance
+      const productPerformance = await db
+        .select({
+          productId: products.id,
+          productName: products.name,
+          revenue: sql<number>`COALESCE(SUM(${orderItems.totalPrice}), 0)::numeric`,
+          orders: sql<number>`COUNT(DISTINCT ${orderItems.orderId})::numeric`,
+          views: sql<number>`0`,
+          conversionRate: sql<number>`0`,
+          profit: sql<number>`COALESCE(SUM(${orderItems.totalPrice} * 0.7), 0)::numeric`
+        })
+        .from(products)
+        .leftJoin(orderItems, eq(products.id, orderItems.productId))
+        .where(eq(products.vendorId, vendorId))
+        .groupBy(products.id, products.name)
+        .orderBy(desc(sql`COALESCE(SUM(${orderItems.totalPrice}), 0)`))
+        .limit(10);
+
+      // Get category breakdown
+      const categoryBreakdown = await db
+        .select({
+          category: products.category,
+          revenue: sql<number>`COALESCE(SUM(${orderItems.totalPrice}), 0)::numeric`,
+          orders: sql<number>`COUNT(DISTINCT ${orderItems.orderId})::numeric`
+        })
+        .from(products)
+        .leftJoin(orderItems, eq(products.id, orderItems.productId))
+        .where(eq(products.vendorId, vendorId))
+        .groupBy(products.category);
+
+      const totalCategoryRevenue = categoryBreakdown.reduce((sum, cat) => sum + Number(cat.revenue), 0);
+      const categoryBreakdownWithPercentage = categoryBreakdown.map(cat => ({
+        ...cat,
+        percentage: totalCategoryRevenue > 0 ? (Number(cat.revenue) / totalCategoryRevenue * 100) : 0
+      }));
+
+      // Get top customers
+      const topCustomers = await db
+        .select({
+          customerId: orders.userId,
+          customerName: users.username,
+          totalSpent: sql<number>`SUM(${orderItems.totalPrice})::numeric`,
+          orderCount: sql<number>`COUNT(DISTINCT ${orders.id})::numeric`,
+          lastOrder: sql<string>`MAX(${orders.createdAt})::text`
+        })
+        .from(orders)
+        .innerJoin(orderItems, eq(orders.id, orderItems.orderId))
+        .innerJoin(users, eq(orders.userId, users.id))
+        .where(eq(orderItems.vendorId, vendorId))
+        .groupBy(orders.userId, users.username)
+        .orderBy(desc(sql`SUM(${orderItems.totalPrice})`))
+        .limit(5);
+
+      // Get customer retention data
+      const customerRetention = await db
+        .select({
+          period: sql<string>`TO_CHAR(${orders.createdAt}, 'YYYY-MM')`,
+          newCustomers: sql<number>`COUNT(DISTINCT CASE WHEN ${orders.id} = (SELECT MIN(id) FROM ${orders} o2 WHERE o2.user_id = ${orders.userId}) THEN ${orders.userId} END)::numeric`,
+          returningCustomers: sql<number>`COUNT(DISTINCT CASE WHEN ${orders.id} != (SELECT MIN(id) FROM ${orders} o2 WHERE o2.user_id = ${orders.userId}) THEN ${orders.userId} END)::numeric`
+        })
+        .from(orders)
+        .innerJoin(orderItems, eq(orders.id, orderItems.orderId))
+        .where(
+          and(
+            eq(orderItems.vendorId, vendorId),
+            gte(orders.createdAt, startDate)
+          )
+        )
+        .groupBy(sql`TO_CHAR(${orders.createdAt}, 'YYYY-MM')`)
+        .orderBy(sql`TO_CHAR(${orders.createdAt}, 'YYYY-MM')`);
+
+      // Get traffic analytics
+      const trafficAnalytics = await db
+        .select({
+          period: sql<string>`TO_CHAR(${orders.createdAt}, 'YYYY-MM-DD')`,
+          views: sql<number>`0::numeric`,
+          uniqueVisitors: sql<number>`COUNT(DISTINCT ${orders.userId})::numeric`,
+          bounceRate: sql<number>`0::numeric`
+        })
+        .from(products)
+        .leftJoin(orderItems, eq(products.id, orderItems.productId))
+        .leftJoin(orders, eq(orderItems.orderId, orders.id))
+        .where(
+          and(
+            eq(products.vendorId, vendorId),
+            gte(orders.createdAt, startDate)
+          )
+        )
+        .groupBy(sql`TO_CHAR(${orders.createdAt}, 'YYYY-MM-DD')`)
+        .orderBy(sql`TO_CHAR(${orders.createdAt}, 'YYYY-MM-DD')`);
+
+      // Calculate comparison (growth rates)
+      const previousStartDate = new Date(startDate);
+      previousStartDate.setDate(previousStartDate.getDate() - (now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      const [previousMetrics] = await db
+        .select({
+          revenue: sql<number>`COALESCE(SUM(${orderItems.totalPrice}), 0)::numeric`,
+          orders: sql<number>`COUNT(DISTINCT ${orderItems.orderId})::numeric`
+        })
+        .from(orderItems)
+        .innerJoin(orders, eq(orderItems.orderId, orders.id))
+        .where(
+          and(
+            eq(orderItems.vendorId, vendorId),
+            gte(orders.createdAt, previousStartDate),
+            lt(orders.createdAt, startDate)
+          )
+        );
+
+      const [previousCustomers] = await db
+        .select({ count: sql<number>`COUNT(DISTINCT ${orders.userId})::numeric` })
+        .from(orders)
+        .innerJoin(orderItems, eq(orders.id, orderItems.orderId))
+        .where(
+          and(
+            eq(orderItems.vendorId, vendorId),
+            gte(orders.createdAt, previousStartDate),
+            lt(orders.createdAt, startDate)
+          )
+        );
+
+      const revenueGrowth = previousMetrics.revenue > 0 
+        ? ((Number(overviewMetrics.totalRevenue) - Number(previousMetrics.revenue)) / Number(previousMetrics.revenue)) * 100 
+        : 0;
+      const orderGrowth = previousMetrics.orders > 0 
+        ? ((Number(overviewMetrics.totalOrders) - Number(previousMetrics.orders)) / Number(previousMetrics.orders)) * 100 
+        : 0;
+      const customerGrowth = previousCustomers.count > 0 
+        ? ((Number(customerCount.count) - Number(previousCustomers.count)) / Number(previousCustomers.count)) * 100 
+        : 0;
+
+      res.json({
+        overview: {
+          totalRevenue: Number(overviewMetrics.totalRevenue),
+          totalOrders: Number(overviewMetrics.totalOrders),
+          totalProducts: Number(productCount.count),
+          totalCustomers: Number(customerCount.count),
+          averageOrderValue: Number(overviewMetrics.averageOrderValue),
+          conversionRate: Number(conversionRate),
+          repeatCustomerRate: Number(repeatCustomerRate),
+          totalViews: Number(totalViews.views)
+        },
+        revenueByPeriod: revenueByPeriod.map(r => ({
+          period: r.period,
+          revenue: Number(r.revenue),
+          orders: Number(r.orders),
+          profit: Number(r.profit)
+        })),
+        productPerformance: productPerformance.map(p => ({
+          productId: p.productId,
+          productName: p.productName,
+          revenue: Number(p.revenue),
+          orders: Number(p.orders),
+          views: p.views || 0,
+          conversionRate: Number(p.conversionRate),
+          profit: Number(p.profit)
+        })),
+        categoryBreakdown: categoryBreakdownWithPercentage.map(c => ({
+          category: c.category || 'Uncategorized',
+          revenue: Number(c.revenue),
+          orders: Number(c.orders),
+          percentage: Number(c.percentage.toFixed(1))
+        })),
+        customerInsights: {
+          topCustomers: topCustomers.map(c => ({
+            customerId: c.customerId,
+            customerName: c.customerName,
+            totalSpent: Number(c.totalSpent),
+            orderCount: Number(c.orderCount),
+            lastOrder: c.lastOrder
+          })),
+          customerRetention: customerRetention.map(c => ({
+            period: c.period,
+            newCustomers: Number(c.newCustomers),
+            returningCustomers: Number(c.returningCustomers)
+          }))
+        },
+        trafficAnalytics: trafficAnalytics.map(t => ({
+          period: t.period,
+          views: Number(t.views),
+          uniqueVisitors: Number(t.uniqueVisitors),
+          bounceRate: Number(t.bounceRate)
+        })),
+        comparison: {
+          revenueGrowth: Number(revenueGrowth.toFixed(1)),
+          orderGrowth: Number(orderGrowth.toFixed(1)),
+          customerGrowth: Number(customerGrowth.toFixed(1)),
+          conversionGrowth: 0
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching vendor analytics', error);
+      res.status(500).json({ error: 'Failed to fetch vendor analytics' });
+    }
+  });
+
   // Individual vendor endpoint
   app.get('/api/vendors/:id', async (req: Request, res: Response) => {
     try {
@@ -18930,332 +19256,6 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
     } catch (error) {
       console.error('Error fetching competitor analytics', error);
       res.status(500).json({ error: 'Failed to fetch competitor analytics' });
-    }
-  });
-
-  // Comprehensive Vendor Analytics endpoint
-  app.get('/api/vendors/analytics', async (req: Request, res: Response) => {
-    try {
-      const vendorIdParam = req.query.vendorId;
-      const timeRange = req.query.timeRange as string || '30d';
-      
-      console.log('[VENDOR-ANALYTICS] Request received', { 
-        vendorIdParam, 
-        vendorIdParamType: typeof vendorIdParam,
-        timeRange,
-        queryParams: req.query 
-      });
-      
-      if (!vendorIdParam) {
-        console.log('[VENDOR-ANALYTICS] Missing vendor ID parameter');
-        return res.status(400).json({ message: 'Vendor ID is required' });
-      }
-      
-      const vendorId = Number(vendorIdParam);
-      
-      console.log('[VENDOR-ANALYTICS] Parsed vendor ID', { 
-        vendorId, 
-        isNaN: isNaN(vendorId),
-        isNegativeOrZero: vendorId <= 0 
-      });
-      
-      if (!vendorId || isNaN(vendorId) || vendorId <= 0) {
-        console.log('[VENDOR-ANALYTICS] Invalid vendor ID', { vendorIdParam, vendorId });
-        return res.status(400).json({ message: 'Invalid vendor ID' });
-      }
-
-      // Calculate date range
-      const now = new Date();
-      let startDate = new Date();
-      switch (timeRange) {
-        case '7d':
-          startDate.setDate(now.getDate() - 7);
-          break;
-        case '30d':
-          startDate.setDate(now.getDate() - 30);
-          break;
-        case '90d':
-          startDate.setDate(now.getDate() - 90);
-          break;
-        case '1y':
-          startDate.setFullYear(now.getFullYear() - 1);
-          break;
-        default:
-          startDate.setDate(now.getDate() - 30);
-      }
-
-      // Get overview metrics
-      const [overviewMetrics] = await db
-        .select({
-          totalRevenue: sql<number>`COALESCE(SUM(${orderItems.totalPrice}), 0)::numeric`,
-          totalOrders: sql<number>`COUNT(DISTINCT ${orderItems.orderId})::numeric`,
-          averageOrderValue: sql<number>`CASE WHEN COUNT(DISTINCT ${orderItems.orderId}) = 0 THEN 0 ELSE (SUM(${orderItems.totalPrice}) / COUNT(DISTINCT ${orderItems.orderId}))::numeric END`
-        })
-        .from(orderItems)
-        .innerJoin(orders, eq(orderItems.orderId, orders.id))
-        .where(
-          and(
-            eq(orderItems.vendorId, vendorId),
-            gte(orders.createdAt, startDate)
-          )
-        );
-
-      const [productCount] = await db
-        .select({ count: sql<number>`COUNT(*)::numeric` })
-        .from(products)
-        .where(eq(products.vendorId, vendorId));
-
-      const [customerCount] = await db
-        .select({ count: sql<number>`COUNT(DISTINCT ${orders.userId})::numeric` })
-        .from(orders)
-        .innerJoin(orderItems, eq(orders.id, orderItems.orderId))
-        .where(
-          and(
-            eq(orderItems.vendorId, vendorId),
-            gte(orders.createdAt, startDate)
-          )
-        );
-
-      const [totalViews] = await db
-        .select({ views: sql<number>`0::numeric` })
-        .from(products)
-        .where(eq(products.vendorId, vendorId))
-        .limit(1);
-
-      // Calculate conversion rate and repeat customer rate
-      const conversionRate = totalViews.views > 0 
-        ? ((overviewMetrics.totalOrders / totalViews.views) * 100) 
-        : 0;
-
-      const [repeatCustomers] = await db
-        .select({ count: sql<number>`COUNT(*)::numeric` })
-        .from(
-          db.select({ userId: orders.userId, orderCount: sql<number>`COUNT(*)` })
-            .from(orders)
-            .innerJoin(orderItems, eq(orders.id, orderItems.orderId))
-            .where(eq(orderItems.vendorId, vendorId))
-            .groupBy(orders.userId)
-            .having(sql`COUNT(*) > 1`)
-            .as('repeat_customers')
-        );
-
-      const repeatCustomerRate = customerCount.count > 0 
-        ? (repeatCustomers.count / customerCount.count) * 100 
-        : 0;
-
-      // Get revenue by period
-      const revenueByPeriod = await db
-        .select({
-          period: sql<string>`TO_CHAR(${orders.createdAt}, 'YYYY-MM-DD')`,
-          revenue: sql<number>`COALESCE(SUM(${orderItems.totalPrice}), 0)::numeric`,
-          orders: sql<number>`COUNT(DISTINCT ${orderItems.orderId})::numeric`,
-          profit: sql<number>`COALESCE(SUM(${orderItems.totalPrice} * 0.7), 0)::numeric`
-        })
-        .from(orderItems)
-        .innerJoin(orders, eq(orderItems.orderId, orders.id))
-        .where(
-          and(
-            eq(orderItems.vendorId, vendorId),
-            gte(orders.createdAt, startDate)
-          )
-        )
-        .groupBy(sql`TO_CHAR(${orders.createdAt}, 'YYYY-MM-DD')`)
-        .orderBy(sql`TO_CHAR(${orders.createdAt}, 'YYYY-MM-DD')`);
-
-      // Get product performance
-      const productPerformance = await db
-        .select({
-          productId: products.id,
-          productName: products.name,
-          revenue: sql<number>`COALESCE(SUM(${orderItems.totalPrice}), 0)::numeric`,
-          orders: sql<number>`COUNT(DISTINCT ${orderItems.orderId})::numeric`,
-          views: sql<number>`0`,
-          conversionRate: sql<number>`0`,
-          profit: sql<number>`COALESCE(SUM(${orderItems.totalPrice} * 0.7), 0)::numeric`
-        })
-        .from(products)
-        .leftJoin(orderItems, eq(products.id, orderItems.productId))
-        .where(eq(products.vendorId, vendorId))
-        .groupBy(products.id, products.name)
-        .orderBy(desc(sql`COALESCE(SUM(${orderItems.totalPrice}), 0)`))
-        .limit(10);
-
-      // Get category breakdown
-      const categoryBreakdown = await db
-        .select({
-          category: products.category,
-          revenue: sql<number>`COALESCE(SUM(${orderItems.totalPrice}), 0)::numeric`,
-          orders: sql<number>`COUNT(DISTINCT ${orderItems.orderId})::numeric`
-        })
-        .from(products)
-        .leftJoin(orderItems, eq(products.id, orderItems.productId))
-        .where(eq(products.vendorId, vendorId))
-        .groupBy(products.category);
-
-      const totalCategoryRevenue = categoryBreakdown.reduce((sum, cat) => sum + Number(cat.revenue), 0);
-      const categoryBreakdownWithPercentage = categoryBreakdown.map(cat => ({
-        ...cat,
-        percentage: totalCategoryRevenue > 0 ? (Number(cat.revenue) / totalCategoryRevenue * 100) : 0
-      }));
-
-      // Get top customers
-      const topCustomers = await db
-        .select({
-          customerId: orders.userId,
-          customerName: users.username,
-          totalSpent: sql<number>`SUM(${orderItems.totalPrice})::numeric`,
-          orderCount: sql<number>`COUNT(DISTINCT ${orders.id})::numeric`,
-          lastOrder: sql<string>`MAX(${orders.createdAt})::text`
-        })
-        .from(orders)
-        .innerJoin(orderItems, eq(orders.id, orderItems.orderId))
-        .innerJoin(users, eq(orders.userId, users.id))
-        .where(eq(orderItems.vendorId, vendorId))
-        .groupBy(orders.userId, users.username)
-        .orderBy(desc(sql`SUM(${orderItems.totalPrice})`))
-        .limit(5);
-
-      // Get customer retention data
-      const customerRetention = await db
-        .select({
-          period: sql<string>`TO_CHAR(${orders.createdAt}, 'YYYY-MM')`,
-          newCustomers: sql<number>`COUNT(DISTINCT CASE WHEN ${orders.id} = (SELECT MIN(id) FROM ${orders} o2 WHERE o2.user_id = ${orders.userId}) THEN ${orders.userId} END)::numeric`,
-          returningCustomers: sql<number>`COUNT(DISTINCT CASE WHEN ${orders.id} != (SELECT MIN(id) FROM ${orders} o2 WHERE o2.user_id = ${orders.userId}) THEN ${orders.userId} END)::numeric`
-        })
-        .from(orders)
-        .innerJoin(orderItems, eq(orders.id, orderItems.orderId))
-        .where(
-          and(
-            eq(orderItems.vendorId, vendorId),
-            gte(orders.createdAt, startDate)
-          )
-        )
-        .groupBy(sql`TO_CHAR(${orders.createdAt}, 'YYYY-MM')`)
-        .orderBy(sql`TO_CHAR(${orders.createdAt}, 'YYYY-MM')`);
-
-      // Get traffic analytics
-      const trafficAnalytics = await db
-        .select({
-          period: sql<string>`TO_CHAR(${orders.createdAt}, 'YYYY-MM-DD')`,
-          views: sql<number>`0::numeric`,
-          uniqueVisitors: sql<number>`COUNT(DISTINCT ${orders.userId})::numeric`,
-          bounceRate: sql<number>`0::numeric`
-        })
-        .from(products)
-        .leftJoin(orderItems, eq(products.id, orderItems.productId))
-        .leftJoin(orders, eq(orderItems.orderId, orders.id))
-        .where(
-          and(
-            eq(products.vendorId, vendorId),
-            gte(orders.createdAt, startDate)
-          )
-        )
-        .groupBy(sql`TO_CHAR(${orders.createdAt}, 'YYYY-MM-DD')`)
-        .orderBy(sql`TO_CHAR(${orders.createdAt}, 'YYYY-MM-DD')`);
-
-      // Calculate comparison (growth rates)
-      const previousStartDate = new Date(startDate);
-      previousStartDate.setDate(previousStartDate.getDate() - (now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-
-      const [previousMetrics] = await db
-        .select({
-          revenue: sql<number>`COALESCE(SUM(${orderItems.totalPrice}), 0)::numeric`,
-          orders: sql<number>`COUNT(DISTINCT ${orderItems.orderId})::numeric`
-        })
-        .from(orderItems)
-        .innerJoin(orders, eq(orderItems.orderId, orders.id))
-        .where(
-          and(
-            eq(orderItems.vendorId, vendorId),
-            gte(orders.createdAt, previousStartDate),
-            lt(orders.createdAt, startDate)
-          )
-        );
-
-      const [previousCustomers] = await db
-        .select({ count: sql<number>`COUNT(DISTINCT ${orders.userId})::numeric` })
-        .from(orders)
-        .innerJoin(orderItems, eq(orders.id, orderItems.orderId))
-        .where(
-          and(
-            eq(orderItems.vendorId, vendorId),
-            gte(orders.createdAt, previousStartDate),
-            lt(orders.createdAt, startDate)
-          )
-        );
-
-      const revenueGrowth = previousMetrics.revenue > 0 
-        ? ((Number(overviewMetrics.totalRevenue) - Number(previousMetrics.revenue)) / Number(previousMetrics.revenue)) * 100 
-        : 0;
-      const orderGrowth = previousMetrics.orders > 0 
-        ? ((Number(overviewMetrics.totalOrders) - Number(previousMetrics.orders)) / Number(previousMetrics.orders)) * 100 
-        : 0;
-      const customerGrowth = previousCustomers.count > 0 
-        ? ((Number(customerCount.count) - Number(previousCustomers.count)) / Number(previousCustomers.count)) * 100 
-        : 0;
-
-      res.json({
-        overview: {
-          totalRevenue: Number(overviewMetrics.totalRevenue),
-          totalOrders: Number(overviewMetrics.totalOrders),
-          totalProducts: Number(productCount.count),
-          totalCustomers: Number(customerCount.count),
-          averageOrderValue: Number(overviewMetrics.averageOrderValue),
-          conversionRate: Number(conversionRate),
-          repeatCustomerRate: Number(repeatCustomerRate),
-          totalViews: Number(totalViews.views)
-        },
-        revenueByPeriod: revenueByPeriod.map(r => ({
-          period: r.period,
-          revenue: Number(r.revenue),
-          orders: Number(r.orders),
-          profit: Number(r.profit)
-        })),
-        productPerformance: productPerformance.map(p => ({
-          productId: p.productId,
-          productName: p.productName,
-          revenue: Number(p.revenue),
-          orders: Number(p.orders),
-          views: p.views || 0,
-          conversionRate: Number(p.conversionRate),
-          profit: Number(p.profit)
-        })),
-        categoryBreakdown: categoryBreakdownWithPercentage.map(c => ({
-          category: c.category || 'Uncategorized',
-          revenue: Number(c.revenue),
-          orders: Number(c.orders),
-          percentage: Number(c.percentage.toFixed(1))
-        })),
-        customerInsights: {
-          topCustomers: topCustomers.map(c => ({
-            customerId: c.customerId,
-            customerName: c.customerName,
-            totalSpent: Number(c.totalSpent),
-            orderCount: Number(c.orderCount),
-            lastOrder: c.lastOrder
-          })),
-          customerRetention: customerRetention.map(c => ({
-            period: c.period,
-            newCustomers: Number(c.newCustomers),
-            returningCustomers: Number(c.returningCustomers)
-          }))
-        },
-        trafficAnalytics: trafficAnalytics.map(t => ({
-          period: t.period,
-          views: Number(t.views),
-          uniqueVisitors: Number(t.uniqueVisitors),
-          bounceRate: Number(t.bounceRate)
-        })),
-        comparison: {
-          revenueGrowth: Number(revenueGrowth.toFixed(1)),
-          orderGrowth: Number(orderGrowth.toFixed(1)),
-          customerGrowth: Number(customerGrowth.toFixed(1)),
-          conversionGrowth: 0
-        }
-      });
-    } catch (error) {
-      console.error('Error fetching vendor analytics', error);
-      res.status(500).json({ error: 'Failed to fetch vendor analytics' });
     }
   });
 
