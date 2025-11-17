@@ -241,7 +241,7 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
 
   if (analyticsError) {
     return (
-      <Card>
+      <Card className="border-0 shadow-none">
         <CardContent className="flex items-center justify-center p-8">
           <div className="text-center" data-testid="analytics-error">
             <h3 className="text-lg font-semibold mb-2">Failed to Load Analytics</h3>
