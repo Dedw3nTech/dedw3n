@@ -560,7 +560,7 @@ export default function VendorDetailPage() {
       return (
         <div className="col-span-full py-12 text-center">
           <div className="text-gray-500 mb-4">{translateText("No products found matching your criteria")}</div>
-          <Button variant="outline" onClick={resetFilters}>
+          <Button variant="ghost" onClick={resetFilters}>
             {resetFiltersText}
           </Button>
         </div>

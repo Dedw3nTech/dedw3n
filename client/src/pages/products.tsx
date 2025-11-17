@@ -983,7 +983,7 @@ export default function Products() {
       return (
         <div className="col-span-full py-12 text-center">
           <div className="text-gray-500 mb-4">No products found matching your criteria</div>
-          <Button variant="outline" onClick={resetFilters}>
+          <Button variant="ghost" onClick={resetFilters}>
             Reset Filters
           </Button>
         </div>
