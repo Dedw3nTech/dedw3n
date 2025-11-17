@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import { LifestyleNav } from "@/components/layout/LifestyleNav";
 import {
@@ -11,9 +11,26 @@ import {
   Package,
   Home,
   Dumbbell,
-  MapPin
+  MapPin,
+  Heart,
+  ShoppingCart,
+  Filter,
+  SlidersHorizontal,
+  ChevronDown,
+  Share2,
+  Star
 } from "lucide-react";
 import type { LifestyleService } from "@shared/schema";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { formatPrice } from "@/lib/utils";
 
 // Category icons and colors mapping
 const categoryConfig: Record<string, { icon: any; color: string; image: string }> = {
@@ -67,6 +84,12 @@ const categoryConfig: Record<string, { icon: any; color: string; image: string }
 export default function LifestylePage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
+  const [sortBy, setSortBy] = useState<string>("trending");
+  const [columnsPerRow, setColumnsPerRow] = useState<number>(4);
+  const [showFeatured, setShowFeatured] = useState(false);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // Translatable texts
   const texts = useMemo(() => [
