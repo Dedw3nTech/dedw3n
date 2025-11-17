@@ -732,8 +732,19 @@ export default function AddProduct() {
       if (!currentCategory || !currentCategory.startsWith('gov-')) {
         form.setValue('category', 'gov-document');
       }
+      // Auto-expand government section and set active
+      setIsGovernmentExpanded(true);
+      setActiveSection('government');
     }
   }, [location, form]);
+
+  // Auto-expand government section when isGovernmentService becomes true
+  useEffect(() => {
+    if (isGovernmentService) {
+      setIsGovernmentExpanded(true);
+      setActiveSection('government');
+    }
+  }, [isGovernmentService]);
 
   // Fetch categories
   const { data: categories = [] } = useQuery({
