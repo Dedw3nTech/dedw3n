@@ -359,7 +359,6 @@ export default function DrCongo() {
             </div>
           ) : displayedServices.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <FileText className="h-16 w-16 text-gray-300 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No services available</h3>
             </div>
           ) : (
