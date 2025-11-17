@@ -184,10 +184,10 @@ export default function VendorProductManagement({ vendorId }: VendorProductManag
   // Helper function to get marketplace badge
   const getMarketplaceBadge = (marketplace: string) => {
     const variants = {
-      c2c: { label: 'Friend to Friend', variant: 'secondary' as const, className: 'bg-blue-100 text-blue-800' },
-      b2c: { label: 'Online Store', variant: 'default' as const, className: 'bg-green-100 text-green-800' },
-      b2b: { label: 'Wholesale', variant: 'outline' as const, className: 'bg-purple-100 text-purple-800' },
-      rqst: { label: 'Request', variant: 'destructive' as const, className: 'bg-orange-100 text-orange-800' },
+      c2c: { label: 'Friend to Friend', variant: 'secondary' as const, className: 'bg-black text-white' },
+      b2c: { label: 'Online Store', variant: 'default' as const, className: 'bg-black text-white' },
+      b2b: { label: 'Wholesale', variant: 'outline' as const, className: 'bg-black text-white' },
+      rqst: { label: 'Request', variant: 'destructive' as const, className: 'bg-black text-white' },
     };
     
     const config = variants[marketplace as keyof typeof variants] || variants.c2c;
