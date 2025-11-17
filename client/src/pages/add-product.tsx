@@ -316,6 +316,7 @@ export default function AddProduct() {
   const prefillData = urlParams.get('prefill');
   const serviceType = urlParams.get('type'); // Check for government-service or other types
   const isGovernmentServiceFromUrl = serviceType === 'government-service';
+  const marketplaceFromUrl = urlParams.get('marketplace'); // Get marketplace from URL
   const sectionFromUrl = urlParams.get('section') || (isGovernmentServiceFromUrl ? 'government' : 'marketplace');
   const [activeSection, setActiveSection] = useState(sectionFromUrl);
   
@@ -700,7 +701,7 @@ export default function AddProduct() {
       trackQuantity: true,
       continueSellingWhenOutOfStock: false,
       requiresShipping: true,
-      marketplace: 'c2c', // Default to C2C
+      marketplace: marketplaceFromUrl === 'government-dr-congo' ? 'government-dr-congo' : 'c2c',
       seoTitle: '',
       seoDescription: '',
       serviceDuration: '',

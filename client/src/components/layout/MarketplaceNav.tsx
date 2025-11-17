@@ -170,7 +170,12 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
     if (isGovernmentPage) {
       if (canAddService) {
         // Navigate to add product page with government service context
-        setLocation('/add-product?type=government-service');
+        // If on Dr Congo page, auto-select Dr Congo marketplace
+        if (location === '/dr-congo') {
+          setLocation('/add-product?type=government-service&marketplace=government-dr-congo');
+        } else {
+          setLocation('/add-product?type=government-service');
+        }
       }
       return;
     }
@@ -183,7 +188,7 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
       // User doesn't have vendor account, redirect to become a vendor
       setLocation('/vendor-dashboard');
     }
-  }, [isGovernmentPage, canAddService, userVendor, setLocation]);
+  }, [isGovernmentPage, canAddService, userVendor, setLocation, location]);
 
   // Track navbar visibility and close dropdown when navbar scrolls out of view
   useEffect(() => {
