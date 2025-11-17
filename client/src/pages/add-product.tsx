@@ -1754,6 +1754,33 @@ export default function AddProduct() {
                       );
                     }
 
+                    if (fieldKey === 'requirements' && form.watch('categoryFields.document_type') === 'Passport') {
+                      return (
+                        <FormField
+                          key={fieldKey}
+                          control={form.control}
+                          name={fieldName}
+                          render={({ field }) => (
+                            <FormItem className="md:col-span-2">
+                              <FormLabel>{t(fieldConfig.label)}</FormLabel>
+                              <div className="space-y-2">
+                                <div className="flex items-center space-x-2 p-3 border rounded-lg bg-gray-50">
+                                  <span className="text-sm font-medium">Birth Certificate</span>
+                                </div>
+                                <div className="flex items-center space-x-2 p-3 border rounded-lg bg-gray-50">
+                                  <span className="text-sm font-medium">ID</span>
+                                </div>
+                              </div>
+                              <FormControl>
+                                <Input type="hidden" {...field} value="Birth Certificate, ID" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      );
+                    }
+
                     return (
                       <FormField
                         key={fieldKey}
