@@ -15,7 +15,7 @@ import { fileURLToPath } from 'url';
 // Import JWT functions from jwt-auth.ts instead of using jsonwebtoken directly
 import { storage } from "./storage";
 import { db } from "./db";
-import { eq, or, like, ilike, sql, and, ne, inArray, desc, count, sum, avg, isNull, gte, lte, between, notInArray, isNotNull } from "drizzle-orm";
+import { eq, or, like, ilike, sql, and, ne, inArray, desc, count, sum, avg, isNull, gte, lte, lt, gt, between, notInArray, isNotNull } from "drizzle-orm";
 import { users, products, orders, vendors, carts, orderItems, reviews, messages, vendorPaymentInfo, insertVendorPaymentInfoSchema, vendorDiscounts, discountUsages, promotionalCampaigns, insertVendorDiscountSchema, insertDiscountUsageSchema, insertPromotionalCampaignSchema, returns, insertReturnSchema, marketingCampaigns, campaignActivities, campaignTouchpoints, campaignAnalytics, campaignProducts, insertMarketingCampaignSchema, insertCampaignActivitySchema, insertCampaignTouchpointSchema, insertCampaignAnalyticsSchema, storeUsers, cities, privateRoomInvitations, videos, videoPurchases, subscriptions, creatorEarnings, friendships, friendRequests, audioSessions, giftPropositions, notifications, moderationReports, insertModerationReportSchema, productReports, insertProductReportSchema, likedProducts, toastReports, insertToastReportSchema, affiliatePartners, vendorAffiliatePartners, drCongoServices } from "@shared/schema";
 
 import { setupAuth, hashPassword, comparePasswords } from "./auth";
@@ -18990,9 +18990,10 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
         );
 
       const [totalViews] = await db
-        .select({ views: sql<number>`COALESCE(SUM(${products.viewCount}), 0)::numeric` })
+        .select({ views: sql<number>`0::numeric` })
         .from(products)
-        .where(eq(products.vendorId, vendorId));
+        .where(eq(products.vendorId, vendorId))
+        .limit(1);
 
       // Calculate conversion rate and repeat customer rate
       const conversionRate = totalViews.views > 0 
@@ -19041,14 +19042,14 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
           productName: products.name,
           revenue: sql<number>`COALESCE(SUM(${orderItems.totalPrice}), 0)::numeric`,
           orders: sql<number>`COUNT(DISTINCT ${orderItems.orderId})::numeric`,
-          views: products.viewCount,
-          conversionRate: sql<number>`CASE WHEN ${products.viewCount} = 0 THEN 0 ELSE (COUNT(DISTINCT ${orderItems.orderId})::float / ${products.viewCount}::float * 100)::numeric END`,
+          views: sql<number>`0`,
+          conversionRate: sql<number>`0`,
           profit: sql<number>`COALESCE(SUM(${orderItems.totalPrice} * 0.7), 0)::numeric`
         })
         .from(products)
         .leftJoin(orderItems, eq(products.id, orderItems.productId))
         .where(eq(products.vendorId, vendorId))
-        .groupBy(products.id, products.name, products.viewCount)
+        .groupBy(products.id, products.name)
         .orderBy(desc(sql`COALESCE(SUM(${orderItems.totalPrice}), 0)`))
         .limit(10);
 
@@ -19109,7 +19110,7 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
       const trafficAnalytics = await db
         .select({
           period: sql<string>`TO_CHAR(${orders.createdAt}, 'YYYY-MM-DD')`,
-          views: sql<number>`COALESCE(SUM(${products.viewCount}), 0)::numeric`,
+          views: sql<number>`0::numeric`,
           uniqueVisitors: sql<number>`COUNT(DISTINCT ${orders.userId})::numeric`,
           bounceRate: sql<number>`0::numeric`
         })
@@ -19250,7 +19251,7 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
           totalRevenue: sql<number>`COALESCE(SUM(${orderItems.totalPrice}), 0)::numeric`,
           totalOrders: sql<number>`COUNT(DISTINCT ${orderItems.orderId})::numeric`,
           avgPrice: sql<number>`AVG(${products.price})::numeric`,
-          totalViews: sql<number>`COALESCE(SUM(${products.viewCount}), 0)::numeric`
+          totalViews: sql<number>`0::numeric`
         })
         .from(products)
         .leftJoin(orderItems, eq(products.id, orderItems.productId))
@@ -19264,8 +19265,8 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
         .where(
           and(
             eq(products.vendorId, vendorId),
-            lte(products.stock, 5),
-            gt(products.stock, 0)
+            lte(products.inventory, 5),
+            gt(products.inventory, 0)
           )
         );
 
@@ -19276,7 +19277,7 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
         .where(
           and(
             eq(products.vendorId, vendorId),
-            eq(products.stock, 0)
+            eq(products.inventory, 0)
           )
         );
 
@@ -19293,7 +19294,7 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
       }
 
       // Suggestion 2: Pricing Strategy
-      const conversionRate = vendorStats.totalViews > 0 ? (vendorStats.totalOrders / vendorStats.totalViews) * 100 : 0;
+      const conversionRate = 0;
       if (conversionRate < 2 && vendorStats.totalViews > 50) {
         suggestions.push({
           id: suggestionId++,
@@ -19350,8 +19351,8 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
           and(
             eq(products.vendorId, vendorId),
             or(
-              isNull(products.image),
-              eq(products.image, '')
+              isNull(products.imageUrl),
+              eq(products.imageUrl, '')
             )
           )
         );
