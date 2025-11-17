@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Heart, GraduationCap, Briefcase, Users, Truck, HandHeart, Search, MapPin, Plus } from 'lucide-react';
+import { Heart, GraduationCap, Briefcase, Users, Truck, HandHeart, MapPin } from 'lucide-react';
 import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
+import { ServicesNav } from '@/components/layout/ServicesNav';
 
 import healthImage from '@assets/stock_images/person_holding_red_h_e5c24926.jpg';
 import educationImage from '@assets/stock_images/teacher_in_classroom_ab8eb30d.jpg';
@@ -9,7 +10,6 @@ import jobsImage from '@assets/stock_images/professional_office__1082d449.jpg';
 import freelanceImage from '@assets/stock_images/freelance_worker_lap_414c8b06.jpg';
 import courierImage from '@assets/stock_images/delivery_courier_pac_0f3db2e7.jpg';
 import charitiesImage from '@assets/stock_images/charity_volunteers_h_b5235fcc.jpg';
-import heroImage from '@assets/stock_images/professional_relaxed_3e00c558.jpg';
 
 interface Service {
   id: number;
@@ -154,95 +154,12 @@ export default function ServicesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            {t[8] || 'Arrange your affairs with grace and flair.'}
-          </h1>
-          <p className="text-lg text-gray-600 mb-8">
-            {t[9] || 'Effortlessly Orchestrate the Symphony of Your Affairs'}
-          </p>
-          
-          {/* Hero Image */}
-          <div className="max-w-4xl mx-auto rounded-lg overflow-hidden shadow-2xl">
-            <img 
-              src={heroImage} 
-              alt="Professional services"
-              className="w-full h-[400px] object-cover"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation Bar */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4">
-            {/* Add Service Button */}
-            <button
-              data-testid="button-add-service"
-              className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-md hover:opacity-90 transition-opacity"
-            >
-              <Plus className="w-5 h-5" />
-              <span className="font-medium">{t[10] || '+ Add a Service'}</span>
-            </button>
-
-            {/* Category Tabs */}
-            <div className="hidden md:flex items-center gap-4">
-              {categoryNavItems.map((item) => (
-                <button
-                  key={item.key}
-                  data-testid={`tab-${item.key}`}
-                  onClick={() => setSelectedCategory(item.key)}
-                  className={`px-4 py-2 font-medium transition-colors ${
-                    selectedCategory === item.key
-                      ? 'text-blue-600 border-b-2 border-blue-600'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Search Bar */}
-            <div className="flex items-center gap-2 ml-4">
-              <div className="relative">
-                <input
-                  type="text"
-                  data-testid="input-search"
-                  placeholder={t[11] || 'Search'}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
-                />
-                <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile Category Tabs */}
-          <div className="md:hidden overflow-x-auto pb-4">
-            <div className="flex gap-2">
-              {categoryNavItems.map((item) => (
-                <button
-                  key={item.key}
-                  data-testid={`tab-mobile-${item.key}`}
-                  onClick={() => setSelectedCategory(item.key)}
-                  className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition-colors ${
-                    selectedCategory === item.key
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-700'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+      <ServicesNav 
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+        searchTerm={searchQuery}
+        setSearchTerm={setSearchQuery}
+      />
 
       {/* Service Categories Grid - Only show when 'all' or no category selected */}
       {(selectedCategory === 'all' || !selectedCategory) && (
