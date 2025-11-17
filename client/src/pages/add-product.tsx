@@ -224,7 +224,7 @@ const FIELD_CONFIGS: Record<string, {label: string; type: string; placeholder?: 
   license_type: { label: 'License Type', type: 'select', options: ['Standard', 'Commercial', 'International'] },
   visa_type: { label: 'Visa Type', type: 'select', options: ['Tourist', 'Business', 'Student', 'Work'] },
   permit_type: { label: 'Permit Type', type: 'text', placeholder: 'Type of permit' },
-  document_type: { label: 'Document Type', type: 'text', placeholder: 'e.g., ID Card, Tax Document' },
+  document_type: { label: 'Document Type', type: 'select', options: ['Passport', 'Drivers License', 'Supplementary Birth Certificate'] },
   language_from: { label: 'Translate From', type: 'text', placeholder: 'e.g., French' },
   language_to: { label: 'Translate To', type: 'text', placeholder: 'e.g., English' },
   notary_type: { label: 'Notary Service Type', type: 'text', placeholder: 'e.g., Affidavit, Power of Attorney' },
