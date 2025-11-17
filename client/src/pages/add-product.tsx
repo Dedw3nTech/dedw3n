@@ -727,10 +727,10 @@ export default function AddProduct() {
     
     if (urlMarketplace === 'government-dr-congo' && urlType === 'government-service') {
       form.setValue('marketplace', 'government-dr-congo');
-      // Set default category to Certificate if not already set
+      // Set default category to Document if not already set
       const currentCategory = form.getValues('category');
       if (!currentCategory || !currentCategory.startsWith('gov-')) {
-        form.setValue('category', 'gov-certificate');
+        form.setValue('category', 'gov-document');
       }
     }
   }, [location, form]);
@@ -1448,7 +1448,7 @@ export default function AddProduct() {
                                       if (section.id === 'government' && subItem.id === 'dr-congo') {
                                         setActiveSection('government');
                                         form.setValue('offeringType', 'service');
-                                        form.setValue('category', '');
+                                        form.setValue('category', 'gov-document');
                                       }
                                     } else if (subItem.onClick) {
                                       subItem.onClick();
