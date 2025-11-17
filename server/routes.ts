@@ -9879,7 +9879,7 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
         address: validatedData.address || user.shippingAddress || '',
         city: validatedData.city || user.shippingCity || '',
         state: validatedData.state || user.region || '',
-        zipCode: validatedData.zipCode || user.postalCode || '',
+        zipCode: validatedData.zipCode || user.shippingZipCode || '',
         country: validatedData.country || user.country || '',
         isApproved,
         isActive: true
@@ -10256,9 +10256,12 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
       });
 
       // Set public read permissions
-      await setObjectAclPolicy(filename, bucketName, ObjectPermission.PublicRead);
+      await setObjectAclPolicy(
+        { bucket: bucketName, key: filename },
+        { owner: 'system', visibility: 'public' }
+      );
 
-      const bannerPath = objectPathToPublicUrl(filename);
+      const bannerPath = filename;
 
       // Update vendor banner in database
       await db
@@ -10346,9 +10349,12 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
       });
 
       // Set public read permissions
-      await setObjectAclPolicy(filename, bucketName, ObjectPermission.PublicRead);
+      await setObjectAclPolicy(
+        { bucket: bucketName, key: filename },
+        { owner: 'system', visibility: 'public' }
+      );
 
-      const logoPath = objectPathToPublicUrl(filename);
+      const logoPath = filename;
 
       // Update vendor logo in database
       await db
@@ -14745,7 +14751,7 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
       
       // Get product and reporter details for admin notification
       const product = await storage.getProduct(productId);
-      const reporter = await storage.getUserById(userId);
+      const reporter = await storage.getUser(userId);
       
       if (product && reporter) {
         // Notify admins about the new report
@@ -14773,7 +14779,7 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: 'Invalid report data', errors: error.errors });
+        return res.status(400).json({ message: 'Invalid report data', errors: error.issues });
       }
       console.error('Error reporting product:', error);
       res.status(500).json({ message: 'Failed to report product' });
