@@ -218,7 +218,7 @@ const FIELD_CONFIGS: Record<string, {label: string; type: string; placeholder?: 
   cuisine_type: { label: 'Cuisine Type', type: 'text', placeholder: 'e.g., Italian' },
   capacity: { label: 'Capacity', type: 'number', placeholder: 'e.g., 50' },
   per_person_rate: { label: 'Rate per Person', type: 'number', placeholder: 'e.g., 25' },
-  processing_time: { label: 'Processing Time', type: 'text', placeholder: 'e.g., 5-7 business days' },
+  processing_time: { label: 'Processing Time (weeks)', type: 'number', placeholder: 'e.g., 2' },
   requirements: { label: 'Requirements', type: 'text', placeholder: 'Documents/requirements needed' },
   validity_period: { label: 'Validity Period', type: 'text', placeholder: 'e.g., 10 years' },
   license_type: { label: 'License Type', type: 'select', options: ['Standard', 'Commercial', 'International'] },
