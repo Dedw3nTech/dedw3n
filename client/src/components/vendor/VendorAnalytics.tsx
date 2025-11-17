@@ -205,17 +205,19 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
   const handleReportIssue = async () => {
     setIsReportingIssue(true);
     try {
-      await apiRequest('POST', '/api/support/report-issue', {
-        page: 'vendor-analytics',
-        vendorId,
+      await apiRequest('POST', '/api/report-error', {
         errorType: 'analytics-load-error',
         errorMessage: analyticsError instanceof Error ? analyticsError.message : 'Failed to load analytics',
-        timestamp: new Date().toISOString()
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        additionalInfo: `Vendor ID: ${vendorId}\nPage: vendor-analytics\nTime Range: ${timeRange}`,
+        toastTitle: 'Analytics Load Error',
+        toastDescription: 'Failed to load vendor analytics data'
       });
 
       toast({
         title: 'Issue Reported',
-        description: 'Thank you for reporting this issue. Our team will look into it.',
+        description: 'Thank you for reporting this issue. Our team will look into it and send you an email confirmation.',
       });
     } catch (error) {
       toast({
