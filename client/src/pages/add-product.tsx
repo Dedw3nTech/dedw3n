@@ -738,14 +738,6 @@ export default function AddProduct() {
     }
   }, [location, form]);
 
-  // Auto-expand government section when isGovernmentService becomes true
-  useEffect(() => {
-    if (isGovernmentService) {
-      setIsGovernmentExpanded(true);
-      setActiveSection('government');
-    }
-  }, [isGovernmentService]);
-
   // Fetch categories
   const { data: categories = [] } = useQuery({
     queryKey: ['/api/categories'],
@@ -763,6 +755,14 @@ export default function AddProduct() {
   // Compute isGovernmentService based on URL parameter or marketplace selection
   const currentMarketplace = form.watch('marketplace');
   const isGovernmentService = isGovernmentServiceFromUrl || currentMarketplace === 'government-dr-congo';
+
+  // Auto-expand government section when isGovernmentService becomes true
+  useEffect(() => {
+    if (isGovernmentService) {
+      setIsGovernmentExpanded(true);
+      setActiveSection('government');
+    }
+  }, [isGovernmentService]);
 
   // Determine available marketplaces based on vendor type
   const getAvailableMarketplaces = () => {
