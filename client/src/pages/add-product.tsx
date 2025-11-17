@@ -230,10 +230,13 @@ const FIELD_CONFIGS: Record<string, {label: string; type: string; placeholder?: 
   notary_type: { label: 'Notary Service Type', type: 'text', placeholder: 'e.g., Affidavit, Power of Attorney' },
 };
 
-// Document type specific requirements configuration
+// Document type and service type specific requirements configuration
 const DOCUMENT_REQUIREMENTS: Record<string, string[]> = {
   'Passport': ['Birth Certificate', 'ID'],
   'Drivers License': ['Old Drivers License', 'ID', 'ID Witness', 'Contact info Witness'],
+  'Birth Certificate': ['ID', 'Old Certificate (or Supplementary Judgement if lost/unavailable)'],
+  'Marriage Certificate': ['ID', 'Old Certificate (or Supplementary Judgement if lost/unavailable)'],
+  'Death Certificate': ['ID', 'Old Certificate (or Supplementary Judgement if lost/unavailable)'],
 };
 
 // Product form schema
@@ -1762,7 +1765,9 @@ export default function AddProduct() {
 
                     if (fieldKey === 'requirements') {
                       const documentType = form.watch('categoryFields.document_type');
-                      const predefinedRequirements = documentType ? DOCUMENT_REQUIREMENTS[documentType] : null;
+                      const serviceType = form.watch('categoryFields.service_type');
+                      const requirementKey = documentType || serviceType;
+                      const predefinedRequirements = requirementKey ? DOCUMENT_REQUIREMENTS[requirementKey] : null;
                       
                       if (predefinedRequirements) {
                         return (
