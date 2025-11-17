@@ -230,6 +230,12 @@ const FIELD_CONFIGS: Record<string, {label: string; type: string; placeholder?: 
   notary_type: { label: 'Notary Service Type', type: 'text', placeholder: 'e.g., Affidavit, Power of Attorney' },
 };
 
+// Document type specific requirements configuration
+const DOCUMENT_REQUIREMENTS: Record<string, string[]> = {
+  'Passport': ['Birth Certificate', 'ID'],
+  'Drivers License': ['Old Drivers License', 'ID'],
+};
+
 // Product form schema
 const productSchema = z.object({
   name: z.string().min(3, { message: "Product name must be at least 3 characters" }),
@@ -1754,31 +1760,35 @@ export default function AddProduct() {
                       );
                     }
 
-                    if (fieldKey === 'requirements' && form.watch('categoryFields.document_type') === 'Passport') {
-                      return (
-                        <FormField
-                          key={fieldKey}
-                          control={form.control}
-                          name={fieldName}
-                          render={({ field }) => (
-                            <FormItem className="md:col-span-2">
-                              <FormLabel>{t(fieldConfig.label)}</FormLabel>
-                              <div className="space-y-2">
-                                <div className="flex items-center space-x-2 p-3 border rounded-lg bg-gray-50">
-                                  <span className="text-sm font-medium">Birth Certificate</span>
+                    if (fieldKey === 'requirements') {
+                      const documentType = form.watch('categoryFields.document_type');
+                      const predefinedRequirements = documentType ? DOCUMENT_REQUIREMENTS[documentType] : null;
+                      
+                      if (predefinedRequirements) {
+                        return (
+                          <FormField
+                            key={fieldKey}
+                            control={form.control}
+                            name={fieldName}
+                            render={({ field }) => (
+                              <FormItem className="md:col-span-2">
+                                <FormLabel>{t(fieldConfig.label)}</FormLabel>
+                                <div className="space-y-2">
+                                  {predefinedRequirements.map((requirement, index) => (
+                                    <div key={index} className="flex items-center space-x-2 p-3 border rounded-lg bg-gray-50">
+                                      <span className="text-sm font-medium">{requirement}</span>
+                                    </div>
+                                  ))}
                                 </div>
-                                <div className="flex items-center space-x-2 p-3 border rounded-lg bg-gray-50">
-                                  <span className="text-sm font-medium">ID</span>
-                                </div>
-                              </div>
-                              <FormControl>
-                                <Input type="hidden" {...field} value="Birth Certificate, ID" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      );
+                                <FormControl>
+                                  <Input type="hidden" {...field} value={predefinedRequirements.join(', ')} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        );
+                      }
                     }
 
                     return (
