@@ -18933,8 +18933,8 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
       const vendorId = parseInt(req.query.vendorId as string);
       const timeRange = req.query.timeRange as string || '30d';
       
-      if (isNaN(vendorId)) {
-        return res.status(400).json({ error: 'Invalid vendor ID' });
+      if (isNaN(vendorId) || !vendorId) {
+        return res.status(400).json({ message: 'Invalid vendor ID' });
       }
 
       // Calculate date range

@@ -130,24 +130,43 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
   const [activeMetric, setActiveMetric] = useState('revenue');
   const [isReportingIssue, setIsReportingIssue] = useState(false);
 
+  // Normalize vendorId to number
+  const numericVendorId = Number(vendorId);
+
+  // Early validation: if vendorId is invalid, show error immediately
+  if (!numericVendorId || isNaN(numericVendorId)) {
+    return (
+      <Card className="border-0 shadow-none">
+        <CardContent className="flex items-center justify-center p-8">
+          <div className="text-center" data-testid="analytics-error">
+            <h3 className="text-lg font-semibold mb-2">Invalid Vendor</h3>
+            <p className="text-muted-foreground mb-4">
+              Unable to load analytics. Please ensure you have a valid vendor account.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   // Fetch analytics data
   const { data: analytics, isLoading, refetch, error: analyticsError } = useQuery({
-    queryKey: ['/api/vendors/analytics', vendorId, timeRange],
+    queryKey: ['/api/vendors/analytics', numericVendorId, timeRange],
     queryFn: async () => {
-      const response = await apiRequest(`/api/vendors/analytics?vendorId=${vendorId}&timeRange=${timeRange}`);
+      const response = await apiRequest(`/api/vendors/analytics?vendorId=${numericVendorId}&timeRange=${timeRange}`);
       return response as AnalyticsData;
     },
-    enabled: !!vendorId
+    enabled: !!numericVendorId && !isNaN(numericVendorId)
   });
 
   // Fetch AI-powered suggestions
   const { data: suggestions, isLoading: isLoadingSuggestions, error: suggestionsError } = useQuery({
-    queryKey: ['/api/vendors', vendorId, 'suggestions'],
+    queryKey: ['/api/vendors', numericVendorId, 'suggestions'],
     queryFn: async () => {
-      const response = await apiRequest(`/api/vendors/${vendorId}/suggestions`);
+      const response = await apiRequest(`/api/vendors/${numericVendorId}/suggestions`);
       return response as Suggestion[];
     },
-    enabled: !!vendorId
+    enabled: !!numericVendorId && !isNaN(numericVendorId)
   });
 
   const formatMetric = (value: number, type: 'currency' | 'number' | 'percentage') => {
@@ -211,7 +230,7 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
         errorMessage: analyticsError instanceof Error ? analyticsError.message : 'Failed to load analytics',
         url: window.location.href,
         userAgent: navigator.userAgent,
-        additionalInfo: `Vendor ID: ${vendorId}\nPage: vendor-analytics\nTime Range: ${timeRange}`,
+        additionalInfo: `Vendor ID: ${numericVendorId}\nPage: vendor-analytics\nTime Range: ${timeRange}`,
         toastTitle: 'Analytics Load Error',
         toastDescription: 'Failed to load vendor analytics data'
       });

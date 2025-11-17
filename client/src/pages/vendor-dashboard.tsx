@@ -547,7 +547,7 @@ export default function VendorDashboard() {
           )}
 
           {activeTab === 'analytics' && vendor?.id && (
-            <VendorAnalytics vendorId={vendor.id} />
+            <VendorAnalytics vendorId={Number(vendor.id)} />
           )}
         </div>
       </div>
