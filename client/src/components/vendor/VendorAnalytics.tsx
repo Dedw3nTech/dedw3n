@@ -242,7 +242,6 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
       <Card>
         <CardContent className="flex items-center justify-center p-8">
           <div className="text-center" data-testid="analytics-error">
-            <Info className="h-12 w-12 mx-auto mb-4 text-blue-500" />
             <h3 className="text-lg font-semibold mb-2">Failed to Load Analytics</h3>
             <p className="text-muted-foreground mb-4">
               Unable to load analytics data at this time. Please try again or report this issue if it persists.
