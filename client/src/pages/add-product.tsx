@@ -201,7 +201,7 @@ const FIELD_CONFIGS: Record<string, {label: string; type: string; placeholder?: 
   languages: { label: 'Languages', type: 'text', placeholder: 'e.g., EN, FR' },
   equipment: { label: 'Equipment', type: 'text', placeholder: 'Camera models' },
   session_rate: { label: 'Session Rate', type: 'number', placeholder: 'e.g., 200' },
-  service_type: { label: 'Service Type', type: 'text', placeholder: 'Type of service' },
+  service_type: { label: 'Service Type', type: 'select', options: ['Birth Certificate', 'Marriage Certificate', 'Death Certificate'] },
   area_coverage: { label: 'Coverage Area', type: 'text', placeholder: 'Cities/Regions' },
   level: { label: 'Level', type: 'select', options: ['Beginner', 'Intermediate', 'Advanced'] },
   platform: { label: 'Platform', type: 'select', options: ['Windows', 'macOS', 'Linux', 'iOS', 'Android', 'Web'] },
