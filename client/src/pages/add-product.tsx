@@ -719,6 +719,22 @@ export default function AddProduct() {
     },
   });
 
+  // Update form marketplace and category fields when URL parameter changes
+  useEffect(() => {
+    const params = new URLSearchParams(getQueryParams(location));
+    const urlMarketplace = params.get('marketplace');
+    const urlType = params.get('type');
+    
+    if (urlMarketplace === 'government-dr-congo' && urlType === 'government-service') {
+      form.setValue('marketplace', 'government-dr-congo');
+      // Set default category to Certificate if not already set
+      const currentCategory = form.getValues('category');
+      if (!currentCategory || !currentCategory.startsWith('gov-')) {
+        form.setValue('category', 'gov-certificate');
+      }
+    }
+  }, [location, form]);
+
   // Fetch categories
   const { data: categories = [] } = useQuery({
     queryKey: ['/api/categories'],
