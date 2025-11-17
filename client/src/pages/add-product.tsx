@@ -116,12 +116,10 @@ const SERVICE_CATEGORIES = [
 ];
 
 const GOVERNMENT_SERVICE_CATEGORIES = [
-  { value: 'gov-certificates', label: 'Certificates', fields: ['service_type', 'processing_time', 'requirements'] },
-  { value: 'gov-passport', label: 'Passport Services', fields: ['service_type', 'processing_time', 'validity_period'] },
-  { value: 'gov-supplementary-judgment', label: 'Supplementary Judgment', fields: ['service_type', 'processing_time', 'requirements'] },
-  { value: 'gov-drivers-license', label: 'Drivers License', fields: ['license_type', 'processing_time', 'validity_period'] },
-  { value: 'gov-visa', label: 'Visa Services', fields: ['visa_type', 'processing_time', 'validity_period'] },
-  { value: 'gov-permits', label: 'Permits & Licenses', fields: ['permit_type', 'processing_time', 'validity_period'] },
+  { value: 'gov-certificate', label: 'Certificate', fields: ['service_type', 'processing_time', 'requirements'] },
+  { value: 'gov-document', label: 'Document', fields: ['document_type', 'processing_time', 'requirements'] },
+  { value: 'gov-translation', label: 'Translation', fields: ['language_from', 'language_to', 'processing_time'] },
+  { value: 'gov-notary', label: 'Notary', fields: ['notary_type', 'processing_time', 'requirements'] },
 ];
 
 const DIGITAL_CATEGORIES = [
@@ -226,6 +224,10 @@ const FIELD_CONFIGS: Record<string, {label: string; type: string; placeholder?: 
   license_type: { label: 'License Type', type: 'select', options: ['Standard', 'Commercial', 'International'] },
   visa_type: { label: 'Visa Type', type: 'select', options: ['Tourist', 'Business', 'Student', 'Work'] },
   permit_type: { label: 'Permit Type', type: 'text', placeholder: 'Type of permit' },
+  document_type: { label: 'Document Type', type: 'text', placeholder: 'e.g., ID Card, Tax Document' },
+  language_from: { label: 'Translate From', type: 'text', placeholder: 'e.g., French' },
+  language_to: { label: 'Translate To', type: 'text', placeholder: 'e.g., English' },
+  notary_type: { label: 'Notary Service Type', type: 'text', placeholder: 'e.g., Affidavit, Power of Attorney' },
 };
 
 // Product form schema
@@ -1499,84 +1501,119 @@ export default function AddProduct() {
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
-          {/* Offering Type Selection */}
-          <div className="mb-6">
-            <FormField
-              control={form.control}
-              name="offeringType"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel>{t("What are you offering?")}</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="grid grid-cols-3 gap-4"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="product" id="product" className="border-gray-300 text-black data-[state=checked]:border-black data-[state=checked]:bg-black" />
-                        <label htmlFor="product" className="text-sm font-medium cursor-pointer">
-                          {t("Product")}
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="service" id="service" className="border-gray-300 text-black data-[state=checked]:border-black data-[state=checked]:bg-black" />
-                        <label htmlFor="service" className="text-sm font-medium cursor-pointer">
-                          {t("Service")}
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="digital_product" id="digital_product" className="border-gray-300 text-black data-[state=checked]:border-black data-[state=checked]:bg-black" />
-                        <label htmlFor="digital_product" className="text-sm font-medium cursor-pointer">
-                          {t("Digital Product")}
-                        </label>
-                      </div>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          {/* Category Selection - Right after offering type */}
-          <div className="mb-6">
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => {
-                const offeringType = form.watch('offeringType');
-                const availableCategories = isGovernmentService
-                  ? GOVERNMENT_SERVICE_CATEGORIES
-                  : offeringType === 'service' 
-                  ? SERVICE_CATEGORIES 
-                  : offeringType === 'digital_product'
-                  ? DIGITAL_CATEGORIES
-                  : PRODUCT_CATEGORIES;
-                
-                return (
-                  <FormItem>
-                    <FormLabel>{t("Product Category")}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t("Select category")} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="max-h-[300px]">
-                        {availableCategories.map((cat) => (
-                          <SelectItem key={cat.value} value={cat.value}>
-                            {t(cat.label)}
-                          </SelectItem>
+          {/* Offering Type Selection - Conditional based on government service */}
+          {isGovernmentService ? (
+            <div className="mb-6">
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>{t("What are you offering?")}</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        className="grid grid-cols-4 gap-4"
+                      >
+                        {GOVERNMENT_SERVICE_CATEGORIES.map((category) => (
+                          <div key={category.value} className="flex items-center space-x-2">
+                            <RadioGroupItem 
+                              value={category.value} 
+                              id={category.value} 
+                              className="border-gray-300 text-black data-[state=checked]:border-black data-[state=checked]:bg-black" 
+                            />
+                            <label htmlFor={category.value} className="text-sm font-medium cursor-pointer">
+                              {t(category.label)}
+                            </label>
+                          </div>
                         ))}
-                      </SelectContent>
-                    </Select>
+                      </RadioGroup>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
-                );
-              }}
-            />
-          </div>
+                )}
+              />
+            </div>
+          ) : (
+            <div className="mb-6">
+              <FormField
+                control={form.control}
+                name="offeringType"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>{t("What are you offering?")}</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="grid grid-cols-3 gap-4"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="product" id="product" className="border-gray-300 text-black data-[state=checked]:border-black data-[state=checked]:bg-black" />
+                          <label htmlFor="product" className="text-sm font-medium cursor-pointer">
+                            {t("Product")}
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="service" id="service" className="border-gray-300 text-black data-[state=checked]:border-black data-[state=checked]:bg-black" />
+                          <label htmlFor="service" className="text-sm font-medium cursor-pointer">
+                            {t("Service")}
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="digital_product" id="digital_product" className="border-gray-300 text-black data-[state=checked]:border-black data-[state=checked]:bg-black" />
+                          <label htmlFor="digital_product" className="text-sm font-medium cursor-pointer">
+                            {t("Digital Product")}
+                          </label>
+                        </div>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
+
+          {/* Category Selection - Only shown for non-government services */}
+          {!isGovernmentService && (
+            <div className="mb-6">
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => {
+                  const offeringType = form.watch('offeringType');
+                  const availableCategories = offeringType === 'service' 
+                    ? SERVICE_CATEGORIES 
+                    : offeringType === 'digital_product'
+                    ? DIGITAL_CATEGORIES
+                    : PRODUCT_CATEGORIES;
+                  
+                  return (
+                    <FormItem>
+                      <FormLabel>{t("Product Category")}</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t("Select category")} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="max-h-[300px]">
+                          {availableCategories.map((cat) => (
+                            <SelectItem key={cat.value} value={cat.value}>
+                              {t(cat.label)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
+            </div>
+          )}
 
           {/* Dynamic Category-Specific Fields */}
           {form.watch('category') && (() => {
