@@ -1403,12 +1403,6 @@ export default function AddProduct() {
         hasSubItems: marketplaceSubItems.length > 0,
         subItems: marketplaceSubItems,
       },
-      {
-        id: 'community',
-        label: t("Community"),
-        href: getSectionHref('community'),
-        isActive: activeSection === 'community',
-      },
     ];
   }, [activeSection, location, t, vendorAccountsData]);
 
