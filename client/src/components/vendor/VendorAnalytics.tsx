@@ -249,17 +249,21 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
               Unable to load analytics data at this time. Please try again or report this issue if it persists.
             </p>
             <div className="flex gap-2 justify-center">
-              <Button onClick={() => refetch()} variant="outline" data-testid="button-retry-analytics">
-                <RefreshCw className="h-4 w-4 mr-2" />
+              <Button 
+                onClick={() => refetch()} 
+                variant="ghost" 
+                className="text-black hover:text-black/80 hover:bg-transparent"
+                data-testid="button-retry-analytics"
+              >
                 Retry
               </Button>
               <Button 
                 onClick={handleReportIssue} 
-                variant="secondary" 
+                variant="ghost"
+                className="text-black hover:text-black/80 hover:bg-transparent"
                 disabled={isReportingIssue}
                 data-testid="button-report-issue"
               >
-                <Flag className="h-4 w-4 mr-2" />
                 {isReportingIssue ? 'Reporting...' : 'Report Issue'}
               </Button>
             </div>
@@ -301,12 +305,19 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
               <SelectItem value="1y">Last year</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={() => refetch()} data-testid="button-refresh-analytics">
-            <RefreshCw className="h-4 w-4 mr-2" />
+          <Button 
+            variant="ghost" 
+            className="text-black hover:text-black/80 hover:bg-transparent"
+            onClick={() => refetch()} 
+            data-testid="button-refresh-analytics"
+          >
             Refresh
           </Button>
-          <Button variant="outline" data-testid="button-export-analytics">
-            <Download className="h-4 w-4 mr-2" />
+          <Button 
+            variant="ghost" 
+            className="text-black hover:text-black/80 hover:bg-transparent"
+            data-testid="button-export-analytics"
+          >
             Export
           </Button>
         </div>
@@ -460,11 +471,11 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
               </p>
               <Button 
                 onClick={() => window.location.reload()} 
-                variant="outline" 
+                variant="ghost"
+                className="text-black hover:text-black/80 hover:bg-transparent"
                 size="sm"
                 data-testid="button-retry-suggestions"
               >
-                <RefreshCw className="h-4 w-4 mr-2" />
                 Retry
               </Button>
             </div>
