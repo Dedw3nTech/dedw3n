@@ -234,9 +234,9 @@ const FIELD_CONFIGS: Record<string, {label: string; type: string; placeholder?: 
 const DOCUMENT_REQUIREMENTS: Record<string, string[]> = {
   'Passport': ['Birth Certificate', 'ID'],
   'Drivers License': ['Old Drivers License', 'ID', 'ID Witness', 'Contact info Witness'],
-  'Birth Certificate': ['ID', 'Old Certificate (or Supplementary Judgement if lost/unavailable)'],
-  'Marriage Certificate': ['ID', 'Old Certificate (or Supplementary Judgement if lost/unavailable)'],
-  'Death Certificate': ['ID', 'Old Certificate (or Supplementary Judgement if lost/unavailable)'],
+  'Birth Certificate': ['ID', 'Document'],
+  'Marriage Certificate': ['ID', 'Document'],
+  'Death Certificate': ['ID', 'Document'],
 };
 
 // Product form schema
