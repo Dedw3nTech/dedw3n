@@ -116,8 +116,8 @@ const SERVICE_CATEGORIES = [
 ];
 
 const GOVERNMENT_SERVICE_CATEGORIES = [
-  { value: 'gov-certificate', label: 'Certificate', fields: ['service_type', 'processing_time', 'requirements'] },
   { value: 'gov-document', label: 'Document', fields: ['document_type', 'processing_time', 'requirements'] },
+  { value: 'gov-certificate', label: 'Certificate', fields: ['service_type', 'processing_time', 'requirements'] },
   { value: 'gov-translation', label: 'Translation', fields: ['language_from', 'language_to', 'processing_time'] },
   { value: 'gov-notary', label: 'Notary', fields: ['notary_type', 'processing_time', 'requirements'] },
 ];
