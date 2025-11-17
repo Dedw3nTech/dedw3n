@@ -1,10 +1,8 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
-import { Input } from "@/components/ui/input";
-import PageHeader from "@/components/layout/PageHeader";
+import { LifestyleNav } from "@/components/layout/LifestyleNav";
 import {
-  Search,
   Car,
   Plane,
   Bus,
@@ -73,7 +71,6 @@ export default function LifestylePage() {
   // Translatable texts
   const texts = useMemo(() => [
     "Lifestyle",
-    "Add Travel Service",
     "Restaurant",
     "Ride Sharing",
     "Flights",
@@ -83,22 +80,25 @@ export default function LifestylePage() {
     "House sharing",
     "Activities",
     "Food Delivery",
-    "Search",
     "SPEND YOUR FREE TIME IN EASE AND PEACE",
     "Embrace tranquility and grace as you journey with Dedw3n.",
     "All Services",
     "Ride Sharing & Taxi",
+    "service",
+    "services",
+    "found",
+    "Back to all categories",
+    "No services found matching your search.",
+    "No services available in this category yet.",
+    "Loading services...",
+    "Featured"
   ], []);
 
   const { translations: t } = useMasterBatchTranslation(texts);
 
-  // Fetch lifestyle services with category filter
-  const queryUrl = selectedCategory && selectedCategory !== 'all' 
-    ? `/api/lifestyle-services?category=${selectedCategory}`
-    : '/api/lifestyle-services';
-    
+  // Fetch lifestyle services
   const { data: services = [], isLoading } = useQuery<LifestyleService[]>({
-    queryKey: [queryUrl],
+    queryKey: ['/api/lifestyle-services'],
     enabled: true,
   });
 
@@ -124,23 +124,17 @@ export default function LifestylePage() {
     return filtered;
   }, [services, searchQuery, selectedCategory]);
 
-  // Get unique categories from services
-  const categories = useMemo(() => {
-    const cats = new Set(services.map(s => s.category));
-    return Array.from(cats);
-  }, [services]);
-
   // Category navigation items
   const categoryNavItems = [
-    { key: "restaurant", label: t["Restaurant"] || "Restaurant" },
-    { key: "ride_sharing", label: t["Ride Sharing"] || "Ride Sharing" },
-    { key: "flights", label: t["Flights"] || "Flights" },
-    { key: "public_transportation", label: t["Public Transportation"] || "Public Transportation" },
-    { key: "free_time", label: t["Free time"] || "Free time" },
-    { key: "hotels", label: t["Hotels"] || "Hotels" },
-    { key: "house_sharing", label: t["House sharing"] || "House sharing" },
-    { key: "activities", label: t["Activities"] || "Activities" },
-    { key: "food_delivery", label: t["Food Delivery"] || "Food Delivery" },
+    { key: "restaurant", label: t[1] || "Restaurant" },
+    { key: "ride_sharing", label: t[2] || "Ride Sharing" },
+    { key: "flights", label: t[3] || "Flights" },
+    { key: "public_transportation", label: t[4] || "Public Transportation" },
+    { key: "free_time", label: t[5] || "Free time" },
+    { key: "hotels", label: t[6] || "Hotels" },
+    { key: "house_sharing", label: t[7] || "House sharing" },
+    { key: "activities", label: t[8] || "Activities" },
+    { key: "food_delivery", label: t[9] || "Food Delivery" },
   ];
 
   // Group services by category for the grid view
@@ -157,8 +151,12 @@ export default function LifestylePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <PageHeader 
-        title={t["Lifestyle"] || "Lifestyle"}
+      {/* Lifestyle Navigation */}
+      <LifestyleNav 
+        searchTerm={searchQuery}
+        setSearchTerm={setSearchQuery}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
       />
 
       {/* Hero Section */}
@@ -166,10 +164,10 @@ export default function LifestylePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              {t["SPEND YOUR FREE TIME IN EASE AND PEACE"] || "SPEND YOUR FREE TIME IN EASE AND PEACE"}
+              {t[10] || "SPEND YOUR FREE TIME IN EASE AND PEACE"}
             </h1>
             <p className="text-lg text-gray-600">
-              {t["Embrace tranquility and grace as you journey with Dedw3n."] || "Embrace tranquility and grace as you journey with Dedw3n."}
+              {t[11] || "Embrace tranquility and grace as you journey with Dedw3n."}
             </p>
           </div>
 
@@ -180,49 +178,6 @@ export default function LifestylePage() {
               alt="Travel"
               className="w-full h-64 md:h-96 object-cover"
             />
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation Tabs */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-4 py-4 overflow-x-auto">
-            <button
-              data-testid="button-add-service"
-              className="flex-shrink-0 px-6 py-2 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors whitespace-nowrap"
-            >
-              + {t["Add Travel Service"] || "Add Travel Service"}
-            </button>
-            
-            {categoryNavItems.map((item) => (
-              <button
-                key={item.key}
-                data-testid={`button-category-${item.key}`}
-                onClick={() => setSelectedCategory(item.key)}
-                className={`flex-shrink-0 px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
-                  selectedCategory === item.key
-                    ? 'bg-gray-200 text-gray-900'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-
-            <div className="flex-shrink-0 ml-auto">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <Input
-                  data-testid="input-search"
-                  type="text"
-                  placeholder={t["Search"] || "Search"}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-64 border-gray-300 rounded-lg"
-                />
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -261,7 +216,7 @@ export default function LifestylePage() {
                       {/* Service Count Badge */}
                       {categoryServices.length > 0 && (
                         <div className="absolute top-4 left-4 px-3 py-1 bg-white/90 rounded-full text-sm font-medium">
-                          {categoryServices.length} {categoryServices.length === 1 ? 'service' : 'services'}
+                          {categoryServices.length} {categoryServices.length === 1 ? (t[14] || 'service') : (t[15] || 'services')}
                         </div>
                       )}
                     </div>
@@ -287,14 +242,15 @@ export default function LifestylePage() {
             <button
               onClick={() => setSelectedCategory('all')}
               className="flex items-center gap-2 text-blue-600 hover:underline"
+              data-testid="button-back-to-all"
             >
-              ← Back to all categories
+              ← {t[17] || "Back to all categories"}
             </button>
             <h2 className="text-2xl font-bold text-gray-900 mt-4">
               {categoryNavItems.find(c => c.key === selectedCategory)?.label || selectedCategory}
             </h2>
             <p className="text-gray-600">
-              {filteredServices.length} {filteredServices.length === 1 ? 'service' : 'services'} found
+              {filteredServices.length} {filteredServices.length === 1 ? (t[14] || 'service') : (t[15] || 'services')} {t[16] || 'found'}
             </p>
           </div>
 
@@ -353,7 +309,7 @@ export default function LifestylePage() {
                     {service.isFeatured && (
                       <div className="mt-2">
                         <span className="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
-                          Featured
+                          {t[21] || "Featured"}
                         </span>
                       </div>
                     )}
@@ -370,7 +326,7 @@ export default function LifestylePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-            <p className="mt-4 text-gray-600">Loading services...</p>
+            <p className="mt-4 text-gray-600">{t[20] || "Loading services..."}</p>
           </div>
         </div>
       )}
@@ -380,7 +336,7 @@ export default function LifestylePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
             <p className="text-gray-600 text-lg">
-              {searchQuery ? 'No services found matching your search.' : 'No services available in this category yet.'}
+              {searchQuery ? (t[18] || 'No services found matching your search.') : (t[19] || 'No services available in this category yet.')}
             </p>
           </div>
         </div>
