@@ -43,7 +43,8 @@ import {
   Lightbulb,
   AlertCircle,
   Info,
-  Flag
+  Flag,
+  Mail
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -128,6 +129,7 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
   const [timeRange, setTimeRange] = useState('30d');
   const [activeMetric, setActiveMetric] = useState('revenue');
   const [isReportingIssue, setIsReportingIssue] = useState(false);
+  const [isEmailingReport, setIsEmailingReport] = useState(false);
 
   // Fetch analytics data
   const { data: analytics, isLoading, refetch, error: analyticsError } = useQuery({
@@ -228,6 +230,28 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
     }
   };
 
+  const handleEmailReport = async () => {
+    setIsEmailingReport(true);
+    try {
+      const response = await apiRequest('POST', '/api/vendors/analytics/email', {
+        timeRange
+      }) as any;
+
+      toast({
+        title: 'Report Sent',
+        description: response?.message || 'Analytics report has been sent to your email.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Email Failed',
+        description: error instanceof Error ? error.message : 'Unable to send the report. Please try again later.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsEmailingReport(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8" data-testid="analytics-loading">
@@ -302,6 +326,15 @@ export default function VendorAnalytics({ vendorId }: VendorAnalyticsProps) {
           <Button variant="outline" onClick={() => refetch()} data-testid="button-refresh-analytics">
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleEmailReport} 
+            disabled={isEmailingReport}
+            data-testid="button-email-analytics"
+          >
+            <Mail className="h-4 w-4 mr-2" />
+            {isEmailingReport ? 'Sending...' : 'Email Report'}
           </Button>
           <Button variant="outline" data-testid="button-export-analytics">
             <Download className="h-4 w-4 mr-2" />
