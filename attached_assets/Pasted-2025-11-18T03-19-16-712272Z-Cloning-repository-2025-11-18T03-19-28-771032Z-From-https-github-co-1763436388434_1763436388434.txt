@@ -1,0 +1,296 @@
+2025-11-18T03:19:16.712272Z	Cloning repository...
+2025-11-18T03:19:28.771032Z	From https://github.com/Dedw3nTech/dedw3n
+2025-11-18T03:19:28.771853Z	 * branch            b8e4021d555b2fbeb412554685f80976c2bdf384 -> FETCH_HEAD
+2025-11-18T03:19:28.771965Z	
+2025-11-18T03:19:31.678063Z	HEAD is now at b8e4021 Update project dependencies and configuration settings
+2025-11-18T03:19:31.678647Z	
+2025-11-18T03:19:31.754388Z	
+2025-11-18T03:19:31.754815Z	Using v2 root directory strategy
+2025-11-18T03:19:31.778663Z	Success: Finished cloning repository files
+2025-11-18T03:19:33.710319Z	Checking for configuration in a Wrangler configuration file (BETA)
+2025-11-18T03:19:33.711436Z	
+2025-11-18T03:19:34.819759Z	No wrangler.toml file found. Continuing.
+2025-11-18T03:19:34.885084Z	Detected the following tools from environment: npm@10.9.2, nodejs@22.16.0, pip@25.1.1, python@3.13.3
+2025-11-18T03:19:34.885627Z	Installing project dependencies: npm clean-install --progress=false
+2025-11-18T03:19:38.111156Z	npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2025-11-18T03:19:38.894987Z	npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2025-11-18T03:19:39.057105Z	npm warn deprecated glob@8.1.0: Glob versions prior to v9 are no longer supported
+2025-11-18T03:19:39.188978Z	npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+2025-11-18T03:19:39.954943Z	npm warn deprecated @types/cookie@1.0.0: This is a stub types definition. cookie provides its own type definitions, so you do not need this installed.
+2025-11-18T03:19:41.116695Z	npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+2025-11-18T03:19:41.116975Z	npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+2025-11-18T03:19:41.788174Z	npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-18T03:19:44.65596Z	npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+2025-11-18T03:19:48.945589Z	
+2025-11-18T03:19:48.945889Z	added 930 packages, and audited 931 packages in 14s
+2025-11-18T03:19:48.94606Z	
+2025-11-18T03:19:48.946173Z	112 packages are looking for funding
+2025-11-18T03:19:48.94632Z	  run `npm fund` for details
+2025-11-18T03:19:48.962926Z	
+2025-11-18T03:19:48.963121Z	2 moderate severity vulnerabilities
+2025-11-18T03:19:48.963336Z	
+2025-11-18T03:19:48.963453Z	To address all issues (including breaking changes), run:
+2025-11-18T03:19:48.963649Z	  npm audit fix --force
+2025-11-18T03:19:48.963802Z	
+2025-11-18T03:19:48.963881Z	Run `npm audit` for details.
+2025-11-18T03:19:48.99612Z	Installing project dependencies: pip install .
+2025-11-18T03:19:50.193396Z	Processing /opt/buildhome/repo
+2025-11-18T03:19:50.196339Z	  Installing build dependencies: started
+2025-11-18T03:19:51.404716Z	  Installing build dependencies: finished with status 'done'
+2025-11-18T03:19:51.405808Z	  Getting requirements to build wheel: started
+2025-11-18T03:19:52.021165Z	  Getting requirements to build wheel: finished with status 'done'
+2025-11-18T03:19:52.022126Z	  Preparing metadata (pyproject.toml): started
+2025-11-18T03:19:52.248863Z	  Preparing metadata (pyproject.toml): finished with status 'done'
+2025-11-18T03:19:52.310888Z	Collecting openpyxl>=3.1.5 (from repl-nix-workspace==0.1.0)
+2025-11-18T03:19:52.348814Z	  Downloading openpyxl-3.1.5-py2.py3-none-any.whl.metadata (2.5 kB)
+2025-11-18T03:19:52.504187Z	Collecting pandas>=2.3.1 (from repl-nix-workspace==0.1.0)
+2025-11-18T03:19:52.51339Z	  Downloading pandas-2.3.3-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (91 kB)
+2025-11-18T03:19:52.667424Z	Collecting psycopg2-binary>=2.9.10 (from repl-nix-workspace==0.1.0)
+2025-11-18T03:19:52.678151Z	  Downloading psycopg2_binary-2.9.11-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.9 kB)
+2025-11-18T03:19:52.696098Z	Collecting xlrd>=2.0.2 (from repl-nix-workspace==0.1.0)
+2025-11-18T03:19:52.705589Z	  Downloading xlrd-2.0.2-py2.py3-none-any.whl.metadata (3.5 kB)
+2025-11-18T03:19:52.722358Z	Collecting et-xmlfile (from openpyxl>=3.1.5->repl-nix-workspace==0.1.0)
+2025-11-18T03:19:52.731693Z	  Downloading et_xmlfile-2.0.0-py3-none-any.whl.metadata (2.7 kB)
+2025-11-18T03:19:52.953508Z	Collecting numpy>=1.26.0 (from pandas>=2.3.1->repl-nix-workspace==0.1.0)
+2025-11-18T03:19:52.965773Z	  Downloading numpy-2.3.5-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (62 kB)
+2025-11-18T03:19:52.995278Z	Collecting python-dateutil>=2.8.2 (from pandas>=2.3.1->repl-nix-workspace==0.1.0)
+2025-11-18T03:19:53.005675Z	  Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+2025-11-18T03:19:53.051837Z	Collecting pytz>=2020.1 (from pandas>=2.3.1->repl-nix-workspace==0.1.0)
+2025-11-18T03:19:53.064315Z	  Downloading pytz-2025.2-py2.py3-none-any.whl.metadata (22 kB)
+2025-11-18T03:19:53.087537Z	Collecting tzdata>=2022.7 (from pandas>=2.3.1->repl-nix-workspace==0.1.0)
+2025-11-18T03:19:53.09641Z	  Downloading tzdata-2025.2-py2.py3-none-any.whl.metadata (1.4 kB)
+2025-11-18T03:19:53.11775Z	Collecting six>=1.5 (from python-dateutil>=2.8.2->pandas>=2.3.1->repl-nix-workspace==0.1.0)
+2025-11-18T03:19:53.127209Z	  Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+2025-11-18T03:19:53.144673Z	Downloading openpyxl-3.1.5-py2.py3-none-any.whl (250 kB)
+2025-11-18T03:19:53.161967Z	Downloading pandas-2.3.3-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (12.3 MB)
+2025-11-18T03:19:53.235563Z	   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.3/12.3 MB 173.3 MB/s eta 0:00:00
+2025-11-18T03:19:53.245409Z	Downloading numpy-2.3.5-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.6 MB)
+2025-11-18T03:19:53.336557Z	   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.6/16.6 MB 187.8 MB/s eta 0:00:00
+2025-11-18T03:19:53.349287Z	Downloading psycopg2_binary-2.9.11-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.2 MB)
+2025-11-18T03:19:53.466102Z	   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.2/4.2 MB 34.5 MB/s eta 0:00:00
+2025-11-18T03:19:53.475827Z	Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+2025-11-18T03:19:53.486675Z	Downloading pytz-2025.2-py2.py3-none-any.whl (509 kB)
+2025-11-18T03:19:53.499151Z	Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+2025-11-18T03:19:53.510066Z	Downloading tzdata-2025.2-py2.py3-none-any.whl (347 kB)
+2025-11-18T03:19:53.521098Z	Downloading xlrd-2.0.2-py2.py3-none-any.whl (96 kB)
+2025-11-18T03:19:53.531957Z	Downloading et_xmlfile-2.0.0-py3-none-any.whl (18 kB)
+2025-11-18T03:19:53.598013Z	Building wheels for collected packages: repl-nix-workspace
+2025-11-18T03:19:53.598889Z	  Building wheel for repl-nix-workspace (pyproject.toml): started
+2025-11-18T03:19:54.018042Z	  Building wheel for repl-nix-workspace (pyproject.toml): finished with status 'done'
+2025-11-18T03:19:54.019055Z	  Created wheel for repl-nix-workspace: filename=repl_nix_workspace-0.1.0-py3-none-any.whl size=1155 sha256=37baddbce4507b9373e595b402ac0172aeebaf9108b0e493df998a15dfecfd1a
+2025-11-18T03:19:54.01947Z	  Stored in directory: /tmp/pip-ephem-wheel-cache-vc2r3sno/wheels/7e/78/6c/93b18e0a519c7d820626f7915a9eb51483a22dc25e596d7e91
+2025-11-18T03:19:54.021655Z	Successfully built repl-nix-workspace
+2025-11-18T03:19:54.086766Z	Installing collected packages: pytz, xlrd, tzdata, six, psycopg2-binary, numpy, et-xmlfile, python-dateutil, openpyxl, pandas, repl-nix-workspace
+2025-11-18T03:20:02.500227Z	
+2025-11-18T03:20:02.503059Z	Successfully installed et-xmlfile-2.0.0 numpy-2.3.5 openpyxl-3.1.5 pandas-2.3.3 psycopg2-binary-2.9.11 python-dateutil-2.9.0.post0 pytz-2025.2 repl-nix-workspace-0.1.0 six-1.17.0 tzdata-2025.2 xlrd-2.0.2
+2025-11-18T03:20:02.592292Z	
+2025-11-18T03:20:02.592543Z	[notice] A new release of pip is available: 25.1.1 -> 25.3
+2025-11-18T03:20:02.592707Z	[notice] To update, run: pip3 install --upgrade pip
+2025-11-18T03:20:02.696676Z	Reshimming asdf python...
+2025-11-18T03:20:07.02287Z	Executing user command: npm run build
+2025-11-18T03:20:07.427133Z	
+2025-11-18T03:20:07.427472Z	> rest-express@1.0.0 build
+2025-11-18T03:20:07.427648Z	> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+2025-11-18T03:20:07.427788Z	
+2025-11-18T03:20:07.737323Z	[36mvite v7.2.2 [32mbuilding client environment for production...[36m[39m
+2025-11-18T03:20:07.81957Z	transforming...
+2025-11-18T03:20:09.832806Z	[33m[plugin vite:esbuild] client/src/pages/add-product.tsx: [33mDuplicate key "license_type" in object literal[33m
+2025-11-18T03:20:09.833192Z	222 |    requirements: { label: 'Requirements', type: 'text', placeholder: 'Documents/requirements needed' },
+2025-11-18T03:20:09.833415Z	223 |    validity_period: { label: 'Validity Period', type: 'text', placeholder: 'e.g., 10 years' },
+2025-11-18T03:20:09.833606Z	224 |    license_type: { label: 'License Type', type: 'select', options: ['Standard', 'Commercial', 'International'] },
+2025-11-18T03:20:09.833887Z	    |    ^
+2025-11-18T03:20:09.834004Z	225 |    visa_type: { label: 'Visa Type', type: 'select', options: ['Tourist', 'Business', 'Student', 'Work'] },
+2025-11-18T03:20:09.834072Z	226 |    permit_type: { label: 'Permit Type', type: 'text', placeholder: 'Type of permit' },
+2025-11-18T03:20:09.834157Z	[39m
+2025-11-18T03:20:17.348566Z	[32m✓[39m 4528 modules transformed.
+2025-11-18T03:20:18.074401Z	rendering chunks...
+2025-11-18T03:20:28.590008Z	computing gzip size...
+2025-11-18T03:20:28.625399Z	[2m../dist/public/[22m[2massets/[22m[32mimages/Navigation Header logo_1758774698294.BZFAG3yd.png                  [39m[1m[2m   23.05 kB[22m[1m[22m
+2025-11-18T03:20:28.625667Z	[2m../dist/public/[22m[32mindex.html                                                                       [39m[1m[2m   23.86 kB[22m[1m[22m[2m │ gzip:   6.52 kB[22m
+2025-11-18T03:20:28.62594Z	[2m../dist/public/[22m[2massets/[22m[32mimages/transparent logo_1762919206444.BrNYoq7d.png                        [39m[1m[2m   30.74 kB[22m[1m[22m
+2025-11-18T03:20:28.626066Z	[2m../dist/public/[22m[2massets/[22m[32mimages/Dedw3n Logo png white_1762591228754.CXgUdjpQ.png                   [39m[1m[2m   41.61 kB[22m[1m[22m
+2025-11-18T03:20:28.626485Z	[2m../dist/public/[22m[2massets/[22m[32mimages/family_insurance_pro_b8a82cf4.BxxQP5zQ.jpg                         [39m[1m[2m   72.24 kB[22m[1m[22m
+2025-11-18T03:20:28.626638Z	[2m../dist/public/[22m[2massets/[22m[32mimages/professional_office__1082d449.C0aqvSFJ.jpg                         [39m[1m[2m  128.94 kB[22m[1m[22m
+2025-11-18T03:20:28.626761Z	[2m../dist/public/[22m[2massets/[22m[32mimages/person_using_laptop__e471afb4.CZCoAQ4e.jpg                         [39m[1m[2m  136.86 kB[22m[1m[22m
+2025-11-18T03:20:28.626874Z	[2m../dist/public/[22m[2massets/[22m[32mloading-animation-compressed.B4N0Vwph.mp4                                 [39m[1m[2m  138.16 kB[22m[1m[22m
+2025-11-18T03:20:28.626991Z	[2m../dist/public/[22m[2massets/[22m[32mimages/loading-logo.D8-YWtMs.png                                          [39m[1m[2m  160.24 kB[22m[1m[22m
+2025-11-18T03:20:28.627094Z	[2m../dist/public/[22m[2massets/[22m[32mimages/elderly_couple_revie_ec2c37d7.D9kO-0Eg.jpg                         [39m[1m[2m  167.51 kB[22m[1m[22m
+2025-11-18T03:20:28.627201Z	[2m../dist/public/[22m[2massets/[22m[32mimages/teacher_in_classroom_ab8eb30d.BV3T_9VD.jpg                         [39m[1m[2m  171.97 kB[22m[1m[22m
+2025-11-18T03:20:28.627353Z	[2m../dist/public/[22m[2massets/[22m[32mimages/freelance_worker_lap_414c8b06.arnItXoo.jpg                         [39m[1m[2m  177.68 kB[22m[1m[22m
+2025-11-18T03:20:28.627469Z	[2m../dist/public/[22m[2massets/[22m[32mimages/home_loan_mortgage_c_4892dc49.B93HvOe1.jpg                         [39m[1m[2m  188.48 kB[22m[1m[22m
+2025-11-18T03:20:28.627577Z	[2m../dist/public/[22m[2massets/[22m[32mimages/delivery_courier_pac_0f3db2e7.DD3qGIsJ.jpg                         [39m[1m[2m  199.93 kB[22m[1m[22m
+2025-11-18T03:20:28.627691Z	[2m../dist/public/[22m[2massets/[22m[32mimages/charity_volunteers_h_b5235fcc.Dj0Fp9LT.jpg                         [39m[1m[2m  230.04 kB[22m[1m[22m
+2025-11-18T03:20:28.627822Z	[2m../dist/public/[22m[2massets/[22m[32mimages/person_holding_red_h_e5c24926.CUlass5H.jpg                         [39m[1m[2m  265.83 kB[22m[1m[22m
+2025-11-18T03:20:28.627926Z	[2m../dist/public/[22m[2massets/[22m[32mimages/cryptocurrency_bitco_7f09fc42.I-d0qlPQ.jpg                         [39m[1m[2m  273.12 kB[22m[1m[22m
+2025-11-18T03:20:28.628028Z	[2m../dist/public/[22m[2massets/[22m[32mimages/money_remittance_int_4eae21d7.Dz_aFpjQ.jpg                         [39m[1m[2m  368.40 kB[22m[1m[22m
+2025-11-18T03:20:28.628135Z	[2m../dist/public/[22m[2massets/[22m[32mimages/Copy of De dw3n (750 x 500 px)_1758998302741.PVcRloyM.png          [39m[1m[2m  768.04 kB[22m[1m[22m
+2025-11-18T03:20:28.628242Z	[2m../dist/public/[22m[2massets/[22m[32mimages/De dw3n_1758789078040.E7JeTJ-W.png                                 [39m[1m[2m  952.18 kB[22m[1m[22m
+2025-11-18T03:20:28.628355Z	[2m../dist/public/[22m[2massets/[22m[32mGenerated File November 09_ 2025 - 8_24PM (1)_1762805360661.1gav3kdF.mp4  [39m[1m[2m1,833.16 kB[22m[1m[22m
+2025-11-18T03:20:28.628479Z	[2m../dist/public/[22m[2massets/[22m[35mcss/index.C8VCxQoB.css                                                    [39m[1m[2m  153.02 kB[22m[1m[22m[2m │ gzip:  23.28 kB[22m
+2025-11-18T03:20:28.628604Z	[2m../dist/public/[22m[2massets/[22m[36mpayment-gateway.CAIyUcPy.js                                               [39m[1m[2m    0.18 kB[22m[1m[22m[2m │ gzip:   0.17 kB[22m
+2025-11-18T03:20:28.628722Z	[2m../dist/public/[22m[2massets/[22m[36mgovernment.CFpj1ewx.js                                                    [39m[1m[2m    0.20 kB[22m[1m[22m[2m │ gzip:   0.18 kB[22m
+2025-11-18T03:20:28.628899Z	[2m../dist/public/[22m[2massets/[22m[36mbecome-business-vendor.Dnt_ZD67.js                                        [39m[1m[2m    0.20 kB[22m[1m[22m[2m │ gzip:   0.19 kB[22m
+2025-11-18T03:20:28.629009Z	[2m../dist/public/[22m[2massets/[22m[36mskeleton.GUjbrKGt.js                                                      [39m[1m[2m    0.21 kB[22m[1m[22m[2m │ gzip:   0.18 kB[22m
+2025-11-18T03:20:28.629111Z	[2m../dist/public/[22m[2massets/[22m[36mcontainer.C9GhtNYj.js                                                     [39m[1m[2m    0.24 kB[22m[1m[22m[2m │ gzip:   0.20 kB[22m
+2025-11-18T03:20:28.629217Z	[2m../dist/public/[22m[2massets/[22m[36muse-currency.KM_CuzkF.js                                                  [39m[1m[2m    0.29 kB[22m[1m[22m[2m │ gzip:   0.24 kB[22m
+2025-11-18T03:20:28.629346Z	[2m../dist/public/[22m[2massets/[22m[36madvertisement-terms.CmJKb6ZP.js                                           [39m[1m[2m    0.39 kB[22m[1m[22m[2m │ gzip:   0.27 kB[22m
+2025-11-18T03:20:28.62947Z	[2m../dist/public/[22m[2massets/[22m[36mabout-us.D1Lip87J.js                                                      [39m[1m[2m    0.47 kB[22m[1m[22m[2m │ gzip:   0.32 kB[22m
+2025-11-18T03:20:28.629594Z	[2m../dist/public/[22m[2massets/[22m[36mcookies.6XsU0oTm.js                                                       [39m[1m[2m    0.48 kB[22m[1m[22m[2m │ gzip:   0.33 kB[22m
+2025-11-18T03:20:28.629712Z	[2m../dist/public/[22m[2massets/[22m[36mcode-of-ethics.DxrZvlsF.js                                                [39m[1m[2m    0.48 kB[22m[1m[22m[2m │ gzip:   0.33 kB[22m
+2025-11-18T03:20:28.629843Z	[2m../dist/public/[22m[2massets/[22m[36mcatalogue-rules.4JDPn8Ck.js                                               [39m[1m[2m    0.49 kB[22m[1m[22m[2m │ gzip:   0.33 kB[22m
+2025-11-18T03:20:28.630053Z	[2m../dist/public/[22m[2massets/[22m[36meducation-policy.Bw3Jm5P3.js                                              [39m[1m[2m    0.49 kB[22m[1m[22m[2m │ gzip:   0.33 kB[22m
+2025-11-18T03:20:28.630177Z	[2m../dist/public/[22m[2massets/[22m[36mintellectual-property.BZLwuwz4.js                                         [39m[1m[2m    0.51 kB[22m[1m[22m[2m │ gzip:   0.34 kB[22m
+2025-11-18T03:20:28.630327Z	[2m../dist/public/[22m[2massets/[22m[36mtips-tricks.C-E_8dG_.js                                                   [39m[1m[2m    0.53 kB[22m[1m[22m[2m │ gzip:   0.36 kB[22m
+2025-11-18T03:20:28.632569Z	[2m../dist/public/[22m[2massets/[22m[36mtextarea.Bj3e-ZFA.js                                                      [39m[1m[2m    0.54 kB[22m[1m[22m[2m │ gzip:   0.35 kB[22m
+2025-11-18T03:20:28.633429Z	[2m../dist/public/[22m[2massets/[22m[36mai-insights.Dyh036Cp.js                                                   [39m[1m[2m    0.63 kB[22m[1m[22m[2m │ gzip:   0.40 kB[22m
+2025-11-18T03:20:28.633607Z	[2m../dist/public/[22m[2massets/[22m[36msocial-insights.g6XaGeKd.js                                               [39m[1m[2m    0.65 kB[22m[1m[22m[2m │ gzip:   0.42 kB[22m
+2025-11-18T03:20:28.633718Z	[2m../dist/public/[22m[2massets/[22m[36mapi-test.GLBOhCRI.js                                                      [39m[1m[2m    0.70 kB[22m[1m[22m[2m │ gzip:   0.44 kB[22m
+2025-11-18T03:20:28.633824Z	[2m../dist/public/[22m[2massets/[22m[36mprotected-route.DCEXg_Mc.js                                               [39m[1m[2m    0.75 kB[22m[1m[22m[2m │ gzip:   0.33 kB[22m
+2025-11-18T03:20:28.63394Z	[2m../dist/public/[22m[2massets/[22m[36mslider.C2mGji3a.js                                                        [39m[1m[2m    0.79 kB[22m[1m[22m[2m │ gzip:   0.45 kB[22m
+2025-11-18T03:20:28.634071Z	[2m../dist/public/[22m[2massets/[22m[36mpopover.D2EFlmcH.js                                                       [39m[1m[2m    0.81 kB[22m[1m[22m[2m │ gzip:   0.43 kB[22m
+2025-11-18T03:20:28.634194Z	[2m../dist/public/[22m[2massets/[22m[36mradio-group.BAY0VU1B.js                                                   [39m[1m[2m    0.82 kB[22m[1m[22m[2m │ gzip:   0.44 kB[22m
+2025-11-18T03:20:28.634316Z	[2m../dist/public/[22m[2massets/[22m[36mscroll-area.C-WuGHDc.js                                                   [39m[1m[2m    0.84 kB[22m[1m[22m[2m │ gzip:   0.43 kB[22m
+2025-11-18T03:20:28.634431Z	[2m../dist/public/[22m[2massets/[22m[36mresolved-user-avatar.C0RqoGF-.js                                          [39m[1m[2m    0.85 kB[22m[1m[22m[2m │ gzip:   0.54 kB[22m
+2025-11-18T03:20:28.634546Z	[2m../dist/public/[22m[2massets/[22m[36maccordion.BwtCLk_J.js                                                     [39m[1m[2m    1.05 kB[22m[1m[22m[2m │ gzip:   0.53 kB[22m
+2025-11-18T03:20:28.634655Z	[2m../dist/public/[22m[2massets/[22m[36mtabs.D7nEAWFU.js                                                          [39m[1m[2m    1.15 kB[22m[1m[22m[2m │ gzip:   0.48 kB[22m
+2025-11-18T03:20:28.634759Z	[2m../dist/public/[22m[2massets/[22m[36mPageHeader._xfF7E4o.js                                                    [39m[1m[2m    1.21 kB[22m[1m[22m[2m │ gzip:   0.59 kB[22m
+2025-11-18T03:20:28.634864Z	[2m../dist/public/[22m[2massets/[22m[36mtest-cookies.CyniTCIs.js                                                  [39m[1m[2m    1.28 kB[22m[1m[22m[2m │ gzip:   0.63 kB[22m
+2025-11-18T03:20:28.634974Z	[2m../dist/public/[22m[2massets/[22m[36mcareers.BRaKVdIi.js                                                       [39m[1m[2m    1.48 kB[22m[1m[22m[2m │ gzip:   0.63 kB[22m
+2025-11-18T03:20:28.635084Z	[2m../dist/public/[22m[2massets/[22m[36mpayment-success.B0ywcfB3.js                                               [39m[1m[2m    1.49 kB[22m[1m[22m[2m │ gzip:   0.75 kB[22m
+2025-11-18T03:20:28.635182Z	[2m../dist/public/[22m[2massets/[22m[36mtable.BwunDxpJ.js                                                         [39m[1m[2m    1.53 kB[22m[1m[22m[2m │ gzip:   0.54 kB[22m
+2025-11-18T03:20:28.635296Z	[2m../dist/public/[22m[2massets/[22m[36medit-post.HreouZMN.js                                                     [39m[1m[2m    1.62 kB[22m[1m[22m[2m │ gzip:   0.85 kB[22m
+2025-11-18T03:20:28.635524Z	[2m../dist/public/[22m[2massets/[22m[36mbusiness-terms.BchKgKqO.js                                                [39m[1m[2m    1.64 kB[22m[1m[22m[2m │ gzip:   0.84 kB[22m
+2025-11-18T03:20:28.635652Z	[2m../dist/public/[22m[2massets/[22m[36mform.kUKs9Sjl.js                                                          [39m[1m[2m    1.73 kB[22m[1m[22m[2m │ gzip:   0.75 kB[22m
+2025-11-18T03:20:28.635776Z	[2m../dist/public/[22m[2massets/[22m[36mpayment-options.DS_JErTZ.js                                               [39m[1m[2m    1.79 kB[22m[1m[22m[2m │ gzip:   0.76 kB[22m
+2025-11-18T03:20:28.635882Z	[2m../dist/public/[22m[2massets/[22m[36mAdminRoutes.CDY3dPpd.js                                                   [39m[1m[2m    1.86 kB[22m[1m[22m[2m │ gzip:   0.68 kB[22m
+2025-11-18T03:20:28.63599Z	[2m../dist/public/[22m[2massets/[22m[36malert-dialog.DFHdLDCR.js                                                  [39m[1m[2m    2.07 kB[22m[1m[22m[2m │ gzip:   0.75 kB[22m
+2025-11-18T03:20:28.636146Z	[2m../dist/public/[22m[2massets/[22m[36mVendorCreationDialog.BU6Qhlmf.js                                          [39m[1m[2m    2.09 kB[22m[1m[22m[2m │ gzip:   0.97 kB[22m
+2025-11-18T03:20:28.63629Z	[2m../dist/public/[22m[2massets/[22m[36mterms.Dt8YdXsR.js                                                         [39m[1m[2m    2.22 kB[22m[1m[22m[2m │ gzip:   1.14 kB[22m
+2025-11-18T03:20:28.636454Z	[2m../dist/public/[22m[2massets/[22m[36mUserSettingsRoutes.CfeHXl8R.js                                            [39m[1m[2m    2.35 kB[22m[1m[22m[2m │ gzip:   0.79 kB[22m
+2025-11-18T03:20:28.636676Z	[2m../dist/public/[22m[2massets/[22m[36msaved-posts.XZfqylkn.js                                                   [39m[1m[2m    2.38 kB[22m[1m[22m[2m │ gzip:   1.15 kB[22m
+2025-11-18T03:20:28.636784Z	[2m../dist/public/[22m[2massets/[22m[36mdrafts.BFciPXXz.js                                                        [39m[1m[2m    2.44 kB[22m[1m[22m[2m │ gzip:   1.19 kB[22m
+2025-11-18T03:20:28.636894Z	[2m../dist/public/[22m[2massets/[22m[36madmin-email.EnroFW8y.js                                                   [39m[1m[2m    2.48 kB[22m[1m[22m[2m │ gzip:   1.20 kB[22m
+2025-11-18T03:20:28.637002Z	[2m../dist/public/[22m[2massets/[22m[36mdelivery-returns.BsC5zF-g.js                                              [39m[1m[2m    2.58 kB[22m[1m[22m[2m │ gzip:   1.05 kB[22m
+2025-11-18T03:20:28.637101Z	[2m../dist/public/[22m[2massets/[22m[36musePageTitle.RxvgfGk1.js                                                  [39m[1m[2m    2.72 kB[22m[1m[22m[2m │ gzip:   1.21 kB[22m
+2025-11-18T03:20:28.63721Z	[2m../dist/public/[22m[2massets/[22m[36mlogout-test.n2hcSEZo.js                                                   [39m[1m[2m    2.86 kB[22m[1m[22m[2m │ gzip:   1.04 kB[22m
+2025-11-18T03:20:28.637353Z	[2m../dist/public/[22m[2massets/[22m[36mcurrencyConverter.DpKDWBn6.js                                             [39m[1m[2m    2.91 kB[22m[1m[22m[2m │ gzip:   1.74 kB[22m
+2025-11-18T03:20:28.637493Z	[2m../dist/public/[22m[2massets/[22m[36mSocialRoutes.B0w82OoR.js                                                  [39m[1m[2m    2.94 kB[22m[1m[22m[2m │ gzip:   0.98 kB[22m
+2025-11-18T03:20:28.637601Z	[2m../dist/public/[22m[2massets/[22m[36mSpecialtyRoutes.Bn4QlP4Y.js                                               [39m[1m[2m    3.72 kB[22m[1m[22m[2m │ gzip:   1.25 kB[22m
+2025-11-18T03:20:28.637696Z	[2m../dist/public/[22m[2massets/[22m[36mSiteMap.USN2BIEt.js                                                       [39m[1m[2m    3.77 kB[22m[1m[22m[2m │ gzip:   1.37 kB[22m
+2025-11-18T03:20:28.637934Z	[2m../dist/public/[22m[2massets/[22m[36mdropdown-menu.Dp8MtYfe.js                                                 [39m[1m[2m    3.85 kB[22m[1m[22m[2m │ gzip:   1.07 kB[22m
+2025-11-18T03:20:28.638095Z	[2m../dist/public/[22m[2massets/[22m[36mfriend-requests.BC3ezJcs.js                                               [39m[1m[2m    3.94 kB[22m[1m[22m[2m │ gzip:   1.32 kB[22m
+2025-11-18T03:20:28.638294Z	[2m../dist/public/[22m[2massets/[22m[36mevent-detail.DDb23jgV.js                                                  [39m[1m[2m    4.11 kB[22m[1m[22m[2m │ gzip:   1.24 kB[22m
+2025-11-18T03:20:28.638445Z	[2m../dist/public/[22m[2massets/[22m[36mMarketplaceRoutes.NEjQ_qRw.js                                             [39m[1m[2m    4.16 kB[22m[1m[22m[2m │ gzip:   1.31 kB[22m
+2025-11-18T03:20:28.638591Z	[2m../dist/public/[22m[2massets/[22m[36mGiftDialog.DiPi_VQw.js                                                    [39m[1m[2m    4.26 kB[22m[1m[22m[2m │ gzip:   1.49 kB[22m
+2025-11-18T03:20:28.639079Z	[2m../dist/public/[22m[2massets/[22m[36mMyMatches.P36vJ5EK.js                                                     [39m[1m[2m    4.39 kB[22m[1m[22m[2m │ gzip:   1.56 kB[22m
+2025-11-18T03:20:28.639345Z	[2m../dist/public/[22m[2massets/[22m[36mLegalInfoRoutes.DerCeiks.js                                               [39m[1m[2m    4.52 kB[22m[1m[22m[2m │ gzip:   1.57 kB[22m
+2025-11-18T03:20:28.639442Z	[2m../dist/public/[22m[2massets/[22m[36mpercentage-calculator.DBsOGQgf.js                                         [39m[1m[2m    4.65 kB[22m[1m[22m[2m │ gzip:   1.19 kB[22m
+2025-11-18T03:20:28.639597Z	[2m../dist/public/[22m[2massets/[22m[36mclose-account.DvggYecc.js                                                 [39m[1m[2m    4.68 kB[22m[1m[22m[2m │ gzip:   1.60 kB[22m
+2025-11-18T03:20:28.639841Z	[2m../dist/public/[22m[2massets/[22m[36mvideo-demo.DHX1ke0J.js                                                    [39m[1m[2m    4.74 kB[22m[1m[22m[2m │ gzip:   1.66 kB[22m
+2025-11-18T03:20:28.639989Z	[2m../dist/public/[22m[2massets/[22m[36mvendors.DAV3nG4f.js                                                       [39m[1m[2m    4.76 kB[22m[1m[22m[2m │ gzip:   1.88 kB[22m
+2025-11-18T03:20:28.640158Z	[2m../dist/public/[22m[2massets/[22m[36mliked.DGOBV0NA.js                                                         [39m[1m[2m    4.97 kB[22m[1m[22m[2m │ gzip:   1.79 kB[22m
+2025-11-18T03:20:28.640357Z	[2m../dist/public/[22m[2massets/[22m[36mpawapay-deposit-callback.CGPGacEe.js                                      [39m[1m[2m    5.06 kB[22m[1m[22m[2m │ gzip:   1.65 kB[22m
+2025-11-18T03:20:28.640485Z	[2m../dist/public/[22m[2massets/[22m[36mpawapay-payout-callback.Cl8K6xGV.js                                       [39m[1m[2m    5.51 kB[22m[1m[22m[2m │ gzip:   1.71 kB[22m
+2025-11-18T03:20:28.640589Z	[2m../dist/public/[22m[2massets/[22m[36mremove-ads.gORb4bC8.js                                                    [39m[1m[2m    5.53 kB[22m[1m[22m[2m │ gzip:   1.84 kB[22m
+2025-11-18T03:20:28.640759Z	[2m../dist/public/[22m[2massets/[22m[36mcommission-payment.0SwvgQjn.js                                            [39m[1m[2m    5.84 kB[22m[1m[22m[2m │ gzip:   2.07 kB[22m
+2025-11-18T03:20:28.641006Z	[2m../dist/public/[22m[2massets/[22m[36mpawapay-refund-callback.BvYWpIX9.js                                       [39m[1m[2m    5.87 kB[22m[1m[22m[2m │ gzip:   1.77 kB[22m
+2025-11-18T03:20:28.641144Z	[2m../dist/public/[22m[2massets/[22m[36mMarketplaceRealEstate.DUX6PAi3.js                                         [39m[1m[2m    5.88 kB[22m[1m[22m[2m │ gzip:   2.00 kB[22m
+2025-11-18T03:20:28.641275Z	[2m../dist/public/[22m[2massets/[22m[36mMarketplaceCreators.DcttmQxu.js                                           [39m[1m[2m    6.02 kB[22m[1m[22m[2m │ gzip:   2.15 kB[22m
+2025-11-18T03:20:28.641373Z	[2m../dist/public/[22m[2massets/[22m[36mdating-profile-view.WxCAJZww.js                                           [39m[1m[2m    6.12 kB[22m[1m[22m[2m │ gzip:   1.87 kB[22m
+2025-11-18T03:20:28.641478Z	[2m../dist/public/[22m[2massets/[22m[36mnetwork-partnership-resources.ftG5fi-Q.js                                 [39m[1m[2m    6.22 kB[22m[1m[22m[2m │ gzip:   1.80 kB[22m
+2025-11-18T03:20:28.641581Z	[2m../dist/public/[22m[2massets/[22m[36msuspend-account.ciaKnL1_.js                                               [39m[1m[2m    7.27 kB[22m[1m[22m[2m │ gzip:   2.04 kB[22m
+2025-11-18T03:20:28.641668Z	[2m../dist/public/[22m[2massets/[22m[36mfinance.CLCLqTj_.js                                                       [39m[1m[2m    7.59 kB[22m[1m[22m[2m │ gzip:   2.36 kB[22m
+2025-11-18T03:20:28.641786Z	[2m../dist/public/[22m[2massets/[22m[36mCreatePost.DsKmB0E5.js                                                    [39m[1m[2m    7.65 kB[22m[1m[22m[2m │ gzip:   3.10 kB[22m
+2025-11-18T03:20:28.641906Z	[2m../dist/public/[22m[2massets/[22m[36mfaq.BbTgmHIM.js                                                           [39m[1m[2m    7.73 kB[22m[1m[22m[2m │ gzip:   2.01 kB[22m
+2025-11-18T03:20:28.642007Z	[2m../dist/public/[22m[2massets/[22m[36mpost-detail.CjQWKGMo.js                                                   [39m[1m[2m    8.21 kB[22m[1m[22m[2m │ gzip:   2.29 kB[22m
+2025-11-18T03:20:28.642088Z	[2m../dist/public/[22m[2massets/[22m[36manalytics.LcruGPMU.js                                                     [39m[1m[2m    8.22 kB[22m[1m[22m[2m │ gzip:   1.46 kB[22m
+2025-11-18T03:20:28.642223Z	[2m../dist/public/[22m[2massets/[22m[36mAIInsights.B0bSiSHz.js                                                    [39m[1m[2m    8.37 kB[22m[1m[22m[2m │ gzip:   2.16 kB[22m
+2025-11-18T03:20:28.642346Z	[2m../dist/public/[22m[2massets/[22m[36msearch.CAUrtu73.js                                                        [39m[1m[2m    8.86 kB[22m[1m[22m[2m │ gzip:   3.04 kB[22m
+2025-11-18T03:20:28.642446Z	[2m../dist/public/[22m[2massets/[22m[36menvironment-diagnostic.DtSM4G5n.js                                        [39m[1m[2m    9.19 kB[22m[1m[22m[2m │ gzip:   2.02 kB[22m
+2025-11-18T03:20:28.642549Z	[2m../dist/public/[22m[2massets/[22m[36mdr-congo.DoVVendm.js                                                      [39m[1m[2m   10.49 kB[22m[1m[22m[2m │ gzip:   2.91 kB[22m
+2025-11-18T03:20:28.642633Z	[2m../dist/public/[22m[2massets/[22m[36mvendor-profile.aDdoeS0l.js                                                [39m[1m[2m   10.74 kB[22m[1m[22m[2m │ gzip:   3.13 kB[22m
+2025-11-18T03:20:28.642728Z	[2m../dist/public/[22m[2massets/[22m[36mcheckout.D2BcIjjU.js                                                      [39m[1m[2m   10.84 kB[22m[1m[22m[2m │ gzip:   3.61 kB[22m
+2025-11-18T03:20:28.64282Z	[2m../dist/public/[22m[2massets/[22m[36mshipping-calculator.D425rlim.js                                           [39m[1m[2m   10.87 kB[22m[1m[22m[2m │ gzip:   3.00 kB[22m
+2025-11-18T03:20:28.642926Z	[2m../dist/public/[22m[2massets/[22m[36mcommunity-search-results.DWF994IL.js                                      [39m[1m[2m   11.30 kB[22m[1m[22m[2m │ gzip:   2.03 kB[22m
+2025-11-18T03:20:28.643022Z	[2m../dist/public/[22m[2massets/[22m[36mupload-product.CeGU_yNx.js                                                [39m[1m[2m   11.49 kB[22m[1m[22m[2m │ gzip:   3.62 kB[22m
+2025-11-18T03:20:28.643121Z	[2m../dist/public/[22m[2massets/[22m[36mmarketplace-raw.DneySfcr.js                                               [39m[1m[2m   11.52 kB[22m[1m[22m[2m │ gzip:   3.50 kB[22m
+2025-11-18T03:20:28.643208Z	[2m../dist/public/[22m[2massets/[22m[36mmeeting.FDTU14A7.js                                                       [39m[1m[2m   11.68 kB[22m[1m[22m[2m │ gzip:   3.68 kB[22m
+2025-11-18T03:20:28.643319Z	[2m../dist/public/[22m[2massets/[22m[36mcontact.B8T2nDPW.js                                                       [39m[1m[2m   11.78 kB[22m[1m[22m[2m │ gzip:   3.64 kB[22m
+2025-11-18T03:20:28.643417Z	[2m../dist/public/[22m[2massets/[22m[36mspending-analytics.amnGckUy.js                                            [39m[1m[2m   11.80 kB[22m[1m[22m[2m │ gzip:   3.23 kB[22m
+2025-11-18T03:20:28.643513Z	[2m../dist/public/[22m[2massets/[22m[36muser-profile.MtcEjksq.js                                                  [39m[1m[2m   12.04 kB[22m[1m[22m[2m │ gzip:   3.28 kB[22m
+2025-11-18T03:20:28.643602Z	[2m../dist/public/[22m[2massets/[22m[36mmembers.BGdrDGsK.js                                                       [39m[1m[2m   12.38 kB[22m[1m[22m[2m │ gzip:   3.96 kB[22m
+2025-11-18T03:20:28.643694Z	[2m../dist/public/[22m[2massets/[22m[36mpayments.B2GZdbIe.js                                                      [39m[1m[2m   12.95 kB[22m[1m[22m[2m │ gzip:   5.06 kB[22m
+2025-11-18T03:20:28.643782Z	[2m../dist/public/[22m[2massets/[22m[36mpremium-video.BKYS53yn.js                                                 [39m[1m[2m   14.14 kB[22m[1m[22m[2m │ gzip:   3.71 kB[22m
+2025-11-18T03:20:28.643862Z	[2m../dist/public/[22m[2massets/[22m[36mservices.Cgtdka8l.js                                                      [39m[1m[2m   14.94 kB[22m[1m[22m[2m │ gzip:   4.53 kB[22m
+2025-11-18T03:20:28.643941Z	[2m../dist/public/[22m[2massets/[22m[36mAICommunityTools.CEkHDvy_.js                                              [39m[1m[2m   16.90 kB[22m[1m[22m[2m │ gzip:   3.69 kB[22m
+2025-11-18T03:20:28.644023Z	[2m../dist/public/[22m[2massets/[22m[36mcommunity-guidelines.BusPlVlt.js                                          [39m[1m[2m   17.19 kB[22m[1m[22m[2m │ gzip:   3.97 kB[22m
+2025-11-18T03:20:28.644116Z	[2m../dist/public/[22m[2massets/[22m[36mexplore.BhxKUkXR.js                                                       [39m[1m[2m   17.31 kB[22m[1m[22m[2m │ gzip:   3.82 kB[22m
+2025-11-18T03:20:28.644205Z	[2m../dist/public/[22m[2massets/[22m[36mcommunity.DTkuy8qR.js                                                     [39m[1m[2m   17.31 kB[22m[1m[22m[2m │ gzip:   4.93 kB[22m
+2025-11-18T03:20:28.644305Z	[2m../dist/public/[22m[2massets/[22m[36morders-returns.BBax1tFx.js                                                [39m[1m[2m   17.85 kB[22m[1m[22m[2m │ gzip:   3.78 kB[22m
+2025-11-18T03:20:28.644391Z	[2m../dist/public/[22m[2massets/[22m[36maffiliate-partnership.Bgid_VUC.js                                         [39m[1m[2m   18.27 kB[22m[1m[22m[2m │ gzip:   4.42 kB[22m
+2025-11-18T03:20:28.644499Z	[2m../dist/public/[22m[2massets/[22m[36mhow-to-use.k-LVPpRG.js                                                    [39m[1m[2m   18.55 kB[22m[1m[22m[2m │ gzip:   4.53 kB[22m
+2025-11-18T03:20:28.644594Z	[2m../dist/public/[22m[2massets/[22m[36mresources.DK-GtPwu.js                                                     [39m[1m[2m   18.74 kB[22m[1m[22m[2m │ gzip:   5.05 kB[22m
+2025-11-18T03:20:28.644675Z	[2m../dist/public/[22m[2massets/[22m[36mAIDatingTools.B_45_M3x.js                                                 [39m[1m[2m   18.77 kB[22m[1m[22m[2m │ gzip:   4.28 kB[22m
+2025-11-18T03:20:28.644762Z	[2m../dist/public/[22m[2massets/[22m[36mdating.39GvIn-T.js                                                        [39m[1m[2m   18.85 kB[22m[1m[22m[2m │ gzip:   5.34 kB[22m
+2025-11-18T03:20:28.644869Z	[2m../dist/public/[22m[2massets/[22m[36mbecome-vendor.DTHA_L2t.js                                                 [39m[1m[2m   20.09 kB[22m[1m[22m[2m │ gzip:   4.98 kB[22m
+2025-11-18T03:20:28.644957Z	[2m../dist/public/[22m[2massets/[22m[36mProfile.PR2GEIBX.js                                                       [39m[1m[2m   20.80 kB[22m[1m[22m[2m │ gzip:   5.10 kB[22m
+2025-11-18T03:20:28.645046Z	[2m../dist/public/[22m[2massets/[22m[36mevents.D6mHLMP4.js                                                        [39m[1m[2m   20.94 kB[22m[1m[22m[2m │ gzip:   5.99 kB[22m
+2025-11-18T03:20:28.645139Z	[2m../dist/public/[22m[2massets/[22m[36mEnhancedPostCard.BNT3HEP1.js                                              [39m[1m[2m   21.23 kB[22m[1m[22m[2m │ gzip:   5.65 kB[22m
+2025-11-18T03:20:28.645232Z	[2m../dist/public/[22m[2massets/[22m[36mvendor-register._Az0iIJX.js                                               [39m[1m[2m   21.24 kB[22m[1m[22m[2m │ gzip:   4.38 kB[22m
+2025-11-18T03:20:28.645338Z	[2m../dist/public/[22m[2massets/[22m[36mvendor-analytics.CBvffJbu.js                                              [39m[1m[2m   22.92 kB[22m[1m[22m[2m │ gzip:   4.63 kB[22m
+2025-11-18T03:20:28.645427Z	[2m../dist/public/[22m[2massets/[22m[36mlifestyle.DtxPOMju.js                                                     [39m[1m[2m   26.07 kB[22m[1m[22m[2m │ gzip:   6.96 kB[22m
+2025-11-18T03:20:28.645523Z	[2m../dist/public/[22m[2massets/[22m[36mwallet.DXDP6IUY.js                                                        [39m[1m[2m   26.44 kB[22m[1m[22m[2m │ gzip:   5.90 kB[22m
+2025-11-18T03:20:28.645608Z	[2m../dist/public/[22m[2massets/[22m[36mprivacy.B8lDygIG.js                                                       [39m[1m[2m   26.47 kB[22m[1m[22m[2m │ gzip:   7.45 kB[22m
+2025-11-18T03:20:28.645699Z	[2m../dist/public/[22m[2massets/[22m[36mcart.ChF4cfiu.js                                                          [39m[1m[2m   28.28 kB[22m[1m[22m[2m │ gzip:   8.02 kB[22m
+2025-11-18T03:20:28.645813Z	[2m../dist/public/[22m[2massets/[22m[36mVendorOrderManagement.CIr4dnOu.js                                         [39m[1m[2m   30.58 kB[22m[1m[22m[2m │ gzip:   6.69 kB[22m
+2025-11-18T03:20:28.645919Z	[2m../dist/public/[22m[2massets/[22m[36mvendor-detail.Cx-H7B8T.js                                                 [39m[1m[2m   30.60 kB[22m[1m[22m[2m │ gzip:   8.05 kB[22m
+2025-11-18T03:20:28.646019Z	[2m../dist/public/[22m[2massets/[22m[36mvendor-dashboard.r8u9pp-O.js                                              [39m[1m[2m   31.13 kB[22m[1m[22m[2m │ gzip:   7.27 kB[22m
+2025-11-18T03:20:28.646111Z	[2m../dist/public/[22m[2massets/[22m[36mgift-cards.C-yUKVx4.js                                                    [39m[1m[2m   32.74 kB[22m[1m[22m[2m │ gzip:   9.29 kB[22m
+2025-11-18T03:20:28.646202Z	[2m../dist/public/[22m[2massets/[22m[36mproduct-detail.B0NSG2yJ.js                                                [39m[1m[2m   33.98 kB[22m[1m[22m[2m │ gzip:   8.69 kB[22m
+2025-11-18T03:20:28.646304Z	[2m../dist/public/[22m[2massets/[22m[36msettings.CIAhaFbu.js                                                      [39m[1m[2m   34.35 kB[22m[1m[22m[2m │ gzip:   5.51 kB[22m
+2025-11-18T03:20:28.646385Z	[2m../dist/public/[22m[2massets/[22m[36msocial-console.DtMZtQok.js                                                [39m[1m[2m   34.64 kB[22m[1m[22m[2m │ gzip:   7.82 kB[22m
+2025-11-18T03:20:28.646472Z	[2m../dist/public/[22m[2massets/[22m[36mreact-query.DrOFLpFo.js                                                   [39m[1m[2m   36.01 kB[22m[1m[22m[2m │ gzip:  10.59 kB[22m
+2025-11-18T03:20:28.646563Z	[2m../dist/public/[22m[2massets/[22m[36mPostCard.CxWbdFfZ.js                                                      [39m[1m[2m   37.56 kB[22m[1m[22m[2m │ gzip:   9.71 kB[22m
+2025-11-18T03:20:28.646663Z	[2m../dist/public/[22m[2massets/[22m[36mdating-profile.BoOpm8fj.js                                                [39m[1m[2m   39.54 kB[22m[1m[22m[2m │ gzip:  11.00 kB[22m
+2025-11-18T03:20:28.646751Z	[2m../dist/public/[22m[2massets/[22m[36mcalendar.BjaXw-zF.js                                                      [39m[1m[2m   44.03 kB[22m[1m[22m[2m │ gzip:  13.77 kB[22m
+2025-11-18T03:20:28.64684Z	[2m../dist/public/[22m[2massets/[22m[36micons.B5puq3FX.js                                                         [39m[1m[2m   44.54 kB[22m[1m[22m[2m │ gzip:  14.73 kB[22m
+2025-11-18T03:20:28.646927Z	[2m../dist/public/[22m[2massets/[22m[36mproducts.BcMKcPGN.js                                                      [39m[1m[2m   48.06 kB[22m[1m[22m[2m │ gzip:  11.56 kB[22m
+2025-11-18T03:20:28.647028Z	[2m../dist/public/[22m[2massets/[22m[36madd-product.kbu9irzJ.js                                                   [39m[1m[2m   59.20 kB[22m[1m[22m[2m │ gzip:  15.38 kB[22m
+2025-11-18T03:20:28.647124Z	[2m../dist/public/[22m[2massets/[22m[36mMessages.BpHJfUSD.js                                                      [39m[1m[2m   60.41 kB[22m[1m[22m[2m │ gzip:  14.13 kB[22m
+2025-11-18T03:20:28.647213Z	[2m../dist/public/[22m[2massets/[22m[36mPageContent.Cec_e0Xe.js                                                   [39m[1m[2m   71.16 kB[22m[1m[22m[2m │ gzip:  18.92 kB[22m
+2025-11-18T03:20:28.647322Z	[2m../dist/public/[22m[2massets/[22m[36madmin-control-center.BX02NLjb.js                                          [39m[1m[2m   82.09 kB[22m[1m[22m[2m │ gzip:  13.46 kB[22m
+2025-11-18T03:20:28.647411Z	[2m../dist/public/[22m[2massets/[22m[36munified-admin-dashboard.C1jnHKrp.js                                       [39m[1m[2m   89.26 kB[22m[1m[22m[2m │ gzip:  15.59 kB[22m
+2025-11-18T03:20:28.647507Z	[2m../dist/public/[22m[2massets/[22m[36mnotifications.DKjObLaO.js                                                 [39m[1m[2m  146.27 kB[22m[1m[22m[2m │ gzip:  33.54 kB[22m
+2025-11-18T03:20:28.6476Z	[2m../dist/public/[22m[2massets/[22m[36mui-vendor.CCRwyr8N.js                                                     [39m[1m[2m  164.32 kB[22m[1m[22m[2m │ gzip:  49.10 kB[22m
+2025-11-18T03:20:28.647692Z	[2m../dist/public/[22m[2massets/[22m[36mforms.D9G_s578.js                                                         [39m[1m[2m  238.56 kB[22m[1m[22m[2m │ gzip:  54.53 kB[22m
+2025-11-18T03:20:28.647791Z	[2m../dist/public/[22m[2massets/[22m[36memoji-picker.ByXhzcKj.js                                                  [39m[1m[2m  269.58 kB[22m[1m[22m[2m │ gzip:  63.77 kB[22m
+2025-11-18T03:20:28.647881Z	[2m../dist/public/[22m[2massets/[22m[36mprofile-settings.DZidsFph.js                                              [39m[1m[2m  322.31 kB[22m[1m[22m[2m │ gzip:  66.95 kB[22m
+2025-11-18T03:20:28.64797Z	[2m../dist/public/[22m[2massets/[22m[36mcharts.1cqYaF92.js                                                        [39m[1m[2m  355.56 kB[22m[1m[22m[2m │ gzip: 104.06 kB[22m
+2025-11-18T03:20:28.648057Z	[2m../dist/public/[22m[2massets/[22m[36mreact-vendor.C5lji59P.js                                                  [39m[1m[2m  355.77 kB[22m[1m[22m[2m │ gzip: 113.84 kB[22m
+2025-11-18T03:20:28.648147Z	[2m../dist/public/[22m[2massets/[22m[36mindex.ByxqvuiM.js                                                         [39m[1m[2m  512.10 kB[22m[1m[22m[2m │ gzip: 147.29 kB[22m
+2025-11-18T03:20:28.648262Z	[32m✓ built in 20.87s[39m
+2025-11-18T03:20:28.701231Z	[VERSION] Generated version.json: {
+2025-11-18T03:20:28.701489Z	  gitHash: 'b8e4021',
+2025-11-18T03:20:28.701665Z	  gitBranch: 'HEAD',
+2025-11-18T03:20:28.701762Z	  buildTime: '2025-11-18T03:20:28.697Z',
+2025-11-18T03:20:28.701844Z	  buildTimestamp: 1763436028697,
+2025-11-18T03:20:28.702572Z	  buildId: 'b8e4021-1763436028697'
+2025-11-18T03:20:28.702729Z	}
+2025-11-18T03:20:29.214894Z	
+2025-11-18T03:20:29.215311Z	  dist/index.js  2.1mb ⚠️
+2025-11-18T03:20:29.215763Z	
+2025-11-18T03:20:29.215949Z	⚡ Done in 91ms
+2025-11-18T03:20:29.243909Z	Finished
+2025-11-18T03:20:30.165627Z	Checking for configuration in a Wrangler configuration file (BETA)
+2025-11-18T03:20:30.166202Z	
+2025-11-18T03:20:31.303803Z	No wrangler.toml file found. Continuing.
+2025-11-18T03:20:31.304546Z	Note: No functions dir at /functions found. Skipping.
+2025-11-18T03:20:31.304747Z	Validating asset output directory
+2025-11-18T03:20:34.201181Z	Deploying your site to Cloudflare's global network...
+2025-11-18T03:20:36.92547Z	Uploading... (175/176)
+2025-11-18T03:20:37.491196Z	Uploading... (176/176)
+2025-11-18T03:20:37.491443Z	✨ Success! Uploaded 1 files (175 already uploaded) (0.91 sec)
+2025-11-18T03:20:37.491541Z	
+2025-11-18T03:20:37.879398Z	✨ Upload complete!
+2025-11-18T03:20:41.755684Z	Success: Assets published!
+2025-11-18T03:20:43.249072Z	Success: Your site was deployed!
