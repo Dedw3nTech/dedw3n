@@ -27,6 +27,7 @@ const PawapayRefundCallback = lazy(() => import('@/pages/pawapay-refund-callback
 const VideoDemo = lazy(() => import('@/pages/video-demo'));
 const TestCookiesPage = lazy(() => import('@/pages/test-cookies'));
 const ERPPage = lazy(() => import('@/pages/erp'));
+const CRMPage = lazy(() => import('@/pages/crm'));
 
 export function SpecialtyRoutes({ params }: any) {
   return (
@@ -55,6 +56,11 @@ export function SpecialtyRoutes({ params }: any) {
       <Route path="/erp">
         <SEOHead title="Enterprise Resource Planning - Dedw3n" description="Integrated business management system connecting all core operations including accounting, HR, procurement, supply chain, and government services." />
         <ERPPage />
+      </Route>
+      
+      <Route path="/crm">
+        <SEOHead title="Customer Relationship Management - Dedw3n" description="Centralized customer data and relationship management system for tracking interactions, sales pipeline, and customer engagement." />
+        <CRMPage />
       </Route>
       
       {/* Lifestyle routes - Order Food, Groceries, and Reservations */}
