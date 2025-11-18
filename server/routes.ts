@@ -3110,7 +3110,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const activeVendors = await db
         .select({ count: sql<number>`count(*)` })
         .from(vendors)
-        .where(eq(vendors.status, 'active'))
+        .where(eq(vendors.accountStatus, 'active'))
         .then(result => result[0]?.count || 0);
 
       return res.json({
