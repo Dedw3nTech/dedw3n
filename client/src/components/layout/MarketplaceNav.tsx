@@ -879,7 +879,7 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     data-testid="search-input-mobile"
-                    placeholder={translatedLabels.searchPlaceholder}
+                    placeholder="Search"
                     value={searchTerm}
                     onChange={(e) => handleSearchChange(e.target.value)}
                     onKeyDown={(e) => {
