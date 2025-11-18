@@ -39,7 +39,6 @@ export function LifestyleNav({
   const navigationTexts = useMemo(() => [
     "Order Food",
     "Reservations",
-    "Ride Sharing",
     "Flights",
     "Hotels",
     "Activities",
@@ -54,8 +53,7 @@ export function LifestyleNav({
     "Restaurants",
     "Hotels & Stays",
     "Travel",
-    "Entertainment",
-    "All Categories"
+    "Entertainment"
   ], []);
 
   const { translations: translatedTexts } = useMasterBatchTranslation(navigationTexts);
@@ -63,23 +61,21 @@ export function LifestyleNav({
   const translatedLabels = useMemo(() => ({
     orderFoodText: translatedTexts[0] || navigationTexts[0],
     reservationsText: translatedTexts[1] || navigationTexts[1],
-    rideSharingText: translatedTexts[2] || navigationTexts[2],
-    flightsText: translatedTexts[3] || navigationTexts[3],
-    hotelsText: translatedTexts[4] || navigationTexts[4],
-    activitiesText: translatedTexts[5] || navigationTexts[5],
-    foodDeliveryText: translatedTexts[6] || navigationTexts[6],
-    transportationText: translatedTexts[7] || navigationTexts[7],
-    searchPlaceholder: translatedTexts[8] || navigationTexts[8],
-    addServiceText: translatedTexts[9] || navigationTexts[9],
-    cancelText: translatedTexts[10] || navigationTexts[10],
-    trendingServicesText: translatedTexts[11] || navigationTexts[11],
-    popularCategoriesText: translatedTexts[12] || navigationTexts[12],
-    quickAccessText: translatedTexts[13] || navigationTexts[13],
-    restaurantsText: translatedTexts[14] || navigationTexts[14],
-    hotelsStaysText: translatedTexts[15] || navigationTexts[15],
-    travelText: translatedTexts[16] || navigationTexts[16],
-    entertainmentText: translatedTexts[17] || navigationTexts[17],
-    allCategoriesText: translatedTexts[18] || navigationTexts[18]
+    flightsText: translatedTexts[2] || navigationTexts[2],
+    hotelsText: translatedTexts[3] || navigationTexts[3],
+    activitiesText: translatedTexts[4] || navigationTexts[4],
+    foodDeliveryText: translatedTexts[5] || navigationTexts[5],
+    transportationText: translatedTexts[6] || navigationTexts[6],
+    searchPlaceholder: translatedTexts[7] || navigationTexts[7],
+    addServiceText: translatedTexts[8] || navigationTexts[8],
+    cancelText: translatedTexts[9] || navigationTexts[9],
+    trendingServicesText: translatedTexts[10] || navigationTexts[10],
+    popularCategoriesText: translatedTexts[11] || navigationTexts[11],
+    quickAccessText: translatedTexts[12] || navigationTexts[12],
+    restaurantsText: translatedTexts[13] || navigationTexts[13],
+    hotelsStaysText: translatedTexts[14] || navigationTexts[14],
+    travelText: translatedTexts[15] || navigationTexts[15],
+    entertainmentText: translatedTexts[16] || navigationTexts[16]
   }), [translatedTexts, navigationTexts]);
 
   // Handle category navigation
@@ -291,42 +287,6 @@ export function LifestyleNav({
                 }`} />
               </div>
             </div>
-            
-            {/* Ride Sharing */}
-            <div 
-              className="cursor-pointer group transition-all duration-300 h-[40px] flex items-center flex-shrink-0"
-              onClick={() => handleCategoryClick("ride_sharing")}
-              data-testid="button-category-ride-sharing"
-            >
-              <div className="relative">
-                <span className={`text-[9px] md:text-[10px] lg:text-xs xl:text-sm font-medium transition-colors duration-300 whitespace-nowrap ${
-                  selectedCategory === 'ride_sharing' 
-                    ? 'text-black' 
-                    : 'text-black group-hover:text-black'
-                }`}>
-                  {translatedLabels.rideSharingText}
-                </span>
-                <div className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
-                  selectedCategory === 'ride_sharing' 
-                    ? 'bg-black w-full' 
-                    : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
-                }`} />
-              </div>
-            </div>
-            
-            {/* All Categories */}
-            <div 
-              className="cursor-pointer group transition-all duration-300 h-[40px] flex items-center flex-shrink-0"
-              onClick={() => handleCategoryClick("all")}
-              data-testid="button-category-all"
-            >
-              <div className="relative">
-                <span className="text-[9px] md:text-[10px] lg:text-xs xl:text-sm font-medium transition-colors duration-300 whitespace-nowrap text-black group-hover:text-black">
-                  {translatedLabels.allCategoriesText}
-                </span>
-                <div className="absolute -bottom-1 left-0 h-0.5 bg-transparent w-0 group-hover:w-full group-hover:bg-black transition-all duration-300" />
-              </div>
-            </div>
           </div>
 
           {/* Right side - Search bar */}
@@ -425,7 +385,6 @@ export function LifestyleNav({
                       {[
                         translatedLabels.restaurantsText,
                         translatedLabels.hotelsStaysText,
-                        translatedLabels.rideSharingText,
                         translatedLabels.activitiesText
                       ].map((item, index) => (
                         <div
@@ -470,15 +429,6 @@ export function LifestyleNav({
                   <div>
                     <h3 className="text-xs font-bold mb-3 tracking-wide">{translatedLabels.quickAccessText}</h3>
                     <div className="space-y-2.5">
-                      <div
-                        onClick={() => {
-                          handleCategoryClick('all');
-                          setShowSuggestions(false);
-                        }}
-                        className="cursor-pointer"
-                      >
-                        <span className="text-xs underline hover:no-underline">{translatedLabels.allCategoriesText}</span>
-                      </div>
                       {isAuthenticated && (
                         <div
                           onClick={() => {
@@ -591,28 +541,6 @@ export function LifestyleNav({
               data-testid="button-category-hotels-mobile"
             >
               {translatedLabels.reservationsText}
-            </button>
-            <button
-              onClick={() => handleCategoryClick("ride_sharing")}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                selectedCategory === 'ride_sharing'
-                  ? 'bg-black text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-              data-testid="button-category-ride-sharing-mobile"
-            >
-              {translatedLabels.rideSharingText}
-            </button>
-            <button
-              onClick={() => handleCategoryClick("all")}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                selectedCategory === 'all'
-                  ? 'bg-black text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-              data-testid="button-category-all-mobile"
-            >
-              {translatedLabels.allCategoriesText}
             </button>
           </div>
         </div>
