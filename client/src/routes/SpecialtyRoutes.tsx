@@ -26,6 +26,7 @@ const PawapayPayoutCallback = lazy(() => import('@/pages/pawapay-payout-callback
 const PawapayRefundCallback = lazy(() => import('@/pages/pawapay-refund-callback'));
 const VideoDemo = lazy(() => import('@/pages/video-demo'));
 const TestCookiesPage = lazy(() => import('@/pages/test-cookies'));
+const ERPPage = lazy(() => import('@/pages/erp'));
 
 export function SpecialtyRoutes({ params }: any) {
   return (
@@ -49,6 +50,11 @@ export function SpecialtyRoutes({ params }: any) {
       <Route path="/finance">
         <SEOHead title="Finance - Dedw3n" description="Access comprehensive financial services including banking, insurance, loans, investing, cryptocurrency, and international remittance through Dedw3n's trusted platform." />
         <FinancePage />
+      </Route>
+      
+      <Route path="/erp">
+        <SEOHead title="Enterprise Resource Planning - Dedw3n" description="Integrated business management system connecting all core operations including accounting, HR, procurement, supply chain, and government services." />
+        <ERPPage />
       </Route>
       
       {/* Lifestyle routes - Order Food, Groceries, and Reservations */}
