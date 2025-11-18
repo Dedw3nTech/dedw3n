@@ -3126,6 +3126,87 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // ============================================================================
+  // CRM (CUSTOMER RELATIONSHIP MANAGEMENT) ROUTES
+  // ============================================================================
+
+  // Get CRM dashboard statistics
+  app.get('/api/crm/stats', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      // Get total customers (all users)
+      const totalCustomers = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(users)
+        .then(result => result[0]?.count || 0);
+
+      // Get active interactions (posts, comments, messages)
+      const activePosts = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(posts)
+        .then(result => result[0]?.count || 0);
+
+      // Get total sales from orders
+      const totalSales = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(orders)
+        .then(result => result[0]?.count || 0);
+
+      // Calculate conversion rate (orders / total users * 100)
+      const conversionRate = totalCustomers > 0 
+        ? Math.round((totalSales / totalCustomers) * 100 * 10) / 10
+        : 0;
+
+      return res.json({
+        totalCustomers,
+        activeInteractions: activePosts,
+        totalSales,
+        conversionRate,
+      });
+    } catch (error) {
+      console.error('Error fetching CRM stats', error);
+      return res.status(500).json({ message: 'Failed to fetch CRM statistics' });
+    }
+  });
+
+  // Get recent customer activity
+  app.get('/api/crm/customers/recent', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      // Get recent users with their activity
+      const recentCustomers = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          name: users.name,
+          email: users.email,
+          createdAt: users.createdAt,
+        })
+        .from(users)
+        .orderBy(desc(users.createdAt))
+        .limit(10);
+
+      // Format the response
+      const formattedCustomers = recentCustomers.map((customer: any) => ({
+        ...customer,
+        lastActivity: customer.createdAt 
+          ? new Date(customer.createdAt).toLocaleDateString() 
+          : 'Recently active',
+      }));
+
+      return res.json(formattedCustomers);
+    } catch (error) {
+      console.error('Error fetching recent customers', error);
+      return res.status(500).json({ message: 'Failed to fetch recent customers' });
+    }
+  });
+
+  // ============================================================================
   // FILE UPLOAD ROUTES FOR CALENDAR ATTACHMENTS
   // ============================================================================
 
