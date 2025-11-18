@@ -348,6 +348,10 @@ export default function UserMenu() {
 
           {/* Meetings Section */}
           <div className="space-y-1">
+            <div className="px-3 py-1 text-right">
+              <span className="text-xs text-gray-500">Business Suite</span>
+            </div>
+            
             <SheetClose asChild>
               <Link href="/erp">
                 <span className="flex items-center px-3 py-3 rounded-md text-sm font-medium text-black hover:bg-white hover:text-black transition-colors cursor-pointer" data-testid="link-erp">
