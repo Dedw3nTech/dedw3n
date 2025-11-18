@@ -217,12 +217,12 @@ export default function UserMenu() {
           />
         </button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-[300px] sm:w-[350px] bg-white">
-        <SheetHeader>
+      <SheetContent side="right" className="w-[300px] sm:w-[350px] bg-white overflow-hidden flex flex-col">
+        <SheetHeader className="flex-shrink-0">
           <SheetTitle className="text-black">{translatedLabels.accountMenu}</SheetTitle>
         </SheetHeader>
 
-        <div className="mt-6 flex flex-col space-y-4">
+        <div className="mt-6 flex flex-col space-y-4 overflow-y-auto flex-1 pr-2 scrollbar-hide smooth-scroll">
           {/* Profile Header */}
           <div className="flex items-center gap-3 pb-4 border-b">
             <SheetClose asChild>

@@ -85,6 +85,11 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+  
+  /* Smooth scrolling behavior */
+  .smooth-scroll {
+    scroll-behavior: smooth;
+  }
 }
 
 /* Improved mobile scrolling performance */
