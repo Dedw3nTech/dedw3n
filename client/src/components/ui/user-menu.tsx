@@ -326,19 +326,6 @@ export default function UserMenu() {
             </SheetClose>
             
             <SheetClose asChild>
-              <Link href="/calendar" data-testid="link-calendar">
-                <span className="flex items-center justify-between px-3 py-3 rounded-md text-sm font-medium text-black hover:bg-gray-50 hover:text-black transition-colors cursor-pointer">
-                  <span>{translatedLabels.calendar}</span>
-                  {(calendarNotifications?.count || 0) > 0 && (
-                    <Badge className="bg-black text-white text-xs min-w-[20px] h-5">
-                      {(calendarNotifications?.count || 0) > 99 ? "99+" : calendarNotifications?.count}
-                    </Badge>
-                  )}
-                </span>
-              </Link>
-            </SheetClose>
-            
-            <SheetClose asChild>
               <Link href="/affiliate-partnership">
                 <span className="flex items-center px-3 py-3 rounded-md text-sm font-medium text-black hover:bg-gray-50 hover:text-black transition-colors cursor-pointer">
                   {translatedLabels.affiliatePartnership}
@@ -361,6 +348,19 @@ export default function UserMenu() {
 
           {/* Meetings Section */}
           <div className="space-y-1">
+            <SheetClose asChild>
+              <Link href="/calendar" data-testid="link-calendar">
+                <span className="flex items-center justify-between px-3 py-3 rounded-md text-sm font-medium text-black hover:bg-white hover:text-black transition-colors cursor-pointer">
+                  <span>{translatedLabels.calendar}</span>
+                  {(calendarNotifications?.count || 0) > 0 && (
+                    <Badge className="bg-black text-white text-xs min-w-[20px] h-5">
+                      {(calendarNotifications?.count || 0) > 99 ? "99+" : calendarNotifications?.count}
+                    </Badge>
+                  )}
+                </span>
+              </Link>
+            </SheetClose>
+            
             <SheetClose asChild>
               <Link href="/meetings/new">
                 <span className="flex items-center px-3 py-3 rounded-md text-sm font-medium text-black hover:bg-white hover:text-black transition-colors cursor-pointer" data-testid="link-new-meeting">
