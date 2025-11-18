@@ -6,7 +6,7 @@ import { useEffect, useRef } from 'react';
  * This prevents users from seeing stale cached content after deployments
  */
 export function CacheBuster({ children }: { children: React.ReactNode }) {
-  const checkIntervalRef = useRef<ReturnType<typeof setInterval>>();
+  const checkIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const isCheckingRef = useRef(false);
   
   useEffect(() => {
