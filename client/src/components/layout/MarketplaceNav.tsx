@@ -872,21 +872,6 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
               )}
             </div>
 
-            {/* Active market type indicator - Hidden on government and add-product pages */}
-            {!isGovernmentPage && !isAddProductPage && (
-              <div className="flex items-center">
-                <span className="text-sm font-medium text-gray-700">
-                  {marketType === 'c2c' && translatedLabels.c2cText}
-                  {marketType === 'b2c' && translatedLabels.b2cText}
-                  {marketType === 'b2b' && translatedLabels.b2bText}
-                  {marketType === 'raw' && translatedLabels.rawText}
-                  {marketType === 'creators' && translatedLabels.creatorsText}
-                  {marketType === 'real-estate' && translatedLabels.realEstateText}
-                  {marketType === 'rqst' && translatedLabels.rqstText}
-                </span>
-              </div>
-            )}
-
             {/* Search bar and hamburger menu for mobile */}
             <div className="flex items-center gap-2 flex-1 justify-end">
               <div className="relative flex-1 max-w-xs">
