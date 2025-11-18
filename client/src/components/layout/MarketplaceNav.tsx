@@ -874,7 +874,7 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
 
             {/* Search bar and hamburger menu for mobile */}
             <div className="flex items-center gap-2 flex-1 justify-end">
-              <div className="relative flex-1 max-w-xs">
+              <div className="relative flex-1 max-w-[160px]">
                 <form onSubmit={handleSearchSubmit} className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
