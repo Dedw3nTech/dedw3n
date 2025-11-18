@@ -5,7 +5,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { UserAvatar } from '@/components/ui/user-avatar';
-import { Search, Plus, Briefcase, Users, Heart, GraduationCap, Truck, HandHeart } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Search, Plus, Briefcase, Users, Heart, GraduationCap, Truck, HandHeart, Menu } from 'lucide-react';
 
 interface Service {
   id: number;
@@ -40,6 +41,7 @@ export function ServicesNav({
   const [suggestions, setSuggestions] = useState<Service[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
 
@@ -60,7 +62,8 @@ export function ServicesNav({
     "Cancel",
     "TRENDING SERVICES",
     "POPULAR CATEGORIES",
-    "QUICK ACCESS"
+    "QUICK ACCESS",
+    "Services"
   ], []);
 
   const { translations: translatedTexts } = useMasterBatchTranslation(navigationTexts);
@@ -80,6 +83,7 @@ export function ServicesNav({
     trendingServicesText: translatedTexts[11] || navigationTexts[11],
     popularCategoriesText: translatedTexts[12] || navigationTexts[12],
     quickAccessText: translatedTexts[13] || navigationTexts[13],
+    servicesText: translatedTexts[14] || navigationTexts[14]
   }), [translatedTexts, navigationTexts]);
 
   const handleCategoryClick = useCallback((category: string) => {
@@ -277,48 +281,87 @@ export function ServicesNav({
           </div>
         </div>
 
-        <div className="md:hidden flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {isAuthenticated && (
-              <div
-                onClick={handleProfileClick}
-                className="cursor-pointer"
-                data-testid="button-profile-mobile"
-              >
-                <UserAvatar
-                  userId={user.id}
-                  username={user.username}
-                  size="sm"
-                  className="border-2 border-gray-200"
-                />
+        <div className="md:hidden">
+          <div className="flex items-center justify-between">
+            {/* Left side - Profile + Add Service */}
+            <div className="flex items-center gap-2">
+              {isAuthenticated && (
+                <div
+                  onClick={handleProfileClick}
+                  className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded-full"
+                  data-testid="button-profile-mobile"
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleProfileClick();
+                    }
+                  }}
+                >
+                  <UserAvatar
+                    userId={user.id}
+                    username={user.username}
+                    size="sm"
+                    className="border-2 border-gray-200 hover:border-gray-300 transition-colors"
+                  />
+                </div>
+              )}
+              {isAuthenticated && (
+                <Button
+                  onClick={handleAddService}
+                  className="h-8 px-3 bg-transparent text-black hover:bg-gray-100 transition-colors flex items-center gap-1.5 font-medium"
+                  style={{ fontSize: '10px' }}
+                  data-testid="button-add-service-mobile"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add
+                </Button>
+              )}
+            </div>
+
+            {/* Search bar and hamburger menu for mobile */}
+            <div className="flex items-center gap-2 flex-1 justify-end">
+              <div className="relative flex-1 max-w-xs">
+                <form onSubmit={handleSearchSubmit} className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    data-testid="input-search-mobile"
+                    type="text"
+                    placeholder={translatedLabels.searchText}
+                    value={searchTerm}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSearch(searchTerm);
+                        setShowSuggestions(false);
+                      }
+                    }}
+                    onFocus={handleSearchFocus}
+                    className="pl-10 h-8 text-sm pr-4 border-0 border-b-2 border-black rounded-none bg-transparent focus:border-black focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none shadow-none"
+                    disabled={isSearching}
+                  />
+                  {isSearching && (
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                      <div className="animate-spin h-3 w-3 border-2 border-gray-300 border-t-gray-600 rounded-full"></div>
+                    </div>
+                  )}
+                </form>
               </div>
-            )}
-          </div>
 
-          <div className="flex-1 mx-4">
-            <form onSubmit={handleSearchSubmit} className="relative">
-              <Input
-                type="text"
-                placeholder={translatedLabels.searchText}
-                value={searchTerm}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                onFocus={handleSearchFocus}
-                className="w-full pl-10 pr-4 h-10 bg-white border-gray-300"
-                data-testid="input-search-mobile"
-              />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            </form>
+              {/* Hamburger menu button for mobile */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 hover:bg-gray-100 flex-shrink-0"
+                onClick={() => setIsSidebarOpen(true)}
+                data-testid="button-hamburger-mobile"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
-
-          {isAuthenticated && (
-            <Button
-              onClick={handleAddService}
-              className="h-10 px-3 bg-transparent text-black hover:bg-gray-100"
-              data-testid="button-add-service-mobile"
-            >
-              <Plus className="h-5 w-5" />
-            </Button>
-          )}
         </div>
       </div>
 
@@ -452,6 +495,47 @@ export function ServicesNav({
           </div>
         </div>
       )}
+
+      {/* Sidebar for services category navigation */}
+      <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+        <SheetContent side="right" className="w-[300px] sm:w-[350px]">
+          <SheetHeader>
+            <SheetTitle>{translatedLabels.servicesText}</SheetTitle>
+          </SheetHeader>
+          
+          <div className="mt-6 space-y-2">
+            {/* Services Category Navigation Buttons */}
+            <div className="space-y-1">
+              
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-12"
+                onClick={() => {
+                  handleCategoryClick("jobs");
+                  setIsSidebarOpen(false);
+                }}
+                data-testid="sidebar-button-jobs"
+              >
+                <Briefcase className="h-4 w-4 mr-2" />
+                <span className="text-xs">{translatedLabels.jobsText}</span>
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-12"
+                onClick={() => {
+                  handleCategoryClick("freelance");
+                  setIsSidebarOpen(false);
+                }}
+                data-testid="sidebar-button-freelance"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                <span className="text-xs">{translatedLabels.freelancerText}</span>
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
