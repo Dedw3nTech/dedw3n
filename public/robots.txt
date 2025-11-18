@@ -27,7 +27,7 @@ Disallow: /attached_assets/
 
 # Block test files and temporary resources
 Disallow: /test-*
-Disallow: *.html
+Disallow: /*.html$
 Allow: /
 Disallow: /simple-upload.html
 
