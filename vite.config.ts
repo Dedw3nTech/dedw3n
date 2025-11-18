@@ -100,12 +100,16 @@ export default defineConfig({
     },
   },
   root: path.resolve(import.meta.dirname, "client"),
-  build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
-    emptyOutDir: true,
+    build: {
+      outDir: path.resolve(import.meta.dirname, "dist/public"),
+      emptyOutDir: true,
 
-    // Use esbuild for faster builds
-    minify: "esbuild",
+      minify: "esbuild",
+
+      commonjsOptions: {
+        include: [/recharts/, /node_modules/],
+        transformMixedEsModules: true,
+      },
 
     // Disable modulepreload polyfill to prevent Chrome warning about unsupported 'as' value
     // Chrome doesn't support as="document" for <link rel="preload">, causing console warnings
@@ -166,7 +170,8 @@ export default defineConfig({
           if (
             id.includes("node_modules/react") ||
             id.includes("node_modules/react-dom") ||
-            id.includes("node_modules/wouter")
+            id.includes("node_modules/wouter") ||
+            id.includes("node_modules/recharts")
           ) {
             return "react-vendor";
           }
@@ -184,9 +189,6 @@ export default defineConfig({
           }
           if (id.includes("node_modules/@tanstack/react-query")) {
             return "react-query";
-          }
-          if (id.includes("node_modules/recharts")) {
-            return "charts";
           }
           if (id.includes("node_modules/emoji-picker-react")) {
             return "emoji-picker";
