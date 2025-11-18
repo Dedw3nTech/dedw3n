@@ -34,6 +34,18 @@ interface CommissionPeriod {
   status: string;
 }
 
+interface VendorResponse {
+  vendor: {
+    id: number;
+    [key: string]: any;
+  };
+}
+
+interface CommissionDashboardResponse {
+  commissionPeriods: CommissionPeriod[];
+  [key: string]: any;
+}
+
 const CommissionPaymentForm = ({ 
   paymentData, 
   commissionPeriod 
@@ -218,7 +230,7 @@ export default function CommissionPayment() {
     const fetchPaymentData = async () => {
       try {
         // Get current vendor
-        const vendorResponse = await apiRequest('GET', '/api/vendors/me');
+        const vendorResponse = await apiRequest('GET', '/api/vendors/me') as unknown as VendorResponse;
         const vendor = vendorResponse.vendor;
 
         if (!vendor) {
@@ -226,18 +238,18 @@ export default function CommissionPayment() {
         }
 
         // Get payment URL data
-        const response = await apiRequest(
+        const paymentResponse = await apiRequest(
           'GET', 
           `/api/vendors/${vendor.id}/commission/${periodId}/payment-url`
-        );
+        ) as unknown as CommissionPaymentData;
         
-        setPaymentData(response);
+        setPaymentData(paymentResponse);
 
         // Get commission dashboard to find the specific period
         const dashboardResponse = await apiRequest(
           'GET', 
           `/api/vendors/${vendor.id}/commission-dashboard`
-        );
+        ) as unknown as CommissionDashboardResponse;
         
         const period = dashboardResponse.commissionPeriods.find(
           (p: CommissionPeriod) => p.id === parseInt(periodId as string)
