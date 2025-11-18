@@ -455,7 +455,9 @@ const lazyBundles = [
   {
     Component: SpecialtyRoutes,
     mounts: [
-      '/government', '/dr-congo', '/finance', '/lifestyle', '/lifestyle/order-food', '/lifestyle/groceries', '/lifestyle/reservations', 
+      '/government', '/dr-congo', '/finance', 
+      '/lifestyle', '/lifestyle/order-food', '/lifestyle/groceries', '/lifestyle/reservations',
+      '/lifestyle/add-restaurant', '/lifestyle/add-groceries', '/lifestyle/add-reservation',
       '/services', '/services/jobs', '/services/freelance',
       '/shipping-calculator', '/percentage-calculator', '/commission-payment/:periodId',
       '/dating', '/dating/:rest*', '/my-matches',

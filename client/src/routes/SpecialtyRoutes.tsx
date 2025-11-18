@@ -12,6 +12,9 @@ const LifestylePage = lazy(() => import('@/pages/lifestyle'));
 const OrderFoodPage = lazy(() => import('@/pages/order-food'));
 const GroceriesPage = lazy(() => import('@/pages/groceries'));
 const ReservationPage = lazy(() => import('@/pages/reservations'));
+const AddRestaurantPage = lazy(() => import('@/pages/add-restaurant'));
+const AddGroceriesPage = lazy(() => import('@/pages/add-groceries'));
+const AddReservationPage = lazy(() => import('@/pages/add-reservation'));
 const ServicesPage = lazy(() => import('@/pages/services'));
 const JobsPage = lazy(() => import('@/pages/jobs'));
 const FreelancePage = lazy(() => import('@/pages/freelance'));
@@ -64,6 +67,21 @@ export function SpecialtyRoutes({ params }: any) {
         <SEOHead title="Reservations - Dedw3n" description="Make reservations for hotels, venues, events, and other services." />
         <ReservationPage />
       </Route>
+      
+      {/* Lifestyle upload forms */}
+      <ProtectedRoute path="/lifestyle/add-restaurant">
+        <SEOHead title="Add Restaurant - Dedw3n" description="List your restaurant or food service on Dedw3n." />
+        <AddRestaurantPage />
+      </ProtectedRoute>
+      <ProtectedRoute path="/lifestyle/add-groceries">
+        <SEOHead title="Add Groceries - Dedw3n" description="List your grocery products on Dedw3n." />
+        <AddGroceriesPage />
+      </ProtectedRoute>
+      <ProtectedRoute path="/lifestyle/add-reservation">
+        <SEOHead title="Add Accommodation - Dedw3n" description="List your hotel or accommodation on Dedw3n." />
+        <AddReservationPage />
+      </ProtectedRoute>
+      
       <Route path="/lifestyle" component={LifestylePage} />
       
       {/* Services routes - Jobs and Freelance */}
