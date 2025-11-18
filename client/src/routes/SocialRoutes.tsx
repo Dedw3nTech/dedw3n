@@ -16,6 +16,7 @@ const CalendarPage = lazy(() => import('@/pages/calendar'));
 const MeetingPage = lazy(() => import('@/pages/meeting'));
 const NewMeetingPage = lazy(() => import('@/pages/new-meeting'));
 const ERPPage = lazy(() => import('@/pages/erp'));
+const CRMPage = lazy(() => import('@/pages/crm'));
 const EventsPage = lazy(() => import('@/pages/events'));
 const EventDetailPage = lazy(() => import('@/pages/event-detail'));
 const SocialConsolePage = lazy(() => import('@/pages/social-console'));
@@ -50,6 +51,7 @@ export function SocialRoutes({ params }: any) {
       <ProtectedRoute path="/notifications" component={NotificationsPage} />
       <ProtectedRoute path="/friend-requests" component={FriendRequestsPage} />
       <ProtectedRoute path="/erp" component={ERPPage} />
+      <ProtectedRoute path="/crm" component={CRMPage} />
       <ProtectedRoute path="/calendar" component={CalendarPage} />
       <ProtectedRoute path="/meetings/new" component={NewMeetingPage} />
       <ProtectedRoute path="/meeting/:roomId" component={MeetingPage} />
