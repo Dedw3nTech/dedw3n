@@ -101,7 +101,7 @@ export function ServicesNav({
   }, [user, setLocation]);
 
   const handleAddService = useCallback(() => {
-    setLocation('/add-service');
+    setLocation('/add-product');
   }, [setLocation]);
 
   const handleSearchFocus = useCallback(() => {
