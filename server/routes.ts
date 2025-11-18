@@ -2380,6 +2380,20 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       return res.status(500).json({ message: 'Failed to fetch unread notification count' });
     }
   });
+
+  // Get unread government notification count
+  app.get('/api/notifications/government/count', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+      
+      const count = await storage.getUnreadNotificationCountByType(req.user.id, 'government');
+      return res.json({ count });
+    } catch (error) {
+      return res.status(500).json({ message: 'Failed to fetch government notification count' });
+    }
+  });
   
   // Get calendar notification count (upcoming reminders in next 7 days)
   app.get('/api/calendar/notifications/count', unifiedIsAuthenticated, async (req: Request, res: Response) => {

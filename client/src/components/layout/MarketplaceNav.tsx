@@ -156,10 +156,19 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
   const { data: generalNotifications } = useQuery<{ count: number }>({
     queryKey: ['/api/notifications/unread/count'],
     staleTime: 10000,
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !isGovernmentPage,
   });
 
-  const totalNotifications = (messagesNotifications?.count || 0) + (generalNotifications?.count || 0);
+  const { data: governmentNotifications } = useQuery<{ count: number }>({
+    queryKey: ['/api/notifications/government/count'],
+    staleTime: 10000,
+    enabled: isAuthenticated && isGovernmentPage,
+  });
+
+  // Calculate notification count based on page type
+  const totalNotifications = isGovernmentPage
+    ? (governmentNotifications?.count || 0)
+    : (messagesNotifications?.count || 0) + (generalNotifications?.count || 0);
 
   const handleProfileClick = useCallback(() => {
     setLocation("/profile");

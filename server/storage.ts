@@ -95,6 +95,7 @@ export interface IStorage {
   createNotification(notificationData: InsertNotification): Promise<Notification>;
   getNotifications(userId: number, limit?: number): Promise<Notification[]>;
   getUnreadNotificationCount(userId: number): Promise<number>;
+  getUnreadNotificationCountByType(userId: number, notificationType: string): Promise<number>;
   markNotificationAsRead(id: number): Promise<Notification | undefined>;
   markAllNotificationsAsRead(userId: number): Promise<boolean>;
   getNotificationSettings(userId: number): Promise<NotificationSettings[]>;
@@ -892,6 +893,26 @@ export class DatabaseStorage implements IStorage {
       return result?.count || 0;
     } catch (error) {
       logger.error('Error getting unread notification count', undefined, error as Error, 'server');
+      return 0;
+    }
+  }
+
+  async getUnreadNotificationCountByType(userId: number, notificationType: string): Promise<number> {
+    try {
+      const [result] = await db
+        .select({ count: count() })
+        .from(notifications)
+        .where(
+          and(
+            eq(notifications.userId, userId),
+            eq(notifications.isRead, false),
+            eq(notifications.type, notificationType as any)
+          )
+        );
+      
+      return result?.count || 0;
+    } catch (error) {
+      logger.error('Error getting unread notification count by type', undefined, error as Error, 'server');
       return 0;
     }
   }
