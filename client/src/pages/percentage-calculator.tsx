@@ -80,7 +80,7 @@ export default function PercentageCalculator() {
 
         <div className="space-y-10">
           <div className="border-b border-gray-200 pb-8">
-            <div className="flex flex-wrap items-center gap-3 mb-4">
+            <div className="flex flex-wrap items-center gap-3">
               <span className="text-black">{whatIsText}</span>
               <input
                 type="number"
@@ -118,18 +118,16 @@ export default function PercentageCalculator() {
               >
                 {calculateText}
               </button>
-            </div>
-            {result1 !== null && (
-              <div className="mt-4">
-                <p className="text-xl text-black" data-testid="result-1">
+              {result1 !== null && (
+                <div className="px-3 py-2 border border-gray-300 text-black bg-white" data-testid="result-1">
                   {resultText}: {result1.toFixed(2)}
-                </p>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="border-b border-gray-200 pb-8">
-            <div className="flex flex-wrap items-center gap-3 mb-4">
+            <div className="flex flex-wrap items-center gap-3">
               <input
                 type="number"
                 value={calc2X}
@@ -166,18 +164,16 @@ export default function PercentageCalculator() {
               >
                 {calculateText}
               </button>
-            </div>
-            {result2 !== null && (
-              <div className="mt-4">
-                <p className="text-xl text-black" data-testid="result-2">
+              {result2 !== null && (
+                <div className="px-3 py-2 border border-gray-300 text-black bg-white" data-testid="result-2">
                   {resultText}: {result2.toFixed(2)}{percentSymbolText}
-                </p>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="border-b border-gray-200 pb-8">
-            <div className="flex flex-wrap items-center gap-3 mb-4">
+            <div className="flex flex-wrap items-center gap-3">
               <span className="text-black">{percentageIncreaseDecreaseText}</span>
               <input
                 type="number"
@@ -215,14 +211,12 @@ export default function PercentageCalculator() {
               >
                 {calculateText}
               </button>
-            </div>
-            {result3 !== null && (
-              <div className="mt-4">
-                <p className="text-xl text-black" data-testid="result-3">
+              {result3 !== null && (
+                <div className="px-3 py-2 border border-gray-300 text-black bg-white" data-testid="result-3">
                   {resultText}: {result3.percentage.toFixed(2)}% {result3.isIncrease ? increaseText : decreaseText}
-                </p>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
