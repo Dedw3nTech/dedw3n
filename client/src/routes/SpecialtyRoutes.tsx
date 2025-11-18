@@ -12,6 +12,8 @@ const LifestylePage = lazy(() => import('@/pages/lifestyle'));
 const OrderFoodPage = lazy(() => import('@/pages/order-food'));
 const ReservationPage = lazy(() => import('@/pages/reservations'));
 const ServicesPage = lazy(() => import('@/pages/services'));
+const JobsPage = lazy(() => import('@/pages/jobs'));
+const FreelancePage = lazy(() => import('@/pages/freelance'));
 const ShippingCalculator = lazy(() => import('@/pages/shipping-calculator'));
 const PercentageCalculator = lazy(() => import('@/pages/percentage-calculator'));
 const GovernmentPage = lazy(() => import('@/pages/government'));
@@ -59,6 +61,15 @@ export function SpecialtyRoutes({ params }: any) {
       </Route>
       <Route path="/lifestyle" component={LifestylePage} />
       
+      {/* Services routes - Jobs and Freelance */}
+      <Route path="/services/jobs">
+        <SEOHead title="Jobs - Dedw3n" description="Browse job opportunities and career listings." />
+        <JobsPage />
+      </Route>
+      <Route path="/services/freelance">
+        <SEOHead title="Freelance - Dedw3n" description="Find freelance gigs and project-based work opportunities." />
+        <FreelancePage />
+      </Route>
       <Route path="/services" component={ServicesPage} />
       
       <Route path="/shipping-calculator">

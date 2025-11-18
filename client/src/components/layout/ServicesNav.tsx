@@ -83,9 +83,16 @@ export function ServicesNav({
   }), [translatedTexts, navigationTexts]);
 
   const handleCategoryClick = useCallback((category: string) => {
-    setSelectedCategory(category);
+    // Navigate to dedicated route for Jobs and Freelance
+    if (category === 'jobs') {
+      setLocation('/services/jobs');
+    } else if (category === 'freelance') {
+      setLocation('/services/freelance');
+    } else {
+      setSelectedCategory(category);
+    }
     setShowSuggestions(false);
-  }, [setSelectedCategory]);
+  }, [setSelectedCategory, setLocation]);
 
   const handleProfileClick = useCallback(() => {
     if (user?.username) {
