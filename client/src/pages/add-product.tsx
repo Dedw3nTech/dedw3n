@@ -206,7 +206,6 @@ const FIELD_CONFIGS: Record<string, {label: string; type: string; placeholder?: 
   level: { label: 'Level', type: 'select', options: ['Beginner', 'Intermediate', 'Advanced'] },
   platform: { label: 'Platform', type: 'select', options: ['Windows', 'macOS', 'Linux', 'iOS', 'Android', 'Web'] },
   version: { label: 'Version', type: 'text', placeholder: 'e.g., 2.0' },
-  license_type: { label: 'License', type: 'select', options: ['Personal', 'Commercial', 'Extended'] },
   file_size: { label: 'File Size (MB)', type: 'number', placeholder: 'e.g., 150' },
   format: { label: 'Format', type: 'text', placeholder: 'e.g., PDF, MP3' },
   artist: { label: 'Artist', type: 'text', placeholder: 'Artist name' },
