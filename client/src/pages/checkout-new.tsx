@@ -20,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   ArrowLeft, 
   ShoppingCart, 
@@ -31,7 +32,8 @@ import {
   Phone,
   Loader2,
   Lock,
-  Check
+  Check,
+  AlertCircle
 } from "lucide-react";
 
 interface CartItem {
@@ -66,11 +68,10 @@ interface PaymentMethod {
   description: string;
 }
 
-// Initialize Stripe
-if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
-  throw new Error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
-}
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+// Initialize Stripe conditionally
+const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 
+  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
+  : null;
 
 // Pawapay Form Component for Mobile Money
 const PawapayForm = ({ total, cartItems, shippingInfo, onOrderComplete }: {
@@ -1134,7 +1135,14 @@ export default function CheckoutNew() {
                   {/* Payment Forms */}
                   {selectedPaymentMethod === 'stripe' && (
                     <div>
-                      {!clientSecret ? (
+                      {!stripePromise ? (
+                        <Alert>
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>
+                            {translateText('Stripe payment is not available. Please contact support or choose another payment method.')}
+                          </AlertDescription>
+                        </Alert>
+                      ) : !clientSecret ? (
                         <div className="flex items-center justify-center py-8">
                           <Loader2 className="h-6 w-6 animate-spin mr-2" />
                           {translateText('Setting up payment...')}

@@ -11,7 +11,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY!);
+const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 
+  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
+  : null;
 
 interface CommissionPaymentData {
   redirectUrl: string;
@@ -288,6 +290,29 @@ export default function CommissionPayment() {
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">
               {error || 'Unable to load payment information'}
+            </p>
+            <Button onClick={() => setLocation('/vendor-dashboard')} className="w-full">
+              Return to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!stripePromise) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-5 w-5" />
+              Payment Unavailable
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-muted-foreground">
+              Payment processing is not currently available. Please contact support for assistance.
             </p>
             <Button onClick={() => setLocation('/vendor-dashboard')} className="w-full">
               Return to Dashboard

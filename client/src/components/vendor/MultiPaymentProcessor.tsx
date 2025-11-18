@@ -8,7 +8,9 @@ import { CheckCircle, AlertCircle, Clock, CreditCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import PayPalButton from './PayPalButton';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY!);
+const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 
+  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
+  : null;
 
 interface MultiPaymentProcessorProps {
   amount: number;
@@ -318,6 +320,16 @@ export default function MultiPaymentProcessor({
 
   switch (paymentMethod) {
     case 'stripe':
+      if (!stripePromise) {
+        return (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Stripe payment is not available. Please contact support or choose another payment method.
+            </AlertDescription>
+          </Alert>
+        );
+      }
       if (!clientSecret) {
         return (
           <div className="flex items-center justify-center p-8">
