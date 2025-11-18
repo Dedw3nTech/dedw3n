@@ -60,7 +60,11 @@ export default function UserMenu() {
     "suspended",
     "Offline Mode",
     "Offline Mode Active",
-    "Percentage Calculator"
+    "Percentage Calculator",
+    "Business Suite",
+    "ERP",
+    "CRM",
+    "New Meeting"
   ], []);
 
   // Use master translation system for consistent auto-translation
@@ -88,7 +92,11 @@ export default function UserMenu() {
     suspended: translatedTexts[17] || "suspended",
     offlineMode: translatedTexts[18] || "Offline Mode",
     offlineModeActive: translatedTexts[19] || "Offline Mode Active",
-    percentageCalculator: translatedTexts[20] || "Percentage Calculator"
+    percentageCalculator: translatedTexts[20] || "Percentage Calculator",
+    businessSuite: translatedTexts[21] || "Business Suite",
+    erp: translatedTexts[22] || "ERP",
+    crm: translatedTexts[23] || "CRM",
+    newMeeting: translatedTexts[24] || "New Meeting"
   }), [translatedTexts]);
 
   // Helper function to translate account type and status dynamically
@@ -349,13 +357,13 @@ export default function UserMenu() {
           {/* Meetings Section */}
           <div className="space-y-1">
             <div className="px-3 py-1 text-right">
-              <span className="text-xs text-gray-500">Business Suite</span>
+              <span className="text-xs text-gray-500">{translatedLabels.businessSuite}</span>
             </div>
             
             <SheetClose asChild>
               <Link href="/erp">
                 <span className="flex items-center px-3 py-3 rounded-md text-sm font-medium text-black hover:bg-white hover:text-black transition-colors cursor-pointer" data-testid="link-erp">
-                  ERP
+                  {translatedLabels.erp}
                 </span>
               </Link>
             </SheetClose>
@@ -363,7 +371,7 @@ export default function UserMenu() {
             <SheetClose asChild>
               <Link href="/crm">
                 <span className="flex items-center px-3 py-3 rounded-md text-sm font-medium text-black hover:bg-white hover:text-black transition-colors cursor-pointer" data-testid="link-crm">
-                  CRM
+                  {translatedLabels.crm}
                 </span>
               </Link>
             </SheetClose>
@@ -384,7 +392,7 @@ export default function UserMenu() {
             <SheetClose asChild>
               <Link href="/meetings/new">
                 <span className="flex items-center px-3 py-3 rounded-md text-sm font-medium text-black hover:bg-white hover:text-black transition-colors cursor-pointer" data-testid="link-new-meeting">
-                  New Meeting
+                  {translatedLabels.newMeeting}
                 </span>
               </Link>
             </SheetClose>
