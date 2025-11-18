@@ -1,0 +1,379 @@
+import { useState, useEffect, useMemo } from 'react';
+import { useLocation } from 'wouter';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient, apiRequest } from '@/lib/queryClient';
+import type { Vendor } from '@shared/schema';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+const GROCERY_CATEGORIES = [
+  { value: 'grocery-fresh-produce', label: 'Fresh Produce', fields: ['origin', 'organic', 'weight', 'expiry_date'] },
+  { value: 'grocery-dairy', label: 'Dairy & Eggs', fields: ['brand', 'weight', 'expiry_date', 'storage_temp'] },
+  { value: 'grocery-meat', label: 'Meat & Seafood', fields: ['meat_type', 'cut', 'weight', 'expiry_date'] },
+  { value: 'grocery-pantry', label: 'Pantry Staples', fields: ['brand', 'weight', 'expiry_date'] },
+  { value: 'grocery-snacks', label: 'Snacks & Treats', fields: ['brand', 'weight', 'allergens', 'expiry_date'] },
+  { value: 'grocery-frozen', label: 'Frozen Foods', fields: ['brand', 'weight', 'expiry_date'] },
+];
+
+const FIELD_CONFIGS: Record<string, {label: string; type: string; placeholder?: string; options?: string[]}> = {
+  origin: { label: 'Origin', type: 'text', placeholder: 'Country/Region' },
+  organic: { label: 'Organic', type: 'select', options: ['Yes', 'No'] },
+  expiry_date: { label: 'Expiry Date', type: 'date' },
+  weight: { label: 'Weight', type: 'text', placeholder: 'e.g., 1kg' },
+  allergens: { label: 'Allergens', type: 'text', placeholder: 'e.g., Nuts, Dairy' },
+  brand: { label: 'Brand', type: 'text', placeholder: 'Brand name' },
+  storage_temp: { label: 'Storage Temperature', type: 'select', options: ['Refrigerated', 'Frozen', 'Room Temperature'] },
+  meat_type: { label: 'Meat Type', type: 'select', options: ['Beef', 'Chicken', 'Pork', 'Lamb', 'Fish', 'Seafood'] },
+  cut: { label: 'Cut/Type', type: 'text', placeholder: 'e.g., Fillet, Steak, Ground' },
+};
+
+const productSchema = z.object({
+  name: z.string().min(3, { message: "Product name must be at least 3 characters" }),
+  description: z.string().min(10, { message: "Description must be at least 10 characters" }),
+  price: z.coerce.number().positive({ message: "Price must be positive" }),
+  discountPrice: z.coerce.number().nonnegative().optional(),
+  category: z.string().min(1, { message: "Please select a category" }),
+  imageUrl: z.string().optional(),
+  inventory: z.coerce.number().int().nonnegative({ message: "Inventory must be a non-negative number" }),
+  isNew: z.boolean().default(false),
+  isOnSale: z.boolean().default(false),
+  status: z.enum(['active', 'draft', 'archived']).default('active'),
+  offeringType: z.enum(['product', 'service', 'digital_product']).default('product'),
+  marketplace: z.enum(['c2c', 'b2c', 'b2b', 'raw', 'rqst', 'government-dr-congo']),
+  categoryFields: z.record(z.string(), z.string()).optional(),
+});
+
+type ProductFormValues = z.infer<typeof productSchema>;
+
+export default function AddGroceriesPage() {
+  const [location, setLocation] = useLocation();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+
+  const texts = useMemo(() => [
+    "Add Grocery Item",
+    "List your grocery items for customers",
+    "Grocery Category",
+    "Select grocery category",
+    "Item Name",
+    "Enter item name",
+    "Description",
+    "Describe your grocery item",
+    "Price",
+    "Available Quantity",
+    "Category-Specific Details",
+    "Select",
+    "Cancel",
+    "Add Grocery Item",
+    "Adding...",
+    "Success",
+    "Grocery item added successfully",
+    "Error",
+    "Failed to add grocery item",
+    "Please log in to add a grocery item",
+    "Login",
+    "You need to create a vendor account before you can add grocery items.",
+    "Become a Vendor",
+    "Fresh Produce",
+    "Dairy & Eggs",
+    "Meat & Seafood",
+    "Pantry Staples",
+    "Snacks & Treats",
+    "Frozen Foods",
+    "Origin",
+    "Organic",
+    "Expiry Date",
+    "Weight",
+    "Allergens",
+    "Brand",
+    "Storage Temperature",
+    "Meat Type",
+    "Cut/Type",
+    "Yes", "No",
+    "Refrigerated", "Frozen", "Room Temperature",
+    "Beef", "Chicken", "Pork", "Lamb", "Fish", "Seafood",
+  ], []);
+
+  const { translations } = useMasterBatchTranslation(texts);
+  const t = (key: string) => {
+    const index = texts.indexOf(key);
+    return index >= 0 ? (translations[index] || key) : key;
+  };
+
+  const { data: vendorAccounts } = useQuery<Vendor[]>({
+    queryKey: ['/api/vendors/user/accounts'],
+    enabled: !!user,
+  });
+
+  const form = useForm<ProductFormValues>({
+    resolver: zodResolver(productSchema),
+    defaultValues: {
+      name: '',
+      description: '',
+      price: 0,
+      discountPrice: 0,
+      category: '',
+      imageUrl: '',
+      inventory: 0,
+      isNew: false,
+      isOnSale: false,
+      status: 'active',
+      offeringType: 'product',
+      marketplace: 'rqst',
+      categoryFields: {},
+    },
+  });
+
+
+  const createProductMutation = useMutation({
+    mutationFn: async (data: ProductFormValues) => {
+      return apiRequest('/api/vendors/products', 'POST', data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/vendors/products'] });
+      toast({
+        title: t("Success"),
+        description: t("Grocery item added successfully"),
+      });
+      setLocation('/vendor-dashboard');
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: t("Error"),
+        description: error.message || t("Failed to add grocery item"),
+      });
+    },
+  });
+
+  const onSubmit = (data: ProductFormValues) => {
+    createProductMutation.mutate(data);
+  };
+
+  if (!user) {
+    return (
+      <div className="container mx-auto p-6 max-w-2xl">
+        <Card>
+          <CardContent className="p-6 text-center">
+            <p className="mb-4" data-testid="text-login-message">{t("Please log in to add a grocery item")}</p>
+            <Button onClick={() => setLocation('/login')} data-testid="button-login">
+              {t("Login")}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!vendorAccounts || vendorAccounts.length === 0) {
+    return (
+      <div className="container mx-auto p-6 max-w-2xl">
+        <Card>
+          <CardContent className="p-6 text-center">
+            <p className="mb-4" data-testid="text-vendor-message">{t("You need to create a vendor account before you can add grocery items.")}</p>
+            <Button onClick={() => setLocation('/become-vendor')} data-testid="button-become-vendor">
+              {t("Become a Vendor")}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const selectedCategoryFields = GROCERY_CATEGORIES.find(c => c.value === selectedCategory)?.fields || [];
+
+  return (
+    <div className="container mx-auto p-6 max-w-4xl">
+      <Card>
+        <CardHeader>
+          <CardTitle data-testid="text-card-title">{t("Add Grocery Item")}</CardTitle>
+          <CardDescription data-testid="text-card-description">{t("List your grocery items for customers")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("Grocery Category")}</FormLabel>
+                    <Select 
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        setSelectedCategory(value);
+                      }} 
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger data-testid="select-category">
+                          <SelectValue placeholder={t("Select grocery category")} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {GROCERY_CATEGORIES.map((cat) => (
+                          <SelectItem key={cat.value} value={cat.value}>
+                            {t(cat.label)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("Item Name")}</FormLabel>
+                    <FormControl>
+                      <Input placeholder={t("Enter item name")} {...field} data-testid="input-name" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("Description")}</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder={t("Describe your grocery item")} {...field} data-testid="textarea-description" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("Price")}</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" placeholder="0.00" {...field} data-testid="input-price" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="inventory"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("Available Quantity")}</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="0" {...field} data-testid="input-inventory" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {selectedCategoryFields.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold" data-testid="text-heading-category-details">{t("Category-Specific Details")}</h3>
+                  {selectedCategoryFields.map((fieldKey) => {
+                    const fieldConfig = FIELD_CONFIGS[fieldKey];
+                    if (!fieldConfig) return null;
+
+                    return (
+                      <div key={fieldKey}>
+                        <label className="block text-sm font-medium mb-2" data-testid={`text-label-${fieldKey}`}>{t(fieldConfig.label)}</label>
+                        {fieldConfig.type === 'select' ? (
+                          <Select
+                            value={form.watch(`categoryFields.${fieldKey}`) || ''}
+                            onValueChange={(value) => {
+                              const currentFields = form.getValues('categoryFields') || {};
+                              form.setValue('categoryFields', { ...currentFields, [fieldKey]: value });
+                            }}
+                          >
+                            <SelectTrigger data-testid={`select-${fieldKey}`}>
+                              <SelectValue placeholder={t(`Select ${fieldConfig.label}`)} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {fieldConfig.options?.map((option) => (
+                                <SelectItem key={option} value={option}>
+                                  {t(option)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Input
+                            type={fieldConfig.type}
+                            placeholder={fieldConfig.placeholder ? t(fieldConfig.placeholder) : ''}
+                            value={form.watch(`categoryFields.${fieldKey}`) || ''}
+                            onChange={(e) => {
+                              const currentFields = form.getValues('categoryFields') || {};
+                              form.setValue('categoryFields', { ...currentFields, [fieldKey]: e.target.value });
+                            }}
+                            data-testid={`input-${fieldKey}`}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div className="flex gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setLocation('/add-product')}
+                  data-testid="button-cancel"
+                >
+                  {t("Cancel")}
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createProductMutation.isPending}
+                  data-testid="button-submit"
+                >
+                  {createProductMutation.isPending ? t("Adding...") : t("Add Grocery Item")}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

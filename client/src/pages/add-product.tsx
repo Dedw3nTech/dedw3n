@@ -1526,66 +1526,36 @@ export default function AddProduct() {
     }
   ];
 
-  // Lifestyle sub-items
+  // Lifestyle sub-items - route to individual upload pages
   const lifestyleSubItems = [
     {
       id: 'order-food',
       label: t("Order Food"),
-      onClick: () => {
-        setSelectedLifestyleType('food');
-        setActiveSection('lifestyle');
-        form.setValue('offeringType', 'service');
-        form.setValue('category', '');
-        form.setValue('marketplace', getMarketplaceForSubcategory('order-food'));
-      }
+      href: '/add-order-food',
     },
     {
       id: 'groceries',
       label: t("Groceries"),
-      onClick: () => {
-        setSelectedLifestyleType('groceries');
-        setActiveSection('lifestyle');
-        form.setValue('offeringType', 'product');
-        form.setValue('category', '');
-        form.setValue('marketplace', getMarketplaceForSubcategory('groceries'));
-      }
+      href: '/add-groceries',
     },
     {
       id: 'reservation',
       label: t("Reservation"),
-      onClick: () => {
-        setSelectedLifestyleType('reservation');
-        setActiveSection('lifestyle');
-        form.setValue('offeringType', 'service');
-        form.setValue('category', '');
-        form.setValue('marketplace', getMarketplaceForSubcategory('reservation'));
-      }
+      href: '/add-reservation',
     }
   ];
 
-  // Services sub-items
+  // Services sub-items - route to individual upload pages
   const servicesSubItems = [
     {
       id: 'jobs',
       label: t("Jobs"),
-      onClick: () => {
-        setSelectedServiceType('jobs');
-        setActiveSection('services');
-        form.setValue('offeringType', 'service');
-        form.setValue('category', '');
-        form.setValue('marketplace', getMarketplaceForSubcategory('jobs'));
-      }
+      href: '/add-jobs',
     },
     {
       id: 'freelance',
       label: t("Freelance"),
-      onClick: () => {
-        setSelectedServiceType('freelance');
-        setActiveSection('services');
-        form.setValue('offeringType', 'service');
-        form.setValue('category', '');
-        form.setValue('marketplace', getMarketplaceForSubcategory('freelance'));
-      }
+      href: '/add-freelance',
     }
   ];
 
@@ -1703,6 +1673,25 @@ export default function AddProduct() {
                               } else if (section.id === 'services') {
                                 isSelected = (subItem.id === 'jobs' && selectedServiceType === 'jobs') ||
                                             (subItem.id === 'freelance' && selectedServiceType === 'freelance');
+                              }
+                              
+                              // Render as Link if href is present, otherwise as button
+                              if (subItem.href) {
+                                return (
+                                  <Link
+                                    key={subItem.id}
+                                    href={subItem.href}
+                                    data-testid={`${section.id}-${subItem.id}`}
+                                    className={cn(
+                                      "w-full block px-4 py-3 rounded-lg text-sm font-medium tracking-wide transition-all text-left",
+                                      isSelected
+                                        ? "bg-black text-white shadow-sm"
+                                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                    )}
+                                  >
+                                    {subItem.label}
+                                  </Link>
+                                );
                               }
                               
                               return (

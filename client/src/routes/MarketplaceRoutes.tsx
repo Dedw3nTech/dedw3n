@@ -7,6 +7,11 @@ const Products = lazy(() => import('@/pages/products'));
 const ProductDetail = lazy(() => import('@/pages/product-detail'));
 const AddProduct = lazy(() => import('@/pages/add-product'));
 const UploadProduct = lazy(() => import('@/pages/upload-product'));
+const AddOrderFood = lazy(() => import('@/pages/add-order-food'));
+const AddGroceries = lazy(() => import('@/pages/add-groceries'));
+const AddReservation = lazy(() => import('@/pages/add-reservation'));
+const AddJobs = lazy(() => import('@/pages/add-jobs'));
+const AddFreelance = lazy(() => import('@/pages/add-freelance'));
 const VendorsPage = lazy(() => import('@/pages/vendors'));
 const VendorDetailPage = lazy(() => import('@/pages/vendor-detail'));
 const VendorProfile = lazy(() => import('@/pages/vendor-profile'));
@@ -90,6 +95,11 @@ export function MarketplaceRoutes({ params }: any) {
         <ProtectedRoute path="/payment-success" component={PaymentSuccess} />
         <ProtectedRoute path="/add-product" component={AddProduct} />
         <ProtectedRoute path="/upload-product" component={UploadProduct} />
+        <ProtectedRoute path="/add-order-food" component={AddOrderFood} />
+        <ProtectedRoute path="/add-groceries" component={AddGroceries} />
+        <ProtectedRoute path="/add-reservation" component={AddReservation} />
+        <ProtectedRoute path="/add-jobs" component={AddJobs} />
+        <ProtectedRoute path="/add-freelance" component={AddFreelance} />
     </Switch>
   );
 }
