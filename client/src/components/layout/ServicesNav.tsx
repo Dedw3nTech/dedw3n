@@ -48,7 +48,7 @@ export function ServicesNav({
 
   const navigationTexts = useMemo(() => [
     "Jobs",
-    "Freelancer",
+    "Freelance",
     "Health",
     "Education",
     "Utilities",
