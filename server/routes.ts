@@ -3178,25 +3178,28 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
       }
 
-      // Get recent users with their activity
+      // Get recent users with their activity (ordered by ID as proxy for recent)
       const recentCustomers = await db
         .select({
           id: users.id,
           username: users.username,
           name: users.name,
           email: users.email,
-          createdAt: users.createdAt,
+          lastLogin: users.lastLogin,
         })
         .from(users)
-        .orderBy(desc(users.createdAt))
+        .orderBy(desc(users.id))
         .limit(10);
 
       // Format the response
       const formattedCustomers = recentCustomers.map((customer: any) => ({
-        ...customer,
-        lastActivity: customer.createdAt 
-          ? new Date(customer.createdAt).toLocaleDateString() 
-          : 'Recently active',
+        id: customer.id,
+        username: customer.username || 'Unknown',
+        name: customer.name || customer.username || 'Unknown User',
+        email: customer.email || 'No email',
+        lastActivity: customer.lastLogin 
+          ? new Date(customer.lastLogin).toLocaleDateString() 
+          : 'Recently joined',
       }));
 
       return res.json(formattedCustomers);
