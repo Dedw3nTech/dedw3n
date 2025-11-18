@@ -80,10 +80,15 @@ export function LifestyleNav({
 
   // Handle category navigation
   const handleCategoryClick = useCallback((category: string) => {
-    if (setSelectedCategory) {
+    // Navigate to dedicated route for Order Food and Reservations
+    if (category === 'restaurant') {
+      setLocation('/lifestyle/order-food');
+    } else if (category === 'hotels') {
+      setLocation('/lifestyle/reservations');
+    } else if (setSelectedCategory) {
       setSelectedCategory(category);
     }
-  }, [setSelectedCategory]);
+  }, [setSelectedCategory, setLocation]);
 
   const handleProfileClick = useCallback(() => {
     setLocation("/profile");

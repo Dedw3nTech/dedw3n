@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Slider } from '@/components/ui/slider';
+import { apiRequest } from '@/lib/queryClient';
 
 interface Service {
   id: number;
@@ -70,12 +71,19 @@ export default function ServicesPage() {
 
   const { translations: t } = useMasterBatchTranslation(texts);
 
-  const queryUrl = selectedCategory && selectedCategory !== 'all' 
-    ? `/api/services?category=${selectedCategory}`
-    : '/api/services';
-    
+  // Fetch only services matching the selected category (jobs or freelance)
   const { data: services = [], isLoading } = useQuery<Service[]>({
-    queryKey: [queryUrl],
+    queryKey: ['/api/services', { category: selectedCategory }],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (selectedCategory && selectedCategory !== 'all') {
+        params.append('category', selectedCategory);
+      }
+      
+      const url = `/api/services${params.toString() ? '?' + params.toString() : ''}`;
+      const response = await apiRequest('GET', url);
+      return response.json();
+    },
     enabled: true,
   });
 

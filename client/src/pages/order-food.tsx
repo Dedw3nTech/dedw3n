@@ -62,8 +62,7 @@ const categoryConfig: Record<string, { icon: any; color: string }> = {
   }
 };
 
-export default function LifestylePage() {
-  const [selectedCategory, setSelectedCategory] = useState<string>("restaurant");
+export default function OrderFoodPage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
   const [priceFilterActive, setPriceFilterActive] = useState(false);
@@ -429,8 +428,6 @@ export default function LifestylePage() {
       <LifestyleNav 
         searchTerm={searchQuery}
         setSearchTerm={setSearchQuery}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
       />
 
       <div className="container mx-auto px-4 py-8">

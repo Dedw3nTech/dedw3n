@@ -62,8 +62,7 @@ const categoryConfig: Record<string, { icon: any; color: string }> = {
   }
 };
 
-export default function LifestylePage() {
-  const [selectedCategory, setSelectedCategory] = useState<string>("restaurant");
+export default function ReservationPage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
   const [priceFilterActive, setPriceFilterActive] = useState(false);
@@ -140,13 +139,13 @@ export default function LifestylePage() {
     }
   });
 
-  // Fetch products - only food/restaurant related products
+  // Fetch products - only reservation related products
   const { data: products = [], isLoading } = useQuery<Product[]>({
-    queryKey: ['/api/products', { categories: 'food,restaurant,delivery' }],
+    queryKey: ['/api/products', { categories: 'reservations,hotel,hotels' }],
     queryFn: async () => {
-      // Fetch only food/restaurant related products
+      // Fetch only reservation related products
       const params = new URLSearchParams();
-      params.append('categories', 'food,restaurant,delivery,groceries,dining,takeaway,catering');
+      params.append('categories', 'reservations,hotel,hotels,stay,table,venue,event,spa,accommodation');
       
       const response = await apiRequest('GET', `/api/products?${params.toString()}`);
       return response.json();
@@ -429,8 +428,6 @@ export default function LifestylePage() {
       <LifestyleNav 
         searchTerm={searchQuery}
         setSearchTerm={setSearchQuery}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
       />
 
       <div className="container mx-auto px-4 py-8">

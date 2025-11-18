@@ -9,6 +9,8 @@ const DatingProfileView = lazy(() => import('@/pages/dating-profile-view'));
 const MyMatches = lazy(() => import('@/pages/MyMatches').then(m => ({ default: m.MyMatches })));
 const AIDatingTools = lazy(() => import('@/components/AIDatingTools'));
 const LifestylePage = lazy(() => import('@/pages/lifestyle'));
+const OrderFoodPage = lazy(() => import('@/pages/order-food'));
+const ReservationPage = lazy(() => import('@/pages/reservations'));
 const ServicesPage = lazy(() => import('@/pages/services'));
 const ShippingCalculator = lazy(() => import('@/pages/shipping-calculator'));
 const PercentageCalculator = lazy(() => import('@/pages/percentage-calculator'));
@@ -46,7 +48,17 @@ export function SpecialtyRoutes({ params }: any) {
         <FinancePage />
       </Route>
       
+      {/* Lifestyle routes - Order Food and Reservations */}
+      <Route path="/lifestyle/order-food">
+        <SEOHead title="Order Food - Dedw3n" description="Browse and order delicious food from local restaurants and food services." />
+        <OrderFoodPage />
+      </Route>
+      <Route path="/lifestyle/reservations">
+        <SEOHead title="Reservations - Dedw3n" description="Make reservations for hotels, venues, events, and other services." />
+        <ReservationPage />
+      </Route>
       <Route path="/lifestyle" component={LifestylePage} />
+      
       <Route path="/services" component={ServicesPage} />
       
       <Route path="/shipping-calculator">
