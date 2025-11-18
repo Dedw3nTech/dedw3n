@@ -10,6 +10,7 @@ const MyMatches = lazy(() => import('@/pages/MyMatches').then(m => ({ default: m
 const AIDatingTools = lazy(() => import('@/components/AIDatingTools'));
 const LifestylePage = lazy(() => import('@/pages/lifestyle'));
 const OrderFoodPage = lazy(() => import('@/pages/order-food'));
+const GroceriesPage = lazy(() => import('@/pages/groceries'));
 const ReservationPage = lazy(() => import('@/pages/reservations'));
 const ServicesPage = lazy(() => import('@/pages/services'));
 const JobsPage = lazy(() => import('@/pages/jobs'));
@@ -50,10 +51,14 @@ export function SpecialtyRoutes({ params }: any) {
         <FinancePage />
       </Route>
       
-      {/* Lifestyle routes - Order Food and Reservations */}
+      {/* Lifestyle routes - Order Food, Groceries, and Reservations */}
       <Route path="/lifestyle/order-food">
         <SEOHead title="Order Food - Dedw3n" description="Browse and order delicious food from local restaurants and food services." />
         <OrderFoodPage />
+      </Route>
+      <Route path="/lifestyle/groceries">
+        <SEOHead title="Groceries - Dedw3n" description="Shop for fresh groceries and everyday essentials." />
+        <GroceriesPage />
       </Route>
       <Route path="/lifestyle/reservations">
         <SEOHead title="Reservations - Dedw3n" description="Make reservations for hotels, venues, events, and other services." />
