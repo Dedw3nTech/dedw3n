@@ -424,8 +424,7 @@ const lazyBundles = [
       '/marketplace/raw', '/marketplace/creators', '/marketplace/real-estate', '/marketplace/rqst',
       '/products', '/product/:identifier', '/vendors', '/vendor/:slug',
       '/search', '/gift-cards', '/cart', '/checkout', '/payment-gateway',
-      '/payment-success', '/add-product', '/upload-product', '/categories',
-      '/add-order-food', '/add-groceries', '/add-reservation', '/add-jobs', '/add-freelance'
+      '/payment-success', '/add-product', '/upload-product', '/categories'
     ]
   },
   {
