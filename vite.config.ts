@@ -93,23 +93,26 @@ export default defineConfig({
     ],
   },
   optimizeDeps: {
-    include: ["react", "react-dom", "react/jsx-runtime"],
+    include: ["react", "react-dom", "react/jsx-runtime", "recharts"],
     esbuildOptions: {
       // Ensure JSX transforms use the aliased React
       jsx: "automatic",
     },
   },
   root: path.resolve(import.meta.dirname, "client"),
-    build: {
-      outDir: path.resolve(import.meta.dirname, "dist/public"),
-      emptyOutDir: true,
+  build: {
+    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    emptyOutDir: true,
 
-      minify: "esbuild",
+    // Use esbuild for faster builds
+    minify: "esbuild",
 
-      commonjsOptions: {
-        include: [/recharts/, /node_modules/],
-        transformMixedEsModules: true,
-      },
+    // CRITICAL FIX: Handle Recharts CommonJS/ESM interop
+    // Prevents "forwardRef undefined" errors in production
+    commonjsOptions: {
+      include: [/recharts/, /node_modules/],
+      transformMixedEsModules: true,
+    },
 
     // Disable modulepreload polyfill to prevent Chrome warning about unsupported 'as' value
     // Chrome doesn't support as="document" for <link rel="preload">, causing console warnings
@@ -166,6 +169,8 @@ export default defineConfig({
           return `assets/[name].[hash][extname]`;
         },
 
+        // CRITICAL FIX: Bundle Recharts with React to prevent forwardRef errors
+        // Recharts must load synchronously with React to access React.forwardRef
         manualChunks: (id) => {
           if (
             id.includes("node_modules/react") ||
