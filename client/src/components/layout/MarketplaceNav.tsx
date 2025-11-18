@@ -909,19 +909,6 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
               </div>
             )}
 
-            {/* Dr Congo button for government page - Mobile */}
-            {isGovernmentPage && (
-              <div 
-                className="flex items-center cursor-pointer"
-                onClick={() => setLocation("/dr-congo")}
-                data-testid="button-dr-congo-nav-mobile"
-              >
-                <span className="text-sm font-medium text-black underline hover:no-underline">
-                  {translatedLabels.drCongoText}
-                </span>
-              </div>
-            )}
-
             {/* Search bar and hamburger menu for mobile */}
             <div className="flex items-center gap-2 flex-1 justify-end">
               <div className="relative flex-1 max-w-xs">
@@ -951,18 +938,16 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
                 </form>
               </div>
 
-              {/* Hamburger menu button for mobile - Hidden on government page */}
-              {!isGovernmentPage && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 hover:bg-gray-100 flex-shrink-0"
-                  onClick={() => setIsSidebarOpen(true)}
-                  data-testid="button-hamburger-mobile"
-                >
-                  <Menu className="h-5 w-5" />
-                </Button>
-              )}
+              {/* Hamburger menu button for mobile */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 hover:bg-gray-100 flex-shrink-0"
+                onClick={() => setIsSidebarOpen(true)}
+                data-testid="button-hamburger-mobile"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
             </div>
           </div>
         </div>
@@ -972,24 +957,42 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
       <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
         <SheetContent side="right" className="w-[300px] sm:w-[350px]">
           <SheetHeader>
-            <SheetTitle>{translatedLabels.marketplaceText}</SheetTitle>
+            <SheetTitle>{isGovernmentPage ? translatedLabels.governmentPortalText : translatedLabels.marketplaceText}</SheetTitle>
           </SheetHeader>
           
           <div className="mt-6 space-y-2">
-            {/* All Market Type Navigation Buttons */}
-            <div className="space-y-1">
-              
-              <Button
-                variant={marketType === 'c2c' ? 'secondary' : 'ghost'}
-                className="w-full justify-start h-12"
-                onClick={() => {
-                  handleMarketNavigation("c2c");
-                  setIsSidebarOpen(false);
-                }}
-                data-testid="sidebar-button-c2c"
-              >
-                <span className="text-xs">{translatedLabels.c2cText}</span>
-              </Button>
+            {/* Government Navigation - Only shown on government pages */}
+            {isGovernmentPage && (
+              <div className="space-y-1 mb-4">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start h-12"
+                  onClick={() => {
+                    setLocation("/dr-congo");
+                    setIsSidebarOpen(false);
+                  }}
+                  data-testid="sidebar-button-dr-congo"
+                >
+                  <span className="text-xs">{translatedLabels.drCongoText}</span>
+                </Button>
+              </div>
+            )}
+
+            {/* All Market Type Navigation Buttons - Only shown on non-government pages */}
+            {!isGovernmentPage && (
+              <div className="space-y-1">
+                
+                <Button
+                  variant={marketType === 'c2c' ? 'secondary' : 'ghost'}
+                  className="w-full justify-start h-12"
+                  onClick={() => {
+                    handleMarketNavigation("c2c");
+                    setIsSidebarOpen(false);
+                  }}
+                  data-testid="sidebar-button-c2c"
+                >
+                  <span className="text-xs">{translatedLabels.c2cText}</span>
+                </Button>
 
               <Button
                 variant={marketType === 'b2c' ? 'secondary' : 'ghost'}
@@ -1070,7 +1073,8 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
               >
                 <span className="text-xs">{translatedLabels.rqstText}</span>
               </Button>
-            </div>
+              </div>
+            )}
           </div>
         </SheetContent>
       </Sheet>
