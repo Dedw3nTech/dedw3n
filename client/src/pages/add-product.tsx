@@ -498,6 +498,13 @@ export default function AddProduct() {
     "Jobs",
     "Freelance",
     
+    // Marketplace Auto-Selection Messages
+    "Marketplace Auto-Selected",
+    "Online Store (B2C) not available. Using first available marketplace.",
+    "Request marketplace not available. Using first available marketplace.",
+    "Using available marketplace for freelance services.",
+    "Category Selected",
+    
     // Authentication & Access
     "Please log in to add a product",
     "Login",
@@ -1465,6 +1472,51 @@ export default function AddProduct() {
     return subItems;
   };
 
+  // Helper function to get appropriate marketplace for subcategory
+  const getMarketplaceForSubcategory = (subcategoryType: string): 'c2c' | 'b2c' | 'b2b' | 'rqst' => {
+    const vendorAccounts = vendorAccountsData?.vendorAccounts || [];
+    const hasPrivateVendor = vendorAccounts.some((account: any) => account.vendorType === 'private');
+    const hasBusinessVendor = vendorAccounts.some((account: any) => account.vendorType === 'business');
+    
+    // Build available marketplaces based on vendor type (independent of form state)
+    const availableMarketplaces: Array<'c2c' | 'b2c' | 'b2b' | 'rqst'> = [];
+    
+    if (hasPrivateVendor) {
+      availableMarketplaces.push('c2c');
+    }
+    
+    // Request is always available to all vendors
+    availableMarketplaces.push('rqst');
+    
+    if (hasBusinessVendor) {
+      availableMarketplaces.push('b2c', 'b2b');
+    }
+    
+    // Lifestyle subcategories: prefer b2c, fallback to rqst, then any available
+    if (['order-food', 'groceries', 'reservation'].includes(subcategoryType)) {
+      if (availableMarketplaces.includes('b2c')) return 'b2c';
+      if (availableMarketplaces.includes('rqst')) return 'rqst';
+      return availableMarketplaces[0] || 'rqst'; // Default to rqst if nothing available
+    }
+    
+    // Services → Jobs: prefer rqst, then any available
+    if (subcategoryType === 'jobs') {
+      if (availableMarketplaces.includes('rqst')) return 'rqst';
+      return availableMarketplaces[0] || 'rqst'; // Default to rqst
+    }
+    
+    // Services → Freelance: prefer b2b, then c2c, then rqst, then any available
+    if (subcategoryType === 'freelance') {
+      if (hasBusinessVendor && availableMarketplaces.includes('b2b')) return 'b2b';
+      if (hasPrivateVendor && availableMarketplaces.includes('c2c')) return 'c2c';
+      if (availableMarketplaces.includes('rqst')) return 'rqst';
+      return availableMarketplaces[0] || 'rqst'; // Default to rqst
+    }
+    
+    // Final fallback
+    return availableMarketplaces[0] || 'rqst';
+  };
+
   // Government sub-items
   const governmentSubItems = [
     {
@@ -1482,6 +1534,9 @@ export default function AddProduct() {
       onClick: () => {
         setSelectedLifestyleType('food');
         setActiveSection('lifestyle');
+        form.setValue('offeringType', 'service');
+        form.setValue('category', '');
+        form.setValue('marketplace', getMarketplaceForSubcategory('order-food'));
       }
     },
     {
@@ -1490,6 +1545,9 @@ export default function AddProduct() {
       onClick: () => {
         setSelectedLifestyleType('groceries');
         setActiveSection('lifestyle');
+        form.setValue('offeringType', 'product');
+        form.setValue('category', '');
+        form.setValue('marketplace', getMarketplaceForSubcategory('groceries'));
       }
     },
     {
@@ -1498,6 +1556,9 @@ export default function AddProduct() {
       onClick: () => {
         setSelectedLifestyleType('reservation');
         setActiveSection('lifestyle');
+        form.setValue('offeringType', 'service');
+        form.setValue('category', '');
+        form.setValue('marketplace', getMarketplaceForSubcategory('reservation'));
       }
     }
   ];
@@ -1510,6 +1571,9 @@ export default function AddProduct() {
       onClick: () => {
         setSelectedServiceType('jobs');
         setActiveSection('services');
+        form.setValue('offeringType', 'service');
+        form.setValue('category', '');
+        form.setValue('marketplace', getMarketplaceForSubcategory('jobs'));
       }
     },
     {
@@ -1518,6 +1582,9 @@ export default function AddProduct() {
       onClick: () => {
         setSelectedServiceType('freelance');
         setActiveSection('services');
+        form.setValue('offeringType', 'service');
+        form.setValue('category', '');
+        form.setValue('marketplace', getMarketplaceForSubcategory('freelance'));
       }
     }
   ];
@@ -1624,7 +1691,20 @@ export default function AddProduct() {
                         {((section.id === 'marketplace' && isMarketplaceExpanded) || (section.id === 'government' && isGovernmentExpanded) || (section.id === 'lifestyle' && isLifestyleExpanded) || (section.id === 'services' && isServicesExpanded)) && section.subItems && (
                           <div className="ml-4 mt-1 space-y-1">
                             {section.subItems.map((subItem: any) => {
-                              const isSelected = subItem.marketplaceValue && form.watch('marketplace') === subItem.marketplaceValue;
+                              let isSelected = false;
+                              
+                              // Check selection based on section type
+                              if (subItem.marketplaceValue) {
+                                isSelected = form.watch('marketplace') === subItem.marketplaceValue;
+                              } else if (section.id === 'lifestyle') {
+                                isSelected = (subItem.id === 'order-food' && selectedLifestyleType === 'food') ||
+                                            (subItem.id === 'groceries' && selectedLifestyleType === 'groceries') ||
+                                            (subItem.id === 'reservation' && selectedLifestyleType === 'reservation');
+                              } else if (section.id === 'services') {
+                                isSelected = (subItem.id === 'jobs' && selectedServiceType === 'jobs') ||
+                                            (subItem.id === 'freelance' && selectedServiceType === 'freelance');
+                              }
+                              
                               return (
                                 <button
                                   key={subItem.id}
