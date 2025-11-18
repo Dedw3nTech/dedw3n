@@ -28,6 +28,7 @@ const VideoDemo = lazy(() => import('@/pages/video-demo'));
 const TestCookiesPage = lazy(() => import('@/pages/test-cookies'));
 const ERPPage = lazy(() => import('@/pages/erp'));
 const CRMPage = lazy(() => import('@/pages/crm'));
+const CalendarPage = lazy(() => import('@/pages/calendar'));
 
 export function SpecialtyRoutes({ params }: any) {
   return (
@@ -61,6 +62,11 @@ export function SpecialtyRoutes({ params }: any) {
       <Route path="/crm">
         <SEOHead title="Customer Relationship Management - Dedw3n" description="Centralized customer data and relationship management system for tracking interactions, sales pipeline, and customer engagement." />
         <CRMPage />
+      </Route>
+      
+      <Route path="/calendar">
+        <SEOHead title="Calendar - Dedw3n" description="Manage your events, meetings, appointments, and schedules with Dedw3n's integrated calendar system." />
+        <CalendarPage />
       </Route>
       
       {/* Lifestyle routes - Order Food, Groceries, and Reservations */}

@@ -395,6 +395,7 @@ export default function CalendarPage() {
   }, [currentWeekStart, viewMode]);
 
   const filteredEvents = useMemo(() => {
+    if (!events || !Array.isArray(events)) return [];
     return events.filter(event => visibleCategories.has(event.category));
   }, [events, visibleCategories]);
 
