@@ -28,6 +28,7 @@ import { useMasterTranslation } from '@/hooks/use-master-translation';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useWeightUnit } from '@/contexts/WeightUnitContext';
 import { useAuth } from '@/hooks/use-auth';
+import { apiRequest } from '@/lib/queryClient';
 
 interface ShippingCalculation {
   shippingType: string;

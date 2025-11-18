@@ -110,7 +110,7 @@ export const WalletPaymentForm = ({
       <CardContent className="space-y-4">
         <div className="flex justify-between items-center">
           <span className="text-sm font-medium">Your Balance:</span>
-          <span className="font-bold">{formatCurrency(walletBalance, walletCurrency)}</span>
+          <span className="font-bold">{formatCurrency(walletBalance, walletCurrency as any)}</span>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-sm font-medium">Order Total:</span>
