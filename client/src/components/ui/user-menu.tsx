@@ -359,6 +359,19 @@ export default function UserMenu() {
 
           <Separator />
 
+          {/* Meetings Section */}
+          <div className="space-y-1">
+            <SheetClose asChild>
+              <Link href="/meetings/new">
+                <span className="flex items-center px-3 py-3 rounded-md text-sm font-medium text-black hover:bg-white hover:text-black transition-colors cursor-pointer" data-testid="link-new-meeting">
+                  New Meeting
+                </span>
+              </Link>
+            </SheetClose>
+          </div>
+
+          <Separator />
+
           {/* Offline Mode Toggle */}
           <div>
             <button

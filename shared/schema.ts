@@ -3961,6 +3961,38 @@ export const updateCalendarEventParticipantStatusSchema = z.object({
   status: z.enum(['pending', 'accepted', 'declined', 'tentative']),
 });
 
+// Meeting-specific insert schema (reuses calendar events with category locked to 'meeting')
+export const insertMeetingSchema = z.object({
+  userId: z.number(),
+  title: z.string().min(1),
+  description: z.string().nullable().optional(),
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date(),
+  category: z.literal('meeting'),
+  isOnline: z.literal(true),
+  meetingLink: z.string().optional(),
+  people: z.string().nullable().optional(),
+  isAllDay: z.boolean().optional(),
+  timezone: z.string().optional(),
+  priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
+  status: z.string().optional(),
+});
+
+export type InsertMeeting = z.infer<typeof insertMeetingSchema>;
+
+// Meeting response schema (includes generated roomId)
+export const meetingResponseSchema = z.object({
+  id: z.number(),
+  roomId: z.string(),
+  title: z.string(),
+  description: z.string().nullable(),
+  startDate: z.date(),
+  endDate: z.date(),
+  meetingLink: z.string(),
+});
+
+export type MeetingResponse = z.infer<typeof meetingResponseSchema>;
+
 // Global holidays table - stores worldwide public holidays
 export const globalHolidays = pgTable("global_holidays", {
   id: serial("id").primaryKey(),

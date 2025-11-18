@@ -16,7 +16,7 @@ import { fileURLToPath } from 'url';
 import { storage } from "./storage";
 import { db } from "./db";
 import { eq, or, like, ilike, sql, and, ne, inArray, desc, count, sum, avg, isNull, gte, lte, lt, gt, between, notInArray, isNotNull } from "drizzle-orm";
-import { users, products, orders, vendors, carts, orderItems, reviews, messages, vendorPaymentInfo, insertVendorPaymentInfoSchema, vendorDiscounts, discountUsages, promotionalCampaigns, insertVendorDiscountSchema, insertDiscountUsageSchema, insertPromotionalCampaignSchema, returns, insertReturnSchema, marketingCampaigns, campaignActivities, campaignTouchpoints, campaignAnalytics, campaignProducts, insertMarketingCampaignSchema, insertCampaignActivitySchema, insertCampaignTouchpointSchema, insertCampaignAnalyticsSchema, storeUsers, cities, privateRoomInvitations, videos, videoPurchases, subscriptions, creatorEarnings, friendships, friendRequests, audioSessions, giftPropositions, notifications, moderationReports, insertModerationReportSchema, productReports, insertProductReportSchema, likedProducts, toastReports, insertToastReportSchema, affiliatePartners, vendorAffiliatePartners, drCongoServices } from "@shared/schema";
+import { users, products, orders, vendors, carts, orderItems, reviews, messages, vendorPaymentInfo, insertVendorPaymentInfoSchema, vendorDiscounts, discountUsages, promotionalCampaigns, insertVendorDiscountSchema, insertDiscountUsageSchema, insertPromotionalCampaignSchema, returns, insertReturnSchema, marketingCampaigns, campaignActivities, campaignTouchpoints, campaignAnalytics, campaignProducts, insertMarketingCampaignSchema, insertCampaignActivitySchema, insertCampaignTouchpointSchema, insertCampaignAnalyticsSchema, storeUsers, cities, privateRoomInvitations, videos, videoPurchases, subscriptions, creatorEarnings, friendships, friendRequests, audioSessions, giftPropositions, notifications, moderationReports, insertModerationReportSchema, productReports, insertProductReportSchema, likedProducts, toastReports, insertToastReportSchema, affiliatePartners, vendorAffiliatePartners, drCongoServices, insertMeetingSchema, calendarEvents } from "@shared/schema";
 
 import { setupAuth, hashPassword, comparePasswords } from "./auth";
 import { setupJwtAuth, verifyToken, revokeToken, generateToken } from "./jwt-auth";
@@ -2985,6 +2985,94 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error) {
       console.error('Error starting comprehensive population', error);
       return res.status(500).json({ message: 'Failed to start comprehensive population' });
+    }
+  });
+
+  // ============================================================================
+  // MEETING ROUTES
+  // ============================================================================
+
+  // Create a new meeting (creates calendar event with category='meeting' and generates roomId)
+  app.post('/api/meetings', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      // Generate unique roomId using UUID
+      const roomId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const meetingLink = `/meeting/${roomId}`;
+
+      // Validate request body with meeting schema
+      const validationResult = insertMeetingSchema.safeParse({
+        ...req.body,
+        userId: req.user.id,
+        category: 'meeting',
+        isOnline: true,
+        meetingLink,
+      });
+
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: 'Invalid meeting data', 
+          errors: validationResult.error.issues 
+        });
+      }
+
+      // Create the meeting as a calendar event with all required fields
+      const newMeeting = await db.insert(calendarEvents).values({
+        userId: req.user.id,
+        title: validationResult.data.title,
+        description: validationResult.data.description || null,
+        category: 'meeting',
+        priority: validationResult.data.priority || 'medium',
+        startDate: validationResult.data.startDate,
+        endDate: validationResult.data.endDate,
+        isAllDay: validationResult.data.isAllDay || false,
+        timezone: validationResult.data.timezone || 'UTC',
+        isOnline: true,
+        meetingLink,
+        people: validationResult.data.people || null,
+        status: validationResult.data.status || 'scheduled',
+      }).returning();
+
+      // Return meeting response with roomId
+      return res.status(201).json({
+        id: newMeeting[0].id,
+        roomId,
+        title: newMeeting[0].title,
+        description: newMeeting[0].description,
+        startDate: newMeeting[0].startDate,
+        endDate: newMeeting[0].endDate,
+        meetingLink: newMeeting[0].meetingLink,
+      });
+    } catch (error) {
+      console.error('Error creating meeting', error);
+      return res.status(500).json({ message: 'Failed to create meeting' });
+    }
+  });
+
+  // Get user's meetings
+  app.get('/api/meetings', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      // Get calendar events with category='meeting' for the user
+      const meetings = await db
+        .select()
+        .from(calendarEvents)
+        .where(and(
+          eq(calendarEvents.userId, req.user.id),
+          eq(calendarEvents.category, 'meeting')
+        ))
+        .orderBy(desc(calendarEvents.startDate));
+
+      return res.json(meetings);
+    } catch (error) {
+      console.error('Error fetching meetings', error);
+      return res.status(500).json({ message: 'Failed to fetch meetings' });
     }
   });
 
