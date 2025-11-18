@@ -366,9 +366,9 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
       <div className="container mx-auto px-4">
         {/* Desktop layout - horizontal navigation with absolute centered navigation */}
         <div className="hidden md:flex relative items-center justify-between w-full">
-          {/* Left side - Add Product button for government, Profile + Add Product for marketplace */}
+          {/* Left side - Profile + Add Product/Service button for both marketplace and government */}
           <div className="flex-shrink-0 flex items-center gap-3">
-            {!isGovernmentPage && isAuthenticated && (
+            {isAuthenticated && (
               <div className="relative">
                 {/* Notification badge positioned at top-right corner */}
                 {totalNotifications > 0 && (
@@ -826,9 +826,9 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
       <div className="container mx-auto px-4">
         <div className="md:hidden">
           <div className="flex items-center justify-between">
-            {/* Left side - Add Product button for government, Profile + Add Product for marketplace */}
+            {/* Left side - Profile + Add Product/Service button for both marketplace and government */}
             <div className="flex items-center gap-2">
-              {!isGovernmentPage && isAuthenticated && (
+              {isAuthenticated && (
                 <div className="relative">
                   {/* Notification badge positioned at top-right corner for mobile */}
                   {totalNotifications > 0 && (
