@@ -38,6 +38,7 @@ export function LifestyleNav({
   // Define translatable texts
   const navigationTexts = useMemo(() => [
     "Order Food",
+    "Groceries",
     "Reservations",
     "Flights",
     "Hotels",
@@ -60,29 +61,32 @@ export function LifestyleNav({
 
   const translatedLabels = useMemo(() => ({
     orderFoodText: translatedTexts[0] || navigationTexts[0],
-    reservationsText: translatedTexts[1] || navigationTexts[1],
-    flightsText: translatedTexts[2] || navigationTexts[2],
-    hotelsText: translatedTexts[3] || navigationTexts[3],
-    activitiesText: translatedTexts[4] || navigationTexts[4],
-    foodDeliveryText: translatedTexts[5] || navigationTexts[5],
-    transportationText: translatedTexts[6] || navigationTexts[6],
-    searchPlaceholder: translatedTexts[7] || navigationTexts[7],
-    addServiceText: translatedTexts[8] || navigationTexts[8],
-    cancelText: translatedTexts[9] || navigationTexts[9],
-    trendingServicesText: translatedTexts[10] || navigationTexts[10],
-    popularCategoriesText: translatedTexts[11] || navigationTexts[11],
-    quickAccessText: translatedTexts[12] || navigationTexts[12],
-    restaurantsText: translatedTexts[13] || navigationTexts[13],
-    hotelsStaysText: translatedTexts[14] || navigationTexts[14],
-    travelText: translatedTexts[15] || navigationTexts[15],
-    entertainmentText: translatedTexts[16] || navigationTexts[16]
+    groceriesText: translatedTexts[1] || navigationTexts[1],
+    reservationsText: translatedTexts[2] || navigationTexts[2],
+    flightsText: translatedTexts[3] || navigationTexts[3],
+    hotelsText: translatedTexts[4] || navigationTexts[4],
+    activitiesText: translatedTexts[5] || navigationTexts[5],
+    foodDeliveryText: translatedTexts[6] || navigationTexts[6],
+    transportationText: translatedTexts[7] || navigationTexts[7],
+    searchPlaceholder: translatedTexts[8] || navigationTexts[8],
+    addServiceText: translatedTexts[9] || navigationTexts[9],
+    cancelText: translatedTexts[10] || navigationTexts[10],
+    trendingServicesText: translatedTexts[11] || navigationTexts[11],
+    popularCategoriesText: translatedTexts[12] || navigationTexts[12],
+    quickAccessText: translatedTexts[13] || navigationTexts[13],
+    restaurantsText: translatedTexts[14] || navigationTexts[14],
+    hotelsStaysText: translatedTexts[15] || navigationTexts[15],
+    travelText: translatedTexts[16] || navigationTexts[16],
+    entertainmentText: translatedTexts[17] || navigationTexts[17]
   }), [translatedTexts, navigationTexts]);
 
   // Handle category navigation
   const handleCategoryClick = useCallback((category: string) => {
-    // Navigate to dedicated route for Order Food and Reservations
+    // Navigate to dedicated route for Order Food, Groceries, and Reservations
     if (category === 'restaurant') {
       setLocation('/lifestyle/order-food');
+    } else if (category === 'groceries') {
+      setLocation('/lifestyle/groceries');
     } else if (category === 'hotels') {
       setLocation('/lifestyle/reservations');
     } else if (setSelectedCategory) {
@@ -265,6 +269,28 @@ export function LifestyleNav({
                 </span>
                 <div className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
                   selectedCategory === 'restaurant' 
+                    ? 'bg-black w-full' 
+                    : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
+                }`} />
+              </div>
+            </div>
+            
+            {/* Groceries */}
+            <div 
+              className="cursor-pointer group transition-all duration-300 h-[40px] flex items-center flex-shrink-0"
+              onClick={() => handleCategoryClick("groceries")}
+              data-testid="button-category-groceries"
+            >
+              <div className="relative">
+                <span className={`text-[9px] md:text-[10px] lg:text-xs xl:text-sm font-medium transition-colors duration-300 whitespace-nowrap ${
+                  selectedCategory === 'groceries' 
+                    ? 'text-black' 
+                    : 'text-black group-hover:text-black'
+                }`}>
+                  {translatedLabels.groceriesText}
+                </span>
+                <div className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
+                  selectedCategory === 'groceries' 
                     ? 'bg-black w-full' 
                     : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
                 }`} />
@@ -535,6 +561,17 @@ export function LifestyleNav({
               data-testid="button-category-restaurant-mobile"
             >
               {translatedLabels.orderFoodText}
+            </button>
+            <button
+              onClick={() => handleCategoryClick("groceries")}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                selectedCategory === 'groceries'
+                  ? 'bg-black text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+              data-testid="button-category-groceries-mobile"
+            >
+              {translatedLabels.groceriesText}
             </button>
             <button
               onClick={() => handleCategoryClick("hotels")}
