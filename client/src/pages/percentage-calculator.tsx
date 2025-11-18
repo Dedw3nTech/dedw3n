@@ -76,8 +76,6 @@ export default function PercentageCalculator() {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-5xl mx-auto px-6 py-12">
-        <h1 className="text-3xl font-normal text-black mb-12 text-center">{titleText}</h1>
-
         <div className="space-y-10">
           <div className="border-b border-gray-200 pb-8">
             <div className="flex flex-wrap items-center gap-3">
