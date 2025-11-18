@@ -1,0 +1,84 @@
+2025-11-17T21:37:00.197515Z	Cloning repository...
+2025-11-17T21:39:43.288421Z	From https://github.com/Dedw3nTech/dedw3n
+2025-11-17T21:39:43.288826Z	 * branch            5c2e48e81abc8761a5b7b60488edf6a496d157c7 -> FETCH_HEAD
+2025-11-17T21:39:43.288918Z	
+2025-11-17T21:39:46.27961Z	HEAD is now at 5c2e48e Add vendor analytics endpoint to display key business metrics
+2025-11-17T21:39:46.280068Z	
+2025-11-17T21:39:46.360612Z	
+2025-11-17T21:39:46.361089Z	Using v2 root directory strategy
+2025-11-17T21:39:46.387306Z	Success: Finished cloning repository files
+2025-11-17T21:39:48.204361Z	Checking for configuration in a Wrangler configuration file (BETA)
+2025-11-17T21:39:48.205016Z	
+2025-11-17T21:39:49.313256Z	No wrangler.toml file found. Continuing.
+2025-11-17T21:39:49.38533Z	Detected the following tools from environment: npm@10.9.2, nodejs@22.16.0, pip@25.1.1, python@3.13.3
+2025-11-17T21:39:49.38612Z	Installing project dependencies: npm clean-install --progress=false
+2025-11-17T21:39:52.672949Z	npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2025-11-17T21:39:53.472323Z	npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2025-11-17T21:39:53.853699Z	npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+2025-11-17T21:39:54.614241Z	npm warn deprecated @types/cookie@1.0.0: This is a stub types definition. cookie provides its own type definitions, so you do not need this installed.
+2025-11-17T21:39:55.726135Z	npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+2025-11-17T21:39:55.84312Z	npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+2025-11-17T21:39:55.876434Z	npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+2025-11-17T21:39:55.891507Z	npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+2025-11-17T21:39:56.349669Z	npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2025-11-17T21:39:59.653557Z	npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+2025-11-17T21:40:03.765261Z	
+2025-11-17T21:40:03.765629Z	added 918 packages, and audited 919 packages in 14s
+2025-11-17T21:40:03.765729Z	
+2025-11-17T21:40:03.76586Z	107 packages are looking for funding
+2025-11-17T21:40:03.765945Z	  run `npm fund` for details
+2025-11-17T21:40:03.783357Z	
+2025-11-17T21:40:03.783563Z	8 vulnerabilities (1 low, 5 moderate, 1 high, 1 critical)
+2025-11-17T21:40:03.783926Z	
+2025-11-17T21:40:03.784028Z	To address issues that do not require attention, run:
+2025-11-17T21:40:03.784118Z	  npm audit fix
+2025-11-17T21:40:03.784329Z	
+2025-11-17T21:40:03.784416Z	To address all issues (including breaking changes), run:
+2025-11-17T21:40:03.784621Z	  npm audit fix --force
+2025-11-17T21:40:03.784787Z	
+2025-11-17T21:40:03.78514Z	Run `npm audit` for details.
+2025-11-17T21:40:03.818614Z	Installing project dependencies: pip install .
+2025-11-17T21:40:05.045983Z	Processing /opt/buildhome/repo
+2025-11-17T21:40:05.048822Z	  Installing build dependencies: started
+2025-11-17T21:40:06.226657Z	  Installing build dependencies: finished with status 'done'
+2025-11-17T21:40:06.227833Z	  Getting requirements to build wheel: started
+2025-11-17T21:40:06.866085Z	  Getting requirements to build wheel: finished with status 'error'
+2025-11-17T21:40:06.87336Z	  error: subprocess-exited-with-error
+2025-11-17T21:40:06.873582Z	  
+2025-11-17T21:40:06.873716Z	  × Getting requirements to build wheel did not run successfully.
+2025-11-17T21:40:06.873834Z	  │ exit code: 1
+2025-11-17T21:40:06.873934Z	  ╰─> [14 lines of output]
+2025-11-17T21:40:06.874048Z	      error: Multiple top-level packages discovered in a flat-layout: ['types', 'client', 'public', 'server', 'shared', 'private', 'migrations', 'replit_agent', 'node_modules', 'attached_assets'].
+2025-11-17T21:40:06.874181Z	      
+2025-11-17T21:40:06.874302Z	      To avoid accidental inclusion of unwanted files or directories,
+2025-11-17T21:40:06.874511Z	      setuptools will not proceed with this build.
+2025-11-17T21:40:06.874641Z	      
+2025-11-17T21:40:06.874768Z	      If you are trying to create a single distribution with multiple packages
+2025-11-17T21:40:06.874883Z	      on purpose, you should not rely on automatic discovery.
+2025-11-17T21:40:06.874989Z	      Instead, consider the following options:
+2025-11-17T21:40:06.875124Z	      
+2025-11-17T21:40:06.875247Z	      1. set up custom discovery (`find` directive with `include` or `exclude`)
+2025-11-17T21:40:06.875381Z	      2. use a `src-layout`
+2025-11-17T21:40:06.875503Z	      3. explicitly set `py_modules` or `packages` with a list of names
+2025-11-17T21:40:06.875654Z	      
+2025-11-17T21:40:06.875772Z	      To find more information, look for "package discovery" on setuptools docs.
+2025-11-17T21:40:06.875879Z	      [end of output]
+2025-11-17T21:40:06.876008Z	  
+2025-11-17T21:40:06.876143Z	  note: This error originates from a subprocess, and is likely not a problem with pip.
+2025-11-17T21:40:06.961261Z	
+2025-11-17T21:40:06.961579Z	[notice] A new release of pip is available: 25.1.1 -> 25.3
+2025-11-17T21:40:06.961764Z	[notice] To update, run: pip3 install --upgrade pip
+2025-11-17T21:40:06.96311Z	error: subprocess-exited-with-error
+2025-11-17T21:40:06.963286Z	
+2025-11-17T21:40:06.963392Z	× Getting requirements to build wheel did not run successfully.
+2025-11-17T21:40:06.963478Z	│ exit code: 1
+2025-11-17T21:40:06.963549Z	╰─> See above for output.
+2025-11-17T21:40:06.963623Z	
+2025-11-17T21:40:06.963688Z	note: This error originates from a subprocess, and is likely not a problem with pip.
+2025-11-17T21:40:07.028255Z	Error: Exit with error code: 1
+2025-11-17T21:40:07.028522Z	    at ChildProcess.<anonymous> (/snapshot/dist/run-build.js)
+2025-11-17T21:40:07.028628Z	    at Object.onceWrapper (node:events:652:26)
+2025-11-17T21:40:07.028699Z	    at ChildProcess.emit (node:events:537:28)
+2025-11-17T21:40:07.028759Z	    at ChildProcess._handle.onexit (node:internal/child_process:291:12)
+2025-11-17T21:40:07.037128Z	Failed: build command exited with code: 1
+2025-11-17T21:40:09.181277Z	Failed: error occurred while running build command

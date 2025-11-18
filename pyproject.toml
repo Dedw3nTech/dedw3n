@@ -1,11 +1,35 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "repl-nix-workspace"
 version = "0.1.0"
-description = "Add your description here"
+description = "Python utilities for Replit development environment"
 requires-python = ">=3.11"
 dependencies = [
     "openpyxl>=3.1.5",
     "pandas>=2.3.1",
     "psycopg2-binary>=2.9.10",
     "xlrd>=2.0.2",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = []
+exclude = [
+    "client*",
+    "server*",
+    "shared*",
+    "public*",
+    "private*",
+    "types*",
+    "migrations*",
+    "replit_agent*",
+    "node_modules*",
+    "attached_assets*",
+    "dist*",
+    "build*",
+    ".cache*",
+    ".pythonlibs*"
 ]
