@@ -133,6 +133,30 @@ const DIGITAL_CATEGORIES = [
   { value: 'digital-games', label: 'Digital Games', fields: ['platform', 'genre', 'multiplayer'] },
 ];
 
+// Lifestyle Categories - For food ordering, groceries, and reservations
+const LIFESTYLE_FOOD_CATEGORIES = [
+  { value: 'lifestyle-restaurant', label: 'Restaurant Food', fields: ['cuisine_type', 'meal_type', 'spice_level', 'dietary_options', 'preparation_time'] },
+  { value: 'lifestyle-fast-food', label: 'Fast Food', fields: ['cuisine_type', 'meal_type', 'preparation_time'] },
+  { value: 'lifestyle-bakery', label: 'Bakery & Desserts', fields: ['item_type', 'allergens', 'expiry_date'] },
+  { value: 'lifestyle-beverages', label: 'Beverages', fields: ['beverage_type', 'volume', 'temperature'] },
+];
+
+const LIFESTYLE_GROCERY_CATEGORIES = [
+  { value: 'grocery-fresh-produce', label: 'Fresh Produce', fields: ['origin', 'organic', 'weight', 'expiry_date'] },
+  { value: 'grocery-dairy', label: 'Dairy & Eggs', fields: ['brand', 'weight', 'expiry_date', 'storage_temp'] },
+  { value: 'grocery-meat', label: 'Meat & Seafood', fields: ['meat_type', 'cut', 'weight', 'expiry_date'] },
+  { value: 'grocery-pantry', label: 'Pantry Staples', fields: ['brand', 'weight', 'expiry_date'] },
+  { value: 'grocery-snacks', label: 'Snacks & Treats', fields: ['brand', 'weight', 'allergens', 'expiry_date'] },
+  { value: 'grocery-frozen', label: 'Frozen Foods', fields: ['brand', 'weight', 'expiry_date'] },
+];
+
+const LIFESTYLE_RESERVATION_CATEGORIES = [
+  { value: 'reservation-restaurant', label: 'Restaurant Reservation', fields: ['restaurant_name', 'cuisine_type', 'seating_capacity', 'time_slot', 'location'] },
+  { value: 'reservation-hotel', label: 'Hotel Booking', fields: ['hotel_name', 'room_type', 'check_in', 'check_out', 'location'] },
+  { value: 'reservation-event', label: 'Event Booking', fields: ['event_name', 'event_type', 'venue', 'date_time', 'capacity'] },
+  { value: 'reservation-spa', label: 'Spa & Wellness', fields: ['service_type', 'duration', 'time_slot'] },
+];
+
 // Field configuration for dynamic rendering
 const FIELD_CONFIGS: Record<string, {label: string; type: string; placeholder?: string; options?: string[]}> = {
   make: { label: 'Make', type: 'text', placeholder: 'e.g., Toyota' },
@@ -214,7 +238,6 @@ const FIELD_CONFIGS: Record<string, {label: string; type: string; placeholder?: 
   certificate: { label: 'Certificate', type: 'select', options: ['Yes', 'No'] },
   software_required: { label: 'Software Required', type: 'text', placeholder: 'e.g., Photoshop' },
   multiplayer: { label: 'Multiplayer', type: 'select', options: ['Yes', 'No'] },
-  cuisine_type: { label: 'Cuisine Type', type: 'text', placeholder: 'e.g., Italian' },
   capacity: { label: 'Capacity', type: 'number', placeholder: 'e.g., 50' },
   per_person_rate: { label: 'Rate per Person', type: 'number', placeholder: 'e.g., 25' },
   processing_time: { label: 'Processing Time (weeks)', type: 'number', placeholder: 'e.g., 2' },
@@ -227,6 +250,32 @@ const FIELD_CONFIGS: Record<string, {label: string; type: string; placeholder?: 
   language_from: { label: 'Translate From', type: 'text', placeholder: 'e.g., French' },
   language_to: { label: 'Translate To', type: 'text', placeholder: 'e.g., English' },
   notary_type: { label: 'Notary Service Type', type: 'text', placeholder: 'e.g., Affidavit, Power of Attorney' },
+  
+  cuisine_type: { label: 'Cuisine Type', type: 'select', options: ['African', 'Asian', 'American', 'European', 'Mediterranean', 'Latin', 'Fusion', 'Other'] },
+  meal_type: { label: 'Meal Type', type: 'select', options: ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert', 'Beverage'] },
+  spice_level: { label: 'Spice Level', type: 'select', options: ['Mild', 'Medium', 'Hot', 'Extra Hot'] },
+  dietary_options: { label: 'Dietary Options', type: 'text', placeholder: 'e.g., Vegetarian, Vegan, Halal' },
+  preparation_time: { label: 'Preparation Time (mins)', type: 'number', placeholder: 'e.g., 30' },
+  item_type: { label: 'Item Type', type: 'text', placeholder: 'e.g., Bread, Cake, Pastry' },
+  beverage_type: { label: 'Beverage Type', type: 'select', options: ['Hot', 'Cold', 'Alcoholic', 'Non-Alcoholic'] },
+  temperature: { label: 'Serving Temperature', type: 'select', options: ['Hot', 'Cold', 'Room Temperature'] },
+  
+  storage_temp: { label: 'Storage Temperature', type: 'select', options: ['Refrigerated', 'Frozen', 'Room Temperature'] },
+  meat_type: { label: 'Meat Type', type: 'select', options: ['Beef', 'Chicken', 'Pork', 'Lamb', 'Fish', 'Seafood'] },
+  cut: { label: 'Cut/Type', type: 'text', placeholder: 'e.g., Fillet, Steak, Ground' },
+  
+  restaurant_name: { label: 'Restaurant Name', type: 'text', placeholder: 'Name of restaurant' },
+  seating_capacity: { label: 'Seating Capacity', type: 'number', placeholder: 'e.g., 4' },
+  time_slot: { label: 'Time Slot', type: 'text', placeholder: 'e.g., 7:00 PM - 9:00 PM' },
+  location: { label: 'Location', type: 'text', placeholder: 'Address or area' },
+  hotel_name: { label: 'Hotel Name', type: 'text', placeholder: 'Name of hotel' },
+  room_type: { label: 'Room Type', type: 'select', options: ['Single', 'Double', 'Suite', 'Deluxe', 'Family'] },
+  check_in: { label: 'Check-in Date', type: 'date' },
+  check_out: { label: 'Check-out Date', type: 'date' },
+  event_name: { label: 'Event Name', type: 'text', placeholder: 'Name of event' },
+  event_type: { label: 'Event Type', type: 'select', options: ['Conference', 'Wedding', 'Birthday', 'Corporate', 'Concert', 'Workshop'] },
+  venue: { label: 'Venue', type: 'text', placeholder: 'Event venue' },
+  date_time: { label: 'Date & Time', type: 'text', placeholder: 'e.g., 2024-12-25 6:00 PM' },
 };
 
 // Document type and service type specific requirements configuration
@@ -313,6 +362,8 @@ export default function AddProduct() {
   const [successData, setSuccessData] = useState<any>(null);
   const [isMarketplaceExpanded, setIsMarketplaceExpanded] = useState(true);
   const [isGovernmentExpanded, setIsGovernmentExpanded] = useState(true);
+  const [isLifestyleExpanded, setIsLifestyleExpanded] = useState(true);
+  const [selectedLifestyleType, setSelectedLifestyleType] = useState<'food' | 'groceries' | 'reservation' | null>(null);
 
   // Parse URL parameters for prefill data and section tracking from Wouter location
   const getQueryParams = (loc: string) => {
@@ -386,6 +437,12 @@ export default function AddProduct() {
     "Upload lifestyle products and services",
     "Upload professional services",
     "Upload community-related products",
+    
+    // Lifestyle Sub-sections
+    "Order Food",
+    "Groceries",
+    "Reservation",
+    "Dr Congo",
     
     // Authentication & Access
     "Please log in to add a product",
@@ -1363,6 +1420,34 @@ export default function AddProduct() {
     }
   ];
 
+  // Lifestyle sub-items
+  const lifestyleSubItems = [
+    {
+      id: 'order-food',
+      label: t("Order Food"),
+      onClick: () => {
+        setSelectedLifestyleType('food');
+        setActiveSection('lifestyle');
+      }
+    },
+    {
+      id: 'groceries',
+      label: t("Groceries"),
+      onClick: () => {
+        setSelectedLifestyleType('groceries');
+        setActiveSection('lifestyle');
+      }
+    },
+    {
+      id: 'reservation',
+      label: t("Reservation"),
+      onClick: () => {
+        setSelectedLifestyleType('reservation');
+        setActiveSection('lifestyle');
+      }
+    }
+  ];
+
   // Navigation sections - memoized to prevent unnecessary re-renders
   const navigationSections = useMemo(() => {
     const marketplaceSubItems = getFilteredMarketplaceSubItems();
@@ -1390,6 +1475,8 @@ export default function AddProduct() {
         label: t("Lifestyle"),
         href: getSectionHref('lifestyle'),
         isActive: activeSection === 'lifestyle',
+        hasSubItems: true,
+        subItems: lifestyleSubItems,
       },
       {
         id: 'services',
@@ -1433,6 +1520,8 @@ export default function AddProduct() {
                               setIsMarketplaceExpanded(!isMarketplaceExpanded);
                             } else if (section.id === 'government') {
                               setIsGovernmentExpanded(!isGovernmentExpanded);
+                            } else if (section.id === 'lifestyle') {
+                              setIsLifestyleExpanded(!isLifestyleExpanded);
                             }
                           }}
                           data-testid={`section-${section.id}`}
@@ -1447,11 +1536,13 @@ export default function AddProduct() {
                           <ChevronDown
                             className={cn(
                               "h-5 w-5 transition-transform",
-                              (section.id === 'marketplace' ? isMarketplaceExpanded : isGovernmentExpanded) ? "rotate-180" : ""
+                              (section.id === 'marketplace' ? isMarketplaceExpanded : 
+                               section.id === 'government' ? isGovernmentExpanded : 
+                               section.id === 'lifestyle' ? isLifestyleExpanded : false) ? "rotate-180" : ""
                             )}
                           />
                         </button>
-                        {((section.id === 'marketplace' && isMarketplaceExpanded) || (section.id === 'government' && isGovernmentExpanded)) && section.subItems && (
+                        {((section.id === 'marketplace' && isMarketplaceExpanded) || (section.id === 'government' && isGovernmentExpanded) || (section.id === 'lifestyle' && isLifestyleExpanded)) && section.subItems && (
                           <div className="ml-4 mt-1 space-y-1">
                             {section.subItems.map((subItem: any) => {
                               const isSelected = subItem.marketplaceValue && form.watch('marketplace') === subItem.marketplaceValue;
@@ -1620,11 +1711,21 @@ export default function AddProduct() {
                 name="category"
                 render={({ field }) => {
                   const offeringType = form.watch('offeringType');
-                  const availableCategories = offeringType === 'service' 
-                    ? SERVICE_CATEGORIES 
-                    : offeringType === 'digital_product'
-                    ? DIGITAL_CATEGORIES
-                    : PRODUCT_CATEGORIES;
+                  let availableCategories;
+                  
+                  if (activeSection === 'lifestyle' && selectedLifestyleType) {
+                    availableCategories = selectedLifestyleType === 'food' 
+                      ? LIFESTYLE_FOOD_CATEGORIES 
+                      : selectedLifestyleType === 'groceries'
+                      ? LIFESTYLE_GROCERY_CATEGORIES
+                      : LIFESTYLE_RESERVATION_CATEGORIES;
+                  } else {
+                    availableCategories = offeringType === 'service' 
+                      ? SERVICE_CATEGORIES 
+                      : offeringType === 'digital_product'
+                      ? DIGITAL_CATEGORIES
+                      : PRODUCT_CATEGORIES;
+                  }
                   
                   return (
                     <FormItem>
@@ -1655,13 +1756,23 @@ export default function AddProduct() {
           {form.watch('category') && (() => {
             const offeringType = form.watch('offeringType');
             const selectedCategory = form.watch('category');
-            const categories = isGovernmentService
-              ? GOVERNMENT_SERVICE_CATEGORIES
-              : offeringType === 'service' 
-              ? SERVICE_CATEGORIES 
-              : offeringType === 'digital_product'
-              ? DIGITAL_CATEGORIES
-              : PRODUCT_CATEGORIES;
+            let categories;
+            
+            if (isGovernmentService) {
+              categories = GOVERNMENT_SERVICE_CATEGORIES;
+            } else if (activeSection === 'lifestyle' && selectedLifestyleType) {
+              categories = selectedLifestyleType === 'food' 
+                ? LIFESTYLE_FOOD_CATEGORIES 
+                : selectedLifestyleType === 'groceries'
+                ? LIFESTYLE_GROCERY_CATEGORIES
+                : LIFESTYLE_RESERVATION_CATEGORIES;
+            } else {
+              categories = offeringType === 'service' 
+                ? SERVICE_CATEGORIES 
+                : offeringType === 'digital_product'
+                ? DIGITAL_CATEGORIES
+                : PRODUCT_CATEGORIES;
+            }
             
             const categoryConfig = categories.find(c => c.value === selectedCategory);
             const fieldsToRender = categoryConfig?.fields || [];
