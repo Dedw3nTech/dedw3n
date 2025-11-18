@@ -830,9 +830,9 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
             <div className="flex items-center gap-2">
               {!isGovernmentPage && isAuthenticated && (
                 <div className="relative">
-                  {/* Notification badge positioned above frame for mobile */}
+                  {/* Notification badge positioned at top-right corner for mobile */}
                   {totalNotifications > 0 && (
-                    <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs rounded-full h-4 w-4 flex items-center justify-center min-w-[16px] text-[9px] font-bold z-10">
+                    <div className="absolute -top-0.5 -right-0.5 bg-black text-white text-xs rounded-full h-4 w-4 flex items-center justify-center min-w-[16px] text-[9px] font-bold z-10 border-[1.5px] border-white">
                       {totalNotifications > 99 ? '99+' : totalNotifications}
                     </div>
                   )}
