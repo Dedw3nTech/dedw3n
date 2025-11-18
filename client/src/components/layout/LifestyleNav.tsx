@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { UserAvatar } from '@/components/ui/user-avatar';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Search, Menu, Plus, Utensils, Calendar, Home, MapPin, Car, Plane, Clock, Dumbbell, Package } from 'lucide-react';
 
 interface LifestyleNavProps {
@@ -27,6 +28,7 @@ export function LifestyleNav({
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const [isNavVisible, setIsNavVisible] = useState(true);
@@ -77,7 +79,8 @@ export function LifestyleNav({
     restaurantsText: translatedTexts[14] || navigationTexts[14],
     hotelsStaysText: translatedTexts[15] || navigationTexts[15],
     travelText: translatedTexts[16] || navigationTexts[16],
-    entertainmentText: translatedTexts[17] || navigationTexts[17]
+    entertainmentText: translatedTexts[17] || navigationTexts[17],
+    lifestyleText: "Lifestyle Services"
   }), [translatedTexts, navigationTexts]);
 
   // Handle category navigation
@@ -521,72 +524,103 @@ export function LifestyleNav({
               )}
             </div>
 
-            {/* Right side - Hamburger menu */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 hover:bg-gray-100"
-              data-testid="button-hamburger-mobile"
-            >
-              <Menu className="h-4 w-4" />
-            </Button>
-          </div>
+            {/* Search bar and hamburger menu for mobile */}
+            <div className="flex items-center gap-2 flex-1 justify-end">
+              <div className="relative flex-1 max-w-xs">
+                <form onSubmit={handleSearchSubmit} className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    data-testid="search-input-mobile"
+                    placeholder={translatedLabels.searchPlaceholder}
+                    value={searchTerm}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSearch(searchTerm);
+                        setShowSuggestions(false);
+                      }
+                    }}
+                    onFocus={() => setShowSuggestions(true)}
+                    className="pl-10 h-8 text-sm pr-4 border-0 border-b-2 border-black rounded-none bg-transparent focus:border-black focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none shadow-none"
+                    disabled={isSearching}
+                  />
+                  {isSearching && (
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                      <div className="animate-spin h-3 w-3 border-2 border-gray-300 border-t-gray-600 rounded-full"></div>
+                    </div>
+                  )}
+                </form>
+              </div>
 
-          {/* Mobile search bar */}
-          <div className="mt-4">
-            <div ref={searchRef} className="relative">
-              <form onSubmit={handleSearchSubmit}>
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  data-testid="search-input-mobile"
-                  placeholder={translatedLabels.searchPlaceholder}
-                  value={searchTerm}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  onFocus={() => setShowSuggestions(true)}
-                  className="pl-10 h-9 pr-4 border-0 border-b-2 border-black rounded-none bg-transparent focus:border-black focus:ring-0"
-                />
-              </form>
+              {/* Hamburger menu button for mobile */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 hover:bg-gray-100 flex-shrink-0"
+                onClick={() => setIsSidebarOpen(true)}
+                data-testid="button-hamburger-mobile"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
             </div>
-          </div>
-
-          {/* Mobile category tabs */}
-          <div className="mt-4 flex items-center gap-2 overflow-x-auto pb-2">
-            <button
-              onClick={() => handleCategoryClick("restaurant")}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                selectedCategory === 'restaurant'
-                  ? 'bg-black text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-              data-testid="button-category-restaurant-mobile"
-            >
-              {translatedLabels.orderFoodText}
-            </button>
-            <button
-              onClick={() => handleCategoryClick("groceries")}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                selectedCategory === 'groceries'
-                  ? 'bg-black text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-              data-testid="button-category-groceries-mobile"
-            >
-              {translatedLabels.groceriesText}
-            </button>
-            <button
-              onClick={() => handleCategoryClick("hotels")}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                selectedCategory === 'hotels'
-                  ? 'bg-black text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-              data-testid="button-category-hotels-mobile"
-            >
-              {translatedLabels.reservationsText}
-            </button>
           </div>
         </div>
       </div>
+
+      {/* Sidebar for lifestyle category navigation */}
+      <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+        <SheetContent side="right" className="w-[300px] sm:w-[350px]">
+          <SheetHeader>
+            <SheetTitle>{translatedLabels.lifestyleText}</SheetTitle>
+          </SheetHeader>
+          
+          <div className="mt-6 space-y-2">
+            {/* Lifestyle Category Navigation Buttons */}
+            <div className="space-y-1">
+              
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-12"
+                onClick={() => {
+                  handleCategoryClick("restaurant");
+                  setIsSidebarOpen(false);
+                }}
+                data-testid="sidebar-button-order-food"
+              >
+                <Utensils className="h-4 w-4 mr-2" />
+                <span className="text-xs">{translatedLabels.orderFoodText}</span>
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-12"
+                onClick={() => {
+                  handleCategoryClick("groceries");
+                  setIsSidebarOpen(false);
+                }}
+                data-testid="sidebar-button-groceries"
+              >
+                <Package className="h-4 w-4 mr-2" />
+                <span className="text-xs">{translatedLabels.groceriesText}</span>
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-12"
+                onClick={() => {
+                  handleCategoryClick("hotels");
+                  setIsSidebarOpen(false);
+                }}
+                data-testid="sidebar-button-reservations"
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                <span className="text-xs">{translatedLabels.reservationsText}</span>
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
