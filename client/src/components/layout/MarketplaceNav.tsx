@@ -459,28 +459,6 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
               </div>
             </div>
             
-            {/* Online Store (B2C) */}
-            <div 
-              className="cursor-pointer group transition-all duration-300 h-[40px] flex items-center flex-shrink-0"
-              onClick={() => handleMarketNavigation("b2c")}
-              data-testid="button-market-b2c"
-            >
-              <div className="relative">
-                <span className={`text-[9px] md:text-[10px] lg:text-xs xl:text-sm font-medium transition-colors duration-300 whitespace-nowrap ${
-                  marketType === 'b2c' 
-                    ? 'text-black' 
-                    : 'text-black group-hover:text-black'
-                }`}>
-                  {translatedLabels.b2cText}
-                </span>
-                <div className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
-                  marketType === 'b2c' 
-                    ? 'bg-black w-full' 
-                    : 'bg-transparent w-0 group-hover:w-full group-hover:bg-black'
-                }`} />
-              </div>
-            </div>
-            
             {/* Request (RQST) */}
             <div 
               className="cursor-pointer group transition-all duration-300 h-[40px] flex items-center flex-shrink-0"
