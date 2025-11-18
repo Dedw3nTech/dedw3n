@@ -157,6 +157,24 @@ const LIFESTYLE_RESERVATION_CATEGORIES = [
   { value: 'reservation-spa', label: 'Spa & Wellness', fields: ['spa_service_type', 'duration', 'time_slot'] },
 ];
 
+// Services Categories - For jobs and freelance work
+const JOBS_CATEGORIES = [
+  { value: 'job-fulltime', label: 'Full-time Position', fields: ['job_title', 'employment_type', 'experience_level', 'salary_range', 'skills_required', 'education_required', 'job_location'] },
+  { value: 'job-parttime', label: 'Part-time Position', fields: ['job_title', 'employment_type', 'experience_level', 'hourly_rate', 'skills_required', 'job_location'] },
+  { value: 'job-contract', label: 'Contract Position', fields: ['job_title', 'contract_duration', 'experience_level', 'salary_range', 'skills_required', 'job_location'] },
+  { value: 'job-internship', label: 'Internship', fields: ['job_title', 'internship_duration', 'experience_level', 'stipend_amount', 'skills_required', 'education_required'] },
+  { value: 'job-remote', label: 'Remote Job', fields: ['job_title', 'employment_type', 'experience_level', 'salary_range', 'skills_required', 'time_zone'] },
+];
+
+const FREELANCE_CATEGORIES = [
+  { value: 'freelance-webdev', label: 'Web Development', fields: ['project_title', 'project_duration', 'budget_range', 'tech_stack', 'experience_required', 'portfolio_required'] },
+  { value: 'freelance-design', label: 'Graphic Design', fields: ['project_title', 'project_duration', 'budget_range', 'design_tools', 'deliverables', 'portfolio_required'] },
+  { value: 'freelance-writing', label: 'Content Writing', fields: ['project_title', 'word_count', 'budget_range', 'content_type', 'deadline', 'samples_required'] },
+  { value: 'freelance-marketing', label: 'Digital Marketing', fields: ['project_title', 'project_duration', 'budget_range', 'marketing_channels', 'experience_required'] },
+  { value: 'freelance-video', label: 'Video Editing', fields: ['project_title', 'video_length', 'budget_range', 'editing_software', 'deliverables', 'deadline'] },
+  { value: 'freelance-consulting', label: 'Consulting', fields: ['project_title', 'consulting_area', 'project_duration', 'budget_range', 'experience_required'] },
+];
+
 // Field configuration for dynamic rendering
 const FIELD_CONFIGS: Record<string, {label: string; type: string; placeholder?: string; options?: string[]}> = {
   make: { label: 'Make', type: 'text', placeholder: 'e.g., Toyota' },
@@ -277,6 +295,35 @@ const FIELD_CONFIGS: Record<string, {label: string; type: string; placeholder?: 
   venue: { label: 'Venue', type: 'text', placeholder: 'Event venue' },
   date_time: { label: 'Date & Time', type: 'text', placeholder: 'e.g., 2024-12-25 6:00 PM' },
   spa_service_type: { label: 'Spa Service', type: 'select', options: ['Massage', 'Facial', 'Body Treatment', 'Manicure/Pedicure', 'Sauna', 'Hot Tub', 'Aromatherapy'] },
+  
+  job_title: { label: 'Job Title', type: 'text', placeholder: 'e.g., Senior Software Engineer' },
+  employment_type: { label: 'Employment Type', type: 'select', options: ['Full-time', 'Part-time', 'Contract', 'Temporary', 'Internship'] },
+  experience_level: { label: 'Experience Level', type: 'select', options: ['Entry Level', 'Mid Level', 'Senior Level', 'Executive'] },
+  salary_range: { label: 'Salary Range', type: 'text', placeholder: 'e.g., $50,000 - $70,000' },
+  skills_required: { label: 'Required Skills', type: 'text', placeholder: 'e.g., JavaScript, React, Node.js' },
+  education_required: { label: 'Education Required', type: 'select', options: ['High School', 'Associate Degree', 'Bachelor Degree', 'Master Degree', 'PhD', 'Not Required'] },
+  job_location: { label: 'Job Location', type: 'text', placeholder: 'City, State/Country' },
+  contract_duration: { label: 'Contract Duration', type: 'text', placeholder: 'e.g., 6 months, 1 year' },
+  internship_duration: { label: 'Internship Duration', type: 'text', placeholder: 'e.g., 3 months, Summer 2024' },
+  stipend_amount: { label: 'Stipend Amount', type: 'text', placeholder: 'e.g., $500/month or Unpaid' },
+  time_zone: { label: 'Time Zone', type: 'text', placeholder: 'e.g., EST, PST, UTC+2' },
+  
+  project_title: { label: 'Project Title', type: 'text', placeholder: 'Name of the project' },
+  project_duration: { label: 'Project Duration', type: 'text', placeholder: 'e.g., 2 weeks, 1 month' },
+  budget_range: { label: 'Budget Range', type: 'text', placeholder: 'e.g., $500 - $1000' },
+  tech_stack: { label: 'Tech Stack', type: 'text', placeholder: 'e.g., React, Node.js, MongoDB' },
+  experience_required: { label: 'Experience Required', type: 'select', options: ['Beginner', 'Intermediate', 'Expert', 'Any'] },
+  portfolio_required: { label: 'Portfolio Required', type: 'select', options: ['Yes', 'No'] },
+  design_tools: { label: 'Design Tools', type: 'text', placeholder: 'e.g., Figma, Adobe XD, Photoshop' },
+  deliverables: { label: 'Deliverables', type: 'text', placeholder: 'e.g., Logo, Brand Kit, Website Mockup' },
+  word_count: { label: 'Word Count', type: 'number', placeholder: 'e.g., 1000' },
+  content_type: { label: 'Content Type', type: 'select', options: ['Blog Post', 'Article', 'Copy Writing', 'Technical Writing', 'Product Description'] },
+  deadline: { label: 'Deadline', type: 'date' },
+  samples_required: { label: 'Writing Samples Required', type: 'select', options: ['Yes', 'No'] },
+  marketing_channels: { label: 'Marketing Channels', type: 'text', placeholder: 'e.g., SEO, Social Media, Email' },
+  video_length: { label: 'Video Length', type: 'text', placeholder: 'e.g., 5 minutes, 30 seconds' },
+  editing_software: { label: 'Editing Software', type: 'text', placeholder: 'e.g., Adobe Premiere, Final Cut Pro' },
+  consulting_area: { label: 'Consulting Area', type: 'text', placeholder: 'e.g., Business Strategy, Marketing' },
 };
 
 // Document type and service type specific requirements configuration
@@ -364,7 +411,9 @@ export default function AddProduct() {
   const [isMarketplaceExpanded, setIsMarketplaceExpanded] = useState(true);
   const [isGovernmentExpanded, setIsGovernmentExpanded] = useState(true);
   const [isLifestyleExpanded, setIsLifestyleExpanded] = useState(true);
+  const [isServicesExpanded, setIsServicesExpanded] = useState(true);
   const [selectedLifestyleType, setSelectedLifestyleType] = useState<'food' | 'groceries' | 'reservation' | null>(null);
+  const [selectedServiceType, setSelectedServiceType] = useState<'jobs' | 'freelance' | null>(null);
 
   // Parse URL parameters for prefill data and section tracking from Wouter location
   const getQueryParams = (loc: string) => {
@@ -444,6 +493,10 @@ export default function AddProduct() {
     "Groceries",
     "Reservation",
     "Dr Congo",
+    
+    // Services Sub-sections
+    "Jobs",
+    "Freelance",
     
     // Authentication & Access
     "Please log in to add a product",
@@ -1449,6 +1502,26 @@ export default function AddProduct() {
     }
   ];
 
+  // Services sub-items
+  const servicesSubItems = [
+    {
+      id: 'jobs',
+      label: t("Jobs"),
+      onClick: () => {
+        setSelectedServiceType('jobs');
+        setActiveSection('services');
+      }
+    },
+    {
+      id: 'freelance',
+      label: t("Freelance"),
+      onClick: () => {
+        setSelectedServiceType('freelance');
+        setActiveSection('services');
+      }
+    }
+  ];
+
   // Navigation sections - memoized to prevent unnecessary re-renders
   const navigationSections = useMemo(() => {
     const marketplaceSubItems = getFilteredMarketplaceSubItems();
@@ -1484,6 +1557,8 @@ export default function AddProduct() {
         label: t("Services"),
         href: getSectionHref('services'),
         isActive: activeSection === 'services',
+        hasSubItems: true,
+        subItems: servicesSubItems,
       },
       {
         id: 'marketplace',
@@ -1523,6 +1598,8 @@ export default function AddProduct() {
                               setIsGovernmentExpanded(!isGovernmentExpanded);
                             } else if (section.id === 'lifestyle') {
                               setIsLifestyleExpanded(!isLifestyleExpanded);
+                            } else if (section.id === 'services') {
+                              setIsServicesExpanded(!isServicesExpanded);
                             }
                           }}
                           data-testid={`section-${section.id}`}
@@ -1539,11 +1616,12 @@ export default function AddProduct() {
                               "h-5 w-5 transition-transform",
                               (section.id === 'marketplace' ? isMarketplaceExpanded : 
                                section.id === 'government' ? isGovernmentExpanded : 
-                               section.id === 'lifestyle' ? isLifestyleExpanded : false) ? "rotate-180" : ""
+                               section.id === 'lifestyle' ? isLifestyleExpanded : 
+                               section.id === 'services' ? isServicesExpanded : false) ? "rotate-180" : ""
                             )}
                           />
                         </button>
-                        {((section.id === 'marketplace' && isMarketplaceExpanded) || (section.id === 'government' && isGovernmentExpanded) || (section.id === 'lifestyle' && isLifestyleExpanded)) && section.subItems && (
+                        {((section.id === 'marketplace' && isMarketplaceExpanded) || (section.id === 'government' && isGovernmentExpanded) || (section.id === 'lifestyle' && isLifestyleExpanded) || (section.id === 'services' && isServicesExpanded)) && section.subItems && (
                           <div className="ml-4 mt-1 space-y-1">
                             {section.subItems.map((subItem: any) => {
                               const isSelected = subItem.marketplaceValue && form.watch('marketplace') === subItem.marketplaceValue;
@@ -1720,6 +1798,10 @@ export default function AddProduct() {
                       : selectedLifestyleType === 'groceries'
                       ? LIFESTYLE_GROCERY_CATEGORIES
                       : LIFESTYLE_RESERVATION_CATEGORIES;
+                  } else if (activeSection === 'services' && selectedServiceType) {
+                    availableCategories = selectedServiceType === 'jobs' 
+                      ? JOBS_CATEGORIES 
+                      : FREELANCE_CATEGORIES;
                   } else {
                     availableCategories = offeringType === 'service' 
                       ? SERVICE_CATEGORIES 
@@ -1767,6 +1849,10 @@ export default function AddProduct() {
                 : selectedLifestyleType === 'groceries'
                 ? LIFESTYLE_GROCERY_CATEGORIES
                 : LIFESTYLE_RESERVATION_CATEGORIES;
+            } else if (activeSection === 'services' && selectedServiceType) {
+              categories = selectedServiceType === 'jobs' 
+                ? JOBS_CATEGORIES 
+                : FREELANCE_CATEGORIES;
             } else {
               categories = offeringType === 'service' 
                 ? SERVICE_CATEGORIES 
