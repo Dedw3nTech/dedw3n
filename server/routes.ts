@@ -3077,6 +3077,55 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // ============================================================================
+  // ERP (ENTERPRISE RESOURCE PLANNING) ROUTES
+  // ============================================================================
+
+  // Get ERP dashboard statistics
+  app.get('/api/erp/stats', unifiedIsAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+
+      // Get total transactions from orders
+      const totalTransactions = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(orders)
+        .then(result => result[0]?.count || 0);
+
+      // Get active users count
+      const activeUsers = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(users)
+        .then(result => result[0]?.count || 0);
+
+      // Get pending orders count
+      const pendingOrders = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(orders)
+        .where(eq(orders.status, 'pending'))
+        .then(result => result[0]?.count || 0);
+
+      // Get active vendors count
+      const activeVendors = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(vendors)
+        .where(eq(vendors.status, 'active'))
+        .then(result => result[0]?.count || 0);
+
+      return res.json({
+        totalTransactions,
+        activeUsers,
+        pendingOrders,
+        activeVendors,
+      });
+    } catch (error) {
+      console.error('Error fetching ERP stats', error);
+      return res.status(500).json({ message: 'Failed to fetch ERP statistics' });
+    }
+  });
+
+  // ============================================================================
   // FILE UPLOAD ROUTES FOR CALENDAR ATTACHMENTS
   // ============================================================================
 
