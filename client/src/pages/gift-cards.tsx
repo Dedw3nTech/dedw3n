@@ -20,14 +20,12 @@ import PaymentGatewaySelector from '@/components/vendor/PaymentGatewaySelector';
 import MultiPaymentProcessor from '@/components/vendor/MultiPaymentProcessor';
 import { apiRequest } from '@/lib/queryClient';
 import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
+import { getStripePromise } from '@/lib/stripe';
 import { formatPriceWithCurrency, convertCurrency } from '@/lib/currencyConverter';
 import logoPath from '@assets/Navigation Header logo_1758774698294.png';
 import headerImagePath from '@assets/De dw3n_1758789078040.png';
 import mobileHeaderImagePath from '@assets/Copy of De dw3n (750 x 500 px)_1758998302741.png';
 import { SEOHead } from '@/components/seo/SEOHead';
-
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY!);
 
 interface GiftCardDesign {
   id: string;

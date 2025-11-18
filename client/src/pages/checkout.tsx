@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
+import { getStripePromise } from "@/lib/stripe";
 import { Button } from "@/components/ui/button";
 import { useMasterTranslation } from "@/hooks/use-master-translation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,11 +14,6 @@ import { apiRequest } from "@/lib/queryClient";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import PayPalButton from "@/components/PayPalButton";
 import { SEOHead } from "@/components/seo/SEOHead";
-
-// Load Stripe conditionally
-const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 
-  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
-  : null;
 
 // Stripe Payment Form Component
 const StripeCheckoutForm = ({ tier, onSuccess }: { tier: string; onSuccess: () => void }) => {
@@ -241,6 +236,8 @@ export default function Checkout() {
   const [isLoading, setIsLoading] = useState(true);
   const { formatPrice } = useCurrency();
   const { translateText } = useMasterTranslation();
+
+  const stripePromise = getStripePromise();
 
   // Get URL parameters and initialize payment
   useEffect(() => {

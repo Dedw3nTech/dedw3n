@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,10 +9,7 @@ import { AlertCircle, CreditCard, Calendar, Building2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-
-const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 
-  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
-  : null;
+import { getStripePromise } from '@/lib/stripe';
 
 interface CommissionPaymentData {
   redirectUrl: string;
@@ -311,6 +307,8 @@ export default function CommissionPayment() {
       </div>
     );
   }
+
+  const stripePromise = getStripePromise();
 
   if (!stripePromise) {
     return (

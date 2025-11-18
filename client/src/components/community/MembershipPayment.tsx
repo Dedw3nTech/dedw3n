@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useStripe, useElements, PaymentElement, Elements } from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
+import { getStripePromise } from "@/lib/stripe";
 import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -21,13 +21,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
-
-// Make sure to call loadStripe outside of a component's render to avoid
-// recreating the Stripe object on every render.
-if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
-  throw new Error("Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY");
-}
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 type MembershipTier = {
   id: number;
@@ -131,6 +124,20 @@ const StripePaymentSection = ({ tier, communityId, onSuccess, onCancel }: Paymen
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+
+  const stripePromise = getStripePromise();
+
+  // Check if Stripe is available before attempting payment
+  if (!stripePromise) {
+    return (
+      <div className="flex justify-center items-center py-8 text-center">
+        <div>
+          <p className="text-red-600 font-semibold">Payment provider not available</p>
+          <p className="text-sm text-gray-600 mt-2">Please contact support or try another payment method.</p>
+        </div>
+      </div>
+    );
+  }
 
   // Create a payment intent when the component mounts
   useEffect(() => {

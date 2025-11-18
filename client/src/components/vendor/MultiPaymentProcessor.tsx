@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle, AlertCircle, Clock, CreditCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import PayPalButton from './PayPalButton';
-
-const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 
-  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
-  : null;
+import { getStripePromise } from '@/lib/stripe';
 
 interface MultiPaymentProcessorProps {
   amount: number;
@@ -317,6 +313,8 @@ export default function MultiPaymentProcessor({
       setPaymentReference(`COM-${vendorId}-${Date.now()}`);
     }
   }, [paymentMethod, amount, currency, commissionPeriodIds, vendorId, onPaymentError]);
+
+  const stripePromise = getStripePromise();
 
   switch (paymentMethod) {
     case 'stripe':

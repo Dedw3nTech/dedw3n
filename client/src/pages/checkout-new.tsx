@@ -8,9 +8,8 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { formatPrice } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { convertCurrency, getCurrencySymbol, convertForPawapay } from "@/lib/currency-converter";
-import { loadStripe } from '@stripe/stripe-js';
 import { Elements, useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
-
+import { getStripePromise } from '@/lib/stripe';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -67,11 +66,6 @@ interface PaymentMethod {
   icon: React.ReactNode;
   description: string;
 }
-
-// Initialize Stripe conditionally
-const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 
-  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
-  : null;
 
 // Pawapay Form Component for Mobile Money
 const PawapayForm = ({ total, cartItems, shippingInfo, onOrderComplete }: {
@@ -453,6 +447,8 @@ export default function CheckoutNew() {
   const { toast } = useToast();
   const { selectedCurrency, formatPriceFromGBP } = useCurrency();
   const { translateText } = useMasterTranslation();
+  
+  const stripePromise = getStripePromise();
   
   const [currentStep, setCurrentStep] = useState<'shipping' | 'payment' | 'review'>('shipping');
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
