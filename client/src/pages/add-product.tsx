@@ -154,7 +154,7 @@ const LIFESTYLE_RESERVATION_CATEGORIES = [
   { value: 'reservation-restaurant', label: 'Restaurant Reservation', fields: ['restaurant_name', 'cuisine_type', 'seating_capacity', 'time_slot', 'location'] },
   { value: 'reservation-hotel', label: 'Hotel Booking', fields: ['hotel_name', 'room_type', 'check_in', 'check_out', 'location'] },
   { value: 'reservation-event', label: 'Event Booking', fields: ['event_name', 'event_type', 'venue', 'date_time', 'capacity'] },
-  { value: 'reservation-spa', label: 'Spa & Wellness', fields: ['service_type', 'duration', 'time_slot'] },
+  { value: 'reservation-spa', label: 'Spa & Wellness', fields: ['spa_service_type', 'duration', 'time_slot'] },
 ];
 
 // Field configuration for dynamic rendering
@@ -276,6 +276,7 @@ const FIELD_CONFIGS: Record<string, {label: string; type: string; placeholder?: 
   event_type: { label: 'Event Type', type: 'select', options: ['Conference', 'Wedding', 'Birthday', 'Corporate', 'Concert', 'Workshop'] },
   venue: { label: 'Venue', type: 'text', placeholder: 'Event venue' },
   date_time: { label: 'Date & Time', type: 'text', placeholder: 'e.g., 2024-12-25 6:00 PM' },
+  spa_service_type: { label: 'Spa Service', type: 'select', options: ['Massage', 'Facial', 'Body Treatment', 'Manicure/Pedicure', 'Sauna', 'Hot Tub', 'Aromatherapy'] },
 };
 
 // Document type and service type specific requirements configuration
