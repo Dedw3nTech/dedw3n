@@ -516,7 +516,6 @@ export function ServicesNav({
                 }}
                 data-testid="sidebar-button-jobs"
               >
-                <Briefcase className="h-4 w-4 mr-2" />
                 <span className="text-xs">{translatedLabels.jobsText}</span>
               </Button>
 
@@ -529,7 +528,6 @@ export function ServicesNav({
                 }}
                 data-testid="sidebar-button-freelance"
               >
-                <Users className="h-4 w-4 mr-2" />
                 <span className="text-xs">{translatedLabels.freelancerText}</span>
               </Button>
             </div>

@@ -588,7 +588,6 @@ export function LifestyleNav({
                 }}
                 data-testid="sidebar-button-order-food"
               >
-                <Utensils className="h-4 w-4 mr-2" />
                 <span className="text-xs">{translatedLabels.orderFoodText}</span>
               </Button>
 
@@ -601,7 +600,6 @@ export function LifestyleNav({
                 }}
                 data-testid="sidebar-button-groceries"
               >
-                <Package className="h-4 w-4 mr-2" />
                 <span className="text-xs">{translatedLabels.groceriesText}</span>
               </Button>
 
@@ -614,7 +612,6 @@ export function LifestyleNav({
                 }}
                 data-testid="sidebar-button-reservations"
               >
-                <Calendar className="h-4 w-4 mr-2" />
                 <span className="text-xs">{translatedLabels.reservationsText}</span>
               </Button>
             </div>
