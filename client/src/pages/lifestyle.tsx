@@ -20,7 +20,8 @@ import {
   Loader2,
   Mail,
   MessageCircle,
-  Smartphone
+  Smartphone,
+  SlidersHorizontal
 } from "lucide-react";
 import type { Product } from "@shared/schema";
 import { Button } from "@/components/ui/button";
@@ -553,9 +554,9 @@ export default function LifestylePage() {
             {/* Filter button */}
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="flex items-center gap-2 border-0 hover:bg-transparent">
-                  <Filter className="h-4 w-4" />
-                  Filter
+                <Button variant="ghost" className="flex items-center gap-2 text-black hover:bg-gray-100 h-auto py-2 px-3">
+                  <SlidersHorizontal className="h-5 w-5" />
+                  <span className="text-base">Filter</span>
                 </Button>
               </SheetTrigger>
               <SheetContent className="overflow-y-auto">
