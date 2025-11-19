@@ -11,6 +11,7 @@ const AIDatingTools = lazy(() => import('@/components/AIDatingTools'));
 const LifestylePage = lazy(() => import('@/pages/lifestyle'));
 const LifestyleProfilePage = lazy(() => import('@/pages/LifestyleProfile'));
 const GovernmentProfilePage = lazy(() => import('@/pages/GovernmentProfile'));
+const ServicesProfilePage = lazy(() => import('@/pages/ServicesProfile'));
 const OrderFoodPage = lazy(() => import('@/pages/order-food'));
 const GroceriesPage = lazy(() => import('@/pages/groceries'));
 const ReservationPage = lazy(() => import('@/pages/reservations'));
@@ -98,7 +99,13 @@ export function SpecialtyRoutes({ params }: any) {
         <SEOHead title="Freelance - Dedw3n" description="Find freelance gigs and project-based work opportunities." />
         <FreelancePage />
       </Route>
-      <Route path="/services" component={ServicesPage} />
+      
+      <ProtectedRoute path="/services-profile" component={ServicesProfilePage} />
+      
+      <Route path="/services">
+        <SEOHead title="Services - Dedw3n" description="Browse and access professional services including jobs and freelance opportunities." />
+        <ServicesPage />
+      </Route>
       
       <Route path="/shipping-calculator">
         <SEOHead title="Shipping Calculator - Dedw3n" description="Calculate shipping costs for different freight types and international destinations on Dedw3n marketplace." />

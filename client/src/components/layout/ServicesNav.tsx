@@ -99,10 +99,8 @@ export function ServicesNav({
   }, [setSelectedCategory, setLocation]);
 
   const handleProfileClick = useCallback(() => {
-    if (user?.username) {
-      setLocation(`/${user.username}`);
-    }
-  }, [user, setLocation]);
+    setLocation("/services-profile");
+  }, [setLocation]);
 
   const handleAddService = useCallback(() => {
     setLocation('/add-product');
