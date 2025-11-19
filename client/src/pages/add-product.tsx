@@ -3352,19 +3352,22 @@ export default function AddProduct() {
                   name="isNew"
                   render={({ field }) => {
                     const isService = form.watch('offeringType') === 'service';
+                    const isNotRelevant = isService || 
+                      (activeSection === 'lifestyle' && (selectedLifestyleType === 'food' || selectedLifestyleType === 'reservation'));
+                    
                     return (
-                      <FormItem className={`flex flex-row items-center justify-between ${isService ? 'opacity-50' : ''}`}>
+                      <FormItem className={`flex flex-row items-center justify-between ${isNotRelevant ? 'opacity-50' : ''}`}>
                         <div className="space-y-0.5">
-                          <FormLabel className={`text-sm font-normal ${isService ? 'text-gray-400' : ''}`}>
+                          <FormLabel className={`text-sm font-normal ${isNotRelevant ? 'text-gray-400' : ''}`}>
                             {t('New Product')}
                           </FormLabel>
                         </div>
                         <FormControl>
                           <Switch
                             checked={field.value}
-                            onCheckedChange={isService ? undefined : field.onChange}
-                            disabled={isService}
-                            className={isService ? 'cursor-not-allowed' : ''}
+                            onCheckedChange={isNotRelevant ? undefined : field.onChange}
+                            disabled={isNotRelevant}
+                            className={isNotRelevant ? 'cursor-not-allowed' : ''}
                           />
                         </FormControl>
                       </FormItem>
