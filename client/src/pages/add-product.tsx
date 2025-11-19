@@ -1526,36 +1526,85 @@ export default function AddProduct() {
     }
   ];
 
-  // Lifestyle sub-items - route to individual upload pages
+  // Lifestyle sub-items - load form on current page
   const lifestyleSubItems = [
     {
       id: 'order-food',
       label: t("Order Food"),
-      href: '/add-order-food',
+      onClick: () => {
+        setSelectedLifestyleType('food');
+        setActiveSection('lifestyle');
+        form.setValue('offeringType', 'product');
+        // Set marketplace - prefer b2c, fallback to rqst
+        const marketplace = availableMarketplaces.find(m => m.value === 'b2c') 
+          ? 'b2c' 
+          : (availableMarketplaces.find(m => m.value === 'rqst') ? 'rqst' : availableMarketplaces[0]?.value || 'rqst');
+        form.setValue('marketplace', marketplace as any);
+      },
     },
     {
       id: 'groceries',
       label: t("Groceries"),
-      href: '/add-groceries',
+      onClick: () => {
+        setSelectedLifestyleType('groceries');
+        setActiveSection('lifestyle');
+        form.setValue('offeringType', 'product');
+        // Set marketplace - prefer b2c, fallback to rqst
+        const marketplace = availableMarketplaces.find(m => m.value === 'b2c') 
+          ? 'b2c' 
+          : (availableMarketplaces.find(m => m.value === 'rqst') ? 'rqst' : availableMarketplaces[0]?.value || 'rqst');
+        form.setValue('marketplace', marketplace as any);
+      },
     },
     {
       id: 'reservation',
       label: t("Reservation"),
-      href: '/add-reservation',
+      onClick: () => {
+        setSelectedLifestyleType('reservation');
+        setActiveSection('lifestyle');
+        form.setValue('offeringType', 'service');
+        // Set marketplace - prefer b2c, fallback to rqst
+        const marketplace = availableMarketplaces.find(m => m.value === 'b2c') 
+          ? 'b2c' 
+          : (availableMarketplaces.find(m => m.value === 'rqst') ? 'rqst' : availableMarketplaces[0]?.value || 'rqst');
+        form.setValue('marketplace', marketplace as any);
+      },
     }
   ];
 
-  // Services sub-items - route to individual upload pages
+  // Services sub-items - load form on current page
   const servicesSubItems = [
     {
       id: 'jobs',
       label: t("Jobs"),
-      href: '/add-jobs',
+      onClick: () => {
+        setSelectedServiceType('jobs');
+        setActiveSection('services');
+        form.setValue('offeringType', 'service');
+        // Set marketplace - prefer rqst for jobs
+        const marketplace = availableMarketplaces.find(m => m.value === 'rqst') 
+          ? 'rqst' 
+          : availableMarketplaces[0]?.value || 'rqst';
+        form.setValue('marketplace', marketplace as any);
+      },
     },
     {
       id: 'freelance',
       label: t("Freelance"),
-      href: '/add-freelance',
+      onClick: () => {
+        setSelectedServiceType('freelance');
+        setActiveSection('services');
+        form.setValue('offeringType', 'service');
+        // Set marketplace - prefer b2b, then c2c, then rqst
+        const marketplace = availableMarketplaces.find(m => m.value === 'b2b')
+          ? 'b2b'
+          : availableMarketplaces.find(m => m.value === 'c2c')
+          ? 'c2c'
+          : availableMarketplaces.find(m => m.value === 'rqst')
+          ? 'rqst'
+          : availableMarketplaces[0]?.value || 'rqst';
+        form.setValue('marketplace', marketplace as any);
+      },
     }
   ];
 
