@@ -66,3 +66,37 @@ export function AdminOnlyRoute({ path, component: Component }: AdminOnlyRoutePro
     </Route>
   );
 }
+
+type FinanceOnlyRouteProps = {
+  path: string;
+  component: ComponentType<any>;
+};
+
+export function FinanceOnlyRoute({ path, component: Component }: FinanceOnlyRouteProps) {
+  const { user, isLoading } = useAuth();
+
+  return (
+    <Route path={path}>
+      {(params) => {
+        if (isLoading) {
+          return (
+            <div className="flex items-center justify-center min-h-screen">
+              <Loader2 className="h-8 w-8 animate-spin text-border" />
+            </div>
+          );
+        }
+
+        if (!user) {
+          return <Redirect to="/" />;
+        }
+
+        if (user.role !== 'admin' && user.username !== 'Serruti') {
+          return <Redirect to="/" />;
+        }
+
+        // Render the finance component with all original props
+        return <Component {...params} />;
+      }}
+    </Route>
+  );
+}

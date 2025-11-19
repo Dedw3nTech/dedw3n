@@ -1,7 +1,7 @@
 import { lazy } from 'react';
 import { Route, Switch } from 'wouter';
 import { SEOHead } from '@/components/seo/SEOHead';
-import { ProtectedRoute, AdminOnlyRoute } from '@/lib/protected-route';
+import { ProtectedRoute, AdminOnlyRoute, FinanceOnlyRoute } from '@/lib/protected-route';
 
 const DatingPage = lazy(() => import('@/pages/dating'));
 const DatingProfilePage = lazy(() => import('@/pages/dating-profile'));
@@ -54,10 +54,7 @@ export function SpecialtyRoutes({ params }: any) {
       
       <ProtectedRoute path="/government-profile" component={GovernmentProfilePage} />
       
-      <Route path="/finance">
-        <SEOHead title="Finance - Dedw3n" description="Access comprehensive financial services including banking, insurance, loans, investing, cryptocurrency, and international remittance through Dedw3n's trusted platform." />
-        <FinancePage />
-      </Route>
+      <FinanceOnlyRoute path="/finance" component={FinancePage} />
       
       <Route path="/erp">
         <SEOHead title="Enterprise Resource Planning - Dedw3n" description="Integrated business management system connecting all core operations including accounting, HR, procurement, supply chain, and government services." />

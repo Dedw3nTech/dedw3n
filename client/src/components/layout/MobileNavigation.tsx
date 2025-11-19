@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useMemo } from "react";
 import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
+import { useAuth } from "@/hooks/use-auth";
 import {
   Tooltip,
   TooltipContent,
@@ -10,6 +11,7 @@ import {
 
 export default function MobileNavigation() {
   const [location] = useLocation();
+  const { user } = useAuth();
   
   // Define translatable texts with stable references
   const mobileNavTexts = useMemo(() => [
@@ -24,8 +26,11 @@ export default function MobileNavigation() {
   // Use optimized batch translation for optimal performance
   const { translations } = useMasterBatchTranslation(mobileNavTexts, 'normal');
   
+  // Check if user has access to Finance section (Admin or Serruti only)
+  const hasFinanceAccess = user?.role === 'admin' || user?.username === 'Serruti';
+  
   // Navigation items configuration
-  const navItems = useMemo(() => [
+  const allNavItems = useMemo(() => [
     { href: "/finance", icon: "ri-bank-line", label: translations[0] || "Finance" },
     { href: "/government", icon: "ri-government-line", label: translations[1] || "Government" },
     { href: "/lifestyle", icon: "ri-heart-pulse-line", label: translations[2] || "Lifestyle" },
@@ -33,6 +38,12 @@ export default function MobileNavigation() {
     { href: "/marketplace", icon: "ri-store-2-line", label: translations[4] || "Marketplace" },
     { href: "/community", icon: "ri-group-line", label: translations[5] || "Community" }
   ], [translations]);
+  
+  // Filter out Finance section for non-authorized users
+  const navItems = useMemo(() => 
+    allNavItems.filter(item => item.href !== '/finance' || hasFinanceAccess),
+    [allNavItems, hasFinanceAccess]
+  );
 
   return (
     <>
