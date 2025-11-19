@@ -1866,7 +1866,7 @@ export default function AddProduct() {
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
-          {/* Offering Type Selection - Conditional based on government service */}
+          {/* Offering Type Selection - Conditional based on government service or lifestyle/services sections */}
           {isGovernmentService ? (
             <div className="mb-6">
               <FormField
@@ -1900,7 +1900,7 @@ export default function AddProduct() {
                 )}
               />
             </div>
-          ) : (
+          ) : (activeSection === 'lifestyle' || activeSection === 'services') ? null : (
             <div className="mb-6">
               <FormField
                 control={form.control}
@@ -1941,8 +1941,377 @@ export default function AddProduct() {
             </div>
           )}
 
-          {/* Category Selection - Only shown for non-government services */}
-          {!isGovernmentService && (
+          {/* Unique Lifestyle Forms */}
+          {activeSection === 'lifestyle' && selectedLifestyleType && (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>
+                  {selectedLifestyleType === 'food' && t("Food Ordering Details")}
+                  {selectedLifestyleType === 'groceries' && t("Grocery Product Details")}
+                  {selectedLifestyleType === 'reservation' && t("Reservation Details")}
+                </CardTitle>
+                <CardDescription>
+                  {selectedLifestyleType === 'food' && t("Provide details about the food item or meal")}
+                  {selectedLifestyleType === 'groceries' && t("Provide details about the grocery product")}
+                  {selectedLifestyleType === 'reservation' && t("Provide details about the reservation service")}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Subcategory Selection */}
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => {
+                    const categories = selectedLifestyleType === 'food' 
+                      ? LIFESTYLE_FOOD_CATEGORIES 
+                      : selectedLifestyleType === 'groceries'
+                      ? LIFESTYLE_GROCERY_CATEGORIES
+                      : LIFESTYLE_RESERVATION_CATEGORIES;
+                    
+                    return (
+                      <FormItem>
+                        <FormLabel>
+                          {selectedLifestyleType === 'food' && t("Food Category")}
+                          {selectedLifestyleType === 'groceries' && t("Grocery Category")}
+                          {selectedLifestyleType === 'reservation' && t("Reservation Type")}
+                        </FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={t("Select category")} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {categories.map((cat) => (
+                              <SelectItem key={cat.value} value={cat.value}>
+                                {t(cat.label)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
+                />
+
+                {/* Food Ordering Form */}
+                {selectedLifestyleType === 'food' && (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.cuisine_type"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Cuisine Type")}</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t("Select cuisine")} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {['African', 'Asian', 'American', 'European', 'Mediterranean', 'Latin', 'Fusion', 'Other'].map((opt) => (
+                                  <SelectItem key={opt} value={opt}>{t(opt)}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.meal_type"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Meal Type")}</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t("Select meal type")} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert', 'Beverage'].map((opt) => (
+                                  <SelectItem key={opt} value={opt}>{t(opt)}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.spice_level"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Spice Level")}</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t("Select spice level")} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {['Mild', 'Medium', 'Hot', 'Extra Hot'].map((opt) => (
+                                  <SelectItem key={opt} value={opt}>{t(opt)}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.preparation_time"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Preparation Time (mins)")}</FormLabel>
+                            <FormControl>
+                              <Input type="number" placeholder={t("e.g., 30")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.dietary_options"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-2">
+                            <FormLabel>{t("Dietary Options")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("e.g., Vegetarian, Vegan, Halal, Gluten-Free")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Groceries Form */}
+                {selectedLifestyleType === 'groceries' && (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.brand"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Brand")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("Brand name")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.weight"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Weight/Size")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("e.g., 1kg, 500g, 2L")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.origin"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Origin")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("Country/Region")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.organic"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Organic")}</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t("Select")} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="Yes">{t("Yes")}</SelectItem>
+                                <SelectItem value="No">{t("No")}</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.expiry_date"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Expiry Date")}</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.storage_temp"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Storage Temperature")}</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t("Select")} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {['Refrigerated', 'Frozen', 'Room Temperature'].map((opt) => (
+                                  <SelectItem key={opt} value={opt}>{t(opt)}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.allergens"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-2">
+                            <FormLabel>{t("Allergens")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("e.g., Nuts, Dairy, Gluten, Soy")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Reservation Form */}
+                {selectedLifestyleType === 'reservation' && (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.restaurant_name"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-2">
+                            <FormLabel>{t("Venue/Business Name")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("Name of restaurant, hotel, or venue")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.cuisine_type"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Cuisine Type / Service Type")}</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t("Select type")} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {['African', 'Asian', 'American', 'European', 'Mediterranean', 'Latin', 'Fusion', 'Hotel', 'Spa', 'Event Space', 'Other'].map((opt) => (
+                                  <SelectItem key={opt} value={opt}>{t(opt)}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.seating_capacity"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Capacity")}</FormLabel>
+                            <FormControl>
+                              <Input type="number" placeholder={t("e.g., 4 people")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.time_slot"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Available Time Slots")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("e.g., 7:00 PM - 9:00 PM")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.location"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-2">
+                            <FormLabel>{t("Location/Address")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("Full address or area")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Category Selection - Hidden for lifestyle/services sections as they use custom forms */}
+          {!isGovernmentService && !(activeSection === 'lifestyle' && selectedLifestyleType) && !(activeSection === 'services' && selectedServiceType) && (
             <div className="mb-6">
               <FormField
                 control={form.control}
@@ -1994,8 +2363,8 @@ export default function AddProduct() {
             </div>
           )}
 
-          {/* Dynamic Category-Specific Fields */}
-          {form.watch('category') && (() => {
+          {/* Dynamic Category-Specific Fields - Hidden for lifestyle/services as they have custom forms */}
+          {form.watch('category') && !(activeSection === 'lifestyle' && selectedLifestyleType) && !(activeSection === 'services' && selectedServiceType) && (() => {
             const offeringType = form.watch('offeringType');
             const selectedCategory = form.watch('category');
             let categories;
