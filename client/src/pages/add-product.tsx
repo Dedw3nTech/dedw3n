@@ -3566,72 +3566,102 @@ export default function AddProduct() {
 
               {/* Service-specific fields */}
               {form.watch('offeringType') === 'service' && (
-                <Card>
+                <Card className={(activeSection === 'services' && selectedServiceType === 'jobs') ? 'opacity-50' : ''}>
                   <CardHeader>
-                    <CardTitle>{t("Service Details")}</CardTitle>
+                    <CardTitle className={(activeSection === 'services' && selectedServiceType === 'jobs') ? 'text-gray-400' : ''}>
+                      {t("Service Details")}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
                         name="serviceDuration"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("Service Duration")}</FormLabel>
-                            <FormControl>
-                              <Input placeholder={t("e.g., 1 hour, 30 minutes")} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        render={({ field }) => {
+                          const isJobsForm = activeSection === 'services' && selectedServiceType === 'jobs';
+                          return (
+                            <FormItem>
+                              <FormLabel className={isJobsForm ? 'text-gray-400' : ''}>
+                                {t("Service Duration")}
+                              </FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder={t("e.g., 1 hour, 30 minutes")} 
+                                  {...field} 
+                                  disabled={isJobsForm}
+                                  className={isJobsForm ? 'cursor-not-allowed bg-gray-50' : ''}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }}
                       />
                       <FormField
                         control={form.control}
                         name="serviceType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("Service Type")}</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder={t("Select type")} />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="onetime">{t("One-time Service")}</SelectItem>
-                                <SelectItem value="recurring">{t("Recurring Service")}</SelectItem>
-                                <SelectItem value="subscription">{t("Subscription")}</SelectItem>
-                                <SelectItem value="consultation">{t("Consultation")}</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        render={({ field }) => {
+                          const isJobsForm = activeSection === 'services' && selectedServiceType === 'jobs';
+                          return (
+                            <FormItem>
+                              <FormLabel className={isJobsForm ? 'text-gray-400' : ''}>
+                                {t("Service Type")}
+                              </FormLabel>
+                              <Select 
+                                onValueChange={isJobsForm ? undefined : field.onChange} 
+                                defaultValue={field.value}
+                                disabled={isJobsForm}
+                              >
+                                <FormControl>
+                                  <SelectTrigger className={isJobsForm ? 'cursor-not-allowed bg-gray-50' : ''}>
+                                    <SelectValue placeholder={t("Select type")} />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="onetime">{t("One-time Service")}</SelectItem>
+                                  <SelectItem value="recurring">{t("Recurring Service")}</SelectItem>
+                                  <SelectItem value="subscription">{t("Subscription")}</SelectItem>
+                                  <SelectItem value="consultation">{t("Consultation")}</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }}
                       />
                     </div>
                     
                     <FormField
                       control={form.control}
                       name="serviceLocation"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("Service Location")}</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder={t("Select location type")} />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="online">{t("Online/Remote")}</SelectItem>
-                              <SelectItem value="onsite">{t("On-site/Client Location")}</SelectItem>
-                              <SelectItem value="office">{t("My Office/Studio")}</SelectItem>
-                              <SelectItem value="flexible">{t("Flexible")}</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      render={({ field }) => {
+                        const isJobsForm = activeSection === 'services' && selectedServiceType === 'jobs';
+                        return (
+                          <FormItem>
+                            <FormLabel className={isJobsForm ? 'text-gray-400' : ''}>
+                              {t("Service Location")}
+                            </FormLabel>
+                            <Select 
+                              onValueChange={isJobsForm ? undefined : field.onChange} 
+                              defaultValue={field.value}
+                              disabled={isJobsForm}
+                            >
+                              <FormControl>
+                                <SelectTrigger className={isJobsForm ? 'cursor-not-allowed bg-gray-50' : ''}>
+                                  <SelectValue placeholder={t("Select location type")} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="online">{t("Online/Remote")}</SelectItem>
+                                <SelectItem value="onsite">{t("On-site/Client Location")}</SelectItem>
+                                <SelectItem value="office">{t("My Office/Studio")}</SelectItem>
+                                <SelectItem value="flexible">{t("Flexible")}</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
                     />
                   </CardContent>
                 </Card>
