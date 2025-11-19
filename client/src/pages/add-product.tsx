@@ -3984,11 +3984,11 @@ export default function AddProduct() {
           </div>
           
           {/* Publish Button */}
-          <div className="flex justify-center mt-8">
+          <div className="mt-8">
             <Button 
               type="submit" 
               disabled={createProductMutation.isPending} 
-              className="w-full max-w-md bg-black hover:bg-gray-800 text-white"
+              className="w-full bg-black hover:bg-gray-800 text-white"
               onClick={(e) => {
                 console.log('🔘 Publish button clicked!', e);
                 console.log('📊 Form state:', form.formState);
