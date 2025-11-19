@@ -262,8 +262,9 @@ export function ServicesNav({
             </div>
           </div>
 
-          <div className="flex-shrink-0 relative">
+          <div className="flex-shrink-0 relative min-w-[200px] max-w-md">
             <form onSubmit={handleSearchSubmit} className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 ref={searchRef}
                 type="text"
@@ -271,10 +272,15 @@ export function ServicesNav({
                 value={searchTerm}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 onFocus={handleSearchFocus}
-                className="w-[200px] lg:w-[250px] xl:w-[300px] pl-10 pr-4 h-10 bg-white border-gray-300 focus:border-black transition-colors"
+                className="pl-10 h-10 pr-4 border-0 border-b-2 border-black rounded-none bg-transparent focus:border-black focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none shadow-none"
                 data-testid="input-search-desktop"
+                disabled={isSearching}
               />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              {isSearching && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div className="animate-spin h-4 w-4 border-2 border-gray-300 border-t-gray-600 rounded-full"></div>
+                </div>
+              )}
             </form>
           </div>
         </div>
