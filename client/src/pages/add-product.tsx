@@ -2343,6 +2343,35 @@ export default function AddProduct() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Offer Type - Jobs Only (First Field) */}
+                {selectedServiceType === 'jobs' && (
+                  <FormField
+                    control={form.control}
+                    name="categoryFields.job_posting_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t("Offer")}</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-job-posting-type">
+                              <SelectValue placeholder={t("Select offer type")} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Looking for a Job" data-testid="option-looking-for-job">
+                              {t("Looking for a Job")}
+                            </SelectItem>
+                            <SelectItem value="Recruiting" data-testid="option-recruiting">
+                              {t("Recruiting")}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
                 {/* Subcategory Selection */}
                 <FormField
                   control={form.control}
@@ -2382,32 +2411,6 @@ export default function AddProduct() {
                 {selectedServiceType === 'jobs' && (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="categoryFields.job_posting_type"
-                        render={({ field }) => (
-                          <FormItem className="md:col-span-2">
-                            <FormLabel>{t("I am")}</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger data-testid="select-job-posting-type">
-                                  <SelectValue placeholder={t("Select your role")} />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="Looking for a Job" data-testid="option-looking-for-job">
-                                  {t("Looking for a Job")}
-                                </SelectItem>
-                                <SelectItem value="Recruiting" data-testid="option-recruiting">
-                                  {t("Recruiting")}
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
                       <FormField
                         control={form.control}
                         name="categoryFields.job_title"
