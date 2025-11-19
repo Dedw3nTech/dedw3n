@@ -3232,6 +3232,165 @@ export default function AddProduct() {
                       }}
                     />
                   </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="categoryFields.hourly_rate"
+                      render={({ field }) => {
+                        const isJobsForm = activeSection === 'services' && selectedServiceType === 'jobs';
+                        return (
+                          <FormItem>
+                            <FormLabel className={isJobsForm ? 'text-gray-400' : ''}>
+                              {t("Hourly Rate")}
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                placeholder="0.00"
+                                {...field}
+                                disabled={isJobsForm}
+                                className={isJobsForm ? 'cursor-not-allowed bg-gray-50' : ''}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="categoryFields.daily_rate"
+                      render={({ field }) => {
+                        const isJobsForm = activeSection === 'services' && selectedServiceType === 'jobs';
+                        return (
+                          <FormItem>
+                            <FormLabel className={isJobsForm ? 'text-gray-400' : ''}>
+                              {t("Daily Rate")}
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                placeholder="0.00"
+                                {...field}
+                                disabled={isJobsForm}
+                                className={isJobsForm ? 'cursor-not-allowed bg-gray-50' : ''}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="categoryFields.project_rate"
+                      render={({ field }) => {
+                        const isJobsForm = activeSection === 'services' && selectedServiceType === 'jobs';
+                        return (
+                          <FormItem>
+                            <FormLabel className={isJobsForm ? 'text-gray-400' : ''}>
+                              {t("Project Rate")}
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                placeholder="0.00"
+                                {...field}
+                                disabled={isJobsForm}
+                                className={isJobsForm ? 'cursor-not-allowed bg-gray-50' : ''}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="categoryFields.modifications_included"
+                    render={({ field }) => {
+                      const isJobsForm = activeSection === 'services' && selectedServiceType === 'jobs';
+                      return (
+                        <FormItem className={`flex flex-row items-center justify-between rounded-lg border p-4 ${isJobsForm ? 'opacity-50 bg-gray-50' : ''}`}>
+                          <div className="space-y-0.5">
+                            <FormLabel className={`text-base ${isJobsForm ? 'text-gray-400' : ''}`}>
+                              {t("Modifications Included")}
+                            </FormLabel>
+                            <p className={`text-sm ${isJobsForm ? 'text-gray-400' : 'text-muted-foreground'}`}>
+                              {t("Include modifications/revisions in the price")}
+                            </p>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value === 'Yes'}
+                              onCheckedChange={(checked) => {
+                                if (!isJobsForm) {
+                                  field.onChange(checked ? 'Yes' : 'No');
+                                }
+                              }}
+                              disabled={isJobsForm}
+                              className={isJobsForm ? 'cursor-not-allowed' : ''}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      );
+                    }}
+                  />
+
+                  {form.watch('categoryFields.modifications_included') === 'No' && (
+                    <div className="space-y-4 rounded-lg border p-4 bg-gray-50">
+                      <h4 className="font-medium">{t("Modification Pricing")}</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="categoryFields.modification_price_per_hour"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t("Per Hour")}</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  placeholder="0.00"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="categoryFields.modification_price_per_revision"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t("Per Revision")}</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  placeholder="0.00"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  )}
                   
                   <FormField
                     control={form.control}
