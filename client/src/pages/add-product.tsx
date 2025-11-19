@@ -3771,19 +3771,26 @@ export default function AddProduct() {
                 <FormField
                   control={form.control}
                   name="isOnSale"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-sm font-normal">On Sale</FormLabel>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const isJobsForm = activeSection === 'services' && selectedServiceType === 'jobs';
+                    return (
+                      <FormItem className={`flex flex-row items-center justify-between ${isJobsForm ? 'opacity-50' : ''}`}>
+                        <div className="space-y-0.5">
+                          <FormLabel className={`text-sm font-normal ${isJobsForm ? 'text-gray-400' : ''}`}>
+                            {t('On Sale')}
+                          </FormLabel>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={isJobsForm ? undefined : field.onChange}
+                            disabled={isJobsForm}
+                            className={isJobsForm ? 'cursor-not-allowed' : ''}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    );
+                  }}
                 />
               </CardContent>
             </Card>
