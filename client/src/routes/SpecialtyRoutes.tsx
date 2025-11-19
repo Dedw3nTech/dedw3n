@@ -9,6 +9,7 @@ const DatingProfileView = lazy(() => import('@/pages/dating-profile-view'));
 const MyMatches = lazy(() => import('@/pages/MyMatches').then(m => ({ default: m.MyMatches })));
 const AIDatingTools = lazy(() => import('@/components/AIDatingTools'));
 const LifestylePage = lazy(() => import('@/pages/lifestyle'));
+const LifestyleProfilePage = lazy(() => import('@/pages/LifestyleProfile'));
 const OrderFoodPage = lazy(() => import('@/pages/order-food'));
 const GroceriesPage = lazy(() => import('@/pages/groceries'));
 const ReservationPage = lazy(() => import('@/pages/reservations'));
@@ -82,6 +83,7 @@ export function SpecialtyRoutes({ params }: any) {
         <SEOHead title="Reservations - Dedw3n" description="Make reservations for hotels, venues, events, and other services." />
         <ReservationPage />
       </Route>
+      <ProtectedRoute path="/lifestyle-profile" component={LifestyleProfilePage} />
       <Route path="/lifestyle" component={LifestylePage} />
       
       {/* Services routes - Jobs and Freelance */}

@@ -98,7 +98,7 @@ export function LifestyleNav({
   }, [setSelectedCategory, setLocation]);
 
   const handleProfileClick = useCallback(() => {
-    setLocation("/profile");
+    setLocation("/lifestyle-profile");
   }, [setLocation]);
 
   const handleAddService = useCallback(() => {
