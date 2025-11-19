@@ -849,11 +849,11 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
                 canAddService && (
                   <Button
                     onClick={handleAddProduct}
-                    className="h-16 px-6 bg-transparent text-black hover:bg-gray-100 transition-colors flex items-center gap-3 font-medium"
-                    style={{ fontSize: '20px' }}
+                    className="px-4 bg-transparent text-black hover:bg-gray-100 transition-colors flex items-center gap-2 font-medium"
+                    style={{ height: '45px', fontSize: '15px' }}
                     data-testid="button-add-service-mobile"
                   >
-                    <Plus className="h-7 w-7" />
+                    <Plus style={{ height: '21px', width: '21px' }} />
                     {translatedLabels.addServiceText}
                   </Button>
                 )
