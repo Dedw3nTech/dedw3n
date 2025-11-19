@@ -195,7 +195,7 @@ export default function OptimizedNavigation() {
         <div className="flex h-20 items-center justify-between">
           {/* Left corner - Logo */}
           <div className="flex items-center">
-            <Logo size="md" withText={false} variant="navigation" className="h-12 w-auto" />
+            <Logo size="md" withText={false} className="h-12 w-auto" />
           </div>
 
           {/* Right side - Navigation and settings */}

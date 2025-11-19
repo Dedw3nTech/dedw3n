@@ -268,7 +268,7 @@ function FooterContent() {
           
           {/* Copyright Section - Bottom Right */}
           <div className="flex justify-center md:justify-end pt-4 border-t border-gray-100">
-            <p className="text-sm text-gray-600">© 2025 <span className="text-black font-medium">Dedw3n Ltd.</span> {allRightsReservedText}</p>
+            <p className="text-sm text-gray-600">© 2025 <span className="text-black font-medium">Dedw3n</span> {allRightsReservedText}</p>
           </div>
         </div>
       </div>
