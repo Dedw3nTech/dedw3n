@@ -359,7 +359,10 @@ export default function DrCongo() {
             </div>
           ) : displayedServices.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <h3 className="text-lg font-normal text-gray-900 mb-2">No services available</h3>
+              <div className="text-gray-500 mb-4">No products found matching your criteria</div>
+              <Button variant="ghost" onClick={resetFilters}>
+                Reset Filters
+              </Button>
             </div>
           ) : (
             <div className={`grid gap-6 ${
