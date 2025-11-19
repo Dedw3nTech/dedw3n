@@ -842,6 +842,10 @@ export default function AddProduct() {
       bedrooms: '',
       bathrooms: '',
       propertyAge: '',
+      // Category-specific fields
+      categoryFields: {
+        modifications_included: 'Yes',
+      },
     },
   });
 
