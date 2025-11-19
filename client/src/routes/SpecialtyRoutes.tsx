@@ -10,6 +10,7 @@ const MyMatches = lazy(() => import('@/pages/MyMatches').then(m => ({ default: m
 const AIDatingTools = lazy(() => import('@/components/AIDatingTools'));
 const LifestylePage = lazy(() => import('@/pages/lifestyle'));
 const LifestyleProfilePage = lazy(() => import('@/pages/LifestyleProfile'));
+const GovernmentProfilePage = lazy(() => import('@/pages/GovernmentProfile'));
 const OrderFoodPage = lazy(() => import('@/pages/order-food'));
 const GroceriesPage = lazy(() => import('@/pages/groceries'));
 const ReservationPage = lazy(() => import('@/pages/reservations'));
@@ -49,6 +50,8 @@ export function SpecialtyRoutes({ params }: any) {
         <SEOHead title="Dr Congo Services - Dedw3n" description="Access Dr Congo services including certificates, passports, and supplementary judgment documents through Dedw3n's trusted platform." />
         <DrCongoPage />
       </Route>
+      
+      <ProtectedRoute path="/government-profile" component={GovernmentProfilePage} />
       
       <Route path="/finance">
         <SEOHead title="Finance - Dedw3n" description="Access comprehensive financial services including banking, insurance, loans, investing, cryptocurrency, and international remittance through Dedw3n's trusted platform." />

@@ -171,8 +171,12 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
     : (messagesNotifications?.count || 0) + (generalNotifications?.count || 0);
 
   const handleProfileClick = useCallback(() => {
-    setLocation("/profile");
-  }, [setLocation]);
+    if (isGovernmentPage) {
+      setLocation("/government-profile");
+    } else {
+      setLocation("/profile");
+    }
+  }, [isGovernmentPage, setLocation]);
 
   const handleAddProduct = useCallback(() => {
     // For government pages, only authorized users can add services
