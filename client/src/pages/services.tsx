@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Briefcase, MapPin, Filter } from 'lucide-react';
+import { Briefcase, MapPin, Filter, SlidersHorizontal } from 'lucide-react';
 import { useMasterBatchTranslation } from '@/hooks/use-master-translation';
 import { ServicesNav } from '@/components/layout/ServicesNav';
 import { Badge } from '@/components/ui/badge';
@@ -251,9 +251,9 @@ export default function ServicesPage() {
               {/* Filter button */}
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="sm" className="flex items-center gap-2 border-0 hover:bg-transparent">
-                    <Filter className="h-4 w-4" />
-                    Filter
+                  <Button variant="ghost" className="flex items-center gap-2 text-black hover:bg-gray-100 h-auto py-2 px-3">
+                    <SlidersHorizontal className="h-5 w-5" />
+                    <span className="text-base">Filter</span>
                   </Button>
                 </SheetTrigger>
                 <SheetContent className="overflow-y-auto">
