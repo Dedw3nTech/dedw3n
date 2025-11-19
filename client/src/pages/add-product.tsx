@@ -833,8 +833,8 @@ export default function AddProduct() {
       serviceDuration: '',
       serviceType: undefined,
       serviceLocation: undefined,
-      vatIncluded: false,
-      vatRate: undefined,
+      vatIncluded: true,
+      vatRate: 20,
       // Vehicle fields
       // Property fields
       propertyType: '',
@@ -1545,10 +1545,9 @@ export default function AddProduct() {
       return availableMarketplaces[0] || 'rqst'; // Default to rqst
     }
     
-    // Services → Freelance: prefer b2b, then c2c, then rqst, then any available
+    // Services → Freelance: prefer b2b, then rqst (NEVER c2c to keep Freelance independent from Friend to Friend)
     if (subcategoryType === 'freelance') {
       if (hasBusinessVendor && availableMarketplaces.includes('b2b')) return 'b2b';
-      if (hasPrivateVendor && availableMarketplaces.includes('c2c')) return 'c2c';
       if (availableMarketplaces.includes('rqst')) return 'rqst';
       return availableMarketplaces[0] || 'rqst'; // Default to rqst
     }
@@ -1640,11 +1639,9 @@ export default function AddProduct() {
         setActiveSection('services');
         form.setValue('offeringType', 'service');
         form.setValue('category', ''); // Reset category to force user to select from freelance categories
-        // Set marketplace - prefer b2b, then c2c, then rqst
+        // Set marketplace - prefer b2b, then rqst (NEVER c2c to keep Freelance independent from Friend to Friend)
         const marketplace = availableMarketplaces.find(m => m.value === 'b2b')
           ? 'b2b'
-          : availableMarketplaces.find(m => m.value === 'c2c')
-          ? 'c2c'
           : availableMarketplaces.find(m => m.value === 'rqst')
           ? 'rqst'
           : availableMarketplaces[0]?.value || 'rqst';
