@@ -1571,6 +1571,8 @@ export default function AddProduct() {
       id: 'order-food',
       label: t("Order Food"),
       onClick: () => {
+        // Clear other section states for clean highlighting
+        setSelectedServiceType(null);
         setSelectedLifestyleType('food');
         setActiveSection('lifestyle');
         form.setValue('offeringType', 'product');
@@ -1586,6 +1588,8 @@ export default function AddProduct() {
       id: 'groceries',
       label: t("Groceries"),
       onClick: () => {
+        // Clear other section states for clean highlighting
+        setSelectedServiceType(null);
         setSelectedLifestyleType('groceries');
         setActiveSection('lifestyle');
         form.setValue('offeringType', 'product');
@@ -1601,6 +1605,8 @@ export default function AddProduct() {
       id: 'reservation',
       label: t("Reservation"),
       onClick: () => {
+        // Clear other section states for clean highlighting
+        setSelectedServiceType(null);
         setSelectedLifestyleType('reservation');
         setActiveSection('lifestyle');
         form.setValue('offeringType', 'service');
@@ -1620,6 +1626,8 @@ export default function AddProduct() {
       id: 'jobs',
       label: t("Jobs"),
       onClick: () => {
+        // Clear other section states for clean highlighting
+        setSelectedLifestyleType(null);
         setSelectedServiceType('jobs');
         setActiveSection('services');
         form.setValue('offeringType', 'service');
@@ -1635,6 +1643,8 @@ export default function AddProduct() {
       id: 'freelance',
       label: t("Freelance"),
       onClick: () => {
+        // Clear other section states for clean highlighting
+        setSelectedLifestyleType(null);
         setSelectedServiceType('freelance');
         setActiveSection('services');
         form.setValue('offeringType', 'service');
@@ -1792,6 +1802,10 @@ export default function AddProduct() {
                                   type="button"
                                   onClick={() => {
                                     if (subItem.marketplaceValue) {
+                                      // Clear other section states for clean highlighting
+                                      setSelectedLifestyleType(null);
+                                      setSelectedServiceType(null);
+                                      
                                       form.setValue('marketplace', subItem.marketplaceValue);
                                       
                                       // Special handling for government services
@@ -1799,6 +1813,9 @@ export default function AddProduct() {
                                         setActiveSection('government');
                                         form.setValue('offeringType', 'service');
                                         form.setValue('category', 'gov-document');
+                                      } else if (section.id === 'marketplace') {
+                                        // Set active section to marketplace for marketplace items
+                                        setActiveSection('marketplace');
                                       }
                                     } else if (subItem.onClick) {
                                       subItem.onClick();
