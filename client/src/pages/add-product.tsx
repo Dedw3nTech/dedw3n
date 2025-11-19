@@ -1535,6 +1535,7 @@ export default function AddProduct() {
         setSelectedLifestyleType('food');
         setActiveSection('lifestyle');
         form.setValue('offeringType', 'product');
+        form.setValue('category', ''); // Reset category to force user to select from food categories
         // Set marketplace - prefer b2c, fallback to rqst
         const marketplace = availableMarketplaces.find(m => m.value === 'b2c') 
           ? 'b2c' 
@@ -1549,6 +1550,7 @@ export default function AddProduct() {
         setSelectedLifestyleType('groceries');
         setActiveSection('lifestyle');
         form.setValue('offeringType', 'product');
+        form.setValue('category', ''); // Reset category to force user to select from grocery categories
         // Set marketplace - prefer b2c, fallback to rqst
         const marketplace = availableMarketplaces.find(m => m.value === 'b2c') 
           ? 'b2c' 
@@ -1563,6 +1565,7 @@ export default function AddProduct() {
         setSelectedLifestyleType('reservation');
         setActiveSection('lifestyle');
         form.setValue('offeringType', 'service');
+        form.setValue('category', ''); // Reset category to force user to select from reservation categories
         // Set marketplace - prefer b2c, fallback to rqst
         const marketplace = availableMarketplaces.find(m => m.value === 'b2c') 
           ? 'b2c' 
@@ -1581,6 +1584,7 @@ export default function AddProduct() {
         setSelectedServiceType('jobs');
         setActiveSection('services');
         form.setValue('offeringType', 'service');
+        form.setValue('category', ''); // Reset category to force user to select from job categories
         // Set marketplace - prefer rqst for jobs
         const marketplace = availableMarketplaces.find(m => m.value === 'rqst') 
           ? 'rqst' 
@@ -1595,6 +1599,7 @@ export default function AddProduct() {
         setSelectedServiceType('freelance');
         setActiveSection('services');
         form.setValue('offeringType', 'service');
+        form.setValue('category', ''); // Reset category to force user to select from freelance categories
         // Set marketplace - prefer b2b, then c2c, then rqst
         const marketplace = availableMarketplaces.find(m => m.value === 'b2b')
           ? 'b2b'
