@@ -47,7 +47,7 @@ export function LifestyleNav({
     "Activities",
     "Food Delivery",
     "Transportation",
-    "Search lifestyle services...",
+    "Search",
     "Add Service",
     "Cancel",
     "TRENDING SERVICES",
