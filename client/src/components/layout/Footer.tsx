@@ -55,7 +55,7 @@ function FooterContent() {
     "Loading...",
     "Unknown",
     "Education Policy",
-    "Intellectual Property Claims Policy",
+    "Intel Prop Claims Policy",
     "Ads Terms of Service"
   ], []);
 
