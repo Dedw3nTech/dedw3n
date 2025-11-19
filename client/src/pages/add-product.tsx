@@ -3163,9 +3163,11 @@ export default function AddProduct() {
               </Card>
 
               {/* Pricing Section */}
-              <Card>
+              <Card className={(activeSection === 'services' && selectedServiceType === 'jobs') ? 'opacity-50' : ''}>
                 <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>{t("Pricing")}</CardTitle>
+                  <CardTitle className={(activeSection === 'services' && selectedServiceType === 'jobs') ? 'text-gray-400' : ''}>
+                    {t("Pricing")}
+                  </CardTitle>
                   <CurrencySelector />
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -3173,45 +3175,61 @@ export default function AddProduct() {
                     <FormField
                       control={form.control}
                       name="price"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("Price")}</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              placeholder="0.00"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      render={({ field }) => {
+                        const isJobsForm = activeSection === 'services' && selectedServiceType === 'jobs';
+                        return (
+                          <FormItem>
+                            <FormLabel className={isJobsForm ? 'text-gray-400' : ''}>
+                              {t("Price")}
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                placeholder="0.00"
+                                {...field}
+                                disabled={isJobsForm}
+                                className={isJobsForm ? 'cursor-not-allowed bg-gray-50' : ''}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
                     />
                     <FormField
                       control={form.control}
                       name="discountPrice"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("Compare-at price")}</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              placeholder="0.00"
-                              {...field}
-                              value={field.value || ''}
-                              onChange={(e) => {
-                                const value = e.target.value === '' ? undefined : parseFloat(e.target.value);
-                                field.onChange(value);
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      render={({ field }) => {
+                        const isJobsForm = activeSection === 'services' && selectedServiceType === 'jobs';
+                        return (
+                          <FormItem>
+                            <FormLabel className={isJobsForm ? 'text-gray-400' : ''}>
+                              {t("Compare-at price")}
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                placeholder="0.00"
+                                {...field}
+                                value={field.value || ''}
+                                onChange={(e) => {
+                                  if (!isJobsForm) {
+                                    const value = e.target.value === '' ? undefined : parseFloat(e.target.value);
+                                    field.onChange(value);
+                                  }
+                                }}
+                                disabled={isJobsForm}
+                                className={isJobsForm ? 'cursor-not-allowed bg-gray-50' : ''}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
                     />
                   </div>
                   
@@ -3220,22 +3238,24 @@ export default function AddProduct() {
                     name="vatIncluded"
                     render={({ field }) => {
                       const isC2C = form.watch('marketplace') === 'c2c';
+                      const isJobsForm = activeSection === 'services' && selectedServiceType === 'jobs';
+                      const isDisabled = isC2C || isJobsForm;
                       return (
-                        <FormItem className={`flex flex-row items-center justify-between rounded-lg border p-4 ${isC2C ? 'opacity-50 bg-gray-50' : ''}`}>
+                        <FormItem className={`flex flex-row items-center justify-between rounded-lg border p-4 ${isDisabled ? 'opacity-50 bg-gray-50' : ''}`}>
                           <div className="space-y-0.5">
-                            <FormLabel className={`text-base ${isC2C ? 'text-gray-400' : ''}`}>
+                            <FormLabel className={`text-base ${isDisabled ? 'text-gray-400' : ''}`}>
                               {t("VAT included in price")}
                             </FormLabel>
-                            <p className={`text-sm ${isC2C ? 'text-gray-400' : 'text-muted-foreground'}`}>
+                            <p className={`text-sm ${isDisabled ? 'text-gray-400' : 'text-muted-foreground'}`}>
                               {isC2C ? t("Not applicable for Friend to Friend marketplace") : t("Enable to include VAT/tax")}
                             </p>
                           </div>
                           <FormControl>
                             <Switch
-                              checked={isC2C ? false : field.value}
-                              onCheckedChange={isC2C ? undefined : field.onChange}
-                              disabled={isC2C}
-                              className={isC2C ? 'cursor-not-allowed' : ''}
+                              checked={isDisabled ? false : field.value}
+                              onCheckedChange={isDisabled ? undefined : field.onChange}
+                              disabled={isDisabled}
+                              className={isDisabled ? 'cursor-not-allowed' : ''}
                             />
                           </FormControl>
                         </FormItem>
@@ -3247,29 +3267,38 @@ export default function AddProduct() {
                     <FormField
                       control={form.control}
                       name="vatRate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("VAT Rate (%)")}</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              max="100"
-                              placeholder="20.00"
-                              {...field}
-                              onChange={(e) => {
-                                const value = e.target.value === '' ? undefined : parseFloat(e.target.value);
-                                field.onChange(value);
-                              }}
-                            />
-                          </FormControl>
-                          <p className="text-sm text-muted-foreground">
-                            {t("Standard UK VAT rate is 20%")}
-                          </p>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      render={({ field }) => {
+                        const isJobsForm = activeSection === 'services' && selectedServiceType === 'jobs';
+                        return (
+                          <FormItem>
+                            <FormLabel className={isJobsForm ? 'text-gray-400' : ''}>
+                              {t("VAT Rate (%)")}
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                max="100"
+                                placeholder="20.00"
+                                {...field}
+                                onChange={(e) => {
+                                  if (!isJobsForm) {
+                                    const value = e.target.value === '' ? undefined : parseFloat(e.target.value);
+                                    field.onChange(value);
+                                  }
+                                }}
+                                disabled={isJobsForm}
+                                className={isJobsForm ? 'cursor-not-allowed bg-gray-50' : ''}
+                              />
+                            </FormControl>
+                            <p className={`text-sm ${isJobsForm ? 'text-gray-400' : 'text-muted-foreground'}`}>
+                              {t("Standard UK VAT rate is 20%")}
+                            </p>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
                     />
                   )}
 
