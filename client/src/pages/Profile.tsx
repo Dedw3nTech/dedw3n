@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { UserAvatar } from '@/components/ui/user-avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Heart, 
   ShoppingCart, 
@@ -21,7 +22,8 @@ import {
   ChevronDown, 
   ChevronRight,
   Edit3,
-  MessageSquare
+  MessageSquare,
+  User
 } from 'lucide-react';
 
 const ProfilePage = () => {
@@ -307,10 +309,96 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Left Sidebar */}
-          <div className="w-full lg:w-80">
+      <div className="container mx-auto px-4 py-4 md:py-8">
+        {/* Mobile Navigation Tabs */}
+        <div className="lg:hidden mb-4">
+          <Tabs value={activeSection} onValueChange={setActiveSection} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 h-auto gap-1 bg-gray-100 p-1">
+              <TabsTrigger 
+                value="liked" 
+                className="flex flex-col items-center py-2 px-1 data-[state=active]:bg-black data-[state=active]:text-white text-xs"
+                data-testid="tab-liked-mobile"
+              >
+                <Heart className="h-4 w-4 mb-1" />
+                <span className="truncate">{t(1)}</span>
+                {likedCount > 0 && (
+                  <Badge variant="secondary" className="mt-1 bg-red-500 text-white text-[10px] h-4 px-1">
+                    {likedCount > 99 ? '99+' : likedCount}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="orders" 
+                className="flex flex-col items-center py-2 px-1 data-[state=active]:bg-black data-[state=active]:text-white text-xs"
+                data-testid="tab-orders-mobile"
+              >
+                <Package className="h-4 w-4 mb-1" />
+                <span className="truncate">{t(3)}</span>
+                {ordersCount > 0 && (
+                  <Badge variant="secondary" className="mt-1 bg-green-500 text-white text-[10px] h-4 px-1">
+                    {ordersCount > 99 ? '99+' : ordersCount}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="personal-info" 
+                className="flex flex-col items-center py-2 px-1 data-[state=active]:bg-black data-[state=active]:text-white text-xs"
+                data-testid="tab-profile-mobile"
+              >
+                <User className="h-4 w-4 mb-1" />
+                <span className="truncate">{t(6)}</span>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {/* Secondary mobile actions */}
+          <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 whitespace-nowrap text-xs h-9"
+              onClick={() => setLocation('/cart')}
+              data-testid="button-cart-mobile"
+            >
+              <ShoppingCart className="h-3.5 w-3.5" />
+              {t(2)}
+              {cartCount > 0 && (
+                <Badge variant="secondary" className="bg-blue-500 text-white text-[10px] h-4 px-1.5">
+                  {cartCount}
+                </Badge>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 whitespace-nowrap text-xs h-9"
+              onClick={() => setLocation('/vendor-dashboard')}
+              data-testid="button-vendor-mobile"
+            >
+              <Store className="h-3.5 w-3.5" />
+              {t(4)}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 whitespace-nowrap text-xs h-9"
+              onClick={() => setLocation('/messages')}
+              data-testid="button-messages-mobile"
+            >
+              <MessageSquare className="h-3.5 w-3.5" />
+              {t(18)}
+              {messagesCount > 0 && (
+                <Badge variant="secondary" className="bg-blue-500 text-white text-[10px] h-4 px-1.5">
+                  {messagesCount}
+                </Badge>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          {/* Desktop Left Sidebar - Hidden on Mobile */}
+          <div className="hidden lg:block w-full lg:w-80">
             <Card className="sticky top-8">
               <CardHeader>
                 <CardTitle>
@@ -340,6 +428,7 @@ const ProfilePage = () => {
                       activeSection === item.id ? 'bg-black text-white hover:bg-gray-800' : ''
                     }`}
                     onClick={item.onClick}
+                    data-testid={`button-${item.id}-desktop`}
                   >
                     <div className="flex items-center">
                       <span>{item.title}</span>
@@ -362,6 +451,7 @@ const ProfilePage = () => {
                     activeSection === 'personal-info' ? 'bg-black text-white hover:bg-gray-800' : ''
                   }`}
                   onClick={() => setActiveSection('personal-info')}
+                  data-testid="button-personal-info-desktop"
                 >
                   <div className="flex items-center">
                     <span>{t(6)}</span>
