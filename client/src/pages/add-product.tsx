@@ -894,6 +894,61 @@ export default function AddProduct() {
     }
   }, [isGovernmentService]);
 
+  // Smart auto-selection based on navigation source (from URL section parameter)
+  useEffect(() => {
+    const params = new URLSearchParams(getQueryParams(location));
+    const urlSection = params.get('section');
+    
+    // Only run auto-selection on initial page load when section is provided in URL
+    if (!urlSection) return;
+    
+    // Lifestyle section - auto-select Groceries (first option)
+    if (urlSection === 'lifestyle' && !selectedLifestyleType) {
+      setIsLifestyleExpanded(true);
+      setActiveSection('lifestyle');
+      setSelectedLifestyleType('groceries');
+      form.setValue('offeringType', 'service');
+      form.setValue('category', '');
+      // Set marketplace - prefer b2c, then rqst
+      const marketplace = availableMarketplaces.find(m => m.value === 'b2c')
+        ? 'b2c'
+        : availableMarketplaces.find(m => m.value === 'rqst')
+        ? 'rqst'
+        : availableMarketplaces[0]?.value || 'rqst';
+      form.setValue('marketplace', marketplace as any);
+    }
+    
+    // Services section - auto-select Jobs (first option)
+    if (urlSection === 'services' && !selectedServiceType) {
+      setIsServicesExpanded(true);
+      setActiveSection('services');
+      setSelectedServiceType('jobs');
+      form.setValue('offeringType', 'service');
+      form.setValue('category', '');
+      // Set marketplace - prefer rqst for jobs
+      const marketplace = availableMarketplaces.find(m => m.value === 'rqst')
+        ? 'rqst'
+        : availableMarketplaces[0]?.value || 'rqst';
+      form.setValue('marketplace', marketplace as any);
+    }
+    
+    // Government section - already handled by existing useEffect
+    if (urlSection === 'government') {
+      setIsGovernmentExpanded(true);
+      setActiveSection('government');
+    }
+    
+    // Marketplace section (Friend to Friend, etc.)
+    if (urlSection === 'marketplace' && !isGovernmentService) {
+      setIsMarketplaceExpanded(true);
+      setActiveSection('marketplace');
+      // Default to c2c for marketplace section
+      if (availableMarketplaces.find(m => m.value === 'c2c')) {
+        form.setValue('marketplace', 'c2c');
+      }
+    }
+  }, [location]);
+
   // Determine available marketplaces based on vendor type
   const getAvailableMarketplaces = () => {
     // Safety check for null/undefined data
