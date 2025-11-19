@@ -937,6 +937,42 @@ export default function AddProduct() {
 
   const availableMarketplaces = getAvailableMarketplaces();
   
+  // Get marketplace display label based on active section
+  const getMarketplaceDisplayLabel = () => {
+    // For Lifestyle section
+    if (activeSection === 'lifestyle' && selectedLifestyleType) {
+      if (selectedLifestyleType === 'food') {
+        return { label: t("Order Food"), description: t("Food ordering and delivery marketplace") };
+      } else if (selectedLifestyleType === 'groceries') {
+        return { label: t("Groceries"), description: t("Grocery shopping marketplace") };
+      } else if (selectedLifestyleType === 'reservation') {
+        return { label: t("Reservation"), description: t("Reservation and booking marketplace") };
+      }
+    }
+    
+    // For Services section
+    if (activeSection === 'services' && selectedServiceType) {
+      if (selectedServiceType === 'jobs') {
+        return { label: t("Jobs"), description: t("Job posting marketplace") };
+      } else if (selectedServiceType === 'freelance') {
+        return { label: t("Freelance"), description: t("Freelance services marketplace") };
+      }
+    }
+    
+    // For Government section
+    if (isGovernmentService || activeSection === 'government') {
+      return { label: t("Dr Congo"), description: t("Government services for Dr Congo") };
+    }
+    
+    // Default: show the actual marketplace type
+    const currentMarketplace = form.watch('marketplace');
+    const marketplace = availableMarketplaces.find(m => m.value === currentMarketplace);
+    return {
+      label: marketplace?.label || t("Select from sidebar"),
+      description: marketplace?.description || t("Use the sidebar to select a marketplace")
+    };
+  };
+  
   // Set default marketplace when available marketplaces change
   useEffect(() => {
     if (availableMarketplaces.length > 0 && !form.getValues('marketplace')) {
@@ -2186,23 +2222,26 @@ export default function AddProduct() {
                   <FormField
                     control={form.control}
                     name="marketplace"
-                    render={({ field }) => (
-                      <FormItem className="mt-4">
-                        <FormLabel>{t("Selected Marketplace")}</FormLabel>
-                        <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                            {availableMarketplaces.find(m => m.value === field.value)?.label || t("Select from sidebar")}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            {availableMarketplaces.find(m => m.value === field.value)?.description || t("Use the sidebar to select a marketplace")}
-                          </p>
-                        </div>
-                        <FormDescription>
-                          {t("Select marketplace from the sidebar navigation")}
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    render={({ field }) => {
+                      const displayInfo = getMarketplaceDisplayLabel();
+                      return (
+                        <FormItem className="mt-4">
+                          <FormLabel>{t("Selected Marketplace")}</FormLabel>
+                          <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                              {displayInfo.label}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              {displayInfo.description}
+                            </p>
+                          </div>
+                          <FormDescription>
+                            {t("Select marketplace from the sidebar navigation")}
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
                 </CardContent>
               </Card>
