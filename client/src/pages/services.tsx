@@ -129,6 +129,14 @@ export default function ServicesPage() {
   // Limit services based on servicesPerPage setting
   const displayedServices = filteredServices.slice(0, servicesPerPage);
 
+  const resetFilters = () => {
+    setSearchQuery('');
+    setPriceRange([0, 5000]);
+    setPriceFilterActive(false);
+    setShowFeatured(false);
+    setShowVerified(false);
+  };
+
   const categoryNavItems = [
     { key: 'jobs', label: t[0] || 'Jobs' },
     { key: 'freelance', label: t[1] || 'Freelance' }
@@ -395,9 +403,10 @@ export default function ServicesPage() {
       {!isLoading && filteredServices.length === 0 && selectedCategory && (
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
-            <p className="text-gray-600 text-lg">
-              {searchQuery ? 'No services found matching your search.' : 'No services available in this category yet.'}
-            </p>
+            <div className="text-gray-500 mb-4">No products found matching your criteria</div>
+            <Button variant="ghost" onClick={resetFilters}>
+              Reset Filters
+            </Button>
           </div>
         </div>
       )}
