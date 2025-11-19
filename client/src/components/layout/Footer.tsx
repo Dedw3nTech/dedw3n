@@ -56,7 +56,7 @@ function FooterContent() {
     "Unknown",
     "Education Policy",
     "Intellectual Property Claims Policy",
-    "Advertisement Terms of Service"
+    "Ads Terms of Service"
   ], []);
 
   const { translations } = useMasterBatchTranslation(footerTexts);
