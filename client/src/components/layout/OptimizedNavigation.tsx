@@ -184,6 +184,7 @@ export default function OptimizedNavigation() {
     {
       icon: CreditCard,
       href: "/cart",
+      count: cartCount?.count || 0,
       label: translatedLabels.cart,
     },
   ] : [];
