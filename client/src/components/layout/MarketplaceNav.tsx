@@ -861,11 +861,11 @@ export function MarketplaceNav({ searchTerm: externalSearchTerm = '', setSearchT
                 isAuthenticated && (
                   <Button
                     onClick={handleAddProduct}
-                    className="h-8 px-3 bg-transparent text-black hover:bg-gray-100 transition-colors flex items-center gap-1.5 font-medium"
-                    style={{ fontSize: '10px' }}
+                    className="px-4 bg-transparent text-black hover:bg-gray-100 transition-colors flex items-center gap-2 font-medium"
+                    style={{ height: '45px', fontSize: '15px' }}
                     data-testid="button-add-product-mobile"
                   >
-                    <Plus className="h-3.5 w-3.5" />
+                    <Plus style={{ height: '21px', width: '21px' }} />
                     {translatedLabels.addText}
                   </Button>
                 )
