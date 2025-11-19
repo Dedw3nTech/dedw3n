@@ -1755,8 +1755,9 @@ export default function AddProduct() {
                               let isSelected = false;
                               
                               // Check selection based on section type
+                              // IMPORTANT: Only highlight marketplace items when actively in marketplace section
                               if (subItem.marketplaceValue) {
-                                isSelected = form.watch('marketplace') === subItem.marketplaceValue;
+                                isSelected = activeSection === 'marketplace' && form.watch('marketplace') === subItem.marketplaceValue;
                               } else if (section.id === 'lifestyle') {
                                 isSelected = (subItem.id === 'order-food' && selectedLifestyleType === 'food') ||
                                             (subItem.id === 'groceries' && selectedLifestyleType === 'groceries') ||
