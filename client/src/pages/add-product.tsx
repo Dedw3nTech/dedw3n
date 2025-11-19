@@ -899,7 +899,8 @@ export default function AddProduct() {
     const params = new URLSearchParams(getQueryParams(location));
     const urlSection = params.get('section');
     
-    // Only run auto-selection on initial page load when section is provided in URL
+    // Only run auto-selection when section is provided in URL
+    // If no section param, just open the page without auto-selecting anything
     if (!urlSection) return;
     
     // Lifestyle section - auto-select Groceries (first option)
