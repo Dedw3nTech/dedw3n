@@ -2310,6 +2310,340 @@ export default function AddProduct() {
             </Card>
           )}
 
+          {/* Unique Services Forms */}
+          {activeSection === 'services' && selectedServiceType && (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>
+                  {selectedServiceType === 'jobs' && t("Job Posting Details")}
+                  {selectedServiceType === 'freelance' && t("Freelance Project Details")}
+                </CardTitle>
+                <CardDescription>
+                  {selectedServiceType === 'jobs' && t("Provide details about the job opportunity")}
+                  {selectedServiceType === 'freelance' && t("Provide details about the freelance project")}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Subcategory Selection */}
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => {
+                    const categories = selectedServiceType === 'jobs' 
+                      ? JOBS_CATEGORIES 
+                      : FREELANCE_CATEGORIES;
+                    
+                    return (
+                      <FormItem>
+                        <FormLabel>
+                          {selectedServiceType === 'jobs' && t("Job Type")}
+                          {selectedServiceType === 'freelance' && t("Freelance Category")}
+                        </FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={t("Select category")} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {categories.map((cat) => (
+                              <SelectItem key={cat.value} value={cat.value}>
+                                {t(cat.label)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
+                />
+
+                {/* Jobs Form */}
+                {selectedServiceType === 'jobs' && (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.job_title"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-2">
+                            <FormLabel>{t("Job Title")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("e.g., Senior Software Engineer")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.employment_type"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Employment Type")}</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t("Select type")} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {['Full-time', 'Part-time', 'Contract', 'Temporary', 'Internship'].map((opt) => (
+                                  <SelectItem key={opt} value={opt}>{t(opt)}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.experience_level"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Experience Level")}</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t("Select level")} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {['Entry Level', 'Mid Level', 'Senior Level', 'Executive'].map((opt) => (
+                                  <SelectItem key={opt} value={opt}>{t(opt)}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.salary_range"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Salary Range")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("e.g., $50,000 - $70,000 annually")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.job_location"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Job Location")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("City, State/Country or Remote")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.skills_required"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-2">
+                            <FormLabel>{t("Required Skills")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("e.g., JavaScript, React, Node.js, Python")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.education_required"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Education Required")}</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t("Select education")} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {['High School', 'Associate Degree', 'Bachelor Degree', 'Master Degree', 'PhD', 'Not Required'].map((opt) => (
+                                  <SelectItem key={opt} value={opt}>{t(opt)}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.time_zone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Time Zone (if remote)")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("e.g., EST, PST, UTC+2")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Freelance Form */}
+                {selectedServiceType === 'freelance' && (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.project_title"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-2">
+                            <FormLabel>{t("Project Title")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("Name of the project")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.project_duration"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Project Duration")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("e.g., 2 weeks, 1 month, 3 months")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.budget_range"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Budget Range")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("e.g., $500 - $1000")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.experience_required"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Experience Required")}</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t("Select level")} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {['Beginner', 'Intermediate', 'Expert', 'Any'].map((opt) => (
+                                  <SelectItem key={opt} value={opt}>{t(opt)}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.deadline"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Deadline")}</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.tech_stack"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-2">
+                            <FormLabel>{t("Tech Stack / Tools Required")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("e.g., React, Node.js, MongoDB, Figma, Adobe XD")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.deliverables"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-2">
+                            <FormLabel>{t("Expected Deliverables")}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t("e.g., Logo, Brand Kit, Website Mockup, Video Edit")} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="categoryFields.portfolio_required"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t("Portfolio Required")}</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t("Select")} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="Yes">{t("Yes")}</SelectItem>
+                                <SelectItem value="No">{t("No")}</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Category Selection - Hidden for lifestyle/services sections as they use custom forms */}
           {!isGovernmentService && !(activeSection === 'lifestyle' && selectedLifestyleType) && !(activeSection === 'services' && selectedServiceType) && (
             <div className="mb-6">
