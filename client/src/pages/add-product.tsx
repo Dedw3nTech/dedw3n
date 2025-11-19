@@ -2343,7 +2343,7 @@ export default function AddProduct() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Offer Type - Jobs Only (First Field) */}
+                {/* Offer Type - First Field for both Jobs and Freelance */}
                 {selectedServiceType === 'jobs' && (
                   <FormField
                     control={form.control}
@@ -2362,6 +2362,34 @@ export default function AddProduct() {
                               {t("Looking for a Job")}
                             </SelectItem>
                             <SelectItem value="Recruiting" data-testid="option-recruiting">
+                              {t("Recruiting")}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                {selectedServiceType === 'freelance' && (
+                  <FormField
+                    control={form.control}
+                    name="categoryFields.freelance_posting_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t("Offer")}</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-freelance-posting-type">
+                              <SelectValue placeholder={t("Select offer type")} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Offering Freelance Work" data-testid="option-offering-freelance">
+                              {t("Offering Freelance Work")}
+                            </SelectItem>
+                            <SelectItem value="Recruiting" data-testid="option-recruiting-freelance">
                               {t("Recruiting")}
                             </SelectItem>
                           </SelectContent>
