@@ -398,6 +398,16 @@ export default function LifestylePage() {
     return filtered;
   }, [products, searchQuery, priceRange, showFeatured, sortBy, priceFilterActive]);
 
+  const resetFilters = () => {
+    setSearchQuery('');
+    setPriceRange([0, 5000]);
+    setPriceFilterActive(false);
+    setSortBy('trending');
+    setShowFeatured(false);
+    setShowSale(false);
+    setShowNew(false);
+  };
+
   const categoryNavItems = [
     { key: "restaurant", label: t[0] || "Restaurant" },
     { key: "hotels", label: t[1] || "Hotels" }
@@ -629,9 +639,10 @@ export default function LifestylePage() {
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="col-span-full py-12 text-center">
-              <p className="text-gray-600 text-lg">
-                {searchQuery ? (t[5] || 'No products found matching your search.') : (t[6] || 'No products available in this category yet.')}
-              </p>
+              <div className="text-gray-500 mb-4">No products found matching your criteria</div>
+              <Button variant="ghost" onClick={resetFilters}>
+                Reset Filters
+              </Button>
             </div>
           ) : (
             displayedProducts.map((product) => (
