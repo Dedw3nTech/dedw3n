@@ -2101,12 +2101,6 @@ const pageContents: Record<string, PageContent> = {
     `,
     lastUpdated: new Date('2025-01-27')
   },
-  "cookies": {
-    id: "cookies",
-    title: "Cookie Policy",
-    content: `<p>Cookie Policy content</p>`,
-    lastUpdated: new Date('2025-11-20')
-  },
 };
 
 // FAQ, contact form submissions, etc.
