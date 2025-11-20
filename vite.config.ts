@@ -187,24 +187,19 @@ export default defineConfig({
             return "react-vendor";
           }
 
-          // Payment-related modules - DO NOT SPLIT to prevent initialization errors
-          // Keep with main bundle to ensure proper variable initialization order
+          // Payment-related modules and pages - DO NOT SPLIT
+          // Bundle with main chunk to prevent React forwardRef errors and initialization issues
+          // This ensures payment components have proper access to React instance
           if (
             id.includes("node_modules/@paypal") ||
-            id.includes("node_modules/@stripe")
-          ) {
-            return undefined; // Bundle with main chunk instead of separate
-          }
-
-          // Payment pages (isolated to prevent circular dependencies)
-          if (
+            id.includes("node_modules/@stripe") ||
             id.includes("client/src/pages/cart.tsx") ||
             id.includes("client/src/pages/checkout.tsx") ||
             id.includes("client/src/pages/checkout-new.tsx") ||
             id.includes("client/src/pages/payment-gateway.tsx") ||
             id.includes("client/src/pages/payment-success.tsx")
           ) {
-            return "payments-pages";
+            return undefined; // Bundle with main chunk - DO NOT create separate chunk
           }
 
           // Rich text editor
