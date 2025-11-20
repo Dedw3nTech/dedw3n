@@ -1,7 +1,4 @@
-import { useState, useEffect } from "react";
-import { useStripe, useElements, PaymentElement, Elements } from "@stripe/react-stripe-js";
-import { getStripePromise } from "@/lib/stripe";
-import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
+import { useState, lazy, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,6 +19,14 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 
+const StripePaymentSection = lazy(() => 
+  import("./StripePaymentSection").then(module => ({ default: module.StripePaymentSection }))
+);
+
+const PayPalPaymentSection = lazy(() => 
+  import("./PayPalPaymentSection").then(module => ({ default: module.PayPalPaymentSection }))
+);
+
 type MembershipTier = {
   id: number;
   name: string;
@@ -40,249 +45,11 @@ type PaymentProps = {
   onCancel: () => void;
 };
 
-// Stripe payment form component
-const StripePaymentForm = ({ tier, communityId, onSuccess }: PaymentProps) => {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const { toast } = useToast();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!stripe || !elements) {
-      return;
-    }
-
-    setIsProcessing(true);
-
-    try {
-      const { error } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          return_url: window.location.origin + "/community/payment-success",
-        },
-        redirect: "if_required",
-      });
-
-      if (error) {
-        toast({
-          title: "Payment Failed",
-          description: error.message || "An error occurred during payment processing",
-          variant: "destructive",
-        });
-        setIsProcessing(false);
-      } else {
-        // If no error, the payment succeeded
-        toast({
-          title: "Payment Successful",
-          description: "Your membership has been activated",
-        });
-        
-        // Create the membership in our system
-        await apiRequest(
-          "POST",
-          `/api/communities/${communityId}/memberships`,
-          { tierId: tier.id, paymentMethod: "stripe" }
-        );
-        
-        onSuccess();
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "An error occurred during payment processing",
-        variant: "destructive",
-      });
-      setIsProcessing(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <PaymentElement />
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={!stripe || isProcessing}
-      >
-        {isProcessing ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Processing...
-          </>
-        ) : (
-          <>Pay {tier.price} {tier.currency}</>
-        )}
-      </Button>
-    </form>
-  );
-};
-
-// Stripe payment section (wrapper for the form with Elements provider)
-const StripePaymentSection = ({ tier, communityId, onSuccess, onCancel }: PaymentProps) => {
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
-
-  const stripePromise = getStripePromise();
-
-  // Check if Stripe is available before attempting payment
-  if (!stripePromise) {
-    return (
-      <div className="flex justify-center items-center py-8 text-center">
-        <div>
-          <p className="text-red-600 font-semibold">Payment provider not available</p>
-          <p className="text-sm text-gray-600 mt-2">Please contact support or try another payment method.</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Create a payment intent when the component mounts
-  useEffect(() => {
-    const createPaymentIntent = async () => {
-      try {
-        const response = await apiRequest(
-          "POST",
-          `/api/membership/payment/stripe/create-intent`,
-          {
-            tierId: tier.id,
-            communityId,
-            amount: tier.price,
-            currency: tier.currency,
-          }
-        );
-
-        const data = await response.json();
-        setClientSecret(data.clientSecret);
-      } catch (error: any) {
-        toast({
-          title: "Error",
-          description: "Could not initialize payment. Please try again.",
-          variant: "destructive",
-        });
-        onCancel();
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    createPaymentIntent();
-  }, [tier.id, communityId, tier.price, tier.currency, onCancel]);
-
-  if (isLoading || !clientSecret) {
-    return (
-      <div className="flex justify-center items-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  return (
-    <Elements stripe={stripePromise} options={{ clientSecret }}>
-      <StripePaymentForm
-        tier={tier}
-        communityId={communityId}
-        onSuccess={onSuccess}
-        onCancel={onCancel}
-      />
-    </Elements>
-  );
-};
-
-// PayPal payment section
-const PaypalPaymentSection = ({ tier, communityId, onSuccess, onCancel }: PaymentProps) => {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const { toast } = useToast();
-
-  return (
-    <PayPalScriptProvider options={{ 
-      "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID as string,
-      currency: tier.currency
-    }}>
-      <div className="py-4">
-        <PayPalButtons
-          disabled={isProcessing}
-          createOrder={async () => {
-            try {
-              setIsProcessing(true);
-              const response = await apiRequest(
-                "POST",
-                `/api/membership/payment/paypal/create-order`,
-                {
-                  tierId: tier.id,
-                  communityId,
-                  amount: tier.price,
-                  currency: tier.currency,
-                }
-              );
-              
-              const data = await response.json();
-              return data.id;
-            } catch (error: any) {
-              toast({
-                title: "Error",
-                description: "Could not create PayPal order. Please try again.",
-                variant: "destructive",
-              });
-              setIsProcessing(false);
-              throw error;
-            }
-          }}
-          onApprove={async (data) => {
-            try {
-              const response = await apiRequest(
-                "POST",
-                `/api/membership/payment/paypal/process`,
-                {
-                  orderId: data.orderID,
-                  tierId: tier.id,
-                  communityId
-                }
-              );
-              
-              if (!response.ok) {
-                throw new Error("Failed to verify payment");
-              }
-              
-              toast({
-                title: "Payment Successful",
-                description: "Your membership has been activated",
-              });
-              
-              onSuccess();
-            } catch (error: any) {
-              toast({
-                title: "Payment Verification Failed",
-                description: error.message || "Could not verify payment. Please contact support.",
-                variant: "destructive",
-              });
-              setIsProcessing(false);
-            }
-          }}
-          onError={() => {
-            toast({
-              title: "Payment Failed",
-              description: "An error occurred during payment processing. Please try again.",
-              variant: "destructive",
-            });
-            setIsProcessing(false);
-          }}
-          onCancel={() => {
-            toast({
-              title: "Payment Cancelled",
-              description: "You've cancelled the payment process.",
-            });
-            setIsProcessing(false);
-            onCancel();
-          }}
-          style={{ layout: "vertical" }}
-        />
-      </div>
-    </PayPalScriptProvider>
-  );
-};
+const PaymentLoadingFallback = () => (
+  <div className="flex justify-center items-center py-8">
+    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  </div>
+);
 
 // E-Wallet Payment section
 const EWalletPaymentSection = ({ tier, communityId, onSuccess, onCancel }: PaymentProps) => {
@@ -530,23 +297,27 @@ const MembershipPayment = ({ tier, communityId, onSuccess, onCancel }: PaymentPr
         
         <TabsContent value="stripe" className="mt-6">
           <Card className="p-4">
-            <StripePaymentSection
-              tier={tier}
-              communityId={communityId}
-              onSuccess={onSuccess}
-              onCancel={onCancel}
-            />
+            <Suspense fallback={<PaymentLoadingFallback />}>
+              <StripePaymentSection
+                tier={tier}
+                communityId={communityId}
+                onSuccess={onSuccess}
+                onCancel={onCancel}
+              />
+            </Suspense>
           </Card>
         </TabsContent>
         
         <TabsContent value="paypal" className="mt-6">
           <Card className="p-4">
-            <PaypalPaymentSection
-              tier={tier}
-              communityId={communityId}
-              onSuccess={onSuccess}
-              onCancel={onCancel}
-            />
+            <Suspense fallback={<PaymentLoadingFallback />}>
+              <PayPalPaymentSection
+                tier={tier}
+                communityId={communityId}
+                onSuccess={onSuccess}
+                onCancel={onCancel}
+              />
+            </Suspense>
           </Card>
         </TabsContent>
 
