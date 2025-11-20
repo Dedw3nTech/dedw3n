@@ -420,32 +420,39 @@ const lazyBundles = [
   {
     Component: MarketplaceRoutes,
     mounts: [
-      '/marketplace/:rest*', '/marketplace', '/marketplace/b2c', '/marketplace/b2b', '/marketplace/c2c',
+      '/marketplace', '/marketplace/b2c', '/marketplace/b2b', '/marketplace/c2c',
       '/marketplace/raw', '/marketplace/creators', '/marketplace/real-estate', '/marketplace/rqst',
       '/products', '/product/:identifier', '/vendors', '/vendor/:slug',
       '/search', '/gift-cards', '/cart', '/checkout', '/payment-gateway',
-      '/payment-success', '/add-product', '/upload-product', '/categories'
+      '/payment-success', '/add-product', '/upload-product',
+      '/add-order-food', '/add-groceries', '/add-reservation', '/add-jobs', '/add-freelance'
     ]
   },
   {
     Component: SocialRoutes,
     mounts: [
-      '/community', '/community/:rest*', '/dating', '/dating/:rest*', '/post/:id', '/vidz/:rest*', '/events', '/events/:rest*',
-      '/social', '/social/:tab', '/social-console', '/social-insights',
-      '/saved-posts', '/drafts', '/messages/:username?', '/messages', '/notifications', '/friend-requests',
-      '/premium-videos', '/premium-videos/:id', '/walls', '/community-search'
+      '/community', '/community-search', '/community/ai-tools',
+      '/social-console', '/social-insights',
+      '/saved-posts', '/drafts', '/edit-post/:id', '/posts/:id', '/explore',
+      '/messages/:username?', '/messages', '/notifications', '/friend-requests',
+      '/erp', '/crm', '/calendar', '/meetings/new', '/meeting/:roomId',
+      '/events', '/event/:id', '/premium-videos', '/premium-videos/:id'
     ]
   },
   {
     Component: AdminRoutes,
-    mounts: ['/admin', '/admin/:rest*', '/admin-control-center', '/admin-control-center/:rest*', '/unified-admin-dashboard', '/unified-admin-dashboard/:rest*']
+    mounts: [
+      '/admin', '/admin/:tab', '/unified-admin-dashboard', '/admin-control-center',
+      '/affiliate-partnership', '/analytics', '/vendor-analytics', '/spending-analytics',
+      '/diagnostic/environment', '/admin/email', '/ai-insights', '/api-test'
+    ]
   },
   {
     Component: UserSettingsRoutes,
     mounts: [
-      '/profile/:rest*', '/profile', '/settings/:rest*', '/settings', '/account/:rest*',
-      '/profile-settings', '/preferences', '/vendor-dashboard', '/become-vendor', 
-      '/become-business-vendor', '/vendor-register', '/logout-test'
+      '/profile', '/profile/:username', '/profile-settings', '/settings',
+      '/suspend-account', '/close-account', '/wallet', '/orders-returns', '/liked', '/members',
+      '/become-vendor', '/become-business-vendor', '/vendor-dashboard', '/vendor-register', '/logout-test'
     ]
   },
   {
@@ -461,12 +468,13 @@ const lazyBundles = [
   {
     Component: SpecialtyRoutes,
     mounts: [
-      '/government', '/dr-congo', '/government-profile', '/finance', '/erp', '/crm', '/calendar', '/lifestyle', '/lifestyle/order-food', '/lifestyle/groceries', '/lifestyle/reservations', '/lifestyle-profile',
+      '/government', '/dr-congo', '/government-profile', '/finance',
+      '/lifestyle', '/lifestyle/order-food', '/lifestyle/groceries', '/lifestyle/reservations', '/lifestyle-profile',
       '/services', '/services/jobs', '/services/freelance', '/services-profile',
-      '/shipping-calculator', '/percentage-calculator', '/commission-payment/:periodId',
-      '/dating', '/dating/:rest*', '/my-matches',
-      '/pawapay/:rest*', '/affiliates/:rest*', '/partner/:rest*', '/creators/:rest*',
-      '/video-demo', '/test-cookies'
+      '/shipping-calculator', '/percentage-calculator',
+      '/dating', '/dating-profile', '/dating-profile/:profileId', '/my-matches', '/dating/ai-tools',
+      '/pawapay/deposit/callback', '/pawapay/payout/callback', '/pawapay/refund/callback',
+      '/commission-payment/:periodId', '/video-demo', '/test-cookies'
     ]
   }
 ];
