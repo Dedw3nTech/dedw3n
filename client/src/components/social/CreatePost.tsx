@@ -399,7 +399,7 @@ export default function CreatePost({
               size="md"
               className="h-10 w-10"
             />
-            <div className="bg-accent px-4 py-2 rounded-full text-muted-foreground flex-1">
+            <div className="bg-black px-4 py-2 rounded-full text-white flex-1">
               {whatsOnYourMindText}, {user.name?.split(" ")[0]}?
             </div>
           </div>
