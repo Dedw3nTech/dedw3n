@@ -19,7 +19,7 @@ import { useMasterBatchTranslation, useMasterTranslation, useSingleTranslation }
 import { processError } from "@/lib/error-handler";
 import ReportPostDialog from "@/components/social/ReportPostDialog";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { currencies } from "@/contexts/CurrencyContext";
+import { currencies } from "@/types/currency";
 import { 
   HoverCard,
   HoverCardContent,
