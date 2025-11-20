@@ -80,7 +80,7 @@ import { registerFileUploadRoutes } from "./file-upload";
 import { registerCallRoutes } from "./call-management";
 import { seedDatabase } from "./seed";
 import { initializeStorageSync } from "./storage-sync-startup";
-import { advancedSocialMediaSuite } from "./advanced-social-suite";
+// import { advancedSocialMediaSuite } from "./advanced-social-suite"; // Disabled - incomplete implementation with missing schema fields
 import {
   getAdvertisements,
   getAdvertisementById,
