@@ -45,37 +45,6 @@ const versionPlugin = (): Plugin => {
   };
 };
 
-// Add to your existing vite.config.ts
-
-export default defineConfig({
-  // ... your existing config
-
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          // Separate payment/checkout logic into its own chunk
-          payments: [
-            "./client/src/pages/cart.tsx",
-            "./client/src/pages/checkout.tsx",
-            "./client/src/pages/payment-gateway.tsx",
-            "./client/src/pages/payment-success.tsx",
-          ],
-        },
-      },
-    },
-  },
-
-  server: {
-    hmr: {
-      overlay: true, // Show HMR errors clearly
-    },
-  },
-
-  // Enable better debugging
-  logLevel: "info",
-});
-
 export default defineConfig({
   plugins: [
     react(),
@@ -200,9 +169,9 @@ export default defineConfig({
           return `assets/[name].[hash][extname]`;
         },
 
-        // CRITICAL FIX: Bundle Recharts with React to prevent forwardRef errors
-        // Recharts must load synchronously with React to access React.forwardRef
+        // OPTIMIZED: Manual chunks for better code splitting and HMR stability
         manualChunks: (id) => {
+          // Core React and routing (most frequently used)
           if (
             id.includes("node_modules/react") ||
             id.includes("node_modules/react-dom") ||
@@ -211,24 +180,57 @@ export default defineConfig({
           ) {
             return "react-vendor";
           }
+
+          // Payment-related modules (isolated for security and performance)
+          if (
+            id.includes("node_modules/@paypal") ||
+            id.includes("node_modules/@stripe")
+          ) {
+            return "payments-vendor";
+          }
+
+          // Payment pages (isolated to prevent circular dependencies)
+          if (
+            id.includes("client/src/pages/cart.tsx") ||
+            id.includes("client/src/pages/checkout.tsx") ||
+            id.includes("client/src/pages/checkout-new.tsx") ||
+            id.includes("client/src/pages/payment-gateway.tsx") ||
+            id.includes("client/src/pages/payment-success.tsx")
+          ) {
+            return "payments-pages";
+          }
+
+          // Rich text editor
           if (id.includes("node_modules/lexical")) {
             return "lexical-editor";
           }
+
+          // Icons
           if (id.includes("node_modules/lucide-react")) {
             return "icons";
           }
+
+          // File uploader
           if (id.includes("node_modules/@uppy")) {
             return "uppy-uploader";
           }
+
+          // UI components
           if (id.includes("node_modules/@radix-ui")) {
             return "ui-vendor";
           }
+
+          // Data fetching
           if (id.includes("node_modules/@tanstack/react-query")) {
             return "react-query";
           }
+
+          // Emoji picker
           if (id.includes("node_modules/emoji-picker-react")) {
             return "emoji-picker";
           }
+
+          // Form handling
           if (
             id.includes("node_modules/react-hook-form") ||
             id.includes("node_modules/@hookform/resolvers") ||
@@ -236,12 +238,7 @@ export default defineConfig({
           ) {
             return "forms";
           }
-          if (
-            id.includes("node_modules/@paypal") ||
-            id.includes("node_modules/@stripe")
-          ) {
-            return "payments";
-          }
+
           return undefined;
         },
       },
@@ -254,13 +251,12 @@ export default defineConfig({
           protocol: "wss",
           host: process.env.REPLIT_DOMAINS.split(",")[0],
           clientPort: 443,
+          overlay: true, // Show HMR errors clearly in browser
         }
-      : true,
+      : {
+          overlay: true, // Show HMR errors clearly in browser
+        },
   },
+  // Enable better debugging for bundling issues
+  logLevel: "info",
 });
-// ❌ Bad - creates runtime dependency
-import { UserType, formatUser } from "./utils";
-
-// ✅ Good - type import ignored by Vite
-import type { UserType } from "./utils";
-import { formatUser } from "./utils";
