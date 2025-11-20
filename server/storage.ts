@@ -1,6 +1,6 @@
 import session from "express-session";
 import createMemoryStore from "memorystore";
-import { hashPassword } from "./auth";
+import { hashPassword } from "./security/password-utils";
 import connectPg from "connect-pg-simple";
 import { Pool } from "pg";
 import { db } from "./db";
