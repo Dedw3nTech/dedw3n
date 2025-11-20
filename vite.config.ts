@@ -187,12 +187,13 @@ export default defineConfig({
             return "react-vendor";
           }
 
-          // Payment-related modules (isolated for security and performance)
+          // Payment-related modules - DO NOT SPLIT to prevent initialization errors
+          // Keep with main bundle to ensure proper variable initialization order
           if (
             id.includes("node_modules/@paypal") ||
             id.includes("node_modules/@stripe")
           ) {
-            return "payments-vendor";
+            return undefined; // Bundle with main chunk instead of separate
           }
 
           // Payment pages (isolated to prevent circular dependencies)

@@ -14,6 +14,7 @@ interface SecurityHeadersConfig {
 /**
  * Generate Content Security Policy directives
  * Luxury e-commerce standard: strict CSP with specific trusted sources
+ * Updated to support payment vendors and bundled assets
  */
 export function getCSP(config: SecurityHeadersConfig): string {
   const { env, nonce } = config;
@@ -23,19 +24,33 @@ export function getCSP(config: SecurityHeadersConfig): string {
     return '';
   }
   
-  // Production CSP - strict security for luxury e-commerce
+  // Production CSP - strict security for luxury e-commerce with payment vendor support
   const directives = [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${nonce ? `'nonce-${nonce}'` : ''} blob:`,
+    // Script sources: Allow self, inline scripts, eval (for payment SDKs), and blob URLs
+    // Payment vendors (Stripe, PayPal) require 'unsafe-inline' and 'unsafe-eval'
+    `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${nonce ? `'nonce-${nonce}'` : ''} blob: https://js.stripe.com https://www.paypal.com https://www.paypalobjects.com`,
+    // Style sources: Allow self and inline styles for dynamic UI components
     `style-src 'self' 'unsafe-inline'`,
+    // Image sources: Allow all HTTPS, data URIs, blob URLs, and object storage
     `img-src 'self' data: blob: https: https://987df99e227c1b3cd8bbc12db0692cdf.r2.cloudflarestorage.com https://dedw3n.com`,
+    // Font sources: Allow self and data URIs
     `font-src 'self' data:`,
-    `connect-src 'self' wss: https: https://987df99e227c1b3cd8bbc12db0692cdf.r2.cloudflarestorage.com https://dedw3n.com`,
+    // Connection sources: Allow API calls to all HTTPS, WebSockets, and object storage
+    `connect-src 'self' wss: https: https://987df99e227c1b3cd8bbc12db0692cdf.r2.cloudflarestorage.com https://dedw3n.com https://api.stripe.com https://www.paypal.com`,
+    // Media sources: Allow self, blob, data URIs, and object storage
     `media-src 'self' blob: data: https://987df99e227c1b3cd8bbc12db0692cdf.r2.cloudflarestorage.com`,
+    // Object embedding: Block all plugins and embedded objects
     `object-src 'none'`,
+    // Base URI: Only allow same origin
     `base-uri 'self'`,
+    // Form submissions: Only allow same origin
     `form-action 'self'`,
+    // Frame embedding: Allow same origin and main domain
     `frame-ancestors 'self' https://dedw3n.com https://www.dedw3n.com`,
+    // Frame sources: Allow payment vendor iframes
+    `frame-src 'self' https://js.stripe.com https://www.paypal.com`,
+    // Upgrade HTTP to HTTPS
     `upgrade-insecure-requests`
   ];
   
