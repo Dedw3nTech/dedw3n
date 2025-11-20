@@ -450,7 +450,13 @@ const lazyBundles = [
   },
   {
     Component: LegalInfoRoutes,
-    mounts: ['/legal/:rest*', '/privacy/:rest*', '/terms/:rest*', '/cookie-policy', '/about']
+    mounts: [
+      '/faq', '/catalogue-rules', '/tips-tricks', '/payment-options', '/delivery-returns',
+      '/how-to-use', '/about-us', '/code-of-ethics', '/careers', '/network-partnership-resources',
+      '/resources', '/privacy', '/terms', '/business-terms', '/cookies', '/education-policy',
+      '/intellectual-property', '/advertisement-terms', '/contact', '/community-guidelines',
+      '/remove-ads', '/sitemap'
+    ]
   },
   {
     Component: SpecialtyRoutes,
