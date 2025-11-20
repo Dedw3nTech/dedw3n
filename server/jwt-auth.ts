@@ -1,32 +1,16 @@
 import { Request, Response, NextFunction, Express } from 'express';
-import { randomBytes, createHmac } from 'crypto';
-import { storage } from './storage';
+import { randomBytes } from 'crypto';
+import type { IStorage } from './storage';
 import { InsertAuthToken, User } from '@shared/schema';
+import { 
+  generateSecureToken, 
+  verifyTokenSignature, 
+  createTokenPayload,
+  TokenPayload
+} from './security/token-utils';
 
-// Default token expiration in seconds (24 hours)
-const TOKEN_EXPIRES_IN = 86400;
-
-// SECURITY: Require TOKEN_SECRET in production, fail fast if missing
-if (!process.env.TOKEN_SECRET && process.env.NODE_ENV === 'production') {
-  console.error('[CRITICAL ERROR] TOKEN_SECRET environment variable is not set in production!');
-  console.error('[CRITICAL ERROR] This is a critical security vulnerability - tokens cannot be securely issued.');
-  console.error('[CRITICAL ERROR] Please set TOKEN_SECRET in your environment secrets immediately.');
-  throw new Error('TOKEN_SECRET environment variable is required in production');
-}
-
-// Get the token secret from environment variable with secure fallback for development only
-const TOKEN_SECRET = process.env.TOKEN_SECRET || 
-  (process.env.NODE_ENV === 'development' 
-    ? 'dedw3n-development-secret-key-for-jwt-authentication-do-not-use-in-production'
-    : '');
-
-// Validate secret is not empty (should never happen with above checks, but safety check)
-if (!TOKEN_SECRET) {
-  throw new Error('TOKEN_SECRET is required but not set');
-}
-
-// Log the token secret source for debugging (without exposing the actual secret)
-console.log(`[AUTH] Using token secret from ${process.env.TOKEN_SECRET ? 'environment variable' : 'development fallback'}`);
+// Re-export TokenPayload for backwards compatibility
+export type { TokenPayload };
 
 // Declare module express-session with a custom user object
 declare module 'express-serve-static-core' {
@@ -37,61 +21,15 @@ declare module 'express-serve-static-core' {
   }
 }
 
-export interface TokenPayload {
-  userId: number;
-  role: string;
-  tokenId: string;
-  issuedAt: number;
-  expiresAt: number;
-}
+// Storage will be injected to avoid circular dependency
+let storageInstance: IStorage;
 
 /**
- * Verifies a password against a stored hash
- * @param plain The plain text password to verify
- * @param stored The stored hash to verify against
- * @returns True if the password matches, false otherwise
+ * Initialize JWT auth with storage instance
+ * MUST be called after storage is initialized to avoid circular dependency
  */
-async function verifyPassword(plain: string, stored: string): Promise<boolean> {
-  try {
-    // Extract the salt from the stored hash
-    const [hashedPassword, salt] = stored.split('.');
-    
-    if (!hashedPassword || !salt) {
-      console.error('Invalid stored password format');
-      return false;
-    }
-    
-    // Hash the plain password with the same salt
-    const hashedBuffer = createHmac('sha512', salt)
-      .update(plain)
-      .digest();
-    
-    // Convert the hash to a hex string
-    const hashedInputPassword = hashedBuffer.toString('hex');
-    
-    // Compare the hashed input to the stored hash
-    return hashedInputPassword === hashedPassword;
-  } catch (error) {
-    console.error('Password verification error:', error);
-    return false;
-  }
-}
-
-/**
- * Generates a secure token string using the crypto module
- */
-function generateSecureToken(payload: TokenPayload): string {
-  // Convert payload to string
-  const payloadStr = JSON.stringify(payload);
-  
-  // Create a signature using HMAC SHA-256
-  const signature = createHmac('sha256', TOKEN_SECRET)
-    .update(payloadStr)
-    .digest('hex');
-  
-  // Combine payload and signature
-  const base64Payload = Buffer.from(payloadStr).toString('base64');
-  return `${base64Payload}.${signature}`;
+export function initializeJwtAuth(storage: IStorage): void {
+  storageInstance = storage;
 }
 
 /**
@@ -99,39 +37,7 @@ function generateSecureToken(payload: TokenPayload): string {
  * Use verifyTokenWithDatabase() for full verification including revocation check
  */
 export function verifyToken(token: string): TokenPayload | null {
-  try {
-    // Split token into parts
-    const [base64Payload, signature] = token.split('.');
-    
-    // Check if token format is valid
-    if (!base64Payload || !signature) {
-      return null;
-    }
-    
-    // Decode the payload
-    const payloadStr = Buffer.from(base64Payload, 'base64').toString();
-    const payload = JSON.parse(payloadStr) as TokenPayload;
-    
-    // Verify signature
-    const expectedSignature = createHmac('sha256', TOKEN_SECRET)
-      .update(payloadStr)
-      .digest('hex');
-    
-    // Check if signatures match
-    if (signature !== expectedSignature) {
-      return null;
-    }
-    
-    // Check if token has expired
-    if (payload.expiresAt < Math.floor(Date.now() / 1000)) {
-      return null;
-    }
-    
-    return payload;
-  } catch (error) {
-    console.error('Token verification failed:', error);
-    return null;
-  }
+  return verifyTokenSignature(token);
 }
 
 /**
@@ -146,8 +52,13 @@ export async function verifyTokenWithDatabase(token: string): Promise<TokenPaylo
       return null;
     }
     
+    if (!storageInstance) {
+      console.error('[SECURITY] Storage not initialized in JWT auth');
+      return null;
+    }
+    
     // CRITICAL: Check database to ensure token hasn't been revoked
-    const authToken = await storage.getAuthToken(token);
+    const authToken = await storageInstance.getAuthToken(token);
     if (!authToken) {
       console.warn('[SECURITY] Token not found in database - possibly forged or cleaned up');
       return null;
@@ -163,7 +74,7 @@ export async function verifyTokenWithDatabase(token: string): Promise<TokenPaylo
     if (new Date(authToken.expiresAt) < new Date()) {
       console.warn('[SECURITY] Token expired according to database');
       // Auto-revoke expired token
-      await storage.revokeAuthToken(authToken.id, 'Token expired');
+      await storageInstance.revokeAuthToken(authToken.id, 'Token expired');
       return null;
     }
     
@@ -187,23 +98,14 @@ export async function generateToken(
     ipAddress?: string 
   } = {}
 ): Promise<{ token: string, expiresAt: Date }> {
-  // Generate a unique token identifier
-  const tokenId = randomBytes(32).toString('hex');
+  if (!storageInstance) {
+    throw new Error('Storage not initialized in JWT auth. Call initializeJwtAuth() first.');
+  }
   
-  // Set expiration date
-  const issuedAt = Math.floor(Date.now() / 1000);
-  const expiresAt = new Date(Date.now() + TOKEN_EXPIRES_IN * 1000);
+  // Create the token payload using token-utils
+  const { payload, expiresAt } = createTokenPayload(userId, role);
   
-  // Create the token payload
-  const payload: TokenPayload = {
-    userId,
-    role,
-    tokenId,
-    issuedAt,
-    expiresAt: Math.floor(expiresAt.getTime() / 1000)
-  };
-  
-  // Generate the token
+  // Generate the token using token-utils
   const token = generateSecureToken(payload);
   
   // Store token in database for tracking/revocation
@@ -218,7 +120,7 @@ export async function generateToken(
     isRevoked: false,
   };
   
-  await storage.createAuthToken(tokenData);
+  await storageInstance.createAuthToken(tokenData);
   
   return { token, expiresAt };
 }
@@ -250,7 +152,7 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
       }
       
       // Get full token record for additional context
-      const authToken = await storage.getAuthToken(token);
+      const authToken = await storageInstance.getAuthToken(token);
       if (!authToken) {
         // Should never happen if verifyTokenWithDatabase passed, but safety check
         return res.status(401).json({ message: 'Token not found' });
@@ -302,16 +204,20 @@ export function requireRole(roles: string | string[]) {
  */
 export async function revokeToken(token: string, reason: string = 'User initiated'): Promise<boolean> {
   try {
+    if (!storageInstance) {
+      throw new Error('Storage not initialized in JWT auth');
+    }
+    
     // Try to verify token but don't throw if invalid
     const payload = verifyToken(token);
     
     // Find and revoke the token
-    const authToken = await storage.getAuthToken(token);
+    const authToken = await storageInstance.getAuthToken(token);
     if (!authToken) {
       return false;
     }
     
-    await storage.revokeAuthToken(authToken.id, reason);
+    await storageInstance.revokeAuthToken(authToken.id, reason);
     return true;
   } catch (error) {
     console.error('Error revoking token:', error);
@@ -324,7 +230,11 @@ export async function revokeToken(token: string, reason: string = 'User initiate
  */
 export async function revokeAllUserTokens(userId: number, reason: string = 'Security measure'): Promise<boolean> {
   try {
-    await storage.revokeAllUserTokens(userId, reason);
+    if (!storageInstance) {
+      throw new Error('Storage not initialized in JWT auth');
+    }
+    
+    await storageInstance.revokeAllUserTokens(userId, reason);
     return true;
   } catch (error) {
     console.error('Error revoking all user tokens:', error);
@@ -338,7 +248,11 @@ export async function revokeAllUserTokens(userId: number, reason: string = 'Secu
  */
 export async function cleanupExpiredTokens(): Promise<void> {
   try {
-    await storage.cleanupExpiredTokens();
+    if (!storageInstance) {
+      throw new Error('Storage not initialized in JWT auth');
+    }
+    
+    await storageInstance.cleanupExpiredTokens();
   } catch (error) {
     console.error('Error cleaning up expired tokens:', error);
   }
