@@ -172,11 +172,13 @@ export default defineConfig({
         // OPTIMIZED: Manual chunks for better code splitting and HMR stability
         manualChunks: (id) => {
           // Core React and routing (most frequently used)
+          // CRITICAL: React Query MUST be bundled with React to prevent duplicate React instances
           if (
             id.includes("node_modules/react") ||
             id.includes("node_modules/react-dom") ||
             id.includes("node_modules/wouter") ||
-            id.includes("node_modules/recharts")
+            id.includes("node_modules/recharts") ||
+            id.includes("node_modules/@tanstack/react-query")
           ) {
             return "react-vendor";
           }
@@ -218,11 +220,6 @@ export default defineConfig({
           // UI components
           if (id.includes("node_modules/@radix-ui")) {
             return "ui-vendor";
-          }
-
-          // Data fetching
-          if (id.includes("node_modules/@tanstack/react-query")) {
-            return "react-query";
           }
 
           // Emoji picker
