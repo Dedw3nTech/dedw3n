@@ -2,7 +2,7 @@ import { useState, useRef, ChangeEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ResolvedUserAvatar } from "@/components/ui/resolved-user-avatar";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
