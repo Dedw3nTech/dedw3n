@@ -8463,7 +8463,3 @@ export class DatabaseStorage implements IStorage {
 }
 
 export const storage = new DatabaseStorage();
-
-// Initialize JWT auth with storage instance to avoid circular dependency
-import { initializeJwtAuth } from "./jwt-auth";
-initializeJwtAuth(storage);

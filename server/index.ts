@@ -651,6 +651,11 @@ if (fs.existsSync(attachedAssetsPath)) {
   // NOW SETUP ROUTES (Server is already listening, health checks work)
   // ============================================================================
   
+  // Initialize JWT auth with storage to avoid circular dependency
+  const { storage } = await import('./storage.js');
+  const { initializeJwtAuth } = await import('./jwt-auth.js');
+  initializeJwtAuth(storage);
+  
   logger.info('Registering API routes (server already listening)', undefined, 'startup');
   server = await registerRoutes(app, httpServer);
   logger.lifecycle('API routes registered', undefined, 'startup');
