@@ -2,7 +2,9 @@ import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { Check } from "lucide-react";
-import { useCurrency, currencies, Currency } from "@/contexts/CurrencyContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import type { Currency } from "@/types/currency";
+import { currencies } from "@/types/currency";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 
 interface CurrencySelectorProps {

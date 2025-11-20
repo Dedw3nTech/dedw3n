@@ -1,4 +1,4 @@
-import type { Currency } from '../contexts/CurrencyContext';
+import type { Currency } from '../types/currency';
 
 export interface CryptoPriceResponse {
   [coinId: string]: {
