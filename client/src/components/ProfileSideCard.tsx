@@ -27,8 +27,8 @@ export function ProfileSideCard() {
   });
 
   // Fetch unread message count
-  const { data: unreadMessagesData } = useQuery<{ unreadCount: number }>({
-    queryKey: ['/api/messages/unread-count'],
+  const { data: unreadMessagesData } = useQuery<{ count: number }>({
+    queryKey: ['/api/messages/unread/count'],
     retry: false,
     staleTime: 30 * 1000, // Cache for 30 seconds
     refetchOnMount: true,
@@ -55,7 +55,7 @@ export function ProfileSideCard() {
 
   // Calculate total count
   const totalCount = 
-    (unreadMessagesData?.unreadCount || 0) + 
+    (unreadMessagesData?.count || 0) + 
     (unreadNotificationsData?.count || 0) + 
     (pendingFriendRequestsData?.count || 0);
 
@@ -133,7 +133,7 @@ export function ProfileSideCard() {
                   <div 
                     className="absolute -top-1 -right-1 bg-black text-white rounded-full min-w-[36px] h-9 px-2 flex items-center justify-center text-sm font-semibold border-2 border-white"
                     data-testid="badge-total-count"
-                    title={`${unreadMessagesData?.unreadCount || 0} messages, ${unreadNotificationsData?.count || 0} notifications, ${pendingFriendRequestsData?.count || 0} friend requests`}
+                    title={`${unreadMessagesData?.count || 0} messages, ${unreadNotificationsData?.count || 0} notifications, ${pendingFriendRequestsData?.count || 0} friend requests`}
                   >
                     {totalCount > 99 ? '99+' : totalCount}
                   </div>
