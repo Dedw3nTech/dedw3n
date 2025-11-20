@@ -174,13 +174,15 @@ export default defineConfig({
           // Core React and routing (most frequently used)
           // CRITICAL: React Query MUST be bundled with React to prevent duplicate React instances
           // CRITICAL: lucide-react MUST be bundled with React to access React.forwardRef
+          // CRITICAL: @radix-ui MUST be bundled with React to access React.forwardRef
           if (
             id.includes("node_modules/react") ||
             id.includes("node_modules/react-dom") ||
             id.includes("node_modules/wouter") ||
             id.includes("node_modules/recharts") ||
             id.includes("node_modules/@tanstack/react-query") ||
-            id.includes("node_modules/lucide-react")
+            id.includes("node_modules/lucide-react") ||
+            id.includes("node_modules/@radix-ui")
           ) {
             return "react-vendor";
           }
@@ -212,11 +214,6 @@ export default defineConfig({
           // File uploader
           if (id.includes("node_modules/@uppy")) {
             return "uppy-uploader";
-          }
-
-          // UI components
-          if (id.includes("node_modules/@radix-ui")) {
-            return "ui-vendor";
           }
 
           // Emoji picker
