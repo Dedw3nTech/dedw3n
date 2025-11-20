@@ -17,6 +17,7 @@ import { initializeOfflineDetection } from "@/lib/offline";
 import { initializeLanguageFromLocation } from "@/lib/i18n";
 import "@/utils/unified-logout-system";
 import leopardVideo from "@assets/Generated File November 09, 2025 - 8_24PM (1)_1762805360661.mp4";
+import dedw3nLogo from "@assets/Copy of MRCHT 1.0 (3)_1763629138053.png";
 
 // Loading indicator for code-split chunks with video background
 function PageLoadingFallback() {
@@ -26,31 +27,41 @@ function PageLoadingFallback() {
 
   return (
     <div 
-      className="fixed inset-0 flex items-center justify-center bg-white"
+      className="fixed inset-0 flex flex-col items-center justify-between bg-white"
       style={{ minHeight: '100dvh' }}
       role="status"
       aria-live="polite"
       aria-label="Loading application"
       data-testid="page-loading-fallback"
     >
-      <div className="text-center py-12">
-        <video 
-          src={leopardVideo} 
-          autoPlay 
-          loop 
-          muted 
-          playsInline
-          className="h-24 w-auto object-contain mx-auto mb-4"
-          data-testid="loading-video"
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center py-12">
+          <video 
+            src={leopardVideo} 
+            autoPlay 
+            loop 
+            muted 
+            playsInline
+            className="h-16 w-auto object-contain mx-auto mb-4"
+            data-testid="loading-video"
+          />
+          <p className="text-gray-600">
+            {thinkingText}
+            <span className="inline-flex ml-1">
+              <span className="animate-bounce" style={{ animationDelay: '0ms' }}>.</span>
+              <span className="animate-bounce" style={{ animationDelay: '150ms' }}>.</span>
+              <span className="animate-bounce" style={{ animationDelay: '300ms' }}>.</span>
+            </span>
+          </p>
+        </div>
+      </div>
+      <div className="pb-8">
+        <img 
+          src={dedw3nLogo} 
+          alt="Dedw3n" 
+          className="h-20 w-auto object-contain mx-auto"
+          data-testid="dedw3n-logo"
         />
-        <p className="text-gray-600">
-          {thinkingText}
-          <span className="inline-flex ml-1">
-            <span className="animate-bounce" style={{ animationDelay: '0ms' }}>.</span>
-            <span className="animate-bounce" style={{ animationDelay: '150ms' }}>.</span>
-            <span className="animate-bounce" style={{ animationDelay: '300ms' }}>.</span>
-          </span>
-        </p>
       </div>
     </div>
   );
