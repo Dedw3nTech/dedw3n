@@ -426,10 +426,18 @@
         pointer-events: none;
       }
       
+      #initial-loader .loader-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+      }
+      
       #initial-loader video {
-        width: 360px !important;
+        width: 240px !important;
         height: auto !important;
-        max-width: 360px !important;
+        max-width: 240px !important;
         object-fit: contain;
         margin-bottom: 20px;
         display: block !important;
@@ -461,6 +469,19 @@
         animation-delay: -0.16s;
       }
       
+      #initial-loader .loader-footer {
+        padding: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      #initial-loader .loader-logo {
+        height: 60px;
+        width: auto;
+        object-fit: contain;
+      }
+      
       @keyframes dot-bounce {
         0%, 80%, 100% {
           transform: translateY(0);
@@ -475,16 +496,21 @@
   <body>
     <!-- Initial Loading Screen -->
     <div id="initial-loader">
-      <video autoplay loop muted playsinline preload="auto">
-        <source src="/leopard-loader.mp4" type="video/mp4">
-      </video>
-      <div class="loading-text" data-translate="Thinking">
-        Thinking
-        <span class="dots">
-          <span>.</span>
-          <span>.</span>
-          <span>.</span>
-        </span>
+      <div class="loader-content">
+        <video autoplay loop muted playsinline preload="auto">
+          <source src="/leopard-loader.mp4" type="video/mp4">
+        </video>
+        <div class="loading-text" data-translate="Thinking">
+          Thinking
+          <span class="dots">
+            <span>.</span>
+            <span>.</span>
+            <span>.</span>
+          </span>
+        </div>
+      </div>
+      <div class="loader-footer">
+        <img src="/transparent-logo.png" alt="Dedw3n" class="loader-logo">
       </div>
     </div>
     
