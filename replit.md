@@ -27,7 +27,7 @@ The platform utilizes a modular, layered architecture for maintainability and sc
 - **Frontend:** React with TypeScript (Vite), featuring route and component-level code splitting, video-based loading, and ChunkLoadErrorBoundary.
 - **Backend:** Express.js with TypeScript, ensuring a clear separation of concerns.
 - **Database:** PostgreSQL with Drizzle ORM for automated synchronization and enterprise-grade connection management.
-- **Authentication:** Passport.js-based system for session management, JWT, secure cookies, rate limiting, input validation, 18+ age verification, password reset, and secure hashing, implemented without middleware.
+- **Authentication:** Passport.js-based system for session management, JWT, secure cookies, rate limiting, input validation, 18+ age verification, password reset, and secure hashing, implemented without middleware. **Circular Dependency Resolution:** Isolated security modules (`server/security/password-utils.ts` for hashing/validation, `server/security/token-utils.ts` for JWT operations) with dependency injection pattern in `jwt-auth.ts` to eliminate circular dependencies between storage, auth, and JWT modules (verified via madge - 0 circular dependencies).
 - **File Management:** Multer for media uploads to Cloudflare R2, with specific handling for profile pictures including manual inline authentication, rate limiting, and a `ProfilePictureProtectionService`.
 - **Real-time Communication:** WebSockets for live messaging and notifications with session caching.
 - **Marketplace Core:** Modules for product, vendor, and order management.
