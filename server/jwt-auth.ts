@@ -159,7 +159,7 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
       }
       
       // Update token's last active timestamp (don't await to prevent slowing down requests)
-      storage.updateTokenLastActive(authToken.id).catch(err => {
+      storageInstance.updateTokenLastActive(authToken.id).catch((err: Error) => {
         console.error('[AUTH] Failed to update token last active:', err);
       });
       
