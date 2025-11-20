@@ -45,6 +45,37 @@ const versionPlugin = (): Plugin => {
   };
 };
 
+// Add to your existing vite.config.ts
+
+export default defineConfig({
+  // ... your existing config
+
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Separate payment/checkout logic into its own chunk
+          payments: [
+            "./client/src/pages/cart.tsx",
+            "./client/src/pages/checkout.tsx",
+            "./client/src/pages/payment-gateway.tsx",
+            "./client/src/pages/payment-success.tsx",
+          ],
+        },
+      },
+    },
+  },
+
+  server: {
+    hmr: {
+      overlay: true, // Show HMR errors clearly
+    },
+  },
+
+  // Enable better debugging
+  logLevel: "info",
+});
+
 export default defineConfig({
   plugins: [
     react(),
@@ -227,3 +258,9 @@ export default defineConfig({
       : true,
   },
 });
+// ❌ Bad - creates runtime dependency
+import { UserType, formatUser } from "./utils";
+
+// ✅ Good - type import ignored by Vite
+import type { UserType } from "./utils";
+import { formatUser } from "./utils";
