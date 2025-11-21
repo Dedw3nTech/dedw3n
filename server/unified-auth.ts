@@ -8,23 +8,24 @@ import { storage } from './storage';
  * between the two authentication systems.
  */
 export const isAuthenticated = async (req: Request, res: Response, next: NextFunction) => {
-  console.log(`[AUTH] Authentication check for ${req.method} ${req.path}`);
-  
-  // First priority: Check for client user ID header
-  const clientUserId = req.headers['x-client-user-id'];
-  if (clientUserId && typeof clientUserId === 'string') {
-    try {
-      const userId = parseInt(clientUserId);
-      const user = await storage.getUser(userId);
-      if (user) {
-        console.log(`[AUTH] Client user authenticated: ${user.username} (ID: ${user.id})`);
-        req.user = user;
-        return next();
+  try {
+    console.log(`[AUTH] Authentication check for ${req.method} ${req.path}`);
+    
+    // First priority: Check for client user ID header
+    const clientUserId = req.headers['x-client-user-id'];
+    if (clientUserId && typeof clientUserId === 'string') {
+      try {
+        const userId = parseInt(clientUserId);
+        const user = await storage.getUser(userId);
+        if (user) {
+          console.log(`[AUTH] Client user authenticated: ${user.username} (ID: ${user.id})`);
+          req.user = user;
+          return next();
+        }
+      } catch (error) {
+        console.error('[AUTH] Error with client user authentication:', error);
       }
-    } catch (error) {
-      console.error('[AUTH] Error with client user authentication:', error);
     }
-  }
 
   // Test user authentication removed for security compliance
 
@@ -354,8 +355,16 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     console.log(`[AUTH] Request authenticated via JWT for user ID: ${user.id}`);
     next();
   } catch (error) {
-    console.error('[AUTH] Error during authentication:', error);
+    console.error('[AUTH] Error during JWT authentication:', error);
     return res.status(500).json({ message: 'Internal server error during authentication' });
+  }
+  } catch (error) {
+    // Top-level catch to ensure we always return JSON, never HTML
+    console.error('[AUTH] Unexpected error in authentication middleware:', error);
+    return res.status(500).json({ 
+      message: 'Authentication system error',
+      error: 'internal_server_error'
+    });
   }
 };
 
