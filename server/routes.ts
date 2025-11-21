@@ -3763,10 +3763,35 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
+  // Diagnostic endpoint to verify route is registered (GET method for easy testing)
+  app.get('/api/report-error/health', async (req: Request, res: Response) => {
+    return res.json({
+      status: 'ok',
+      endpoint: '/api/report-error',
+      methods: ['POST'],
+      message: 'Error reporting endpoint is registered and ready',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development'
+    });
+  });
+
+  // Explicit OPTIONS handler for CORS preflight
+  app.options('/api/report-error', (req: Request, res: Response) => {
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.status(200).end();
+  });
+
   // Error reporting endpoint for sending error reports via SMTP
   // RESILIENT: Always succeeds if database save works, email is optional
   app.post('/api/report-error', async (req: Request, res: Response) => {
     const reportId = `ERR-${Date.now()}`;
+    console.log(`[ERROR-REPORT] Received error report request ${reportId}`, {
+      method: req.method,
+      contentType: req.headers['content-type'],
+      origin: req.headers.origin,
+      hasBody: !!req.body
+    });
     
     try {
       const { errorType, errorMessage, url, userAgent, additionalInfo, userEmail, toastTitle, toastDescription } = req.body;
