@@ -443,6 +443,11 @@ async function batchFetchCryptoPrices(currencies: string[]): Promise<Record<stri
       throw new Error(`CoinGecko API error: ${response.status} ${response.statusText}`);
     }
 
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error(`CoinGecko API returned non-JSON content type: ${contentType}`);
+    }
+
     const data = await response.json();
     const prices: Record<string, number> = {};
 
