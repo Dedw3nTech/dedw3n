@@ -9185,78 +9185,87 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
 
   // User endpoint for authentication checks - allow unauthenticated requests to return status
   app.get("/api/user", async (req: Request, res: Response) => {
-    // Add privacy and security headers for sensitive route
-    attachPrivacyHeaders(res, req);
-    
-    console.log('/api/user - Checking authentication status');
-    
-    // Try to get user using the same logic as unifiedIsAuthenticated middleware
-    let user = null;
-    
-    // Check if already authenticated via middleware
-    if (req.user) {
-      user = req.user;
-    }
-    // Check passport session
-    else if (req.isAuthenticated && req.isAuthenticated()) {
-      user = req.user;
-    }
-    // Check session passport data directly
-    else if (req.session && typeof (req.session as any).passport !== 'undefined' && (req.session as any).passport.user) {
-      try {
-        const userId = (req.session as any).passport.user;
-        user = await storage.getUser(userId);
-      } catch (error) {
-        console.error('[DEBUG] Error retrieving user from session', error);
-      }
-    }
-    // Check for stored user session (fallback for messaging)
-    else if (req.session && (req.session as any).userId) {
-      try {
-        user = await storage.getUser((req.session as any).userId);
-      } catch (error) {
-        console.error('[DEBUG] Error retrieving user from fallback session', error);
-      }
-    }
-    
-    if (user) {
+    try {
+      // Add privacy and security headers for sensitive route
+      attachPrivacyHeaders(res, req);
       
-      // Check if user has an active proxy account
-      const activeProxyAccountId = (req.session as any)?.activeProxyAccountId;
-      if (activeProxyAccountId) {
+      console.log('/api/user - Checking authentication status');
+      
+      // Try to get user using the same logic as unifiedIsAuthenticated middleware
+      let user = null;
+      
+      // Check if already authenticated via middleware
+      if (req.user) {
+        user = req.user;
+      }
+      // Check passport session
+      else if (req.isAuthenticated && req.isAuthenticated()) {
+        user = req.user;
+      }
+      // Check session passport data directly
+      else if (req.session && typeof (req.session as any).passport !== 'undefined' && (req.session as any).passport.user) {
         try {
-          const proxyAccount = await storage.getProxyAccount(activeProxyAccountId);
-          
-          if (proxyAccount && proxyAccount.parentUserId === (user as any).id) {
-            // Return proxy account data as a user object
-            const proxyUserData = {
-              id: proxyAccount.id,
-              username: proxyAccount.accountName,
-              name: proxyAccount.accountName,
-              email: proxyAccount.email || (user as any).email, // Use proxy email if set, fallback to parent
-              avatar: (user as any).avatar,
-              role: (user as any).role,
-              isProxyAccount: true,
-              parentUserId: proxyAccount.parentUserId,
-              accountType: proxyAccount.accountType,
-              status: proxyAccount.status,
-            };
-            
-            return res.json(proxyUserData);
-          } else {
-            delete (req.session as any).activeProxyAccountId;
-          }
+          const userId = (req.session as any).passport.user;
+          user = await storage.getUser(userId);
         } catch (error) {
-          console.error('[DEBUG] /api/user - Error loading proxy account', error);
-          delete (req.session as any).activeProxyAccountId;
+          console.error('[DEBUG] Error retrieving user from session', error);
+        }
+      }
+      // Check for stored user session (fallback for messaging)
+      else if (req.session && (req.session as any).userId) {
+        try {
+          user = await storage.getUser((req.session as any).userId);
+        } catch (error) {
+          console.error('[DEBUG] Error retrieving user from fallback session', error);
         }
       }
       
-      res.json(user);
-    } else {
-      console.log('/api/user - No authenticated user');
-      // Return 200 OK with null user instead of 401 to avoid console errors
-      res.status(200).json(null);
+      if (user) {
+        
+        // Check if user has an active proxy account
+        const activeProxyAccountId = (req.session as any)?.activeProxyAccountId;
+        if (activeProxyAccountId) {
+          try {
+            const proxyAccount = await storage.getProxyAccount(activeProxyAccountId);
+            
+            if (proxyAccount && proxyAccount.parentUserId === (user as any).id) {
+              // Return proxy account data as a user object
+              const proxyUserData = {
+                id: proxyAccount.id,
+                username: proxyAccount.accountName,
+                name: proxyAccount.accountName,
+                email: proxyAccount.email || (user as any).email, // Use proxy email if set, fallback to parent
+                avatar: (user as any).avatar,
+                role: (user as any).role,
+                isProxyAccount: true,
+                parentUserId: proxyAccount.parentUserId,
+                accountType: proxyAccount.accountType,
+                status: proxyAccount.status,
+              };
+              
+              return res.json(proxyUserData);
+            } else {
+              delete (req.session as any).activeProxyAccountId;
+            }
+          } catch (error) {
+            console.error('[DEBUG] /api/user - Error loading proxy account', error);
+            delete (req.session as any).activeProxyAccountId;
+          }
+        }
+        
+        res.json(user);
+      } else {
+        console.log('/api/user - No authenticated user');
+        // Return 200 OK with null user instead of 401 to avoid console errors
+        res.status(200).json(null);
+      }
+    } catch (error) {
+      console.error('[ERROR] /api/user endpoint failed:', error);
+      // Always return JSON even on error
+      res.status(500).json({ 
+        error: 'Failed to retrieve user information',
+        authenticated: false 
+      });
     }
   });
 
