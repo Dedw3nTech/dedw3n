@@ -427,23 +427,28 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
 
   // CORS preflight handlers for authentication endpoints
   // Required for production cross-origin requests
+  // Using 200 instead of 204 for maximum browser compatibility (Firefox, IE11, legacy browsers)
+  // See: https://github.com/Kong/kong/issues/4008
+  app.options("/api/auth/login", (req, res) => {
+    res.sendStatus(200);
+  });
   app.options("/api/auth/register", (req, res) => {
-    res.status(204).end();
+    res.sendStatus(200);
   });
   app.options("/api/auth/logout", (req, res) => {
-    res.status(204).end();
+    res.sendStatus(200);
   });
   app.options("/api/auth/reset-password", (req, res) => {
-    res.status(204).end();
+    res.sendStatus(200);
   });
   app.options("/api/auth/verify-email/request", (req, res) => {
-    res.status(204).end();
+    res.sendStatus(200);
   });
   app.options("/api/auth/verify-email/confirm", (req, res) => {
-    res.status(204).end();
+    res.sendStatus(200);
   });
   app.options("/api/auth/forgot-password", (req, res) => {
-    res.status(204).end();
+    res.sendStatus(200);
   });
 
   // Authentication routes
@@ -638,12 +643,6 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
       logger.error(`Registration failed:`, error);
       next(error);
     }
-  });
-
-  // CORS preflight handler for login endpoint
-  // Required for production cross-origin requests
-  app.options("/api/auth/login", (req, res) => {
-    res.status(204).end();
   });
 
   app.post("/api/auth/login", async (req, res, next) => {
