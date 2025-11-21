@@ -337,7 +337,11 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  maxAge: 86400
+  maxAge: 86400,
+  // Use 200 instead of default 204 for maximum browser compatibility
+  // Firefox and IE11 have issues with 204 preflight responses
+  // See: https://github.com/Kong/kong/issues/4008
+  optionsSuccessStatus: 200
 }));
 
 // Essential body parsing - Required for API to function

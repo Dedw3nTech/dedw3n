@@ -425,32 +425,6 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
     });
   });
 
-  // CORS preflight handlers for authentication endpoints
-  // Required for production cross-origin requests
-  // Using 200 instead of 204 for maximum browser compatibility (Firefox, IE11, legacy browsers)
-  // See: https://github.com/Kong/kong/issues/4008
-  app.options("/api/auth/login", (req, res) => {
-    res.sendStatus(200);
-  });
-  app.options("/api/auth/register", (req, res) => {
-    res.sendStatus(200);
-  });
-  app.options("/api/auth/logout", (req, res) => {
-    res.sendStatus(200);
-  });
-  app.options("/api/auth/reset-password", (req, res) => {
-    res.sendStatus(200);
-  });
-  app.options("/api/auth/verify-email/request", (req, res) => {
-    res.sendStatus(200);
-  });
-  app.options("/api/auth/verify-email/confirm", (req, res) => {
-    res.sendStatus(200);
-  });
-  app.options("/api/auth/forgot-password", (req, res) => {
-    res.sendStatus(200);
-  });
-
   // Authentication routes
   app.post("/api/auth/register", async (req, res, next) => {
     const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
