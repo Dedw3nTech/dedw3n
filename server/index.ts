@@ -397,8 +397,17 @@ app.get('/navigation-header-logo.png', (req, res) => {
 
 // CRITICAL: Serve attached_assets BEFORE any middleware to prevent 404 interception
 // This folder contains email template images and other static assets
-const attachedAssetsPath = path.join(process.cwd(), 'attached_assets');
-if (fs.existsSync(attachedAssetsPath)) {
+// In production, check both the dist folder location and the root
+const isDevelopment = process.env.NODE_ENV !== 'production';
+const possibleAssetPaths = [
+  path.join(process.cwd(), 'attached_assets'),
+  path.join(__dirname, 'attached_assets'),
+  path.join(__dirname, '..', 'attached_assets')
+];
+
+let attachedAssetsPath = possibleAssetPaths.find(p => fs.existsSync(p));
+
+if (attachedAssetsPath) {
   app.use('/attached_assets', express.static(attachedAssetsPath, {
     setHeaders: (res, filePath) => {
       const config = {
@@ -408,7 +417,10 @@ if (fs.existsSync(attachedAssetsPath)) {
       applyStaticAssetHeaders({ path: filePath } as any, res, config);
     }
   }));
-  log('Mounted attached_assets static folder');
+  log(`Mounted attached_assets static folder from: ${attachedAssetsPath}`);
+} else {
+  console.warn('Warning: attached_assets folder not found in any expected location');
+  console.warn('Searched paths:', possibleAssetPaths);
 }
 
 (async () => {
