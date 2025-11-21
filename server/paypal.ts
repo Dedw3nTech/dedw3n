@@ -109,7 +109,14 @@ export async function createPaypalOrder(req: Request, res: Response) {
     const { body, ...httpResponse } =
           await ordersController.createOrder(collect);
 
-    const jsonResponse = JSON.parse(String(body));
+    const { safeJsonParseExternal } = await import('./utils');
+    const jsonResponse = safeJsonParseExternal(String(body), 'PayPal Create Order API');
+    
+    if (!jsonResponse) {
+      console.error("Failed to parse PayPal order creation response");
+      return res.status(502).json({ error: "Invalid response from PayPal API" });
+    }
+    
     const httpStatusCode = httpResponse.statusCode;
 
     res.status(httpStatusCode).json(jsonResponse);
@@ -130,7 +137,14 @@ export async function capturePaypalOrder(req: Request, res: Response) {
     const { body, ...httpResponse } =
           await ordersController.captureOrder(collect);
 
-    const jsonResponse = JSON.parse(String(body));
+    const { safeJsonParseExternal } = await import('./utils');
+    const jsonResponse = safeJsonParseExternal(String(body), 'PayPal Capture Order API');
+    
+    if (!jsonResponse) {
+      console.error("Failed to parse PayPal capture response");
+      return res.status(502).json({ error: "Invalid response from PayPal API" });
+    }
+    
     const httpStatusCode = httpResponse.statusCode;
 
     res.status(httpStatusCode).json(jsonResponse);

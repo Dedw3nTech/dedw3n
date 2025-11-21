@@ -16,6 +16,9 @@ import { db } from "./db";
 import { createHealthChecker } from "./health/health-checks";
 import { logger } from "./logger";
 import { applySecurityHeaders, applyStaticAssetHeaders } from "./utils/securityHeaders";
+import { ErrorBuilder } from "./errors/error-builder";
+import { jsonRateLimitCheck, recordJsonError } from "./middleware/json-rate-limiter";
+import { randomBytes } from "crypto";
 
 // Extend Express Request type to include our custom properties
 declare global {
@@ -344,9 +347,43 @@ app.use(cors({
   optionsSuccessStatus: 200
 }));
 
+// Generate correlation ID for request tracing (before all other middleware)
+app.use((req: Request, _res: Response, next: NextFunction) => {
+  req.correlationId = req.correlationId || `${Date.now()}-${randomBytes(4).toString('hex')}`;
+  next();
+});
+
+// Rate limiting for malformed JSON requests (after correlation ID, before body parsing)
+app.use(jsonRateLimitCheck);
+
 // Essential body parsing - Required for API to function
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
+
+// Production-safe JSON parsing error handler
+// Catches malformed JSON from express.json() middleware
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  if (err instanceof SyntaxError && (err as any).status === 400 && 'body' in err) {
+    // Record this error for rate limiting
+    recordJsonError(req);
+    
+    // Use standardized error builder for consistent error handling
+    const { response, httpStatus } = ErrorBuilder.jsonParseError({
+      message: 'Request body contains malformed JSON',
+      correlationId: req.correlationId,
+      path: req.path,
+      method: req.method,
+      originalError: err,
+      context: {
+        contentType: req.headers['content-type'],
+        bodySize: req.headers['content-length'],
+      }
+    });
+    
+    return res.status(httpStatus).json(response);
+  }
+  next(err);
+});
 
 // Get current file directory (ES modules replacement for __dirname)
 const __filename = fileURLToPath(import.meta.url);
@@ -685,25 +722,56 @@ if (attachedAssetsPath) {
     next();
   });
   
-  // Global error handler with full stack trace and correlation ID
+  // Production-safe centralized error handler
   app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
     const correlationId = req.correlationId || 'unknown';
     
-    logger.error(`Error ${status}: ${message}`, {
+    // Determine if error is client-side (4xx) or server-side (5xx)
+    const isClientError = status >= 400 && status < 500;
+    
+    // Log with appropriate level
+    const logMessage = `Error ${status}: ${err.message || 'Unknown error'}`;
+    logger.error(logMessage, {
       correlationId,
       path: `${req.method} ${req.path}`,
       name: err.name,
       status,
-      code: err.code
+      code: err.code,
+      isClientError
     }, err, 'http');
     
-    res.status(status).json({ 
-      message,
+    // Production-safe error message (never expose internal details in production)
+    let clientMessage: string;
+    if (process.env.NODE_ENV === 'production') {
+      if (isClientError) {
+        // For client errors, provide the error message (it's the client's fault)
+        clientMessage = err.message || 'Bad request';
+      } else {
+        // For server errors, provide generic message (hide internal details)
+        clientMessage = 'An internal error occurred. Please try again later.';
+      }
+    } else {
+      // Development: show full error message
+      clientMessage = err.message || 'Internal Server Error';
+    }
+    
+    const errorResponse: any = { 
+      error: clientMessage,
       correlationId,
-      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-    });
+      status
+    };
+    
+    // Only include stack trace in development
+    if (process.env.NODE_ENV === 'development') {
+      errorResponse.stack = err.stack;
+      errorResponse.details = {
+        name: err.name,
+        code: err.code
+      };
+    }
+    
+    res.status(status).json(errorResponse);
   });
   
   // Optimized 404 detection middleware

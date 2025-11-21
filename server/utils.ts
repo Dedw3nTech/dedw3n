@@ -22,14 +22,126 @@ export function safeJsonStringify(obj: any): string {
 
 /**
  * Parse a JSON string safely, returning null if parsing fails
+ * Enhanced with detailed error context for production debugging
  * @param str The string to parse
+ * @param context Optional context string for logging (e.g., 'user preferences', 'API response')
  * @returns Parsed object or null if parsing fails
  */
-export function safeJsonParse(str: string): any {
+export function safeJsonParse(str: string, context?: string): any {
   try {
+    if (!str || typeof str !== 'string') {
+      // Use logger for structured logging (imported dynamically to avoid circular dependency)
+      import('./logger').then(({ logger }) => {
+        logger.warn('JSON parsing failed - invalid input', {
+          context: context || 'unknown',
+          inputType: typeof str,
+          isNull: str === null,
+          isUndefined: str === undefined
+        }, 'json-parser');
+      });
+      return null;
+    }
+    
     return JSON.parse(str);
   } catch (error) {
-    console.error('Failed to parse JSON:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const truncatedStr = str?.length > 100 ? str.substring(0, 100) + '...' : str;
+    
+    // Use logger for structured logging
+    import('./logger').then(({ logger }) => {
+      logger.warn('JSON parsing failed', {
+        context: context || 'unknown',
+        errorType: error instanceof SyntaxError ? 'SYNTAX_ERROR' : 'UNKNOWN_ERROR',
+        errorMessage,
+        inputPreview: truncatedStr,
+        inputLength: str?.length || 0,
+      }, 'json-parser');
+    });
+    
+    return null;
+  }
+}
+
+/**
+ * Parse JSON with validation and proper error propagation for critical operations
+ * Use this for critical parsing where null is not acceptable
+ * @param str The string to parse
+ * @param context Context for error messages
+ * @returns Parsed object
+ * @throws Error with descriptive message if parsing fails
+ */
+export function safeJsonParseWithValidation<T = any>(str: string, context: string): T {
+  if (!str || typeof str !== 'string') {
+    const error = new Error(`${context}: Invalid input - expected non-empty string, got ${typeof str}`);
+    (error as any).code = 'INVALID_INPUT';
+    (error as any).context = context;
+    throw error;
+  }
+  
+  try {
+    const parsed = JSON.parse(str);
+    
+    if (parsed === null || parsed === undefined) {
+      const error = new Error(`${context}: Parsed JSON is null or undefined`);
+      (error as any).code = 'NULL_RESULT';
+      (error as any).context = context;
+      throw error;
+    }
+    
+    return parsed as T;
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      const truncatedStr = str.length > 100 ? str.substring(0, 100) + '...' : str;
+      const enrichedError = new Error(`${context}: Invalid JSON format - ${error.message}. Input preview: ${truncatedStr}`);
+      (enrichedError as any).code = 'JSON_SYNTAX_ERROR';
+      (enrichedError as any).context = context;
+      (enrichedError as any).originalError = error;
+      throw enrichedError;
+    }
+    
+    throw error;
+  }
+}
+
+/**
+ * Parse JSON from external API with proper error handling
+ * Use this for third-party API responses to catch and classify errors properly
+ * @param str The JSON string from external API
+ * @param apiName Name of the external API for context
+ * @returns Parsed object or null if parsing fails
+ */
+export function safeJsonParseExternal<T = any>(str: string, apiName: string): T | null {
+  try {
+    if (!str || typeof str !== 'string') {
+      // Use logger for structured logging
+      import('./logger').then(({ logger }) => {
+        logger.error('External API returned invalid JSON response', {
+          apiName,
+          inputType: typeof str,
+          isNull: str === null,
+          isUndefined: str === undefined,
+        }, undefined, 'json-parser-external');
+      });
+      return null;
+    }
+    
+    return JSON.parse(str) as T;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const truncatedStr = str?.length > 200 ? str.substring(0, 200) + '...' : str;
+    
+    // Use logger for structured logging - external API failures are high severity
+    import('./logger').then(({ logger }) => {
+      logger.error('External API JSON parsing failed', {
+        apiName,
+        errorType: error instanceof SyntaxError ? 'SYNTAX_ERROR' : 'UNKNOWN_ERROR',
+        errorMessage,
+        responsePreview: truncatedStr,
+        responseLength: str?.length || 0,
+        severity: 'HIGH',
+      }, error as Error, 'json-parser-external');
+    });
+    
     return null;
   }
 }

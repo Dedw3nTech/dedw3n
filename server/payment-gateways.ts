@@ -141,7 +141,13 @@ export class PayPalGateway implements PaymentGatewayInterface {
         prefer: 'return=representation',
       });
 
-      const orderData = JSON.parse(String(order.body));
+      const { safeJsonParseExternal } = await import('./utils');
+      const orderData = safeJsonParseExternal(String(order.body), 'PayPal Order API');
+      
+      if (!orderData) {
+        throw new Error('Failed to parse PayPal order response - invalid JSON returned from PayPal API');
+      }
+      
       const approvalUrl = orderData.links?.find((link: any) => link.rel === 'approve')?.href;
 
       return {
@@ -165,7 +171,12 @@ export class PayPalGateway implements PaymentGatewayInterface {
         prefer: 'return=representation',
       });
 
-      const captureData = JSON.parse(String(capture.body));
+      const { safeJsonParseExternal } = await import('./utils');
+      const captureData = safeJsonParseExternal(String(capture.body), 'PayPal Capture API');
+      
+      if (!captureData) {
+        throw new Error('Failed to parse PayPal capture response - invalid JSON returned from PayPal API');
+      }
       
       return {
         gateway: 'paypal',
@@ -188,7 +199,14 @@ export class PayPalGateway implements PaymentGatewayInterface {
   async getPaymentStatus(paymentId: string): Promise<string> {
     try {
       const order = await paypalOrdersController.getOrder({ id: paymentId });
-      const orderData = JSON.parse(String(order.body));
+      const { safeJsonParseExternal } = await import('./utils');
+      const orderData = safeJsonParseExternal(String(order.body), 'PayPal Order Status API');
+      
+      if (!orderData || !orderData.status) {
+        console.error('[PayPal] Invalid order status response');
+        return 'unknown';
+      }
+      
       return orderData.status.toLowerCase();
     } catch (error) {
       console.error('[PayPal] Error getting payment status:', error);
