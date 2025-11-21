@@ -1,3 +1,5 @@
+import heroImageDesktop from "@assets/coming soon carte blanche_1761364163382.png";
+import heroImageMobile from "@assets/coming soon web app mobile_1758821892697.png";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -335,7 +337,7 @@ export default function Home() {
     <div className="min-h-screen">
       {/* Hero Section with Unified Background */}
       <HeroBackground 
-        src={isMobile ? "/attached_assets/coming%20soon%20web%20app%20mobile_1758821892697.png" : `/attached_assets/coming%20soon%20carte%20blanche_1761364163382.png?v=${Date.now()}`}
+        src={isMobile ? heroImageMobile : heroImageDesktop}
         className="relative w-full min-h-screen flex items-center justify-center hero-mobile-optimized"
         alt={isMobile ? "Coming Soon - Dedw3n Mobile App" : "Carte Blanche - Coming Soon"}
         onError={() => console.error('Failed to load hero image in home page')}

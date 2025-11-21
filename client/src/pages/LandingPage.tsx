@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import heroImageDesktop from "@assets/coming soon carte blanche_1761364163382.png";
 
 export default function LandingPage() {
   const [imageError, setImageError] = useState(false);
-  
+
   // Use the coming soon desktop hero image
-  const heroImagePath = "/attached_assets/coming%20soon%20carte%20blanche_1761364163382.png";
+  const heroImagePath = heroImageDesktop;
   
   const handleImageError = () => {
     console.error('Failed to load hero image:', heroImagePath);
