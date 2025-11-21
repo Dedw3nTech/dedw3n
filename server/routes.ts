@@ -23488,6 +23488,28 @@ The Dedw3n Team
         cacheKey,
         async () => {
           const response = await fetch(`https://ipapi.co/${ipToCheck}/json/`);
+          
+          if (!response.ok) {
+            console.warn(`Geolocation API returned ${response.status} for IP ${ipToCheck}`);
+            return {
+              country: 'Unknown',
+              countryCode: 'XX',
+              city: 'Unknown',
+              region: 'Unknown'
+            };
+          }
+          
+          const contentType = response.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+            console.warn(`Geolocation API returned non-JSON content type: ${contentType}`);
+            return {
+              country: 'Unknown',
+              countryCode: 'XX',
+              city: 'Unknown',
+              region: 'Unknown'
+            };
+          }
+          
           const data = await response.json();
           
           if (data.country_name && !data.error) {
