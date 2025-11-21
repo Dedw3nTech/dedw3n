@@ -28,6 +28,18 @@ export function useLocation(hasConsent: boolean): UseLocationReturn {
     const fetchLocation = async () => {
       try {
         const response = await fetch('/api/geolocation');
+        
+        // Validate response before parsing JSON
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        // Check if response is actually JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error(`Expected JSON, received: ${contentType || 'unknown'}`);
+        }
+        
         const data = await response.json();
         
         setLocation(data);

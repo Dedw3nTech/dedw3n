@@ -123,6 +123,13 @@ export async function apiRequest(
   if (url === undefined) {
     const getUrl = urlOrMethod;
     const response = await apiRequestFull('GET', getUrl, undefined, options);
+    
+    // Validate content-type before parsing JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error(`Expected JSON response, received: ${contentType || 'unknown'}`);
+    }
+    
     return response.json();
   }
   

@@ -96,6 +96,12 @@ export async function fetchCryptoPrices(cryptoCodes: string[]): Promise<Record<s
       throw new Error(`CoinGecko API error: ${response.status} ${response.statusText}`);
     }
 
+    // Validate content-type before parsing JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error(`Expected JSON response, received: ${contentType || 'unknown'}`);
+    }
+
     const prices: Record<string, number> = await response.json();
 
     // Update cache
