@@ -146,17 +146,6 @@ async function apiRequestFull(
   // Extract isFormData from options
   const isFormData = options?.isFormData;
   
-  // TEMPORARILY DISABLED: Get userId from session or localStorage to fix auth loop
-  let userId = null;
-  // Clear any stored userData to prevent authentication loops
-  try {
-    sessionStorage.removeItem('userData');
-    localStorage.removeItem('userData');
-    console.log('Cleared userData from storage in apiRequest');
-  } catch (e) {
-    console.error('Error clearing user data from storage:', e);
-  }
-  
   // Check for logout state from unified system
   let userLoggedOut = false;
   try {
@@ -345,6 +334,14 @@ async function apiRequestFull(
       }
     }
 
+    // Handle authentication errors properly - dispatch event for auth context
+    if (res.status === 401 || res.status === 403) {
+      console.log('[AUTH-ERROR] Authentication error detected:', res.status);
+      window.dispatchEvent(new CustomEvent('auth-error', { 
+        detail: { status: res.status, url } 
+      }));
+    }
+
     await throwIfResNotOk(res);
     
     // If this was a successful mutation (non-GET request), invalidate related caches
@@ -461,17 +458,6 @@ export const getQueryFn: <T>(options: {
       }
     };
 
-    // TEMPORARILY DISABLED: Get user ID from sessionStorage to fix auth loop
-    let userId = null;
-    // Clear any stored userData to prevent authentication loops
-    try {
-      sessionStorage.removeItem('userData');
-      localStorage.removeItem('userData');
-      console.log('Cleared userData from storage in getQueryFn');
-    } catch (e) {
-      // Continue without user ID
-    }
-
     // Check if user is logged out via unified logout system
     let userLoggedOut = false;
     try {
@@ -528,7 +514,13 @@ export const getQueryFn: <T>(options: {
         }
       }
 
-      if (res.status === 401) {
+      // Handle authentication errors properly - dispatch event for auth context
+      if (res.status === 401 || res.status === 403) {
+        console.log('[AUTH-ERROR] Authentication error detected in query:', res.status);
+        window.dispatchEvent(new CustomEvent('auth-error', { 
+          detail: { status: res.status, url } 
+        }));
+        
         if (unauthorizedBehavior === "returnNull") {
           // Return a safe default value instead of null to prevent "Cannot read properties of null" errors
           return getSafeDefaultForEndpoint(url);

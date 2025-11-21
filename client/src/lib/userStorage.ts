@@ -111,10 +111,14 @@ export function updateUserData(userData: Partial<User>): void {
   const existingData = loadUserData();
   
   if (existingData) {
+    // Extract metadata fields that aren't part of User type
+    const { lastUpdated, lastAuthTime, ...userFields } = existingData;
+    
+    // Merge existing user fields with updates and cast to User
+    // saveUserData will add back lastUpdated and lastAuthTime
     saveUserData({
-      ...existingData,
+      ...userFields,
       ...userData,
-      lastUpdated: new Date().toISOString()
-    });
+    } as User);
   }
 }
