@@ -15611,7 +15611,11 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
   // Get user friends for private room invitations
   app.get('/api/friends', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = (req as any).userId;
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+      
+      const userId = req.user.id;
 
       const friends = await db
         .select({
@@ -15626,17 +15630,24 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
           eq(friendships.status, 'accepted')
         ));
 
-      res.json(friends);
+      return res.json(friends);
     } catch (error) {
-      console.error('Error fetching friends', error);
-      res.status(500).json({ message: 'Failed to fetch friends' });
+      console.error('[FRIENDS] Error fetching friends:', error);
+      return res.status(500).json({ 
+        message: 'Failed to fetch friends',
+        error: 'internal_server_error'
+      });
     }
   });
 
   // Get pending friend requests count
   app.get('/api/friends/pending/count', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = (req as any).userId;
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+      
+      const userId = req.user.id;
 
       const pendingCount = await db
         .select({ count: sql`count(*)` })
@@ -15646,10 +15657,13 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
           eq(friendRequests.status, 'pending')
         ));
 
-      res.json({ count: Number(pendingCount[0]?.count || 0) });
+      return res.json({ count: Number(pendingCount[0]?.count || 0) });
     } catch (error) {
-      console.error('Error fetching pending friend requests count', error);
-      res.status(500).json({ message: 'Failed to fetch pending friend requests count' });
+      console.error('[FRIENDS] Error fetching pending friend requests count:', error);
+      return res.status(500).json({ 
+        message: 'Failed to fetch pending friend requests count',
+        error: 'internal_server_error'
+      });
     }
   });
   
@@ -15667,8 +15681,12 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
   // Create private room
   app.post('/api/chatrooms/private', unifiedIsAuthenticated, async (req: Request, res: Response) => {
     try {
+      if (!req.user?.id) {
+        return res.status(401).json({ message: 'Unauthorized - No valid authentication' });
+      }
+      
       const { name, isAudioEnabled, invitedUsers } = req.body;
-      const userId = (req as any).userId;
+      const userId = req.user.id;
 
       if (!name || !name.trim()) {
         return res.status(400).json({ message: 'Room name is required' });
