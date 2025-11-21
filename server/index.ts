@@ -838,7 +838,29 @@ if (attachedAssetsPath) {
       next();
     });
     
-    serveStatic(app);
+    // CRITICAL PRODUCTION FIX: Protect API routes from static file catch-all
+    // Create a dedicated Express instance for static serving with guards
+    // This prevents 405 errors on POST /api/auth/login and other API endpoints
+    const staticApp = express();
+    serveStatic(staticApp);
+    
+    // Mount static server with protective guards (aligned with Vite middleware behavior)
+    app.use((req, res, next) => {
+      // Skip static serving for:
+      // 1. Non-GET requests (POST, PUT, DELETE, etc.) - prevents 405 on API mutations
+      // 2. All API routes - ensures API handlers process these requests
+      // 3. Object storage routes - handled by dedicated object storage middleware
+      if (req.method !== 'GET' || 
+          req.path.startsWith('/api') || 
+          req.path.startsWith('/public-objects') || 
+          req.path.startsWith('/private-objects')) {
+        return next();
+      }
+      
+      // Forward eligible requests to static server
+      staticApp(req, res, next);
+    });
+    
     logger.lifecycle('Production static server started', undefined, 'startup');
   }
   
