@@ -2377,7 +2377,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const count = await storage.getUnreadNotificationCount(req.user.id);
       return res.json({ count });
     } catch (error) {
-      return res.status(500).json({ message: 'Failed to fetch unread notification count' });
+      console.error('[NOTIFICATIONS] Error fetching unread notification count:', error);
+      return res.status(500).json({ 
+        message: 'Failed to fetch unread notification count',
+        error: 'internal_server_error'
+      });
     }
   });
 
