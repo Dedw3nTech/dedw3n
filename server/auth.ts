@@ -425,6 +425,27 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
     });
   });
 
+  // CORS preflight handlers for authentication endpoints
+  // Required for production cross-origin requests
+  app.options("/api/auth/register", (req, res) => {
+    res.status(204).end();
+  });
+  app.options("/api/auth/logout", (req, res) => {
+    res.status(204).end();
+  });
+  app.options("/api/auth/reset-password", (req, res) => {
+    res.status(204).end();
+  });
+  app.options("/api/auth/verify-email/request", (req, res) => {
+    res.status(204).end();
+  });
+  app.options("/api/auth/verify-email/confirm", (req, res) => {
+    res.status(204).end();
+  });
+  app.options("/api/auth/forgot-password", (req, res) => {
+    res.status(204).end();
+  });
+
   // Authentication routes
   app.post("/api/auth/register", async (req, res, next) => {
     const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
@@ -617,6 +638,12 @@ This is an automated message from Dedw3n. Please do not reply to this email.`;
       logger.error(`Registration failed:`, error);
       next(error);
     }
+  });
+
+  // CORS preflight handler for login endpoint
+  // Required for production cross-origin requests
+  app.options("/api/auth/login", (req, res) => {
+    res.status(204).end();
   });
 
   app.post("/api/auth/login", async (req, res, next) => {
