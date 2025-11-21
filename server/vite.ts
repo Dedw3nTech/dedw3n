@@ -43,12 +43,16 @@ export async function setupVite(app: Express, server: Server) {
   app.use(vite.middlewares);
   app.use(async (req, res, next) => {
     // Only handle GET requests for HTML/SPA routes
-    if (req.method !== 'GET') {
+    if (req.method !== "GET") {
       return next();
     }
 
     // Skip API and object storage routes
-    if (req.path.startsWith('/api') || req.path.startsWith('/public-objects') || req.path.startsWith('/private-objects')) {
+    if (
+      req.path.startsWith("/api") ||
+      req.path.startsWith("/public-objects") ||
+      req.path.startsWith("/private-objects")
+    ) {
       return next();
     }
 
@@ -87,8 +91,24 @@ export function serveStatic(app: Express) {
 
   app.use(express.static(distPath));
 
-  // fall through to index.html if the file doesn't exist
-  app.use((_req, res) => {
+  // PRODUCTION FIX: fall through to index.html if the file doesn't exist
+  // CRITICAL: Add guards to prevent intercepting API routes (fixes 405 errors)
+  app.use((req, res, next) => {
+    // Skip non-GET requests (POST, PUT, DELETE, etc.)
+    if (req.method !== "GET") {
+      return next();
+    }
+
+    // Skip API and object storage routes
+    if (
+      req.path.startsWith("/api") ||
+      req.path.startsWith("/public-objects") ||
+      req.path.startsWith("/private-objects")
+    ) {
+      return next();
+    }
+
+    // Serve index.html for SPA routes
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }
