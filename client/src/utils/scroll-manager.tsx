@@ -1,7 +1,11 @@
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 
 const scrollHistory = new Map<string, number>();
+
+if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
+  window.history.scrollRestoration = 'manual';
+}
 
 interface ScrollManagerConfig {
   exemptRoutes?: string[];
@@ -68,15 +72,23 @@ export function ScrollManager({ config }: { config?: Partial<ScrollManagerConfig
       return;
     }
     
-    if (mergedConfig.enableScrollRestoration) {
-      const savedPosition = scrollHistory.get(location);
-      
-      if (savedPosition !== undefined) {
-        document.documentElement.scrollTo({
-          top: savedPosition,
-          left: 0,
-          behavior: mergedConfig.scrollBehavior
-        });
+    requestAnimationFrame(() => {
+      if (mergedConfig.enableScrollRestoration) {
+        const savedPosition = scrollHistory.get(location);
+        
+        if (savedPosition !== undefined) {
+          document.documentElement.scrollTo({
+            top: savedPosition,
+            left: 0,
+            behavior: mergedConfig.scrollBehavior
+          });
+        } else {
+          document.documentElement.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: mergedConfig.scrollBehavior
+          });
+        }
       } else {
         document.documentElement.scrollTo({
           top: 0,
@@ -84,13 +96,7 @@ export function ScrollManager({ config }: { config?: Partial<ScrollManagerConfig
           behavior: mergedConfig.scrollBehavior
         });
       }
-    } else {
-      document.documentElement.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: mergedConfig.scrollBehavior
-      });
-    }
+    });
     
     previousPath.current = location;
   }, [location, config]);
