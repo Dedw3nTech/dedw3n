@@ -265,16 +265,8 @@ import { SocialProviders } from '@/components/SocialProviders';
 import { MessagingProviders } from '@/components/MessagingProviders';
 import { MarketplaceProviders } from '@/components/MarketplaceProviders';
 
-// Global scroll to top component
-function ScrollToTop() {
-  const [location] = useLocation();
-  
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [location]);
-  
-  return null;
-}
+// Import ScrollManager for improved scroll-to-top functionality
+import { ScrollManager } from '@/utils/scroll-manager';
 
 // Email verification redirect component
 function EmailVerificationRedirect() {
@@ -616,7 +608,7 @@ function App() {
           <MessagingProviders>
             <MarketplaceProviders>
               <ErrorBoundary>
-                <ScrollToTop />
+                <ScrollManager />
                 <EmailVerificationRedirect />
                 <div className="flex flex-col min-h-screen">
                   {!isStandalone && (
