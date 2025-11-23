@@ -11,6 +11,7 @@ const BusinessTermsPage = lazy(() => import('@/pages/business-terms'));
 const CookiesPage = lazy(() => import('@/pages/cookies'));
 const CommunityGuidelines = lazy(() => import('@/pages/community-guidelines'));
 const CodeOfEthicsPage = lazy(() => import('@/pages/code-of-ethics'));
+const CharityPage = lazy(() => import('@/pages/charity'));
 const CareersPage = lazy(() => import('@/pages/careers'));
 const IntellectualPropertyPage = lazy(() => import('@/pages/intellectual-property'));
 const AdvertisementTermsPage = lazy(() => import('@/pages/advertisement-terms'));
@@ -55,6 +56,11 @@ export function LegalInfoRoutes({ params }: any) {
       <Route path="/code-of-ethics">
         <SEOHead title="Code of Ethics - Dedw3n" description="Learn about Dedw3n's commitment to ethics, integrity, and social responsibility in all business operations." />
         <CodeOfEthicsPage />
+      </Route>
+      
+      <Route path="/charity">
+        <SEOHead title="Charity - Dedw3n" description="Learn about Dedw3n's commitment to charitable causes and how we give back to the community." />
+        <CharityPage />
       </Route>
       
       <Route path="/careers">

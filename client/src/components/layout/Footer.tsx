@@ -46,6 +46,7 @@ function FooterContent() {
     "Legal",
     "Dedw3n",
     "About Us",
+    "Charity",
     "Code Of Ethics",
     "Careers",
     "Location",
@@ -71,7 +72,7 @@ function FooterContent() {
     communityGuidelinesText, contactUsText, faqText, catalogueRulesText, tipsTricksText, paymentOptionsText, deliveryReturnsText, howToUseText,
     downloadMobileAppText, downloadOnTheText, appStoreText, getItOnText, googlePlayText,
     britishCompanyText, registeredOfficeText, bankRegisteredText, officialWebsiteText,
-    giftCardsText, helpText, legalText, dedw3nText, aboutUsText, codeOfEthicsText, careersText, locationText,
+    giftCardsText, helpText, legalText, dedw3nText, aboutUsText, charityText, codeOfEthicsText, careersText, locationText,
     locationCountryText, loadingText, unknownText, educationPolicyText, intellectualPropertyText, advertisementTermsText
   ] = translations || footerTexts;
   
@@ -99,6 +100,11 @@ function FooterContent() {
                 <li>
                   <Link href="/about-us" className="text-xs text-gray-600 hover:text-primary">
                     {aboutUsText}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/charity" className="text-xs text-gray-600 hover:text-primary" data-testid="link-charity">
+                    {charityText}
                   </Link>
                 </li>
                 <li>

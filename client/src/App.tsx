@@ -459,7 +459,7 @@ const lazyBundles = [
     Component: LegalInfoRoutes,
     mounts: [
       '/faq', '/catalogue-rules', '/tips-tricks', '/payment-options', '/delivery-returns',
-      '/how-to-use', '/about-us', '/code-of-ethics', '/careers', '/network-partnership-resources',
+      '/how-to-use', '/about-us', '/charity', '/code-of-ethics', '/careers', '/network-partnership-resources',
       '/resources', '/privacy', '/terms', '/business-terms', '/cookies', '/education-policy',
       '/intellectual-property', '/advertisement-terms', '/contact', '/community-guidelines',
       '/remove-ads', '/sitemap'
