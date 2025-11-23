@@ -1,7 +1,5 @@
-import { useLayoutEffect, useRef, useEffect } from "react";
+import { useEffect } from "react";
 import { useLocation } from "wouter";
-
-const scrollHistory = new Map<string, number>();
 
 if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
   window.history.scrollRestoration = 'manual';
@@ -10,8 +8,7 @@ if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
 interface ScrollManagerConfig {
   exemptRoutes?: string[];
   exemptPatterns?: RegExp[];
-  enableScrollRestoration?: boolean;
-  scrollBehavior?: 'instant' | 'smooth';
+  scrollBehavior?: 'auto' | 'smooth';
 }
 
 const DEFAULT_CONFIG: Required<ScrollManagerConfig> = {
@@ -26,8 +23,7 @@ const DEFAULT_CONFIG: Required<ScrollManagerConfig> = {
     /\?tab=/,
     /#\//
   ],
-  enableScrollRestoration: true,
-  scrollBehavior: 'instant'
+  scrollBehavior: 'auto'
 };
 
 function shouldSkipScroll(pathname: string, config: Required<ScrollManagerConfig>): boolean {
@@ -42,68 +38,48 @@ function shouldSkipScroll(pathname: string, config: Required<ScrollManagerConfig
   return false;
 }
 
+function scrollToTop(behavior: 'auto' | 'smooth' = 'auto') {
+  try {
+    window.scrollTo({ top: 0, left: 0, behavior });
+  } catch (e) {
+    window.scrollTo(0, 0);
+  }
+  
+  if (document.documentElement) {
+    document.documentElement.scrollTop = 0;
+  }
+  
+  if (document.body) {
+    document.body.scrollTop = 0;
+  }
+}
+
 export function ScrollManager({ config }: { config?: Partial<ScrollManagerConfig> } = {}) {
   const [location] = useLocation();
-  const previousPath = useRef<string>('');
-  const isInitialMount = useRef(true);
   
-  useLayoutEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      previousPath.current = location;
-      return;
-    }
-    
+  useEffect(() => {
     const mergedConfig: Required<ScrollManagerConfig> = {
       exemptRoutes: config?.exemptRoutes !== undefined ? config.exemptRoutes : DEFAULT_CONFIG.exemptRoutes,
       exemptPatterns: config?.exemptPatterns !== undefined ? config.exemptPatterns : DEFAULT_CONFIG.exemptPatterns,
-      enableScrollRestoration: config?.enableScrollRestoration !== undefined ? config.enableScrollRestoration : DEFAULT_CONFIG.enableScrollRestoration,
       scrollBehavior: config?.scrollBehavior !== undefined ? config.scrollBehavior : DEFAULT_CONFIG.scrollBehavior
     };
-    
-    if (mergedConfig.enableScrollRestoration) {
-      scrollHistory.set(previousPath.current, window.scrollY);
-    }
     
     const fullPath = window.location.pathname + window.location.search + window.location.hash;
     
     if (shouldSkipScroll(fullPath, mergedConfig)) {
-      previousPath.current = location;
       return;
     }
     
-    requestAnimationFrame(() => {
-      if (mergedConfig.enableScrollRestoration) {
-        const savedPosition = scrollHistory.get(location);
-        
-        if (savedPosition !== undefined) {
-          document.documentElement.scrollTo({
-            top: savedPosition,
-            left: 0,
-            behavior: mergedConfig.scrollBehavior
-          });
-        } else {
-          document.documentElement.scrollTo({
-            top: 0,
-            left: 0,
-            behavior: mergedConfig.scrollBehavior
-          });
-        }
-      } else {
-        document.documentElement.scrollTo({
-          top: 0,
-          left: 0,
-          behavior: mergedConfig.scrollBehavior
-        });
-      }
-    });
+    scrollToTop(mergedConfig.scrollBehavior);
     
-    previousPath.current = location;
+    setTimeout(() => {
+      scrollToTop(mergedConfig.scrollBehavior);
+    }, 0);
+    
+    setTimeout(() => {
+      scrollToTop(mergedConfig.scrollBehavior);
+    }, 100);
   }, [location, config]);
   
   return null;
-}
-
-export function clearScrollHistory() {
-  scrollHistory.clear();
 }
