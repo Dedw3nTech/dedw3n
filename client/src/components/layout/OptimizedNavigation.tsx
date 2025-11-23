@@ -124,6 +124,9 @@ export default function OptimizedNavigation() {
     // Check if user has access to Finance section (Admin or Serruti only)
     const hasFinanceAccess = userData?.role === 'admin' || userData?.username === 'Serruti';
     
+    // Check if user has access to Lifestyle section (Admin or Serruti only)
+    const hasLifestyleAccess = userData?.role === 'admin' || userData?.username === 'Serruti';
+    
     const allNavItems = [
       {
         title: translatedLabels.finance,
@@ -163,8 +166,12 @@ export default function OptimizedNavigation() {
       },
     ];
     
-    // Filter out Finance section for non-authorized users
-    return allNavItems.filter(item => item.href !== '/finance' || hasFinanceAccess);
+    // Filter out restricted sections for non-authorized users
+    return allNavItems.filter(item => {
+      if (item.href === '/finance') return hasFinanceAccess;
+      if (item.href === '/lifestyle') return hasLifestyleAccess;
+      return true;
+    });
   }, [translatedLabels, location, userData]);
 
   // Quick access items for authenticated users

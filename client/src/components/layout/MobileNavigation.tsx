@@ -29,6 +29,9 @@ export default function MobileNavigation() {
   // Check if user has access to Finance section (Admin or Serruti only)
   const hasFinanceAccess = user?.role === 'admin' || user?.username === 'Serruti';
   
+  // Check if user has access to Lifestyle section (Admin or Serruti only)
+  const hasLifestyleAccess = user?.role === 'admin' || user?.username === 'Serruti';
+  
   // Navigation items configuration
   const allNavItems = useMemo(() => [
     { href: "/finance", icon: "ri-bank-line", label: translations[0] || "Finance" },
@@ -39,10 +42,14 @@ export default function MobileNavigation() {
     { href: "/community", icon: "ri-group-line", label: translations[5] || "Community" }
   ], [translations]);
   
-  // Filter out Finance section for non-authorized users
+  // Filter out restricted sections for non-authorized users
   const navItems = useMemo(() => 
-    allNavItems.filter(item => item.href !== '/finance' || hasFinanceAccess),
-    [allNavItems, hasFinanceAccess]
+    allNavItems.filter(item => {
+      if (item.href === '/finance') return hasFinanceAccess;
+      if (item.href === '/lifestyle') return hasLifestyleAccess;
+      return true;
+    }),
+    [allNavItems, hasFinanceAccess, hasLifestyleAccess]
   );
 
   return (
