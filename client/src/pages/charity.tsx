@@ -2,7 +2,6 @@ import { Container } from "@/components/ui/container";
 import { useEffect } from "react";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import charityHeaderImage from "@assets/Charity header _1763871204927.png";
-import partneringImage from "@assets/waste  ENPLAREC_1763873002193.png";
 
 export default function CharityPage() {
   useEffect(() => {
@@ -65,38 +64,25 @@ export default function CharityPage() {
             <h2 className="text-2xl font-semibold mb-3">
               {partneringTitle}
             </h2>
-            
-            <div className="md:flex md:gap-6 md:items-start">
-              <div className="md:flex-1">
-                <p className="text-base leading-relaxed mb-4">
-                  {partneringText1}
-                </p>
-                <p className="text-base leading-relaxed mb-4">
-                  {partneringText2}
-                </p>
-                <p className="text-base leading-relaxed mb-3">
-                  {partneringText3}
-                </p>
-                <div className="space-y-2 ml-4">
-                  <p className="text-base leading-relaxed">
-                    <strong>Environmental:</strong> {partneringFocus1?.replace('Environmental: ', '') || 'Supporting projects that protect and restore our natural world.'}
-                  </p>
-                  <p className="text-base leading-relaxed">
-                    <strong>Social:</strong> {partneringFocus2?.replace('Social: ', '') || 'Investing in communities to improve health, education, and equality.'}
-                  </p>
-                  <p className="text-base leading-relaxed">
-                    <strong>Governance:</strong> {partneringFocus3?.replace('Governance: ', '') || 'Promoting ethical practices, transparency, and accountability within our own operations and our partner network.'}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="mt-4 md:mt-0 md:w-80 lg:w-96 flex-shrink-0">
-                <img 
-                  src={partneringImage} 
-                  alt="Environmental impact - waste management initiative"
-                  className="w-full h-auto rounded-sm shadow-sm"
-                />
-              </div>
+            <p className="text-base leading-relaxed mb-4">
+              {partneringText1}
+            </p>
+            <p className="text-base leading-relaxed mb-4">
+              {partneringText2}
+            </p>
+            <p className="text-base leading-relaxed mb-3">
+              {partneringText3}
+            </p>
+            <div className="space-y-2 ml-4">
+              <p className="text-base leading-relaxed">
+                <strong>Environmental:</strong> {partneringFocus1?.replace('Environmental: ', '') || 'Supporting projects that protect and restore our natural world.'}
+              </p>
+              <p className="text-base leading-relaxed">
+                <strong>Social:</strong> {partneringFocus2?.replace('Social: ', '') || 'Investing in communities to improve health, education, and equality.'}
+              </p>
+              <p className="text-base leading-relaxed">
+                <strong>Governance:</strong> {partneringFocus3?.replace('Governance: ', '') || 'Promoting ethical practices, transparency, and accountability within our own operations and our partner network.'}
+              </p>
             </div>
           </div>
 
