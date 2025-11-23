@@ -2,7 +2,7 @@ import { Container } from "@/components/ui/container";
 import { useEffect } from "react";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
 import charityHeaderImage from "@assets/Charity header _1763871204927.png";
-import partneringImage from "@assets/waste picked  ENPLAREC_1763872682914.png";
+import partneringImage from "@assets/waste  ENPLAREC_1763873002193.png";
 
 export default function CharityPage() {
   useEffect(() => {
