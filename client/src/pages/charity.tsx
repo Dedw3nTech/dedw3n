@@ -56,7 +56,7 @@ export default function CharityPage() {
           </h1>
         
         <div className="space-y-8 text-black">
-          <p className="text-base md:text-lg leading-relaxed">
+          <p className="text-base leading-relaxed">
             {introText}
           </p>
 
