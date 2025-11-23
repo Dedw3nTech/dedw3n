@@ -10,7 +10,7 @@ export default function CharityPage() {
 
   const charityTexts = [
     "Charity",
-    "At Dedw3n, we believe in giving back to the community and making a positive impact on society.",
+    "A core component of Dedw3n is the inclusion of Dedw3n Charity. This integration underscores our strong commitment to creating prosperity and equilibrium for all, giving back and creating Environmental, Social, and Governance (ESG) principles. The ESG framework is vital for measuring a company's impact and dedication to sustainability and ethical practices, serving as a key metric for investors and stakeholders to assess long-term performance and non-financial risks. To solidify our ESG commitment, the Dedw3n Group will pledge 10% of its yearly profits to Dedw3n Charity.",
     "Our Commitment",
     "We are committed to supporting charitable causes and organizations that align with our values of sustainability, education, and social responsibility.",
     "How We Help",
