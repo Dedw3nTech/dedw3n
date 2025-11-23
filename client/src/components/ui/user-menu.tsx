@@ -354,51 +354,55 @@ export default function UserMenu() {
 
           <Separator />
 
-          {/* Meetings Section */}
-          <div className="space-y-1">
-            <div className="px-3 py-1 text-right">
-              <span className="text-xs text-gray-500">{translatedLabels.businessSuite}</span>
-            </div>
-            
-            <SheetClose asChild>
-              <Link href="/erp">
-                <span className="flex items-center px-3 py-3 rounded-md text-sm font-medium text-black hover:bg-white hover:text-black transition-colors cursor-pointer" data-testid="link-erp">
-                  {translatedLabels.erp}
-                </span>
-              </Link>
-            </SheetClose>
-            
-            <SheetClose asChild>
-              <Link href="/crm">
-                <span className="flex items-center px-3 py-3 rounded-md text-sm font-medium text-black hover:bg-white hover:text-black transition-colors cursor-pointer" data-testid="link-crm">
-                  {translatedLabels.crm}
-                </span>
-              </Link>
-            </SheetClose>
-            
-            <SheetClose asChild>
-              <Link href="/calendar" data-testid="link-calendar">
-                <span className="flex items-center justify-between px-3 py-3 rounded-md text-sm font-medium text-black hover:bg-white hover:text-black transition-colors cursor-pointer">
-                  <span>{translatedLabels.calendar}</span>
-                  {(calendarNotifications?.count || 0) > 0 && (
-                    <Badge className="bg-black text-white text-xs min-w-[20px] h-5">
-                      {(calendarNotifications?.count || 0) > 99 ? "99+" : calendarNotifications?.count}
-                    </Badge>
-                  )}
-                </span>
-              </Link>
-            </SheetClose>
-            
-            <SheetClose asChild>
-              <Link href="/meetings/new">
-                <span className="flex items-center px-3 py-3 rounded-md text-sm font-medium text-black hover:bg-white hover:text-black transition-colors cursor-pointer" data-testid="link-new-meeting">
-                  {translatedLabels.newMeeting}
-                </span>
-              </Link>
-            </SheetClose>
-          </div>
+          {/* Meetings Section - Only visible to Admin and Serruti */}
+          {(currentUser?.role === 'admin' || currentUser?.username === 'Serruti') && (
+            <>
+              <div className="space-y-1">
+                <div className="px-3 py-1 text-right">
+                  <span className="text-xs text-gray-500">{translatedLabels.businessSuite}</span>
+                </div>
+                
+                <SheetClose asChild>
+                  <Link href="/erp">
+                    <span className="flex items-center px-3 py-3 rounded-md text-sm font-medium text-black hover:bg-white hover:text-black transition-colors cursor-pointer" data-testid="link-erp">
+                      {translatedLabels.erp}
+                    </span>
+                  </Link>
+                </SheetClose>
+                
+                <SheetClose asChild>
+                  <Link href="/crm">
+                    <span className="flex items-center px-3 py-3 rounded-md text-sm font-medium text-black hover:bg-white hover:text-black transition-colors cursor-pointer" data-testid="link-crm">
+                      {translatedLabels.crm}
+                    </span>
+                  </Link>
+                </SheetClose>
+                
+                <SheetClose asChild>
+                  <Link href="/calendar" data-testid="link-calendar">
+                    <span className="flex items-center justify-between px-3 py-3 rounded-md text-sm font-medium text-black hover:bg-white hover:text-black transition-colors cursor-pointer">
+                      <span>{translatedLabels.calendar}</span>
+                      {(calendarNotifications?.count || 0) > 0 && (
+                        <Badge className="bg-black text-white text-xs min-w-[20px] h-5">
+                          {(calendarNotifications?.count || 0) > 99 ? "99+" : calendarNotifications?.count}
+                        </Badge>
+                      )}
+                    </span>
+                  </Link>
+                </SheetClose>
+                
+                <SheetClose asChild>
+                  <Link href="/meetings/new">
+                    <span className="flex items-center px-3 py-3 rounded-md text-sm font-medium text-black hover:bg-white hover:text-black transition-colors cursor-pointer" data-testid="link-new-meeting">
+                      {translatedLabels.newMeeting}
+                    </span>
+                  </Link>
+                </SheetClose>
+              </div>
 
-          <Separator />
+              <Separator />
+            </>
+          )}
 
           {/* Offline Mode Toggle */}
           <div>
