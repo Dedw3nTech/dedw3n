@@ -1,6 +1,7 @@
 import { Container } from "@/components/ui/container";
 import { useEffect } from "react";
 import { useMasterBatchTranslation } from "@/hooks/use-master-translation";
+import charityHeaderImage from "@assets/Charity header _1763871204927.png";
 
 export default function CharityPage() {
   useEffect(() => {
@@ -32,11 +33,21 @@ export default function CharityPage() {
   ] = translations || charityTexts;
 
   return (
-    <Container className="py-8 md:py-12">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl md:text-4xl font-bold text-black mb-6">
-          {charityTitle}
-        </h1>
+    <>
+      {/* Header Image Section */}
+      <div className="w-full h-[300px] md:h-[400px] relative overflow-hidden bg-white">
+        <img 
+          src={charityHeaderImage} 
+          alt={charityTitle}
+          className="w-full h-full object-cover"
+        />
+      </div>
+
+      <Container className="py-8 md:py-12">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-3xl md:text-4xl font-bold text-black mb-6">
+            {charityTitle}
+          </h1>
         
         <div className="space-y-8 text-black">
           <p className="text-base md:text-lg leading-relaxed">
@@ -72,5 +83,6 @@ export default function CharityPage() {
         </div>
       </div>
     </Container>
+    </>
   );
 }
